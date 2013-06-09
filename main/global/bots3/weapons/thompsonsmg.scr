@@ -1,0 +1,65 @@
+// thompson rrrrrrrrrgun
+// by jv_map
+
+// let bots3 know I compiled ok.
+acte_de_presence:
+end 1
+
+info:
+	self.clipsize = 30
+	self.spread = 0.015
+	self.weapontype = "smg"
+	
+	self.rounds_in_clip = self.clipsize
+end
+
+action:
+
+	self playsound snd_rifle_pullout
+	waitthread level.bots.anim::playupperanim smg_stand_raise
+
+	// can only exit this loop 
+	// by dieing or changing weapon
+	
+	while(isAlive self)
+	{
+		if(self.new_weapon)
+		{
+			// holster smg
+			self playsound snd_rifle_putaway
+			waitthread level.bots.anim::playupperanim smg_stand_lower
+			break
+		}
+		else if((self.current_weapon.rounds_in_clip < self.current_weapon.clipsize && self.key_reload) || self.current_weapon.rounds_in_clip <= 0)
+		{
+			// reload
+			waitthread level.bots.anim::playupperanim smg_reload
+			if(isAlive self)
+			{
+				self.current_weapon.rounds_in_clip = self.current_weapon.clipsize
+			}
+		}
+		else if(self.key_attack_primary && self readyToFire)
+		{
+			// fire
+			waitthread level.bots.common::fire_current_weapon
+		}
+		else if(level.time - self.last_pain_time <= 0.05)
+		{
+			// ouch
+			if(self.pose == level.bots.POSE_STAND)
+			{
+				waitthread level.bots.anim::playupperanim smg_pain
+			}
+			else
+			{
+				waitthread level.bots.anim::playupperanim smg_pain_ducked
+			}
+		}
+		else
+		{
+			// no action
+			waitframe
+		}
+	}
+end

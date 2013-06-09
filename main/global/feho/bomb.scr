@@ -1,0 +1,12 @@
+main:
+
+	local.player = parm.other
+	
+	if (local.player.needrevive == 1 || local.player.has_the_bomb == 1)
+		end
+		
+	self remove
+	local.player exec global/feho/scan_player.scr 
+
+
+end

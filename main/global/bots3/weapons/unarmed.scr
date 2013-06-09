@@ -1,0 +1,13 @@
+// unarmed
+// by jv_map
+
+// let bots3 know I compiled ok.
+acte_de_presence:
+end 1
+
+//get_legs_anim:
+//end unarmed_stand_idle
+
+set_legs_anim:
+	waitthread level.bots.move::set_legs_anim unarmed
+end

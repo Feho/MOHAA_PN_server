@@ -1,0 +1,63 @@
+/*
+Mode rafale de 3 coups ou full auto pour la StG44
+
+self = joueur
+
+Créé par Feho
+*/
+
+main local.fire:
+	if (self.useheld == 1)
+		end
+		
+	self weaponcommand dual targetname getme
+	local.weapon = $getme
+	local.weapon.targetname = ""
+	
+	if (local.weapon.model=="models/weapons/mp44.tik")
+	{
+		if (local.fire)
+		{
+			self thread fire local.weapon
+			end
+		}
+
+		if (local.weapon.burst != NIL)
+		{
+			local.weapon.burst--
+			if (local.weapon.burst == -1)
+			{
+				local.weapon.burst = 1
+				self iprint "StG 44 : 3 round burst"
+
+				// Augmente la précision
+				// self weaponcommand dual dmbulletrange 8000
+			}
+			if (local.weapon.burst == 0)
+			{
+				self iprint "StG 44 : automatic"
+
+				// Diminue la précision
+				// self weaponcommand dual dmbulletrange 4000
+			}
+		}
+		else
+		{
+			local.weapon.burst = 1
+			self iprint "StG 44 : 3 round burst"
+			// self weaponcommand dual dmbulletrange 8000
+		}
+		
+		local.weapon playsound mp44_snd_noammo
+	}
+end
+
+fire local.weapon:
+
+	if (local.weapon.burst == 1)
+	{
+		wait 0.11
+		self stufftext("-attackprimary")
+	}
+
+end

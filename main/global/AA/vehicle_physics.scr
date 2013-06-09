@@ -1,0 +1,154 @@
+vehicle_physics:
+
+	local.origin = self.origin
+
+	local.pitch = self.angles[0]
+	if (local.pitch > 180.0)
+	{
+		local.pitch -= 360.0
+		local.pitch = abs local.pitch
+	}
+	else
+		local.pitch -= local.pitch + local.pitch
+
+	local.sinalfa = waitthread global/AA/math.scr::sin local.pitch
+	local.cosalfa = waitthread global/AA/math.scr::cos local.pitch
+	local.tanalfa = waitthread global/AA/math.scr::tan local.pitch
+
+	local.se = 0.06
+	if (self.istank == 1)
+		local.se = 0.09
+
+	local.gravity = (9.81 * 100) / 1.905
+
+	local.Fsuly = self.mass * local.gravity
+	local.Fny = local.Fsuly * local.cosalfa
+	local.Fsurl = local.Fny * local.se
+	local.Feredo = (local.Fsuly * local.sinalfa) - local.Fsurl
+	local.a = local.Feredo / self.mass
+
+	local.stop = 0
+
+	if (self.driver != NULL)
+	{
+		if (self.driver.keyheld[ELORE] == 1)
+		{
+			if (self.speed < self.vehiclespeed)
+			{
+				if (self.speed < 0.0)
+					self.speed = self.speed + self.acceleration * 0.1
+				else
+					self.speed = self.speed + self.acceleration * 0.05
+
+				if (self.speed > self.vehiclespeed)
+					self.speed = self.vehiclespeed
+			}
+		}
+		else if (self.driver.keyheld[HATRA] == 1)
+		{
+			if ( self.speed > (self.vehiclespeed / 2.0) * -1.0 )
+			{
+				if (self.speed > 0.0)
+					self.speed = self.speed - self.acceleration * 0.1
+				else
+					self.speed = self.speed - self.acceleration * 0.05
+
+				if ( self.speed < (self.vehiclespeed / 2.0) * -1.0 )
+					self.speed = (self.vehiclespeed / 2.0) * -1.0
+			}
+		}
+		else
+			local.stop = 1
+
+		if (self.istank != 1)
+		{
+			if (self.driver.keyheld[BALRA] == 1)
+			{
+				self.wheel += self.turnrate
+				if (self.wheel > self.wheel_max)
+					self.wheel = self.wheel_max
+			}
+			else if (self.driver.keyheld[JOBBRA] == 1)
+			{
+				self.wheel -= self.turnrate
+				if (self.wheel < -self.wheel_max)
+					self.wheel = -self.wheel_max
+			}
+			else
+			{
+				if (self.wheel > 0.0)
+				{
+					self.wheel -= self.turnrate
+					if (self.wheel < 0.0)
+						self.wheel = 0.0
+				}
+				else if (self.wheel < 0.0)
+				{
+					self.wheel += self.turnrate
+					if (self.wheel > 0.0)
+						self.wheel = 0.0
+				}
+			}
+			
+		}
+	}
+	else
+		local.stop = 1
+
+	if ( local.stop == 1 && self.speed != 0.0 )
+	{
+		if (self.speed > 0.0)
+		{
+			self.speed -= self.acceleration * 0.05
+			if (self.speed < 0.0)
+				self.speed = 0.0
+		}
+		else if (self.speed < 0.0)
+		{
+			self.speed += self.acceleration * 0.05
+			if (self.speed > 0.0)
+				self.speed = 0.0
+		}
+	}
+
+	waitframe
+
+	local.dist = vector_length ( local.origin - self.origin )
+	local.speed_frame = abs self.speed / 20.0
+	if ( local.speed_frame - local.dist > 5.0 )
+	{
+		self.speed -= self.speed + self.speed
+		self.speed = self.speed / 2.0
+	}
+
+	if (self.istank != 1)
+	{
+		if (self.wheel == 0.0)
+			local.r = 0.0
+		else
+		{
+			local.alfa = abs self.wheel
+			local.beta = 180.0 - (90.0 + local.alfa)
+			local.sinalfa = waitthread global/AA/math.scr::sin local.alfa
+			local.sinbeta = waitthread global/AA/math.scr::sin local.beta
+			local.r = (self.wheel_base / 2.0) / (local.sinalfa / local.sinbeta)
+			local.r += (self.track / 2.0)
+		}
+
+		if (local.r != 0.0)
+		{
+			local.teta = (self.speed * 0.05) / local.r
+			local.alfa = (180.0 - local.teta) / 2.0
+			local.alfa = (90.0 - local.alfa) * 20.0
+
+			if (self.wheel < 0.0)
+				local.alfa = local.alfa * -1.0
+
+			local.alfa = local.alfa * 1.2
+			self.angles = ( self.angles[0] (self.angles[1] + local.alfa) self.angles[2] )
+		}
+	}
+
+	self.velocity = self.forwardvector * self.speed
+
+end

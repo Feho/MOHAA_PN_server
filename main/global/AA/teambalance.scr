@@ -1,0 +1,241 @@
+main:
+
+	level waittill spawn
+
+	local.gt = int ( getcvar "g_gametype" )
+	if (local.gt == 1)
+		end
+
+	teamswitchdelay .2
+
+	wait 1
+
+	thread player_monitor
+	thread teambalance
+
+end
+		end
+player_monitor:
+
+	level.allies_balance_number = 0
+	level.axis_balance_number = 0
+
+	while ( level.intermission_started != 1 && level.bas_roundend != 1 )
+	{
+		for (local.i = 1;local.i <= $player.size;local.i++)
+		{
+			local.player = $player[local.i]
+
+			if ( local.player != NULL && local.player.isplayer == 1 )
+			{
+				if (local.player.dmteam != "spectator")
+				{
+					if ( local.player.dmteam == "allies" && local.player.current_dmteam != "allies" )
+					{
+						level.allies_balance_number++
+
+						local.player.current_dmteam = "allies"
+						local.player.allies_balance_number = level.allies_balance_number
+					}
+					else if ( local.player.dmteam == "axis" && local.player.current_dmteam != "axis" )
+					{
+						level.axis_balance_number++
+
+						local.player.current_dmteam = "axis"
+						local.player.axis_balance_number = level.axis_balance_number
+					}
+
+					if ( level.last_balanced_player != NULL && level.last_balanced_player == local.player )
+					{
+						if (local.player.dmteam != local.player.balanced_team)
+						{
+							local.unbalanced_teams = waitthread check_teams
+							if ( ( local.player.balanced_team == "allies" && local.unbalanced_teams == 2 ) || ( local.player.balanced_team == "axis" && local.unbalanced_teams == 1 ) )
+							{
+								wait .1
+
+								if (local.player != NULL)
+								{
+									local.player join_team local.player.balanced_team
+									local.player iprint "Stay in your team, otherwise the teams will be unbalanced."
+								}
+							}
+							else
+								level.last_balanced_player = NULL
+						}
+					}
+				}
+				else
+				{
+					if (local.player.current_dmteam != "spectator")
+						local.player.current_dmteam = "spectator"
+				}
+			}
+		}
+
+		wait .1
+	}
+
+end
+
+teambalance:
+
+	local.max_warning = 2
+	local.warning = 0
+	local.warning_time = 6
+
+	level.last_balanced_player = NULL
+
+	while ( level.intermission_started != 1 && level.bas_roundend != 1 )
+	{
+		wait 1
+
+		level.tb = getcvar "teambalance"
+		if (level.tb == "")
+			setcvar "teambalance" "0"
+
+		level.tb = int ( getcvar "teambalance" )
+		if (level.tb > 0)
+		{
+			local.unbalanced_teams = waitthread check_teams
+			if (local.unbalanced_teams > 0)
+			{
+				if (local.warning <= local.max_warning)
+				{
+					wait local.warning_time
+
+					local.unbalanced_teams = waitthread check_teams
+					if (local.unbalanced_teams > 0)
+					{
+						local.warning++
+						if (local.warning > local.max_warning)
+						{
+							waitthread balance_teams
+
+							local.warning = 0
+						}
+						else
+						{
+							if (local.unbalanced_teams == 1)
+								local.team = "AXIS"
+							else if (local.unbalanced_teams == 2)
+								local.team = "ALLIES"
+
+							iprintlnbold ( "Teams are unbalanced! Need more " + local.team + " players!" )
+						}
+					}
+					else
+						local.warning = 0
+				}
+			}
+			else
+			{
+				if (local.warning > 0)
+					local.warning = 0
+			}
+		}
+		else
+		{
+			if (local.warning > 0)
+				local.warning = 0
+		}
+	}
+
+end
+
+check_teams:
+
+	local.allies_count = 0
+	local.axis_count = 0
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.isplayer == 1 && local.player.dmteam != "spectator" )
+		{
+			if (local.player.dmteam == "allies")
+				local.allies_count++
+			else if (local.player.dmteam == "axis")
+				local.axis_count++
+		}
+	}
+
+	if (local.allies_count > local.axis_count + 1)
+		end 1 // More allies players
+	else if (local.axis_count > local.allies_count + 1)
+		end 2 // More axis players
+
+end 0 // Everything is ok
+
+balance_teams:
+
+	iprintlnbold ( "Balancing teams..." )
+
+	wait 1
+
+	local.unbalanced_teams = waitthread check_teams
+	if (local.unbalanced_teams == 1)
+	{
+		local.team = "allies"
+		local.join_team = "axis"
+	}
+	else if (local.unbalanced_teams == 2)
+	{
+		local.team = "axis"
+		local.join_team = "allies"
+	}
+
+	if (local.team != NIL)
+	{
+		for (local.i = 1;local.i <= $player.size;local.i++)
+		{
+			local.player = $player[local.i]
+
+			if ( local.player != NULL && local.player.isplayer == 1 && local.player.dmteam != "spectator" )
+			{
+				if (local.player.dmteam == local.team)
+				{
+					if (local.teammates == NIL)
+						local.teammates[1] = local.player
+					else
+						local.teammates[local.teammates.size + 1] = local.player
+				}
+			}
+		}
+
+		if ( local.teammates != NIL && local.teammates.size > 1 )
+		{
+			local.pl = local.teammates[1]
+
+			for (local.i = 2;local.i <= local.teammates.size;local.i++)
+			{
+				local.teammate = local.teammates[local.i]
+
+				if (local.team == "allies")
+				{
+					if (local.teammate.allies_balance_number > local.pl.allies_balance_number)
+						local.pl = local.teammate
+				}
+				else if (local.team == "axis")
+				{
+					if (local.teammate.axis_balance_number > local.pl.axis_balance_number)
+						local.pl = local.teammate
+				}
+			}
+
+			local.pl join_team local.join_team
+
+			level.last_balanced_player = local.pl
+			level.last_balanced_player.balanced_team = local.join_team
+
+			if (local.join_team == "allies")
+				local.t = "ALLIES"
+			else if (local.join_team == "axis")
+				local.t = "AXIS"
+
+			local.pl iprint ( "You were forced to join the " + local.t + " team!!!" )
+		}
+	}
+
+end

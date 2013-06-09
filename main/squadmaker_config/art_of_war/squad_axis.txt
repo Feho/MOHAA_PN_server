@@ -1,0 +1,49 @@
+// Axis squad definition
+// This is a script file, don't make syntax errors
+
+local.a = makeArray // don't change this line
+
+//----------------------------
+// squad definition below here
+//----------------------------
+
+// loadouts:
+//----------
+// rifleman
+// sniper
+// smg
+// mg
+// support
+// shotgun
+// bazooka
+
+// primary weapons:
+//----------
+// rifle
+// sniper
+// smg
+// mg
+// bazooka
+// shotgun
+
+//------------------------------------------------------------------------
+// 	loadout			name					associated with primary weapon
+//------------------------------------------------------------------------
+	smg				"Hauptfeldwebel"		smg
+	mg				"Unteroffizier"			mg
+	mg				"Obergefreiter"			mg
+	support			"Oberschutze"			heavy
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+
+//----------------------------
+// end squad definition
+//----------------------------
+
+endArray // don't change this line
+
+end local.a // don't change this line
+
+// don't change this line

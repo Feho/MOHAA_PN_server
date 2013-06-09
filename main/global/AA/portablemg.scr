@@ -1,0 +1,327 @@
+main local.team:
+
+	self.has_portablemg = 1
+
+	self takeall
+
+	self give models/weapons/bar.tik
+	self useweaponclass mg
+	self activatenewweapon righthand
+
+	if (local.team == "allies")
+	{
+		self give models/weapons/colt45.tik
+
+		local.gun_model = "models/vehicles/jeep_30cal.tik"
+		local.gun_hide_surface = "mount"
+		local.gun_tag_offset = ( 5 -1 62.5 )
+		local.bipod_tag_offset = ( -5 -1 0 )
+		local.name = "M1919"
+		local.firedelay = 0.08
+		local.firesound = m1919_fire
+		local.dmg = 60
+	}
+	else if (local.team == "axis")
+	{
+		self give models/weapons/p38.tik
+
+		local.gun_model = "models/statweapons/mg42_gun.tik"
+		local.gun_hide_surface = NIL
+		local.gun_tag_offset = ( 37.5 -1 0 )
+		local.bipod_tag_offset = ( -5 -1 0 )
+		local.name = "MG42"
+		local.firedelay = 0.06
+		local.firesound = NIL
+		local.dmg = 70
+	}
+
+	local.bipod_model = "models/statweapons/mg42_bipod.tik"
+
+	waitframe
+
+	while ( self != NULL && self.player_spawned == 1 && self.current_weapon == NULL )
+		waitframe
+
+	if ( self == NULL || self.player_spawned != 1 )
+		end
+
+	if (self.current_weapon.model != "models/weapons/bar.tik")
+		end
+
+	local.gun = spawn Animate angles ( 0 0 180 )
+	local.gun attach self.current_weapon "origin" 1 local.gun_tag_offset
+	local.gun model local.gun_model
+	local.gun notsolid
+
+	if (local.gun_hide_surface != NIL)
+		local.gun surface local.gun_hide_surface "+nodraw"
+
+	local.gun.bipod = spawn Animate angles ( 0 0 0 )
+	local.gun.bipod attach local.gun "tag_barrel" 1 local.bipod_tag_offset
+	local.gun.bipod model local.bipod_model
+	local.gun.bipod notsolid
+
+	self.current_weapon surface all "+nodraw"
+
+	local.gun.name = local.name
+	local.gun.firedelay = local.firedelay
+
+	if (local.firesound != NIL)
+		local.gun.firesound = local.firesound
+
+	self.current_weapon noammosound		snd_step_paper
+	self.current_weapon ammotype		"fakeammo"
+
+	self.current_weapon holstertag		"Bip01 Spine2"
+	self.current_weapon holsteroffset	"8.0 -7.75 6.5"
+	self.current_weapon holsterangles	"0 185 -25"		
+	self.current_weapon holsterScale	1.0
+
+	self.current_weapon bulletspread	10 10 30 30
+	self.current_weapon bulletdamage	local.dmg
+	self.current_weapon firespreadmult	0.0 0.0 0 0.0
+	self.current_weapon movementspeed	0.55
+
+	self.current_weapon dmbulletspread	10 10 30 30
+	self.current_weapon dmbulletdamage	local.dmg
+	self.current_weapon dmfirespreadmult	0.0 0.0 0 0.0
+	self.current_weapon dmmovementspeed	0.55
+
+	self.current_weapon ammo_in_clip	0
+	self.current_weapon semiauto
+
+	local.gun.maxtolteny = 300
+	local.gun.tolteny = 150
+	local.gun.tarhely = 75
+	local.gun.tolteny_tarban = 75
+
+	local.gun.canfire = 1
+
+	local.gun.parent = self.current_weapon
+	self.portable_mg = local.gun
+
+	if (local.team == "allies")
+	{
+		local.gun.rugas_mozgas[standing] = 1.0
+		local.gun.rugas_mozgas[walking] = 1.3
+		local.gun.rugas_mozgas[running] = 1.7
+		local.gun.rugas_mozgas[falling] = 2.3
+	}
+	else if (local.team == "axis")
+	{
+		local.gun.rugas_mozgas[standing] = 1.0
+		local.gun.rugas_mozgas[walking] = 1.5
+		local.gun.rugas_mozgas[running] = 2.0
+		local.gun.rugas_mozgas[falling] = 2.6
+	}
+
+	self stufftext ("globalwidgetcommand weaponname itemstat -1")
+	self stufftext ("globalwidgetcommand weaponname title " + local.gun.name)
+	self stufftext ("globalwidgetcommand clipcount playerstat -1")
+	self stufftext ("globalwidgetcommand clipcount title " + local.gun.tolteny_tarban)
+	self stufftext ("globalwidgetcommand ammocount playerstat -1")
+	self stufftext ("globalwidgetcommand ammocount linkcvar portablemg")
+	self stufftext ("globalwidgetcommand clipbulletso playerstat -1")
+	self stufftext ("globalwidgetcommand clipbulletse playerstat -1")
+
+	self stufftext ("set portablemg " + local.gun.tolteny)
+
+	local.heveder = self waitthread heveder
+
+	self thread check_gun local.gun local.heveder
+
+end
+
+check_gun local.gun local.heveder:
+
+	if (self.portablemg_help != 1)
+	{
+		self.portablemg_help = 1
+		self iprint "You can reload your machinegun by the sec. attack button!" 1
+	}
+
+	while ( self != NULL && self.player_spawned == 1 )
+	{
+		if ( self.fireheld == 1 && self.secfireheld != 1 )
+		{
+			if ( self.current_weapon != NULL && self.current_weapon == local.gun.parent )
+			{
+				if (local.gun.canfire == 1)
+				{
+					local.gun thread gun_firing self
+				}
+			}
+		}
+		else if ( self.fireheld == 1 && self.secfireheld == 1 )
+		{
+			if ( self.current_weapon != NULL && self.current_weapon == local.gun.parent )
+			{
+				if ( local.gun.tolteny > 0 && local.gun.isreloading != 1 )
+				{
+					local.gun thread gun_reload self
+				}
+			}
+		}
+
+		if ( local.gun != NULL && local.gun.parent.angles[2] == 90.0 )
+			break
+
+		waitframe
+	}
+
+	if (local.gun)
+	{
+		local.parent_gun = local.gun.parent
+		local.gun.bipod remove
+		local.gun remove
+
+		if (local.parent_gun)
+			local.parent_gun remove
+	}
+
+	if (local.heveder)
+	{
+		local.heveder detach
+		local.heveder remove
+	}
+
+	if (self != NULL)
+	{
+		self.has_portablemg = 0
+
+		self stufftext ("globalwidgetcommand weaponname itemstat 1")
+		self stufftext ("globalwidgetcommand clipcount playerstat 6")
+		self stufftext ("globalwidgetcommand ammocount playerstat 4")
+		self stufftext ("globalwidgetcommand ammocount fgcolor .7 .6 .05 1")
+		self stufftext ("globalwidgetcommand clipbulletso playerstat 6")
+		self stufftext ("globalwidgetcommand clipbulletse playerstat 6")
+	}
+
+end
+
+gun_firing local.attacker:
+
+	if (self.tolteny_tarban > 0)
+	{
+		self.canfire = 0
+
+		local.attacker waitthread gun_viewkick self
+
+		local.attacker viewmodelanim fire 1
+		self.parent shoot
+
+		self.tolteny_tarban--
+
+		local.attacker stufftext ("globalwidgetcommand clipcount title " + self.tolteny_tarban)
+
+		self thread fakegun_firing
+
+		wait self.firedelay
+
+		if (self.tolteny_tarban > 0)
+			self.canfire = 1
+	}
+
+end
+
+fakegun_firing:
+
+	self anim fire
+
+	if (self.firesound != NIL)
+		self playsound self.firesound
+
+	waitframe
+
+	if (self)
+		self anim idle
+
+end
+
+gun_reload local.attacker:
+
+	self.canfire = 0
+	self.isreloading = 1
+
+	local.tar = self.tarhely - self.tolteny_tarban
+	if (local.tar == 0)
+	{
+		self.canfire = 1
+		self.isreloading = 0
+
+		end
+	}
+
+	wait 1
+
+	if (self == NULL)
+		end
+
+	self playsound bar_snd_reload
+
+	wait 3
+
+	if (self != NULL)
+	{
+		if (self.tolteny >= local.tar)
+		{
+			local.a = local.tar
+		}
+		else
+			local.a = self.tolteny
+
+		self.tolteny_tarban += local.a
+		self.tolteny -= local.a
+
+		if (self.tolteny < 0)
+			self.tolteny = 0
+
+		if (local.attacker != NULL)
+		{
+			local.attacker stufftext ("globalwidgetcommand clipcount title " + self.tolteny_tarban)
+			local.attacker stufftext ("set portablemg " + self.tolteny)
+		}
+
+		if (self.tolteny_tarban > 0)
+		{
+			self.canfire = 1
+			self.isreloading = 0
+		}
+	}
+
+end
+
+gun_viewkick local.gun:
+
+	local.rugas = ( 0 0 0 )
+
+	if ( (self getposition) == "standing")
+		local.modosito = 1.10
+	else
+		local.modosito = 0.35
+
+	local.modositas = local.modosito * local.gun.rugas_mozgas[(self getmovement)]
+
+	local.felfele_rugas = randomfloat 2.0
+	local.felfele_rugas = local.felfele_rugas - (local.felfele_rugas + local.felfele_rugas)
+
+	local.oldal_rugas = randomfloat 1.0
+	local.elojel = randomint 6.0
+	if (local.elojel > 3.0)
+		local.oldal_rugas = local.oldal_rugas - (local.oldal_rugas + local.oldal_rugas)
+
+	local.rugas = ( (local.felfele_rugas * local.modositas) (local.oldal_rugas * local.modositas) 0 )
+
+	self.viewangles += local.rugas
+
+end
+
+heveder:
+
+	local.heveder = spawn Animate model "models/gear/heer/grenadierload.tik"
+	local.heveder attach self "Bip01 Spine2" 1 ( -70 1 0 )
+	local.heveder surface ammobox "+nodraw"
+	local.heveder angles ( 0 90 90 )
+	local.heveder notsolid
+
+end local.heveder

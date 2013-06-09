@@ -1,0 +1,78 @@
+/**
+ * Fonctions communes
+ *
+ * Dépendances :
+ * - global/math.scr
+ *
+ * Feho
+ */
+
+/**
+ * Convertit un angle afin qu'il soit compris dans l'intervalle [0 ; 360[
+ */
+ConvertAngleBetween0And360Excluded local.angle:
+
+	local.angle = int(local.angle)
+
+	if (local.angle > 0)
+		local.angle = local.angle % 360
+	else if (local.angle < 0)
+		local.angle = 360 + local.angle % 360
+
+end local.angle
+
+/**
+ * Effectue une rotation vers les angles local.targetAngles à la vitesse de local.degreesPerFrame°/frame
+ *
+ * @param angles local.targetAngles
+ * @param int local.degreesPerFrame
+ */
+MoveToAngles local.targetAngles local.degreesPerFrame:
+
+	while (self && self.angles != local.targetAngles)
+	{
+		local.angles = self.angles
+
+		// Pour chacun des 3 angles x y z
+		for (local.i = 0; local.i <= 2; local.i++)
+		{
+			if (local.angles[local.i] != local.targetAngles[local.i])
+			{
+				// Récupère la différence d'angle
+				local.angleDiff = waitthread global/math.scr::getanglediff local.angles[local.i] local.targetAngles[local.i]
+
+				if (abs local.angleDiff < local.degreesPerFrame)
+				{
+					local.angles[local.i] = local.targetAngles[local.i]
+				}
+				else if (local.angleDiff > 0)
+				{
+					local.angles[local.i] += local.degreesPerFrame
+				}
+				else
+				{
+					local.angles[local.i] -= local.degreesPerFrame
+				}
+			}
+		}
+
+		self.angles = local.angles
+		waitframe
+	}
+
+end
+
+/**
+ * Génère une valeur aléatoire comprise entre min et max
+ *
+ * @param int local.min Valeur minimale incluse
+ * @param int local.max Valeur maximale incluse
+ */
+RandomInteger local.min local.max:
+
+	if (local.min > local.max)
+		end 0
+
+	local.result = randomint(local.max - local.min + 1) + local.min
+
+end local.result

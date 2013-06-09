@@ -1,0 +1,41 @@
+// Allied squad names
+// use '#' for the squad number
+// US Joint Army/Navy (JAN) Phonetic Alphabet (1941)
+
+local.a = makeArray // do not modify
+
+	// start squad names
+	// add/remove any lines as needed
+	"Able Squad"
+	"Baker Squad"
+	"Charlie Squad"
+	"Dog Squad"
+	"Easy Squad"
+	"Fox Squad"
+	"George Squad"
+	"How Squad"
+	"Item Squad"
+	"Jig Squad"
+	"King Squad"
+	"Love Squad"
+	"Mike Squad"
+	"Nan Squad"
+	"Oboe Squad"
+	"Peter Squad"
+	"Queen Squad"
+	"Roger Squad"
+	"Sail Squad"
+	"Tare Squad"
+	"Uncle Squad"
+	"Victor Squad"
+	"William Squad"
+	"X-ray Squad"
+	"Yoke Squad"
+	"Zebra Squad"
+	// end squad names
+
+endArray // do not modify
+
+end local.a // do not modify
+
+end // keep this line

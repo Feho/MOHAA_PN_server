@@ -1,0 +1,242 @@
+//
+// M1L1 - Rangers Lead The Way
+//
+
+
+main: 
+
+	// setcvar "g_gametype" "1"
+
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1" "Map Name: M1L1"
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" "Rangers Lead the Way" 
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" "Server IP"
+	setcvar "g_obj_axistext3" "178.32.28.179:12203" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "Team-match"
+	
+	waitthread tdm_spawns
+	waitthread set_da_stuff_up
+
+	level waittill prespawn
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m1l1
+	exec global/shutter.scr
+	exec global/DMprecache.scr
+
+	level waittill spawn
+
+	level.clockside = kills
+
+end
+
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1" "Map Name: M1L1"
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" "Rangers Lead the Way" 
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	setcvar "g_gametype" "1"
+	
+	waitthread ffa_spawns
+	waitthread set_da_stuff_up
+	
+	level waittill prespawn
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m1l1
+	exec global/shutter.scr
+	exec global/DMprecache.scr
+
+	level waittill spawn
+
+	level.clockside = kills
+
+end
+
+
+
+tdm_spawns:
+
+	spawn info_player_axis "origin" "-4810.55 117.57 367.14" "angle" "94"
+	spawn info_player_axis "origin" "-5285.71 -1.71 379.33" "angle" "22"
+	spawn info_player_axis "origin" "-5658.79 154.61 380.13" "angle" "-18"
+	spawn info_player_axis "origin" "-5939.29 285.28 376.16" "angle" "-5"
+	spawn info_player_axis "origin" "-6046.07 493.07 376.16" "angle" "-20"
+
+	spawn info_player_axis "origin" "-5619.96 784.88 376.16" "angle" "-83"
+	spawn info_player_axis "origin" "-5976.12 969.85 390.08" "angle" "-77"
+	spawn info_player_axis "origin" "-5914.88 1329.26 422.52" "angle" "-92"
+	spawn info_player_axis "origin" "-4493.78 1040.88 460.13" "angle" "-157"
+	spawn info_player_axis "origin" "-4848.88 1104.76 460.13" "angle" "-40"
+
+	spawn info_player_axis "origin" "-3490.93 550.29 459.16" "angle" "-161"
+	spawn info_player_axis "origin" "-5059.30 -1.21 376.32" "angle" "61"
+	spawn info_player_axis "origin" "-5754.50 773.62 376.29" "angle" "-69"
+	spawn info_player_axis "origin" "-4839.72 1147.18 460.13" "angle" "-51"
+	spawn info_player_axis "origin" "-4848.56 987.52 460.13" "angle" "-1"
+
+
+	spawn info_player_allied "origin" "-2119.09 -2966.51 47.65" "angle" "177"
+	spawn info_player_allied "origin" "-1857.54 -3356.62 30.29" "angle" "162"
+	spawn info_player_allied "origin" "-1787.79 -3713.57 42.39" "angle" "158"
+	spawn info_player_allied "origin" "-1474.17 -3578.03 42.01" "angle" "160"
+	spawn info_player_allied "origin" "-1835.18 -4128.34 79.72" "angle" "131"
+
+	spawn info_player_allied "origin" "-2108.94 -4350.57 86.90" "angle" "123"
+	spawn info_player_allied "origin" "-2970.23 -4527.93 151.64" "angle" "93"
+	spawn info_player_allied "origin" "-3132.98 -4424.89 200.13" "angle" "60"
+	spawn info_player_allied "origin" "-3167.04 -4034.04 200.13" "angle" "52"
+	spawn info_player_allied "origin" "-3179.89 -3540.69 200.13" "angle" "163"
+
+	spawn info_player_allied "origin" "-3836.08 -3519.66 177.83" "angle" "87"
+	spawn info_player_allied "origin" "-4649.97 -3776.87 104.12" "angle" "47"
+	spawn info_player_allied "origin" "-3056.90 -4070.89 156.85" "angle" "97"
+	spawn info_player_allied "origin" "-1670.26 -3954.54 68.97" "angle" "160"
+	spawn info_player_allied "origin" "-1857.17 -3647.68 35.00" "angle" "151"	 
+
+end
+
+
+ffa_spawns:
+
+	spawn info_player_deathmatch "origin" "-4848.87 1152.31 460.13" "angle" "-50"
+	spawn info_player_deathmatch "origin" "-5357.17 5.54 378.82" "angle" "23"
+	spawn info_player_deathmatch "origin" "-6052.87 524.87 376.13" "angle" "-34"
+	spawn info_player_deathmatch "origin" "-6958.06 1662.82 432.13" "angle" "19"
+	spawn info_player_deathmatch "origin" "-6391.13 2567.97 432.13" "angle" "-112"
+
+	spawn info_player_deathmatch "origin" "-5847.13 2133.23 640.13" "angle" "170"
+	spawn info_player_deathmatch "origin" "-3512.68 -92.91 422.20" "angle" "-133"
+	spawn info_player_deathmatch "origin" "-5490.28 -2085.05 448.13" "angle" "-7"
+	spawn info_player_deathmatch "origin" "-4640.58 -3776.87 104.13" "angle" "66"
+	spawn info_player_deathmatch "origin" "-3055.75 -4577.80 156.39" "angle" "89"
+
+	spawn info_player_deathmatch "origin" "-1504.17 -4351.24 103.37" "angle" "163"
+	spawn info_player_deathmatch "origin" "-1915.32 -3249.42 31.07" "angle" "174"
+	spawn info_player_deathmatch "origin" "-2919.48 -2000.40 240.13" "angle" "163"
+	spawn info_player_deathmatch "origin" "-3214.02 -375.13 411.11" "angle" "-144"
+
+end
+
+
+
+set_da_stuff_up:
+	
+	// Trucks Idle Sound
+	local.master= spawn scriptmaster
+	local.master aliascache opeltruck_snd_idle sound/vehicle/veh_truck_idle.wav soundparms 1.0 0.0 1.0 0.0 300 7000 auto loaded maps "m dm obj"
+
+	// Remove AI
+	removeclass actor
+	
+	// Make use of some things lying around
+	$temptruck2.origin = ( -3557.82 -974.37 395.01 ) 
+	$temptruck2.angles = ( 1 -130 0 )
+	$temptruck2 anim stop_wheels
+	$temptruck2 anim idlenolights
+	$temptruck2 thread selfstuff
+	
+	// Use concrete Truck clip for above Truck (to climb on etc)
+	$2ndtruckclip.origin = ( -3557.82 -974.37 397.01 )
+	$2ndtruckclip.angle = -130
+	$2ndtruckclip hide
+	
+	// Add an Allied vehicle over other metal clip
+	cache models/vehicles/gmctruck.tik
+	spawn models/vehicles/gmctruck.tik "targetname" "alliestruck"
+	$alliestruck.origin = ( -2787.00 -3289.00 58.00 )
+	$alliestruck.angles = ( 358.000488 200 0.263672 )
+	$alliestruck thread selfstuff	
+
+	// remove some things not needed
+	$hahaha remove
+	$truckclip remove 
+	$truckclip2 remove 
+	$deadtruck remove 
+	$explodersmashed remove
+	$door remove
+	$endshutterL2 remove
+	$endshutterR2 remove
+	$endshutterR remove
+	$endshutterL remove
+	$ending_save_player remove
+	$clippy notsolid
+	$toss remove
+	$newtruckclip remove
+	$temptruck1 remove
+	$ignoreme_trigger remove
+	$enemyspawnertrigger remove
+	$kill_roof remove
+	$endtrigger remove
+	$endingexploder remove
+	$jeep_trigger remove
+	$endtriggergun remove
+	$endarea remove
+	$mg42temptrigger remove
+	$intro_bazooka_target remove
+
+	
+end
+
+// Vehicle thread
+selfstuff:
+	
+	self loopsound opeltruck_snd_idle
+	self notsolid
+	self nodamage
+end
+
+
+// End some setthreads
+door_end_open:
+end
+barrel:
+end
+hint_reach:
+end
+standup:
+end
+ending_kill:
+end
+blowthedoor:
+end
+dooropen:
+end
+triggerend:
+end
+endthelevel:
+end
+captain_talk:
+end

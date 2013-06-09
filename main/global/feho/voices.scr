@@ -1,0 +1,436 @@
+/**
+ * -=[PN]=- Feho - 2011
+ *
+ * Joue un son aléatoire toutes les X secondes ou quand le joueur appuie sur utiliser + clic
+ *
+ * Exécuté par DMprecache.scr
+ */
+
+main:
+	
+	if (level.voices == 1)
+		end
+	
+	level.voices = 1
+	// local.master = spawn ScriptMaster
+
+	// Array of Allied voices
+	level.alliedVoices = makeArray
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		allied_sighted
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_attack_10j_1
+		dfr_alert_04h_1
+		dfr_alert_04h_1
+		dfr_directive_215a_2
+		dfr_directive_215a_3
+		dfr_directive_218c_1
+		// dfr_directive_218c_2 // Déployez-vous !
+		dfr_directive_217h_1
+		dfr_directive_276m_2
+		dfr_directive_187j_2
+		dfr_directive_194c_1
+		dfr_panic_33h_1
+		dfr_idle_11h_1
+		dfr_idle_20h_1
+		dfr_idle_27h_1
+		dfr_idle_28h_1
+		dfr_idle_31h_1
+		dfr_idle_35h_1
+		dfr_before_039j_2
+		dfr_before_117j_1
+		dfr_follow_02j_1
+		dfr_follow_01j_1
+		dfr_follow_03j_3
+		dfr_follow_04j_yell
+		dfr_follow_05j_1
+		dfr_over_10j_1
+		dfr_betrayed_02j_2
+		dfr_cover_01j_1
+		dfr_cover_01j_1
+		dfr_cover_01j_1
+		dfr_cover_01j_1
+		dfr_cover_01j_1
+		dfr_cover_01j_1
+		dfr_cover_01j_1
+		dfr_cover_01j_1
+		dfr_impressed_17j_1
+	endArray
+
+	// Array of German voices
+	level.axisVoices = makeArray
+		axis_sighted
+		axis_sighted
+		axis_sighted
+		den_curious1_10a
+		den_curious1_11b
+		den_curious1_08b
+		den_curious1_12d
+		den_curious1_09d
+		den_alarm_09a
+		den_alarm_09a
+		den_alarm_01c
+		den_alarm_01c
+		den_attack_075d
+		den_attack_074b
+		den_attack_074b
+		den_attack_072b
+		den_attack_072b
+		den_attack_040b
+		den_attack_060b
+		den_attack_001c
+		den_attack_002c
+		den_attack_003d
+		den_fear_30b
+		den_fear_30d
+		den_fear_11c
+		den_attack_007d
+		den_attack_010c
+		den_attack_022e
+		snd_den_fer_generic
+		Ang_004a
+		Ang_007a
+		snd_den_laugh_generic_a
+		snd_den_laugh_generic_c
+		snd_den_laugh_generic_d
+		den_disguise_057d
+		snd_den_papers_generic
+		den_disguise_042d
+		snd_den_handsup_generic
+	endArray
+
+	//====================================================================================
+	//====================================================================================
+	// NE RIEN DÉCOMMENTER, LES VOIX ON ÉTÉ TRANSFÉRÉES DANS LE FICHIER UBERDIALOG.SCR
+	//====================================================================================
+	//====================================================================================
+
+	//Allies
+	// local.master aliascache allied_sighted17 sound/dialogue/M4L1/A/dfr_generic_add03h2.wav soundparms 1.0 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted18 sound/dialogue/Generic/A/sighted/dfr_sighted_01f_1.wav soundparms 1.0 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted19 sound/dialogue/M1L2/A/dfr_generic_add05z2.wav soundparms 1.2 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted21 sound/dialogue/M3L2/a/dfr_generic_add04j4.wav soundparms 1.4 0.1 1.0 0.1 160 900 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted22 sound/dialogue/Multiplayer/a/AMdfr_m_01a.wav soundparms 1.2 0.1 1.0 0.1 160 900 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted23 sound/dialogue/Multiplayer/a/AMdfr_m_10h.wav soundparms 1.2 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted24 sound/dialogue/Multiplayer/a/AMdfr_v_02z.wav soundparms 1.2 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted25 sound/dialogue/Multiplayer/A/AMdfr_m_07h.wav soundparms 1.2 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted26 sound/dialogue/Generic/A/sighted/dfr_sighted_04c_2.wav soundparms 1.0 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted27 sound/dialogue/Generic/A/sighted/dfr_sighted_04h_2.wav soundparms 1.0 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted28 sound/dialogue/Generic/A/sighted/dfr_sighted_11h_1.wav soundparms 1.0 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted29 sound/dialogue/Generic/A/sighted/dfr_sighted_13h_1.wav soundparms 0.8 0.1 1.0 0.1 160 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted30 sound/dialogue/Generic/A/attack/dfr_attack_06e_1.wav soundparms 1.4 0.1 1.0 0.1 160 900 dialog loaded maps "m dm obj"
+	
+
+	// local.master alias allied_sighted1 sound/dialogue/Generic/A/attack/dfr_attack_04e.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Tuez-les !
+	// local.master alias allied_sighted2 sound/dialogue/Generic/A/attack/dfr_attack_09e.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Feu !
+	// local.master alias allied_sighted3 sound/dialogue/Generic/A/cover/dfr_cover_01h_1.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //A couvert !
+	// local.master alias allied_sighted16 sound/dialogue/M1L2/A/dfr_generic_add05z2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Faites gaffe !
+	// local.master alias allied_sighted6 sound/dialogue/M3L2/A/dfr_generic_add04j4.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Attention !
+	// local.master alias allied_sighted9 sound/dialogue/M4L1/A/dfr_generic_add13h2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Là-bas !
+
+	// local.master alias allied_sighted1 sound/dialogue/M3L1/A/dfr_scripted_M3L1_008a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Par les côtés, par les côtés, allez allez !
+	// local.master alias allied_sighted2 sound/dialogue/M3L1/A/dfr_scripted_M3L1_011f.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Déployez-vous !
+	// local.master alias allied_sighted3 sound/dialogue/M3L1/A/dfr_scripted_M3L1_039g.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Baisse la tête !
+	// local.master alias allied_sighted4 sound/dialogue/Generic/A/target/dfr_target_046j_2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Point d'appui ennemi
+	// local.master aliascache allied_sighted5 sound/dialogue/Multiplayer/a/AMdfr_m_10h.wav soundparms 1.2 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj" //Run for it !
+	// local.master alias allied_sighted6 sound/dialogue/M3L1/A/dfr_scripted_M3L1_094a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //A plat ventre !
+	// local.master alias allied_sighted7 sound/dialogue/M3L1/A/dfr_scripted_M3L1_097d.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Ouvrez l'oeil les gars !
+	// local.master alias allied_sighted8 sound/dialogue/M3L1/A/dfr_scripted_M3L1_098a_2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Attendez là, restez à couvert
+	// local.master alias allied_sighted9 sound/dialogue/M3L1/A/dfr_scripted_M3L1_102a_2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Allez on se magne, allez allez !
+	// local.master aliascache allied_sighted10 sound/dialogue/Multiplayer/a/AMdfr_m_08a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj" //Incoming !
+	// // Get ready to move in on my signal !
+	// local.master aliascache allied_sighted11 sound/dialogue/Multiplayer/a/AMdfr_c_07a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted12 sound/dialogue/Multiplayer/a/AMdfr_c_07j.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_manon_sighted1 sound/dialogue/Multiplayer/a/FRdfr_c_07n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Let's keep it up
+	// local.master aliascache allied_sighted14 sound/dialogue/Multiplayer/a/AMdfr_m_01a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted15 sound/dialogue/Multiplayer/a/AMdfr_m_01h.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted16 sound/dialogue/Multiplayer/a/AMdfr_m_01j.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_manon_sighted2 sound/dialogue/Multiplayer/a/FRdfr_m_01n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Get down !
+	// local.master aliascache allied_manon_sighted3 sound/dialogue/Multiplayer/a/FRdfr_m_02n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // I'm hurt
+	// local.master aliascache allied_manon_sighted4 sound/dialogue/Multiplayer/a/FRdfr_m_03n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // I'm hit
+	// local.master aliascache allied_manon_sighted5 sound/dialogue/Multiplayer/a/FRdfr_m_04n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Medic !
+	// local.master aliascache allied_manon_sighted6 sound/dialogue/Multiplayer/a/FRdfr_m_05n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // I need reinforcement
+	// local.master aliascache allied_sighted17 sound/dialogue/Multiplayer/a/AMdfr_m_06a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted18 sound/dialogue/Multiplayer/a/AMdfr_m_06h.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted19 sound/dialogue/Multiplayer/a/AMdfr_m_06j.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted20 sound/dialogue/Multiplayer/a/AMdfr_m_06z.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_manon_sighted7 sound/dialogue/Multiplayer/a/FRdfr_m_06n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // On the ???
+	// local.master aliascache allied_manon_sighted8 sound/dialogue/Multiplayer/a/FRdfr_m_07n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Incoming !
+	// local.master aliascache allied_sighted22 sound/dialogue/Multiplayer/a/AMdfr_m_08h.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted23 sound/dialogue/Multiplayer/a/AMdfr_m_08j.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted24 sound/dialogue/Multiplayer/a/AMdfr_m_08z.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted9 sound/dialogue/Multiplayer/a/FRdfr_m_08n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Grenade !
+	// local.master aliascache allied_manon_sighted9 sound/dialogue/Multiplayer/a/FRdfr_m_09n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Run for it
+	// local.master aliascache allied_manon_sighted10 sound/dialogue/Multiplayer/a/FRdfr_m_10n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Make a hole ??? 
+	// local.master aliascache allied_manon_sighted11 sound/dialogue/Multiplayer/a/FRdfr_m_19n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Sorry
+	// local.master aliascache allied_sighted25 sound/dialogue/Multiplayer/a/AMdfr_m_20a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted26 sound/dialogue/Multiplayer/a/AMdfr_m_20z.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_manon_sighted12 sound/dialogue/Multiplayer/a/FRdfr_m_20n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // I think he's ???
+	// local.master aliascache allied_manon_sighted13 sound/dialogue/Multiplayer/a/FRdfr_m_21n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Got any dry socks ?
+	// local.master aliascache allied_sighted28 sound/dialogue/Multiplayer/a/AMdfr_m_22a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted29 sound/dialogue/Multiplayer/a/AMdfr_m_22h.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_manon_sighted14 sound/dialogue/Multiplayer/a/FRdfr_m_23n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Think even for small miracles
+	// local.master aliascache allied_manon_sighted15 sound/dialogue/Multiplayer/a/FRdfr_m_22n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // I can't believe we're still alive
+	// local.master aliascache allied_sighted31 sound/dialogue/Multiplayer/a/AMdfr_m_24h.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_manon_sighted16 sound/dialogue/Multiplayer/a/FRdfr_m_24n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // Next step : Berlin
+	// local.master aliascache allied_sighted32 sound/dialogue/Multiplayer/a/AMdfr_m_26a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted33 sound/dialogue/Multiplayer/a/AMdfr_m_26h.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted34 sound/dialogue/Multiplayer/a/AMdfr_m_26j.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted35 sound/dialogue/Multiplayer/a/AMdfr_m_26z.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_manon_sighted17 sound/dialogue/Multiplayer/a/FRdfr_m_26n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // ???
+	// local.master aliascache allied_manon_sighted18 sound/dialogue/Multiplayer/a/FRdfr_m_27n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // See you in Berlin
+	// local.master aliascache allied_sighted36 sound/dialogue/Multiplayer/a/AMdfr_r_14a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted37 sound/dialogue/Multiplayer/a/AMdfr_r_14h.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted38 sound/dialogue/Multiplayer/a/AMdfr_r_14j.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_sighted39 sound/dialogue/Multiplayer/a/AMdfr_r_14z.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_manon_sighted19 sound/dialogue/Multiplayer/a/FRdfr_r_14n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // I've seen french farms girls shoot better
+	// local.master aliascache allied_manon_sighted20 sound/dialogue/Multiplayer/a/FRdfr_r_21n.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	
+	//Axis
+	// local.master alias axis_sighted01 sound/dialogue/Generic/G/attack/Ang_007a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted02 sound/dialogue/Generic/G/attack/Ang_007g.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted03 sound/dialogue/Generic/G/sighted/Alt_G_002b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted04 sound/dialogue/Generic/G/attack/Atk_G_004a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted05 sound/dialogue/Generic/G/attack/Atk_G_005b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted06 sound/dialogue/Generic/G/sighted/den_alarm_01e.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted07 sound/dialogue/Generic/G/attack/Atk_G_005e.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted08 sound/dialogue/Generic/G/attack/Atk_G_009b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted09 sound/dialogue/Generic/G/sighted/den_alarm_10a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted10 sound/dialogue/Generic/G/attack/Atk_G_016b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted11 sound/dialogue/Generic/G/attack/Atk_G_017e.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted12 sound/dialogue/Generic/G/attack/Atk_O_007e.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted13 sound/dialogue/Generic/G/attack/Atk_O_009g.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted14 sound/dialogue/Generic/G/attack/den_attack_026d.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted15 sound/dialogue/Generic/G/attack/den_attack_038b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted16 sound/dialogue/Generic/G/sighted/Sig_001b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted17 sound/dialogue/Generic/G/attack/den_attack_046a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted18 sound/dialogue/Generic/G/sighted/Sig_003b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted20 sound/dialogue/Generic/G/sighted/Sig_004b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted21 sound/dialogue/Generic/G/sighted/Sig_007a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted22 sound/dialogue/Generic/G/sighted/Sig_008a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted23 sound/dialogue/Generic/G/sighted/Sig_009a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted25 sound/dialogue/Generic/G/sighted/Sig_010a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted26 sound/dialogue/Generic/G/sighted/Sig_010b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted27 sound/dialogue/Generic/G/sighted/Sig_011b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted28 sound/dialogue/Generic/G/sighted/Sig_012b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted29 sound/dialogue/Generic/G/sighted/Sig_013b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted31 sound/dialogue/Generic/G/attack/den_attack_037b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted32 sound/dialogue/Generic/G/sighted/Sig_015a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted33 sound/dialogue/Generic/G/sighted/Sig_015b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted34 sound/dialogue/Generic/G/sighted/Sig_016b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted35 sound/dialogue/Generic/G/sighted/Sig_017b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted36 sound/dialogue/Generic/G/idle/Laf_001f.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_sighted37 sound/dialogue/Generic/G/idle/Laf_002b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master aliascache axis_sighted1 sound/dialogue/Multiplayer/g/GRden_m_08b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj train"
+	// local.master aliascache axis_sighted2 sound/dialogue/Multiplayer/g/GRden_m_08a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj train"
+	// local.master aliascache axis_sighted3 sound/dialogue/Multiplayer/g/GRden_m_07b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj train"
+	// local.master aliascache axis_sighted4 sound/dialogue/Multiplayer/g/GRden_m_10a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj train"
+	// local.master aliascache axis_sighted5 sound/dialogue/Multiplayer/g/GRden_m_10b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj train"
+	// local.master aliascache axis_sighted6 sound/dialogue/Multiplayer/g/GRden_m_22a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj train"
+	// local.master aliascache axis_sighted7 sound/dialogue/Multiplayer/g/GRden_m_22i.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj train"
+
+	// // Get ready to move in on my signal !
+	// local.master aliascache axis_sighted8 sound/dialogue/Multiplayer/g/GRden_c_07a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache axis_sighted9 sound/dialogue/Multiplayer/g/GRden_c_07i.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// // See you in America
+	// local.master aliascache axis_sighted10 sound/dialogue/Multiplayer/g/GRden_r_14a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache axis_sighted11 sound/dialogue/Multiplayer/g/GRden_r_14b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache axis_sighted12 sound/dialogue/Multiplayer/g/GRden_r_14c.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache axis_sighted13 sound/dialogue/Multiplayer/g/GRden_r_14d.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache axis_sighted14 sound/dialogue/Multiplayer/g/GRden_r_14i.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	
+	// //***Axis kills***
+	// local.master alias axis_gotone01 sound/dialogue/Generic/G/attack/Vic_003f.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_gotone02 sound/dialogue/Generic/G/attack/Vic_005b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+	// local.master alias axis_gotone03 sound/dialogue/Generic/G/attack/Vic_009b.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj train"
+
+	// //***Allied kills***
+	// local.master aliascache allied_gotone01 sound/dialogue/Generic/A/kill/dfr_kill_002h_3.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_gotone02 sound/dialogue/Generic/A/kill/dfr_kill_007e_2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	// local.master aliascache allied_gotone03 sound/dialogue/Generic/A/kill/dfr_kill_005a_2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj"
+	
+	thread random_player "allies"
+	thread random_player "axis"
+	
+	while (1) 
+	{
+		local.nbPlayers = $player.size
+
+		for (local.i = 1 ; local.i <= local.nbPlayers ; local.i++) 
+		{
+			$player[local.i] thread sighted
+		}
+
+		wait 0.04
+	}
+	
+end
+
+sighted:
+	
+	if (self.useheld && self.fireheld && self.can_speak != 0 && self.needrevive != 1)
+	{
+		self thread play_a_sound
+		self.can_speak = 0
+		wait 1
+		self.can_speak = 1
+	}
+	
+end
+
+// Pioche un joueur aléatoirement et joue un son aléatoire s'il a un joueur en vue
+random_player local.team:
+
+	while (1)
+	{
+		local.nbPlayers = $player.size
+
+		if (local.nbPlayers > 0)
+		{
+			local.randomPlayer = $player[randomint(local.nbPlayers) + 1]
+
+			// La boucle se termine seulement une fois qu'un joueur pris au hasard est dans la team local.team
+			while ($player.size > 0 && local.randomPlayer && local.randomPlayer.dmteam != local.team)
+			{
+				local.randomPlayer = $player[randomint(local.nbPlayers) + 1]
+				waitframe
+			}
+
+			// Parcourt tous les joueurs
+			for (local.i = 1 ; local.i <= local.nbPlayers ; local.i++) 
+			{
+				// Si randomPlayer peut voir le joueur et que les 2 sont vivants, le son est joué
+				if (isAlive $player[local.i] && local.randomPlayer && isAlive local.randomPlayer && local.randomPlayer cansee $player[local.i] 140 4000 && local.randomPlayer.can_speak != 0)
+				{
+					local.randomPlayer thread play_a_sound
+					break
+				}
+			}
+		}
+
+		// Plus il y a de joueurs, plus le wait est court
+		if (local.nbPlayers < 3) {
+			wait (randomint(21) + 200)
+		} else if (local.nbPlayers < 5) {
+			wait (randomint(11) + 50)
+		} else if (local.nbPlayers < 7) {
+			wait (randomint(6) + 30)
+		} else {
+			wait (randomint(6) + 20)
+		}
+	}
+
+end
+
+// Joue un son aléatoire différent selon la team et le skin du joueur
+play_a_sound:
+
+	// exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound")
+
+	if (self.dmteam == "allies")
+	{
+		switch (self.model)
+		{
+			case "models/player/american_army.tik":
+				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_army_sighted")
+				self playsound allied_army_sighted
+				break
+
+			case "models/player/allied_manon.tik":
+				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_manon_sighted")
+				self playsound allied_manon_sighted
+				break
+
+			case "models/player/allied_airborne.tik":
+				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_airborne_sighted")
+				self playsound allied_airborne_sighted
+				break
+
+			case "models/player/allied_pilot.tik":
+			case "models/player/american_ranger.tik":
+				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_pilot_sighted")
+				self playsound allied_pilot_sighted
+				break
+
+			default:
+				local.rand = randomint(level.alliedVoices.size) + 1
+				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound " + level.alliedVoices[local.rand][1])
+				self playsound level.alliedVoices[local.rand][1]
+		}
+	}
+	else if (self.dmteam == "axis")
+	{
+		switch (self.model)
+		{
+			case "models/player/german_worker.tik":
+				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound german_worker")
+				local.rand = randomint(7)
+
+				if (local.rand == 0 || local.rand == 1)
+				{
+					self playsound snd_den_laugh_generic_a
+				}
+				else if (local.rand == 2 || local.rand == 3)
+				{
+					self playsound snd_den_laugh_generic_c
+				}
+				else if (local.rand == 4 || local.rand == 5)
+				{
+					self playsound snd_den_laugh_generic_d
+				}
+				else if (local.rand == 6)
+				{
+					self playsound axis_sighted11
+				}
+				break
+
+			default:
+				local.rand = randomint(level.axisVoices.size) + 1
+				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound " + level.axisVoices[local.rand][1])
+				self playsound level.axisVoices[local.rand][1]
+		}
+	}
+
+end

@@ -1,0 +1,46 @@
+/*
+Feho - 2011
+
+2 modes de cadence pour le BAR + bipied
+
+Exécuté par nagle_aa_torso.st
+*/
+
+main:
+	if (self.useheld == 1)
+		end
+
+	self weaponcommand dual targetname getme
+	local.weapon = $getme
+	local.weapon.targetname = ""
+
+	self.cadence++
+	self playsound bar_snd_noammo
+
+	if (self.cadence == 2) 
+	{
+		self weaponcommand dual dmfiredelay 0.16
+		self iprint "Rate of fire : slow (300 rpm)"
+		self.cadence = 0
+	
+		if (local.weapon.has_bipod != 1) 
+		{
+			local.weapon.podmodel 		= "models/statweapons/mg42_bipod_nonstatic.tik"
+			local.weapon.podtag 		= "tag_barrel"
+			local.weapon.podoffset 		= ( -2 -1 0)
+			local.weapon.podangles		= (193 0 0)
+		
+			// add a bipod for BAR
+			local.weapon.bipod = spawn Animate model local.weapon.podmodel
+			local.weapon.bipod.scale = 0.7
+			local.weapon.bipod attach local.weapon local.weapon.podtag 1 local.weapon.podoffset
+			local.weapon.bipod.angles = local.weapon.podangles
+			local.weapon.has_bipod = 1
+		}
+	}
+	else 
+	{
+		self weaponcommand dual dmfiredelay 0.12
+		self iprint "Rate of fire : fast (400 rpm)"
+	}
+end

@@ -1,0 +1,66 @@
+main:
+
+	if(self.kick)
+		end
+
+	self.kick = 1
+	local.origin = self.origin
+	local.id = spawn trigger_use origin local.origin
+	local.id glue self
+	local.id setsize ( -50 -50 -50 ) ( 50 50 50 )
+	local.id.nade = self
+	local.id setthread KickNade
+	
+	// Feho -------->
+	local.hit_nade = spawn trigger_multiple "spawnflags" 128 "targetname" "hit_nade"
+	local.hit_nade glue self
+	local.hit_nade setsize ( -4 -4 -4 ) ( 4 4 4 )
+	local.hit_nade.nade = self
+	local.hit_nade setthread shot
+
+	wait 3.8
+
+	// Règle en partie le bug des grenades qui ne font aucun dégât
+	self.velocity = (0 0 0)
+	//<---------------
+
+	while(self != NULL)
+		waitframe
+
+	if(local.id != NULL) {
+		local.id remove
+		local.hit_nade remove //feho
+	}
+
+end
+
+KickNade:
+	local.player = parm.other
+	// if (local.player.rankbonus["nades"] != 1 && level.running_ranking == 1)
+			// end
+			
+	local.randomNbr = randomint(350)+200
+	self nottriggerable
+
+	local.angles = angles_toforward local.player.angles
+	self.nade.velocity = local.angles * 600 + ( 0 0 local.randomNbr ) //450
+	local.player iprint "Good Kick!"
+	// local.player addkills 10
+	// pour re-kick la nade
+	wait .2
+	self triggerable
+	// if(self != NULL)
+		// self remove
+		
+end
+	
+shot:
+	local.player = parm.other
+	
+	self nottriggerable
+	self.nade.velocity =  ( 0 0 80 ) + local.player.forwardvector * 500 
+	wait .2
+
+	if (self)
+		self triggerable
+end

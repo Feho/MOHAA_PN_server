@@ -1,0 +1,725 @@
+//
+// M6L2A - The Communications Blackout
+
+//  
+// 
+// 
+
+
+
+
+main: 
+
+	setcvar "timelimit" "15"
+	
+	// local.x = randomint(2)
+
+	// if (local.x == 0)
+	// {
+		// setcvar "g_gametype" "1"
+	// }
+	// else
+	// {
+		// setcvar "g_gametype" "2"
+	// }
+	
+	//setcvar "g_gametype" "2" // doesn't work with Domination restarts :'(
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else //if ((getcvar("g_gametype") == "2"))
+	{
+	waitthread tdmtype  
+	end
+	}
+	// else
+	// {
+		// waitthread objectivethread
+	// }
+	
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"     "Map Name: M6L2A" 
+	setcvar "g_obj_alliedtext2"            "The"
+	setcvar "g_obj_alliedtext3"  "Communications Blackout"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing6a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "Team-Match"
+		// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
+	waitthread tdm_spawns
+	
+	level.niceview = spawn info_player_deathmatch origin ( -2578.32 -144.10 390.72 ) angles ( 9.00 -170.77 0.00 )//a nicer start view :)
+	
+///////////////////////////
+	level waittill prespawn
+///////////////////////////
+
+	exec global/DMprecache.scr
+
+	$world farplane 4000
+	$world farplane_color ( .1 .1 .12 )
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m6l2a
+	
+	
+	//Domination TDM
+	// exec global/dom/TDM/flag1.scr ( 1162.06 -3089.28 160.13 ) -90 1
+	// exec global/dom/TDM/flag2.scr ( -2621 -3207 48.12 ) 90 2
+	// exec global/dom/TDM/flag3.scr ( -3042.014 -263.333 48.13 ) 355 3
+	// exec global/dom/TDM/flag4.scr ( -1336 -2445 -47.91 ) -90 4
+	// exec global/dom/flag5.scr ( 1264.875 624.875 304.125 ) 217 5
+	// exec global/dom/TDM/main.scr	
+	
+	
+	//Sorrids ladders
+	// exec global/ladderspawn.scr ( -3172 -1214 8 ) 208 metal -90
+	// exec global/ladderspawn.scr ( -2835 -1215 0 ) 195 metal 90
+	// exec global/ladderspawn.scr ( 60 -2308 120 ) 180 metal 180
+	// exec global/ladderspawn.scr ( -829 -2450 -288 ) 324 wood 90
+	// exec global/ladderspawn.scr ( -2438 700 0.13 ) 400 wood -180 // Mirador
+	// exec global/ladderspawn.scr ( -3633 -1132 8.13 ) 400 wood 0 // Mirador
+
+	// Accès aux miradors
+	exec global/AIR_TeleModel.scr ( -2438 700 20.13 ) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleTrig.scr ( -2438 700 20.13 ) ( -2438 577 400.13 ) NIL 1
+	exec global/AIR_TeleModel.scr ( -3633 -1132 28.13 ) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleTrig.scr ( -3633 -1132 28.13 ) ( -3633 -1027 408.13 ) NIL 1 
+	// Au ca soù un joueur tombe dans la rivère
+	exec global/AIR_TeleModel.scr ( -829 -2450 -268 ) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleTrig.scr ( -829 -2450 -268 ) ( -578 -2458 -60 ) NIL 1
+
+	// Caisses pour passer au dessus de la grille
+	local.fix1 = spawn script_model "targetname" "caisse1"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( -3005 -1188 94 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model "targetname" "caisse1"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( -3005 -1168 47 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model "targetname" "caisse1"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( -3005 -1148 0 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model "targetname" "caisse1"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( -2837 -1280 8 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model "targetname" "caisse1"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( -2837 -1260 55 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model "targetname" "caisse1"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( -2837 -1240 102 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model "targetname" "caisse1"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( 95 -2307 120 )
+	local.fix1.angles = ( 00.00 180.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model "targetname" "caisse1"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( 75 -2307 167 )
+	local.fix1.angles = ( 00.00 180.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+	
+	local.mur = spawn script_object
+	local.mur.origin = ( -2266 845 281)
+	local.mur.angle = -90
+	local.mur setsize ( -1 -380 -106) ( 1 10 500)
+	local.mur solid
+
+	local.mur = spawn script_object
+	local.mur.origin = ( -3823 -855 281)
+	local.mur.angle = 0
+	local.mur setsize ( -1 -553 -106) ( 1 10 500)
+	local.mur solid
+	
+	// Portable 30 cals
+	exec models/create_guns.scr ( -1335 -2895 -55.88 )
+	
+	exec global/DETONATOR_SOUND.scr
+	exec global/RB_DETONATORS.scr::DETONATOR ( -1326 -862 89 ) ( 0 0 0 )
+	exec global/RB_DETONATORS.scr::DETONATOR ( -1094 -1329 -127.88 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -974 -1329 -127.88 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -2578.76 -3448.59 8.13 ) ( 0 0 0 )
+
+	// exec global/feho/SHIELDS.scr::SHIELD ( -1319.10 -1652.07 -111.88 ) ( 0 0 0 )
+	
+////////////////////////	
+	level waittill spawn
+////////////////////////	
+	
+	level.squadmaker_areaname 	= "in the village"
+	level.squadmaker_config		= "winterwar"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	// Spotlight
+	local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -3545 -1007 453)
+	local.s1 angles ( 0 180 0 )
+	local.s1 targetname myspot
+	local.s1.color = ( 1 1 1 )
+	local.s1.health = 500
+	
+	local.s2 = spawn script_model model miscobj/searchlightbase.tik origin ( -2440 503 453)
+	local.s2 angles ( 0 -90 0 )
+	local.s2 targetname myspot
+	local.s2.color = ( 1 1 1 )
+	local.s2.health = 500
+	
+	exec global/player_spotlight.scr myspot
+	
+	// unlock some doors with triggers - Feho
+	exec global/fake_door.scr ( -2295 -2495 28 ) ( -1906 -2526 -54 )
+	exec global/fake_door.scr ( -1935 -2526 -35 ) ( -2310 -2495 10 )
+	exec global/fake_door.scr ( 1365 -3280 142 ) ( 1264 -3320 137 ) 1
+	exec global/fake_door.scr ( 1264 -3296 158 ) ( 1365 -3260 122 ) 1
+	
+	/////////////////////////DOOR
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1365 -3280 182 )
+	local.static.angles = ( 0 180 90 )
+	local.static.scale = 4
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1264 -3296 198 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 4
+	
+	waitthread setup_game
+	
+	thread music
+
+	//thread Map_Guard
+
+
+	level.clockside = kills
+
+end
+
+	
+
+ffatype:
+
+	
+	setcvar "g_obj_alliedtext1"     "Map Name: M6L2A" 
+	setcvar "g_obj_alliedtext2"            "The"
+	setcvar "g_obj_alliedtext3"  "Communications Blackout"
+
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing6a.tga" 
+	
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	waitthread ffa_spawns
+
+	
+	level waittill prespawn
+	exec global/DMprecache.scr
+	
+	$world farplane 40000
+	
+	exec global/ambient.scr m6l2a
+	
+	//Sorrids ladders
+	exec global/ladderspawn.scr ( -3172 -1214 8 ) 208 metal -90
+	exec global/ladderspawn.scr ( -2835 -1215 0 ) 195 metal 90
+	exec global/ladderspawn.scr ( 60 -2308 120 ) 180 metal 180
+	exec global/ladderspawn.scr ( -829 -2450 -288 ) 324 wood 90
+	
+	// Portable 30 cals
+	exec models/create_guns.scr ( -1684 -2339 -65 )
+	
+	exec global/DETONATOR_SOUND.scr
+	exec global/RB_DETONATORS.scr::DETONATOR ( -1326 -862 89 ) ( 0 0 0 )
+	exec global/RB_DETONATORS.scr::DETONATOR ( -1094 -1329 -127.88 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -974 -1329 -127.88 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -2578.76 -3448.59 8.13 ) ( 0 0 0 )
+	
+	level waittill spawn
+
+	waitthread setup_game
+
+	
+	//thread Map_Guard
+
+	level.clockside = kills
+
+end
+
+/*
+objectivethread:
+
+
+
+	 setcvar "g_gametype" "4"
+
+	 setcvar "g_obj_alliedtext1" "- Capture all the flags" 
+	 setcvar "g_obj_alliedtext2" " "
+	 setcvar "g_obj_alliedtext3" " "
+
+	 setcvar "g_obj_axistext1" "- Capture all the flags"
+	 setcvar "g_obj_axistext2" " "
+	 setcvar "g_obj_axistext3" " "
+	 setcvar "g_obj_axistext4" " "
+	 
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	waitthread tdm_spawns
+
+	////////////////////////
+	level waittill prespawn
+	///////////////////////
+	
+	exec global/DMprecache.scr
+
+	$world farplane 40000
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m6l2a
+
+	// local.master = spawn scriptmaster
+	// local.master alias stay sound/dialogue/m3l1/A/dfr_scripted_M3L1_020e.wav soundparms 2.0 4.0 1.0 0.0 0.0 6000 dialog streamed subtitle "Stay down!" maps "m dm obj"
+	// local.master alias ole sound/dialogue/m2l2/g/den_m2l2_241a.wav soundparms 1.0 0.0 1.0 0.0 160 500 dialog streamed subtitle "Bomb!" maps "m dm obj" 
+	 
+
+	//Domination
+	exec global/dom/flag1.scr ( 1162.06 -3089.28 160.13 ) -90 1
+	exec global/dom/flag2.scr ( -2621 -3207 48.12 ) 90 2
+	exec global/dom/flag3.scr ( -3042.014 -263.333 48.13 ) 355 3
+	exec global/dom/flag4.scr ( -1336 -2445 -47.91 ) -90 4
+	// exec global/dom/flag5.scr ( 1264.875 624.875 304.125 ) 217 5
+	exec global/dom/main.scr	
+	
+	
+	//Sorrids ladders
+	exec global/ladderspawn.scr ( -3172 -1214 8 ) 208 metal -90
+	exec global/ladderspawn.scr ( -2835 -1215 0 ) 195 metal 90
+	exec global/ladderspawn.scr ( 60 -2308 120 ) 180 metal 180
+	exec global/ladderspawn.scr ( -829 -2450 -288 ) 324 wood 90
+	
+	// Portable 30 cals
+	exec models/create_guns.scr ( -1335 -2895 -55.88 )
+	
+	exec global/DETONATOR_SOUND.scr
+	exec global/RB_DETONATORS.scr::DETONATOR ( -1326 -862 89 ) ( 0 0 0 )
+	exec global/RB_DETONATORS.scr::DETONATOR ( -1094 -1329 -127.88 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -974 -1329 -127.88 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -2578.76 -3448.59 8.13 ) ( 0 0 0 )
+	
+	/////////////////////
+	level waittill spawn
+	////////////////////
+
+
+	level.squadmaker_areaname 	= "in the village"
+	level.squadmaker_config		= "winterwar"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	waitthread setup_game
+
+	//thread Map_Guard
+
+
+	level.clockside = kills
+	
+	// set the parameters for this round/wave based match
+	level.dmrespawning = 1 // 1 **wave based** or 0 **round based**
+	level.dmroundlimit = 10 // round time limit in minutes
+
+
+	level waittill roundstart
+
+
+	//waitthread setupobj1
+
+end
+*/
+
+//------------------------------------------------------------------------
+
+
+tdm_spawns:
+
+ 
+	removeclass actor
+	removeclass ammoentity
+	
+
+	// Stage 1 Axis
+	spawn info_player_axis "origin" "-4141.45 -3497.07 9.41" "angle" "30" "targetname" "X1"
+	spawn info_player_axis "origin" "-3522.60 -3058.69 12" "angle" "-30" "targetname" "X2"
+	spawn info_player_axis "origin" "-2806 -3645 13" "angle" "110" "targetname" "X3"
+	spawn info_player_axis "origin" "-2359.70 -2541.93 12" "angle" "-124" "targetname" "X4"
+	spawn info_player_axis "origin" "-3080.88 -2451.72 13" "angle" "-28" "targetname" "X5" 
+
+	spawn info_player_axis "origin" "-1159 -4637 -160" "angle" "90" "targetname" "X6"
+	spawn info_player_axis "origin" "-163 -3759 -140" "angle" "-180" "targetname" "X7"
+	spawn info_player_axis "origin" "-1886 -2707 -64" "angle" "26" "targetname" "X8"
+	spawn info_player_axis "origin" "-86 -441 116" "angle" "-108" "targetname" "X9"
+	spawn info_player_axis "origin" "316 -1418 116" "angle" "180" "targetname" "X10"
+
+	spawn info_player_axis "origin" "1123 -3215.87 124" "angle" "90" "targetname" "X11"
+	spawn info_player_axis "origin" "-340 -615 124" "angle" "-92" "targetname" "X12"
+	spawn info_player_axis "origin" "-1617.36 -312.45 52" "angle" "-90" "targetname" "X13"
+	spawn info_player_axis "origin" "-3959 -276 4" "angle" "0" "targetname" "X14"
+	spawn info_player_axis "origin" "-3826 33 4" "angle" "0" "targetname" "X15"
+
+
+
+	// Stage 1 Allies
+	spawn info_player_allied "origin" "-4141.45 -3497.07 9.41" "angle" "30" "targetname" "A1"
+	spawn info_player_allied "origin" "-3522.60 -3058.69 12" "angle" "-30" "targetname" "A2"
+	spawn info_player_allied "origin" "-2806 -3645 13" "angle" "110" "targetname" "A3"
+	spawn info_player_allied "origin" "-2359.70 -2541.93 12" "angle" "-124" "targetname" "A4"
+	spawn info_player_allied "origin" "-3080.88 -2451.72 13" "angle" "-28" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "-1159 -4637 -160" "angle" "90" "targetname" "A6"
+	spawn info_player_allied "origin" "-163 -3759 -140" "angle" "-180" "targetname" "A7"
+	spawn info_player_allied "origin" "-1886 -2707 -64" "angle" "26" "targetname" "A8"
+	spawn info_player_allied "origin" "-86 -441 116" "angle" "-108" "targetname" "A9"
+	spawn info_player_allied "origin" "316 -1418 116" "angle" "180" "targetname" "A10"
+
+	spawn info_player_allied "origin" "1123 -3215.87 124" "angle" "90" "targetname" "A11"
+	spawn info_player_allied "origin" "-340 -615 124" "angle" "-92" "targetname" "A12"
+	spawn info_player_allied "origin" "-1617.36 -312.45 52" "angle" "-90" "targetname" "A13"
+	spawn info_player_allied "origin" "-3959 -276 4" "angle" "0" "targetname" "A14"
+	spawn info_player_allied "origin" "-3826 33 4" "angle" "0" "targetname" "A15"
+
+
+	/*
+	
+	//  Player Blocker
+	spawn script_object "targetname" "blocker1" 
+	$blocker1.origin = ( 339.17 1365.41 -543.63 )
+	$blocker1 setsize ( -30 -1 -1 ) ( 30 1 150 )
+	$blocker1 solid
+	$blocker1 nodamage
+
+	spawn trigger_multiple "targetname" "blocktrig"
+	$blocktrig.origin = ( 339.17 1365.41 -543.63 )
+	$blocktrig setsize ( -30 -5 -1 ) ( 30 5 150 )
+	$blocktrig message "Wrong Way Soldier - Turn Around"
+	
+	*/
+
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+	
+end
+
+
+ffa_spawns: 
+
+	removeclass actor
+	removeclass ammoentity
+
+	// spawn info_player_deathmatch "origin" "1958.12 -2967.14 328.13" "angle" "-137"
+	// spawn info_player_deathmatch "origin" "63.13 -2344.87 120.13" "angle" "16"
+	// spawn info_player_deathmatch "origin" "39.31 -864.87 120.13" "angle" "129"
+	// spawn info_player_deathmatch "origin" "-858.65 -1279.13 -119.88" "angle" "-109"
+	// spawn info_player_deathmatch "origin" "136.87 -2008.13 -87.88" "angle" "-142"
+
+	// spawn info_player_deathmatch "origin" "356.87 -3331.13 -127.88" "angle" "-157"
+	// spawn info_player_deathmatch "origin" "1456.86 -3568.31 136.13" "angle" "139"
+	// spawn info_player_deathmatch "origin" "-655.13 -3352.87 -63.88" "angle" "125"
+	// spawn info_player_deathmatch "origin" "-1517.08 -4683.96 -167.88" "angle" "85"
+	// spawn info_player_deathmatch "origin" "-2761.41 -3736.87 8.13" "angle" "118"
+
+	// spawn info_player_deathmatch "origin" "-3930.31 -3025.76 4.13" "angle" "-77"
+	// spawn info_player_deathmatch "origin" "-3502.88 -2470.87 8.13" "angle" "31"
+	// spawn info_player_deathmatch "origin" "-2263.69 -1847.96 8.13" "angle" "-177"
+	// spawn info_player_deathmatch "origin" "-3992.87 105.53 0.13" "angle" "-7"
+	// spawn info_player_deathmatch "origin" "-1255.13 -527.13 57.56" "angle" "-140"
+	
+	spawn info_player_deathmatch "origin" "-4141.45 -3497.07 9.41" "angle" "30" "targetname" "A1"
+	spawn info_player_deathmatch "origin" "-3522.60 -3058.69 12" "angle" "-30" "targetname" "A2"
+	spawn info_player_deathmatch "origin" "-2806 -3645 13" "angle" "110" "targetname" "A3"
+	spawn info_player_deathmatch "origin" "-2359.70 -2541.93 12" "angle" "-124" "targetname" "A4"
+	spawn info_player_deathmatch "origin" "-3080.88 -2451.72 13" "angle" "-28" "targetname" "A5" 
+
+	spawn info_player_deathmatch "origin" "-1159 -4637 -160" "angle" "90" "targetname" "A6"
+	spawn info_player_deathmatch "origin" "-163 -3759 -140" "angle" "-180" "targetname" "A7"
+	spawn info_player_deathmatch "origin" "-1886 -2707 -64" "angle" "26" "targetname" "A8"
+	spawn info_player_deathmatch "origin" "-86 -441 116" "angle" "-108" "targetname" "A9"
+	spawn info_player_deathmatch "origin" "316 -1418 116" "angle" "180" "targetname" "A10"
+
+	spawn info_player_deathmatch "origin" "1123 -3215.87 124" "angle" "90" "targetname" "A11"
+	spawn info_player_deathmatch "origin" "-340 -615 124" "angle" "-92" "targetname" "A12"
+	spawn info_player_deathmatch "origin" "-1617.36 -312.45 52" "angle" "-90" "targetname" "A13"
+	spawn info_player_deathmatch "origin" "-3959 -276 4" "angle" "0" "targetname" "A14"
+	spawn info_player_deathmatch "origin" "-3826 33 4" "angle" "0" "targetname" "A15"
+
+	
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+end
+
+
+
+setup_game:
+
+	$explodersmashed remove
+	$exploderchunk remove
+
+	//level.farplaneswitching = 0 	
+	//level.farplane = 1600
+	//level.farplane_color = ".1 .1 .2"
+
+	//$world farplane level.farplane
+	//$world farplane_color level.farplane_color
+
+	$objective1_fireball1 remove
+	$objective1_fireball2 remove
+	$objective1_fireball3 remove
+	$objective1_fireball4 remove
+	$objective1_fireball5 remove
+	$objective1_fireball6 remove
+	$objective1_fireball7 remove
+
+	$cp1_bomb1 remove
+	$cp1_bomb2 remove
+	$cp1_bomb3 remove
+	$cp2_bomb1 remove
+	$cp2_bomb2 remove
+	$cp2_bomb3 remove
+
+	$health1 remove
+	$health2 remove
+	$health3 remove
+	$health4 remove
+	$health5 remove
+	$health6 remove
+	
+end
+
+
+
+piano:
+	$pianospeaker playsound moh_piano
+end
+
+cello:
+	$cellospeaker playsound moh_cello
+end
+
+
+locked_gate_sound:
+	self playsound gate_metal_locked
+end
+
+locked_iron_gate_sound:
+	self playsound gate_iron_locked
+end
+
+
+
+
+// Under Map Protection - Probably not needed in this map - not threaded to/coords not edited.
+Map_Guard:
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( -1925.47 -2150.12 1536.13 ) 
+	$Killah setsize ( -9999 -9999 -900 ) ( 9999 9999 2 )
+	$Killah setthread die
+	
+end
+
+die:
+	
+	iprintln "*** - Map_Guard Triggered - ***"
+	local.punk = parm.other
+	if!(isalive local.punk)
+	{
+	end
+	}
+	local.punk thread spawn_fx2 models/animate/explosion_bridge.tik 
+end
+
+
+
+spawn_fx2 local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp.scale = .3
+	local.temp playsound gas_explode1
+	local.temp anim start
+	radiusdamage local.temp 120 120
+	wait 3
+	local.temp remove
+end
+
+
+// End some labels
+alarm_player_reset:
+end
+farplane_near:
+end
+farplane_far:
+end
+cp2_bombplant3:
+end
+cp2_bombplant2:
+end
+cp2_bombplant1:
+end
+cp1_bombplant3:
+end
+cp1_bombplant2:
+end
+m6l2a_changelevel:
+end
+cp1_bombplant1:
+end
+scene3_spawn1_terminate:
+end
+objective2_alarm:
+end
+alarm_control:
+end
+
+
+// Cobs
+
+music:
+
+	local.STUFFSTRING = "tmstart sound/music/mus_01a_suspense.mp3; seta s_musicvolume 0.2" // One shot music
+
+	while(1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			local.p = $player[local.i]
+			if(local.p.music_handled != 1)
+			{
+				local.p.music_handled = 1
+				local.p stufftext local.STUFFSTRING
+			}
+		}
+		waitframe
+	}
+
+end

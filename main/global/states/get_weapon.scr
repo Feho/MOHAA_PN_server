@@ -1,0 +1,161 @@
+/*
+======================================================
+*** AIRborne; Weapon Handler StateScript for MoH:AA
+======================================================
+by Sor
+Version: v1.2
+-----------------------------------
+--- INFO:
+
+1) WEAPONNAME: <player_alias>.current_weapon
+
+ "StG44"			"UNARMED"			"BAR"	
+ "MP40"			"Binoculars"		"Thompson SMG"
+ "Panzerschreck"		"Shotgun"			"Bazooka"
+ "Mauser KAR98 Rifle"					"M1 Garand"
+ "KAR98 Sniper Rifle"					"Springfield '03 Sniper"
+ "Walther P38"		"Silenced Pistol"		"Colt 45"
+ "Stielhandgranate"					"Frag Grenade"
+
+2) WEAPONCLASS: <player_alias>.current_weaponclass
+
+ pistol			grenade
+ mg				shotgun
+ smg				none
+ rifle			heavy
+
+3) WEAPONMODEL: <player_alias>.current_weapon_model
+
+ The string returned, contains the full weaponpath (with "models/")
+
+-------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+
+main local.name local.model local.class:
+
+
+	//feho
+	//--------------->
+	if ((getcvar("ranksys")) == "0")
+	{
+		level.running_ranking = 0
+		end
+	}
+	//<---------------
+		
+	if (self != NULL)
+	{
+		if (self.getweap != 1)
+		{
+			self.getweap = 1
+			self.current_weapon = local.name
+			self.current_weaponclass = local.class
+			self.current_weapon_model = local.model
+
+			if (self.rankbonus["speed"] == 1 && level.running_ranking == 1 && self.speed_bonus[local.model] != 1 && self.sprt_has_ammo_belt != 1 )
+			{
+				self weaponcommand dual dmmovementspeed 1.10
+				self.speed_bonus[local.model] = 1
+			}
+
+			if (self.rankbonus["damage"] == 1 && level.running_ranking == 1 && self.damage_bonus[local.model] != 1 ) // bonus dommages
+			{
+				if (local.name == "Thompson SMG") {
+					self weaponcommand dual dmbulletdamage 111
+				}
+				else if (local.name == "BAR") {
+					self weaponcommand dual dmbulletdamage 124
+				}
+				else if (local.name == "Colt 45") {
+					self weaponcommand dual dmbulletdamage 98
+				}
+				else if (local.name == "Mauser KAR98 Rifle") {
+					self weaponcommand dual dmbulletdamage 138
+				}
+				else if (local.name == "KAR98 Sniper Rifle") {
+					self weaponcommand dual dmbulletdamage 138
+				}
+				else if (local.name == "M1 Garand") {
+					self weaponcommand dual dmbulletdamage 135
+				}
+				else if (local.name == "MP40") {
+					self weaponcommand dual dmbulletdamage 89
+				}
+				else if (local.name == "StG44") {
+					self weaponcommand dual dmbulletdamage 98
+				}
+				else if (local.name == "Walther P38") {
+					self weaponcommand dual dmbulletdamage 78
+				}
+				else if (local.name == "Shotgun") {
+					self weaponcommand dual dmbulletdamage 20
+				}
+				else if (local.name == "Silenced Pistol") {
+					self weaponcommand dual dmbulletdamage 78
+				}
+				else if (local.name == "Springfield '03 Sniper") {
+					self weaponcommand dual dmbulletdamage 138
+				}
+				
+				self.damage_bonus[local.model] = 1
+			}
+			
+			// if (self.medic_sugo != 1)
+			// {
+				// self.medic_sugo = 1
+				// self thread medic_sugo
+			// }
+			// if (self.current_weapon == "M1 Garand" || self.current_weapon == "Mauser KAR98 Rifle")
+			// {
+				// self exec global/medicmod.scr
+			// }
+			
+			//self exec global/medicmod.scr::medic_start self.current_weapon
+			
+			waitframe
+			local.weapon_limiter = level.AIR["weapon_limiter"]
+			if (local.weapon_limiter == 1)
+			{
+				self waitexec global/states/weapon_limiter.scr::check local.model
+			}
+		
+			wait 0.3
+			self.getweap = 0
+			
+			if (local.name == "UNARMED")
+			{
+				self.hasweapon = 0
+			}
+			else
+			{
+				self.hasweapon = 1
+			}
+		}
+
+	}
+end

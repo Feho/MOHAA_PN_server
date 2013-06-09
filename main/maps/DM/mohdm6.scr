@@ -1,0 +1,81 @@
+// STALINGRAD
+// ARCHITECTURE: ZIED, POWZER
+// SCRIPTING: POWZER
+
+main:
+	
+setcvar "g_gametype" "2"
+setcvar "timelimit" "15"
+
+// set scoreboard messages
+setcvar "g_obj_alliedtext1" "Stalingrad"
+setcvar "g_obj_alliedtext2" ""
+setcvar "g_obj_alliedtext3" "Server IP"
+setcvar "g_obj_axistext1" "178.32.28.179:12203"
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "mohdm6"
+setcvar "g_gametypestring" "Stalingrad Battle TDM" // Feho
+
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
+	// call additional stuff for playing this map round based is needed
+	if(level.roundbased)
+		thread roundbasedthread
+
+	level waittill prespawn
+
+	// exec global/ladderspawn.scr ( 1078 590 304 ) 296 wood 90
+	
+	// Portable 30 cals
+	exec models/create_guns.scr ( 1079 320 304.13 )
+	
+	//*** Precache Dm Stuff
+	exec global/DMprecache.scr
+
+	exec global/door_locked.scr::lock
+	level.script = maps/dm/mohdm6.scr
+	exec global/ambient.scr mohdm6
+	
+	exec global/DETONATOR_SOUND.scr
+	exec global/RB_DETONATORS.scr::DETONATOR ( -711.11 -867.74 322.13 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( 273.65 147.96 87.13 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -48.10 902.07 512.13 ) ( 0 0 0 )
+
+	
+	level waittill spawn
+	
+	// $world farplane_color ( 0 0 0 )
+	// $world farplane 2000
+
+end
+
+//-----------------------------------------------------------------------------
+
+roundbasedthread:
+
+	// Can specify different scoreboard messages for round based games here.
+
+	level waitTill prespawn
+
+	level waittill spawn
+
+	// set the parameters for this round based match
+	level.dmrespawning = 1 // 1 or 0
+	level.dmroundlimit = 6 // round time limit in minutes
+	level.clockside = kills // set to axis, allies, kills, or draw
+//----------------------------------------------
+
+	/*// set the parameters for this round based match
+	level.dmrespawning = 0 // 1 or 0
+	level.dmroundlimit = 5 // round time limit in minutes
+	level.clockside = kills // set to axis, allies, kills, or draw*/
+
+	level waittill roundstart
+
+end
+
+//-----------------------------------------------------------------------------

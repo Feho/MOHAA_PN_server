@@ -1,0 +1,43 @@
+// Messages for the hud
+// by jv_map
+
+// Best viewed with 4 spaces per tab
+
+/* 
+Hud commands:
+-----------------
+SPLASH  				: Standard squadmaker title screen (= "Squadmaker " VERSION " " CONFIG "\nby " AUTHOR)
+TIP1					: Join a team to become part of a squad.
+TIP2					: Your weapon depends on your role in the squad.
+TIP3 weapon				: The support gun is the heaviest weapon in your squad, select the <weapon> to use it.
+TIP4					: Use left/right click to swiftly (un)holster the support gun.
+ORDER_OF_BATTLE	team	: Lists squads of specified team (e.g. 'ORDER_OF_BATTLE allies' or 'ORDER_OF_BATTLE axis')
+AREANAME				: Prints level.squadmaker_areaname or "in the area" if not specified.
+CVAR name				: Prints data of any cvar on server (e.g. 'CVAR sv_hostname' prints server hostname)
+VERSION					: Squadmaker version number
+AUTHOR					: Prints 'jv_map'
+CONFIG					: Prints config in the form 'Config1 on Config2 on Config3 ...'
+
+Spaces are pruned unless quotes (") are used.
+Use '\n' for a line break.
+All commands and their arguments are case-sensitive.
+All arguments are required (never optional).
+*/
+
+local.a = makeArray
+
+	// hud messages here
+	SPLASH
+	"You're playing " CVAR g_gametypestring " on\n" CVAR sv_hostname
+	TIP1
+	TIP2
+	TIP3 "Rocket Launcher"
+	TIP4
+	"Allied forces " AREANAME ":\n" ORDER_OF_BATTLE allies
+	"German resistance " AREANAME ":\n" ORDER_OF_BATTLE axis
+	// end hud messages
+
+endArray
+
+end local.a
+// keep this line

@@ -1,0 +1,66 @@
+main:
+	// local.master = spawn scriptmaster
+	// local.master aliascache mountG sound/mechanics/lockpick2.wav soundparms 1.5 0.2 0.8 0.2 160 1000 weapon loaded maps "dm obj t m"
+	self weaponcommand dual targetname getme
+	local.weapon = $getme
+	local.weapon.targetname = ""
+
+	if(local.weapon.hasscope==2 && local.weapon.hasnade!=1 && local.weapon.nades>0)
+	{
+		self weaponcommand dual dmammorequired 0
+
+		self safeholster 1
+		// self stopwatch 1.5
+		wait 1
+		self safeholster 0
+		wait 0.5
+
+		self weaponcommand dual targetname getme
+		local.weapon = $getme
+		local.weapon.targetname = ""
+
+		if(local.weapon.model=="models/weapons/m1_garand.tik")
+		{
+			local.weapon.nade = spawn animate model weapons/m2frag_grenade.tik
+			local.weapon.nade notsolid
+			local.weapon.nade attach local.weapon "tag_barrel" 1 ( 0 0.4 1 )
+			local.weapon.nade angles ( 110 0 0 )
+		}
+		else
+		{
+			local.weapon.nade = spawn animate model weapons/steilhandgranate.tik
+			local.weapon.nade notsolid
+			local.weapon.nade attach local.weapon "tag_barrel" 1 ( 0 0.4 0 )
+			local.weapon.nade angles ( -75 -6 0 )
+			local.weapon.nade scale 0.8
+		}
+
+		if (local.weapon.model=="models/weapons/m1_garand.tik" || local.weapon.model=="models/weapons/kar98.tik")
+		{
+			self weaponcommand dual firetype projectile
+			local.weapon.hasnade=1
+			local.weapon playsound mountG
+		}
+	}
+	else if(local.weapon.hasscope==2 && local.weapon.nades>0)
+	{
+		self safeholster 1
+		// self stopwatch 1.5
+		wait 1
+		self safeholster 0
+		wait 0.5
+
+		self weaponcommand dual targetname getme
+		local.weapon = $getme
+		local.weapon.targetname = ""
+		
+		if (local.weapon.model=="models/weapons/m1_garand.tik" || local.weapon.model=="models/weapons/kar98.tik")
+		{
+			self weaponcommand dual dmammorequired 1
+			local.weapon.nade remove
+			self weaponcommand dual firetype bullet
+			local.weapon.hasnade=0
+			local.weapon playsound mountG
+		}
+	}
+end

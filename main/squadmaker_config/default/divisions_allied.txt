@@ -1,0 +1,29 @@
+// Allied divisions
+
+// best viewed with 4 spaces per tab
+
+// Skin names are without path and without .tik extensions.
+// All skins must be present in the models/player folder.
+
+// The officer skin is used for each first member of a squad. 
+// If no officer skin is specified, the enlisted skin is used 
+// for all squad members.
+
+local.a = makeArray // do not modify
+
+//-----------------------------------------------------------------
+//	Division name		Enlisted skin		Officer skin (optional)
+//-----------------------------------------------------------------
+	"82nd Airborne" 	allied_airborne
+	"101st Airborne" 	allied_airborne
+	"1st Rangers" 		american_ranger
+	"2nd Rangers" 		american_ranger
+	"1st Infantry"		american_army
+	"9th Infantry" 		american_army
+//-----------------------------------------------------------------
+
+endArray // do not modify
+
+end local.a // do not modify
+
+// do not modify

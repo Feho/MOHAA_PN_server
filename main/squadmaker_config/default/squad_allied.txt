@@ -1,0 +1,80 @@
+// Allied squad definition
+// This is a script file, don't make syntax errors
+
+// best viewed with 4 spaces per tab
+
+local.a = makeArray // don't change this line
+
+//----------------------------
+// squad definition below here
+//----------------------------
+
+// loadouts:
+//----------
+// rifleman
+// sniper
+// smg
+// mg
+// support
+// shotgun
+// bazooka
+
+// primary weapons:
+//----------
+// rifle
+// sniper
+// smg
+// mg
+// heavy
+// shotgun
+
+// You may change the size of the squad by adding/removing lines.
+
+//----------------------------------------------------------------------------
+// 	loadout			name						associated with primary weapon
+//----------------------------------------------------------------------------
+	rifleman		"Rifleman"					rifle
+	rifleman		"Rifleman"					rifle
+	rifleman		"Rifleman"					rifle
+	rifleman		"Rifleman"					rifle
+	rifleman		"Rifleman"					rifle
+	rifleman		"Rifleman"					rifle
+	rifleman		"Rifleman"					rifle
+	rifleman		"Rifleman"					rifle
+	sniper			"Sniper"					sniper
+	sniper			"Sniper"					sniper
+	sniper			"Sniper"					sniper
+	sniper			"Sniper"					sniper
+	sniper			"Sniper"					sniper
+	sniper			"Sniper"					sniper
+	sniper			"Sniper"					sniper
+	sniper			"Sniper"					sniper
+	smg				"Scout"						smg
+	smg				"Scout"						smg
+	smg				"Scout"						smg
+	smg				"Scout"						smg
+	smg				"Scout"						smg
+	smg				"Scout"						smg
+	smg				"Scout"						smg
+	smg				"Scout"						smg
+	mg				"Light machine gunner"		mg
+	mg				"Light machine gunner"		mg
+	mg				"Light machine gunner"		mg
+	mg				"Light machine gunner"		mg
+	mg				"Light machine gunner"		mg
+	mg				"Light machine gunner"		mg
+	mg				"Light machine gunner"		mg
+	mg				"Light machine gunner"		mg
+	shotgun			"Hunter"					shotgun
+	support			"Support gunner"			heavy
+
+
+//----------------------------
+// end squad definition
+//----------------------------
+
+endArray // don't change this line
+
+end local.a // don't change this line
+
+// don't change this line

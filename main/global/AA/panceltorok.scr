@@ -1,0 +1,68 @@
+main local.origin local.angles local.type:
+
+	local.pos = trace ( local.origin + ( 0 0 10 ) ) ( ( local.origin[0] local.origin[1] -17123 ) )
+
+	local.crate = spawn script_model
+	local.crate.origin = local.pos
+	local.crate.angles = local.angles
+	local.crate model "models/static/indycrate.tik"
+	local.crate solid
+	local.crate nodamage
+
+	if (local.type == "bazooka")
+		local.model = "models/weapons/bazooka.tik"
+	else
+		local.model = "models/weapons/panzerschreck.tik"
+
+	local.bazooka = spawn script_model
+	local.bazooka.origin = local.crate.origin + ( 0 0 50 )
+
+	local.trace = trace ( local.bazooka.origin + ( 0 0 10 ) ) ( ( local.bazooka.origin[0] local.bazooka.origin[1] -17123 ) )
+	local.bazooka.origin = local.trace
+
+	if (local.type == "bazooka")
+		local.bazooka.angles = local.crate.angles + ( 0 270 90 )
+	else
+		local.bazooka.angles = local.crate.angles + ( 180 90 270 )
+
+	local.bazooka model local.model
+	local.bazooka notsolid
+
+	local.bazooka.trigger = spawn trigger_use origin local.bazooka.origin
+	local.bazooka.trigger setsize ( -10 -10 -10 ) ( 10 10 20 )
+
+	local.bazooka thread giveme_bazooka
+
+end
+
+giveme_bazooka:
+
+	self.trigger waittill trigger
+
+	local.player = parm.other
+
+	if (local.player.has_heatseeker == 1)
+	{
+		goto giveme_bazooka
+		end
+	}
+
+	self hide
+
+	local.player give self.model
+	local.player ammo heavy 3
+
+	if (self.model == "models/weapons/bazooka.tik")
+		self playsound bazooka_snd_pickup
+	else
+		self playsound panzerschreck_snd_pickup
+
+	local.player iprint "You picked up an anti-tank weapon."
+
+	wait 10
+
+	self show
+
+	goto giveme_bazooka
+
+end

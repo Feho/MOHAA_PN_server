@@ -1,0 +1,18 @@
+main local.origin: 
+	
+	local.MASTER = spawn scriptmaster
+
+	local.MASTER aliascache bomb_drop1 sound/items/Item_BangaloreAssemble_03.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m dm moh obj train"
+	local.MASTER aliascache pickup_bomb1 sound/items/Item_BangalorePickup_01.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m dm moh obj train"
+
+	level.bomb_model = "models/items/explosive.tik"
+	
+	local.trigger = spawn trigger_multiple origin local.origin
+	local.trigger model level.bomb_model
+	local.trigger show
+	local.trigger setsize ( -50 -50 0 ) ( 50 50 50 )
+	local.trigger light 1 0 0 50
+	local.trigger setthread global/feho/bomb.scr::main
+	local.trigger droptofloor
+
+end

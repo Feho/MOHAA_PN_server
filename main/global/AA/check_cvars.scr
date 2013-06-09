@@ -1,0 +1,77 @@
+main:
+
+	level waittill spawn
+
+	while ( level.intermission_started != 1 && level.bas_roundend != 1 )
+	{
+		thread player_things
+		wait 7
+	}
+
+end
+
+player_things:
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.isplayer == 1 )
+		{
+			if (local.player getconnstate != 4)
+				local.player.isplayer = 0
+
+			if ( local.player isadmin == 1 && level.account == 1 && local.player.binded_logged_key != 1 )
+			{
+				local.player.binded_logged_key = 1
+				local.player stufftext ( "bind F4 keyp 111" )
+
+				local.player iprint "Press F4 to check the logged players." 1
+			}
+
+			local.player stufftext ( "set cg_forcemodel 0" )
+		}
+	}
+
+end
+
+force_respawn_player local.clnum:
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.isplayer == 1 && local.player.player_spawned == 1 )
+		{
+			local.num = getclientnum local.player
+			if (local.num == int local.clnum)
+			{
+				if ( local.player.inveh == 1 || local.player.inturret == 1 )
+				{
+					if (local.player.inturret == 1)
+						local.player usestuff
+
+					local.player.player_spawned = 0
+
+					wait .1
+				}
+
+				if (local.player != NULL)
+				{
+					local.player.inveh = 0
+					local.player.inturret = 0
+
+					local.player respawn
+
+					stuffsrv ( "say " + netname local.player + " was forced to respawn by the Admin." )
+					local.player iprint "You were forced to respawn by the admin."
+				}
+
+				end
+			}
+		}
+	}
+
+	self iprint "The player not found." 1
+
+end

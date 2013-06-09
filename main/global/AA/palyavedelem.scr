@@ -1,0 +1,172 @@
+main:
+
+	level waittill spawn
+
+	level.palyavedelem = getcvar "undermap_fix"
+	if (level.palyavedelem == "")
+		setcvar "undermap_fix" "1"
+
+	level.palyavedelem = int ( getcvar "undermap_fix" )
+	if (level.palyavedelem != 1)
+		end
+
+	local.z = waitthread map_ellenorzes
+	if (local.z == NULL)
+		end
+
+	local.undermap_player_trigger = spawn trigger_multipleall
+	local.undermap_player_trigger.origin = ( 0 0 local.z )
+	local.undermap_player_trigger setsize ( -20000 -20000 -100 ) ( 20000 20000 0 )
+	local.undermap_player_trigger setthread undermap_player
+
+	local.undermap_vehicle_trigger = spawn trigger_vehicle
+	local.undermap_vehicle_trigger.origin = ( 0 0 local.z )
+	local.undermap_vehicle_trigger setsize ( -20000 -20000 -100 ) ( 20000 20000 0 )
+	local.undermap_vehicle_trigger setthread undermap_vehicle
+
+end
+
+undermap_player:
+
+	local.player = parm.other
+
+	if ( !isAlive local.player || local.player.inveh == 1 )
+		end
+
+	local.player respawn
+
+	stuffsrv ( "say " + (netname local.player) + " TRIED TO GET UNDER THE MAP!!!\n" )
+	local.player iprint "You were forced to respawn."
+
+	if (local.player.start_undermap_counter != 1)
+	{
+		local.player.start_undermap_counter = 1
+		local.player thread undermap_counter
+	}
+
+	if (local.player.undermap_count == NIL)
+		local.player.undermap_count = 0
+
+	local.player.undermap_count++
+
+end
+
+undermap_counter:
+
+	local.timecount = 20
+
+	while ( self != NULL && local.timecount > 0 )
+	{
+		wait 2
+		local.timecount--
+
+		if ( self != NULL && self.undermap_count >= 3 )
+		{
+			if ( level.account == 1 && self.logged_in == 1 )
+			{
+				self.cash -= 50
+				if (self.cash < 0)
+					self.cash = 0
+			}
+
+			local.reason = "going too many times under map."
+
+			stuffsrv ( "say " + (netname self) + " kicked for " + local.reason + "\n" )
+
+			wait 3
+
+			if (self != NULL)
+			{
+				local.num = getclientnum self
+
+				stuffsrv ( "clientkickr " + local.num + " " + local.reason )
+			}
+		}
+	}
+
+	if (self == NULL)
+		end
+
+	self.start_undermap_counter = 0
+	self.undermap_count = 0
+
+end
+
+undermap_vehicle:
+
+	local.vehicle = parm.other
+
+	if ( local.vehicle.classname == "VehicleCollisionEntity" || local.vehicle.classname == "ScriptSlave" )
+	{
+		if (local.vehicle.vehicle)
+			local.vehicle = local.vehicle.vehicle
+	}
+
+	if (local.vehicle.fakehealth <= 0)
+		end
+
+	if ( self.same_z != 0 && local.vehicle.origin[2] > self.origin[2] )
+		end
+
+	if (local.vehicle.driver != NULL)
+		local.driver = local.vehicle.driver
+
+	local.vehicle.last_attacker = $world
+	local.vehicle.fakehealth = 0
+
+	local.vehicle takedamage
+	local.vehicle removeimmune none
+	local.vehicle normal_damage 10000
+
+	if (local.driver != NIL)
+		stuffsrv ( "say " + (netname local.driver) + " TRIED TO GET UNDER THE MAP WITH VEHICLE!!!\n" )
+
+end
+
+map_ellenorzes:
+
+	local.map = getcvar "mapname"
+	local.z = NULL
+
+	switch (local.map)
+	{
+		case "m1l3a":
+			local.z = -191.875
+		break
+		case "m1l3b":
+			local.z = -103.875
+		break
+		case "m4l0":
+			local.z = -327.875
+		break
+		case "m4l1":
+			local.z = -511.875
+
+			local.undermap_player_trigger = spawn trigger_multipleall
+			local.undermap_player_trigger.origin = ( 2711 4341 -239.875 )
+			local.undermap_player_trigger setsize ( -4144 -2700 -100 ) ( 1643 2763 0 )
+			local.undermap_player_trigger setthread undermap_player
+
+			local.undermap_vehicle_trigger = spawn trigger_vehicle
+			local.undermap_vehicle_trigger.origin = ( 2711 4341 -239.875 )
+			local.undermap_vehicle_trigger setsize ( -4144 -2700 -100 ) ( 1643 2763 0 )
+			local.undermap_vehicle_trigger.same_z = 0
+			local.undermap_vehicle_trigger setthread undermap_vehicle
+		break
+		case "m4l3":
+			local.z = -447.875
+
+			local.undermap_player_trigger = spawn trigger_multipleall
+			local.undermap_player_trigger.origin = ( -4012 3103 -12 )
+			local.undermap_player_trigger setsize ( 0 0 0 ) ( 5800 200 300 )
+			local.undermap_player_trigger setthread undermap_player
+		break
+		case "m5l2a":
+			local.z = 64.125
+		break
+		case "m5l3":
+			local.z = 128.125
+		break
+	}
+
+end local.z

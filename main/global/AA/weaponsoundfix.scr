@@ -1,0 +1,384 @@
+main local.state:
+
+	if (self == NULL)
+		end
+
+	local.fegyver = self
+
+	// A mapok nevei, ahol engedélyezve vannak a hangok, az ubersound.scr fájlból vannak meghatározva.
+
+	switch (local.state)
+	{
+		// PISTOL Sounds
+		case "ATTACK_PISTOL_PRIMARY":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound colt45_snd_fire
+		break
+		case "RELOAD_PISTOL":
+			if (local.fegyver.model == "models/weapons/colt45.tik")
+			{
+				if (level.allies_weapon_sound[local.state] == 1)
+					local.fegyver playsound colt45_snd_reload
+			}
+			else if (local.fegyver.model == "models/weapons/silencedpistol.tik")
+			{
+				if (level.axis_weapon_sound[local.state] == 1)
+					local.fegyver playsound silencer_snd_reload
+			}
+		break
+
+		// RIFLE Sounds
+		case "ATTACK_RIFLE_PRIMARY":
+			if (local.fegyver.model == "models/weapons/m1_garand.tik")
+			{
+				if (level.allies_weapon_sound_ind[local.state]["garand"] == 1)
+					local.fegyver playsound m1_snd_fire
+			}
+			else if (local.fegyver.model == "models/weapons/springfield.tik")
+			{
+				if (level.allies_weapon_sound_ind[local.state]["springfield"] == 1)
+					local.fegyver playsound springfield_snd_fire2
+			}
+		break
+		case "ATTACK_RIFLE_PRIMARY_EMPTY":
+			if (level.weapon_sound[local.state] == 1)
+			{
+				local.fegyver playsound m1_snd_fire
+				wait 0.3
+				local.fegyver playsound snd_ping
+			}
+		break
+		case "RELOAD_RIFLE":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound m1_snd_reload
+		break
+		case "ATTACK_SPRINGFIELD_RECHAMBER":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound springfield_snd_bolt
+		break
+		case "RELOAD_SPRINGFIELD":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound springfield_snd_reload_start
+		break
+		case "RELOAD_SPRINGFIELD_SINGLE":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound springfield_snd_reload_single
+		break
+		case "RELOAD_SPRINGFIELD_END":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound springfield_snd_reload_end
+		break
+
+		// MG Sounds
+		case "ATTACK_MG_PRIMARY":
+			if (local.fegyver.model == "models/weapons/bar.tik")
+			{
+				if (level.allies_weapon_sound_ind[local.state]["bar"] == 1)
+					local.fegyver playsound bar_snd_fire
+			}
+			else if (local.fegyver.model == "models/weapons/mp44.tik")
+			{
+				if (level.axis_weapon_sound_ind[local.state]["mp44"] == 1)
+					local.fegyver playsound mp44_snd_fire
+			}
+		break
+		case "RELOAD_MG":
+			if (local.fegyver.model == "models/weapons/bar.tik")
+			{
+				if (level.allies_weapon_sound_ind[local.state]["bar"] == 1)
+					local.fegyver playsound bar_snd_reload
+			}
+			else if (local.fegyver.model == "models/weapons/mp44.tik")
+			{
+				if (level.axis_weapon_sound_ind[local.state]["mp44"] == 1)
+					local.fegyver playsound mp44_snd_reload
+			}
+		break
+		case "PUTAWAY_MG_BAR":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound bar_snd_putaway
+		break
+		case "RAISE_MG_BAR":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound bar_snd_pullout
+		break
+		case "RAISE_MG_MP44":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound mp44_snd_pullout
+		break
+
+		// PÁNCÉLTÖRÕ Sounds
+		case "ATTACK_BAZOOKA_PRIMARY":
+			if (local.fegyver.model == "models/weapons/bazooka.tik")
+			{
+				if (level.allies_weapon_sound_ind[local.state]["bazooka"] == 1)
+					local.fegyver playsound bazooka_snd_fire
+			}
+			else if (local.fegyver.model == "models/weapons/panzerschreck.tik")
+			{
+				if (level.axis_weapon_sound_ind[local.state]["panzerschreck"] == 1)
+					local.fegyver playsound panzerschreck_snd_fire
+			}
+		break
+		case "RELOAD_HEAVY":
+			if (local.fegyver.model == "models/weapons/bazooka.tik")
+			{
+				if (level.allies_weapon_sound_ind[local.state]["bazooka"] == 1)
+					local.fegyver playsound bazooka_snd_reload
+			}
+			else if (local.fegyver.model == "models/weapons/panzerschreck.tik")
+			{
+				if (level.axis_weapon_sound_ind[local.state]["panzerschreck"] == 1)
+					local.fegyver playsound panzerschreck_snd_reload
+			}
+		break
+		case "PUTAWAY_HEAVY":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound snd_bazooka_putaway
+		break
+		case "RAISE_HEAVY":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound snd_bazooka_pullout
+		break
+
+		// SHOTGUN Sounds
+		case "ATTACK_SHOTGUN_PRIMARY":
+			if (level.weapon_sound[local.state] == 1)
+			{
+				local.fegyver playsound shotgun_snd_fire
+				local.fegyver playsound shotgun_snd_rechamber
+			}
+		break
+		case "RELOAD_SHOTGUN":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound shotgun_snd_reload_start
+		break
+		case "RELOAD_SHOTGUN_SINGLE":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound shotgun_snd_reload_single
+		break
+		case "RELOAD_SHOTGUN_END":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound shotgun_snd_reload_end
+		break
+		case "PUTAWAY_SHOTGUN":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound snd_shotgun_putaway
+		break
+		case "RAISE_SHOTGUN":
+			if (level.weapon_sound[local.state] == 1)
+				local.fegyver playsound snd_shotgun_pullout
+		break
+	}
+
+end
+
+check_sounds:
+
+	local.map = getcvar "mapname"
+
+	local.sound_type = ATTACK_PISTOL_PRIMARY::RELOAD_PISTOL::ATTACK_RIFLE_PRIMARY::ATTACK_RIFLE_PRIMARY_EMPTY::RELOAD_RIFLE::ATTACK_SPRINGFIELD_RECHAMBER::RELOAD_SPRINGFIELD::RELOAD_SPRINGFIELD_SINGLE::RELOAD_SPRINGFIELD_END::ATTACK_MG_PRIMARY::RELOAD_MG::PUTAWAY_MG_BAR::RAISE_MG_BAR::RAISE_MG_MP44::ATTACK_BAZOOKA_PRIMARY::RELOAD_HEAVY::PUTAWAY_HEAVY::RAISE_HEAVY::ATTACK_SHOTGUN_PRIMARY::RELOAD_SHOTGUN::RELOAD_SHOTGUN_SINGLE::RELOAD_SHOTGUN_END::PUTAWAY_SHOTGUN::RAISE_SHOTGUN
+
+	for (local.i = 1;local.i <= local.sound_type.size;local.i++)
+	{
+	switch (local.sound_type[local.i])
+	{
+		// PISTOL Sounds
+		case "ATTACK_PISTOL_PRIMARY":
+			local.map_allj = m1l1::m1l2a::m1l2b::m1l3c::m3l1a::m3l1b::m3l2::m3l3::m4l1::m5l1a::m5l1b::m5l2a::m5l2b::m5l3::m6l3a::m6l3b::m6l3c::m6l3d::dm::moh::obj::train
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RELOAD_PISTOL":
+			local.map_allj = m1l1::m1l2a::m1l2b::m1l3c::m3l1a::m3l1b::m3l2::m3l3::m4l1::m5l1a::m5l1b::m5l2a::m5l2b::m5l3::m6l3a::m6l3b::m6l3c::m6l3d::dm::moh::obj::train
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.allies_weapon_sound[local.sound_type[local.i]] = local.ertek
+
+			local.map_allj = m1l2a::m1l2b::m1l3a::m1l3b::m1l3c::m2l1::m2l2a::m2l2b::m2l2c::m2l3::m4l2::m4l3::m6l1a::m6l1b::m6l1c::m6l2a::m6l2b::m6l3a::m6l3c::m6l3d::m6l3e::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.axis_weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+
+		// RIFLE Sounds
+		case "ATTACK_RIFLE_PRIMARY":
+			local.map_allj = m1l1::m1l2a::m1l2b::m1l3a::m1l3b::m1l3c::m3l1a::m3l2::m3l3::m4l0::m4l1::m5l1a::m5l1b::m6l3a::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.allies_weapon_sound_ind[local.sound_type[local.i]]["garand"] = local.ertek
+
+			local.map_allj = m2l2a::m2l2b::m2l2c::m6l3b::m6l3c::m6l3d::m6l3e
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.allies_weapon_sound_ind[local.sound_type[local.i]]["springfield"] = local.ertek
+		break
+		case "ATTACK_RIFLE_PRIMARY_EMPTY":
+			local.map_allj = m1l1::m1l2a::m1l2b::m1l3a::m1l3b::m1l3c::m3l1a::m3l2::m3l3::m4l0::m4l1::m5l1a::m5l1b::m6l3a::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RELOAD_RIFLE":
+			local.map_allj = m1l1::m1l2a::m1l2b::m1l3a::m1l3b::m1l3c::m3l2::m3l3::m4l0::m4l1::m5l1a::m5l1b::m6l3a::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "ATTACK_SPRINGFIELD_RECHAMBER":
+			local.map_allj = m2l1::m2l2a::m2l2b::m2l2c::m2l3::m3l1a::m3l1b::m3l2::m3l3::m5l1a::m5l1b::m5l2a::m5l2b::m5l3::m6l1a::m6l1b::m6l1c::m6l2::m6l2b::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj::train
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RELOAD_SPRINGFIELD":
+			local.map_allj = m2l1::m2l2a::m2l2b::m2l2c::m2l3::m3l1a::m3l1b::m3l2::m3l3::m5l1a::m5l1b::m5l2a::m5l2b::m5l3::m6l1a::m6l1b::m6l1c::m6l2::m6l2b::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj::train
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RELOAD_SPRINGFIELD_SINGLE":
+			local.map_allj = m2l1::m2l2a::m2l2b::m2l2c::m2l3::m3l1a::m3l1b::m3l2::m3l3::m5l1a::m5l1b::m5l2a::m5l2b::m5l3::m6l1a::m6l1b::m6l1c::m6l2::m6l2b::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj::train
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RELOAD_SPRINGFIELD_END":
+			local.map_allj = m2l1::m2l2a::m2l2b::m2l2c::m2l3::m3l1a::m3l1b::m3l2::m3l3::m5l1a::m5l1b::m5l2a::m5l2b::m5l3::m6l1a::m6l1b::m6l1c::m6l2::m6l2b::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj::train
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+
+		// MG Sounds
+		case "ATTACK_MG_PRIMARY":
+			local.map_allj = m2l3::m3l1a::m3l2::m3l3::m4l0::m5l1b::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.allies_weapon_sound_ind[local.sound_type[local.i]]["bar"] = local.ertek
+
+			local.map_allj = m5l1b::m6l1c::m6l2a::m6l2b::m6l3a::m6l3b::m6l3c::m6l3::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.axis_weapon_sound_ind[local.sound_type[local.i]]["mp44"] = local.ertek
+		break
+		case "RELOAD_MG":
+			local.map_allj = m3l1a::m3l2::m3l3::m4l0::m5l1b::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.allies_weapon_sound_ind[local.sound_type[local.i]]["bar"] = local.ertek
+
+			local.map_allj = m5l1b::m6l1c::m6l2a::m6l2b::m6l3a::m6l3b::m6l3::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.axis_weapon_sound_ind[local.sound_type[local.i]]["mp44"] = local.ertek
+		break
+		case "PUTAWAY_MG_BAR":
+			local.map_allj = m3l1a::m3l2::m3l3::m4l0::m5l1b::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RAISE_MG_BAR":
+			local.map_allj = m3l1a::m3l2::m3l3::m4l0::m5l1b::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RAISE_MG_MP44":
+			local.map_allj = m5l1b::m6l1c::m6l2a::m6l2b::m6l3a::m6l3b::m6l3::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+
+		// PÁNCÉLTÖRÕ Sounds
+		case "ATTACK_BAZOOKA_PRIMARY":
+			local.map_allj = m5::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.allies_weapon_sound_ind[local.sound_type[local.i]]["bazooka"] = local.ertek
+
+			local.map_allj = m1l1::m1l3::m3l3::m5l2::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.axis_weapon_sound_ind[local.sound_type[local.i]]["panzerschreck"] = local.ertek
+		break
+		case "RELOAD_HEAVY":
+			local.map_allj = m5::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.allies_weapon_sound_ind[local.sound_type[local.i]]["bazooka"] = local.ertek
+
+			local.map_allj = m1l1::m1l3::m3l3::m5l2::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.axis_weapon_sound_ind[local.sound_type[local.i]]["panzerschreck"] = local.ertek
+		break
+		case "PUTAWAY_HEAVY":
+			local.map_allj = m1l1::m5::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RAISE_HEAVY":
+			local.map_allj = m1l1::m3l3::m5::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+
+		// SHOTGUN Sounds
+		case "ATTACK_SHOTGUN_PRIMARY":
+			local.map_allj = m4l3::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RELOAD_SHOTGUN":
+			local.map_allj = m4l3::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RELOAD_SHOTGUN_SINGLE":
+			local.map_allj = m4l3::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RELOAD_SHOTGUN_END":
+			local.map_allj = m4l3::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "PUTAWAY_SHOTGUN":
+			local.map_allj = m4l3::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+		case "RAISE_SHOTGUN":
+			local.map_allj = m4l3::m6l3a::m6l3b::m6l3c::m6l3d::m6l3e::dm::moh::obj
+			local.ertek = waitthread palyaellenorzes local.map_allj
+
+			level.weapon_sound[local.sound_type[local.i]] = local.ertek
+		break
+	}
+	}
+
+end
+
+palyaellenorzes local.map_allj:
+
+	local.map = getcvar "mapname"
+
+	for (local.i = 1;local.i <= local.map_allj.size;local.i++)
+	{
+		if (local.map == local.map_allj[local.i])
+			end 0
+	}
+
+end 1

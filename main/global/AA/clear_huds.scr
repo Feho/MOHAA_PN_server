@@ -1,0 +1,12 @@
+main:
+
+	self stufftext "ui_removehud dday1"
+	self stufftext "ui_removehud dday2"
+	self stufftext "ui_removehud credits1"
+
+	for (local.i = 0;local.i <= 255;local.i++)
+	{
+		ihuddraw_alpha self local.i 0
+	}
+
+end

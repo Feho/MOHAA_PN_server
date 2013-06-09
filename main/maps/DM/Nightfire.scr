@@ -1,0 +1,112 @@
+// Night Fire
+// Silence...
+
+main:
+
+	setcvar "g_obj_alliedtext1" "Night Fire" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" ""
+
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" ""
+	
+	setcvar "g_scoreboardpic" "Nightfire"
+
+	if ((getcvar("g_gametype") != "1")) 
+	{
+		waitthread tdmtype
+		end
+	}
+
+	// call additional stuff for playing this map round based is needed
+
+	if(level.roundbased)
+		thread roundbasedthread
+
+	level waittill prespawn
+	
+	//*** Precache Dm Stuff
+		exec global/DMprecache.scr
+		
+		exec global/door_locked.scr::lock
+		level.script = maps/dm/Nightfire.scr
+		// exec global/ambient.scr Nightfire
+		exec global/ambient.scr m1l1 // Feho
+		exec maps/dm/Nightfire_precache.scr
+		
+
+	
+      level waittill spawn
+	
+end
+
+//-----------------------------------------------------------------------------
+
+
+roundbasedthread:
+
+	// Can specify different scoreboard messages for round based games here.
+
+	level waitTill prespawn
+
+	level waittill spawn
+
+		// set the parameters for this round based match
+		level.dmrespawning = 0 // 1 or 0
+		level.dmroundlimit = 5 // round time limit in minutes
+		level.clockside = kills // set to axis, allies, kills, or draw
+
+	level waittill roundstart
+
+end
+
+tdmtype:
+
+	local.allied = spawn info_player_allied origin ( 112.000 440.000 480.125 ) angle ( 225.000 )
+	local.allied = spawn info_player_allied origin ( -464.000 -688.000 -47.875 ) angle ( 225.000 )
+	local.allied = spawn info_player_allied origin ( -568.000 -208.000 384.125 ) angle ( 270.000 )
+	local.allied = spawn info_player_allied origin ( 1088.000 -168.000 328.125 ) angle ( 90.000 )
+	local.allied = spawn info_player_allied origin ( 1036.000 -68.000 112.125 ) angle ( 90.000 )
+	local.allied = spawn info_player_allied origin ( -386.000 -248.000 168.125 ) angle ( 180.000 )
+	local.allied = spawn info_player_allied origin ( 728.000 -924.000 -55.875 ) angle ( 180.000 )
+	local.allied = spawn info_player_allied origin ( 804.000 -432.000 504.125 ) angle ( 315.000 )
+	local.allied = spawn info_player_allied origin ( -136.000 -1024.000 464.125 ) angle ( 180.000 )
+	local.allied = spawn info_player_allied origin ( -216.000 -1800.000 360.125 ) angle ( 45.000 )
+	local.allied = spawn info_player_allied origin ( -372.000 -1216.000 504.125 ) angle ( 270.000 )
+	local.allied = spawn info_player_allied origin ( 840.000 -924.000 136.125 ) angle ( 0.000 )
+	local.allied = spawn info_player_allied origin ( -532.000 412.000 120.125 ) angle ( 270.000 )
+	local.allied = spawn info_player_allied origin ( -456.000 -680.000 372.125 ) angle ( 225.000 )
+	local.allied = spawn info_player_allied origin ( 200.000 336.000 296.125 ) angle ( 45.000 )
+	local.allied = spawn info_player_allied origin ( 568.438 -809.803 134.125 ) angle ( 178.918 )
+	local.allied = spawn info_player_allied origin ( 327.125 450.597 -43.875 ) angle ( 232.339 )
+	local.allied = spawn info_player_allied origin ( 420.794 421.552 112.125 ) angle ( 267.709 )
+
+	local.axis = spawn info_player_axis origin ( 112.000 440.000 480.125 ) angle ( 225.000 )
+	local.axis = spawn info_player_axis origin ( -464.000 -688.000 -47.875 ) angle ( 225.000 )
+	local.axis = spawn info_player_axis origin ( -568.000 -208.000 384.125 ) angle ( 270.000 )
+	local.axis = spawn info_player_axis origin ( 1088.000 -168.000 328.125 ) angle ( 90.000 )
+	local.axis = spawn info_player_axis origin ( 1036.000 -68.000 112.125 ) angle ( 90.000 )
+	local.axis = spawn info_player_axis origin ( -386.000 -248.000 168.125 ) angle ( 180.000 )
+	local.axis = spawn info_player_axis origin ( 728.000 -924.000 -55.875 ) angle ( 180.000 )
+	local.axis = spawn info_player_axis origin ( 804.000 -432.000 504.125 ) angle ( 315.000 )
+	local.axis = spawn info_player_axis origin ( -136.000 -1024.000 464.125 ) angle ( 180.000 )
+	local.axis = spawn info_player_axis origin ( -216.000 -1800.000 360.125 ) angle ( 45.000 )
+	local.axis = spawn info_player_axis origin ( -372.000 -1216.000 504.125 ) angle ( 270.000 )
+	local.axis = spawn info_player_axis origin ( 840.000 -924.000 136.125 ) angle ( 0.000 )
+	local.axis = spawn info_player_axis origin ( -532.000 412.000 120.125 ) angle ( 270.000 )
+	local.axis = spawn info_player_axis origin ( -456.000 -680.000 372.125 ) angle ( 225.000 )
+	local.axis = spawn info_player_axis origin ( 200.000 336.000 296.125 ) angle ( 45.000 )
+	local.axis = spawn info_player_axis origin ( 568.438 -809.803 134.125 ) angle ( 178.918 )
+	local.axis = spawn info_player_axis origin ( 327.125 450.597 -43.875 ) angle ( 232.339 )
+	local.axis = spawn info_player_axis origin ( 420.794 421.552 112.125 ) angle ( 267.709 )
+
+end
+
+
+
+
+	
+	
+	
+	

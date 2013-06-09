@@ -1,0 +1,12 @@
+// Allied divisions in Ardennes
+
+local.a = makeArray
+
+"101st Airborne" allied_airborne
+"6th Infantry" american_ranger
+"36th Infantry" american_army
+"9th Infantry" american_army
+
+endArray
+
+end local.a

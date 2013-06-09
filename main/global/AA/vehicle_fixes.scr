@@ -1,0 +1,160 @@
+vehicle_camera:
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player != self && local.player.isplayer == 1 && local.player.player_spawned == 1 && local.player.inveh == 1 )
+			local.player.forced_cueplayer = 1
+	}
+
+end
+
+vehicle_spawnkill:
+
+	local.mapname = getcvar "mapname"
+	level.vehicle_spawnkill = 0
+
+	switch (local.mapname)
+	{
+		case "m1l3a":
+			local.allies_origin = ( 1788 -7715 -172 )
+			local.allies_size1 = ( -1300 0 0 )
+			local.allies_size2 = ( 2500 4000 410 )
+
+			local.axis_origin = ( 3891 -1813 -276 )
+			local.axis_size1 = ( 0 0 0 )
+			local.axis_size2 = ( 3800 4700 1100 )
+
+			level.vehicle_spawnkill = 1
+		break
+		case "m1l3b":
+			local.allies_origin = ( -2715 -7565 -49 )
+			local.allies_size1 = ( 0 0 0 )
+			local.allies_size2 = ( 4400 3000 800 )
+
+			local.axis_origin = ( 7670 8142 -121 )
+			local.axis_size1 = ( -3000 -5100 0 )
+			local.axis_size2 = ( 0 0 880 )
+
+			level.vehicle_spawnkill = 1
+		break
+		case "m4l0":
+			local.allies_origin = ( -1689 -4509 -286 )
+			local.allies_size1 = ( -5000 0 0 )
+			local.allies_size2 = ( 0 4000 1200 )
+
+			local.axis_origin = ( -5446 1016 -350 )
+			local.axis_size1 = ( 0 0 0 )
+			local.axis_size2 = ( 4100 7300 1200 )
+
+			level.vehicle_spawnkill = 1
+		break
+		case "m4l1":
+			local.allies_origin = ( -4375 -4413 -485 )
+			local.allies_size1 = ( 0 -2600 0 )
+			local.allies_size2 = ( 3500 0 640 )
+
+			local.axis_origin = ( 2745 2510 171 )
+			local.axis_size1 = ( 0 0 0 )
+			local.axis_size2 = ( 2300 2900 720 )
+
+			level.vehicle_spawnkill = 1
+		break
+		case "m4l3":
+			local.allies_origin = ( -6733 -8169 -383 )
+			local.allies_size1 = ( 0 0 0 )
+			local.allies_size2 = ( 5000 4300 900 )
+
+			local.axis_origin = ( 3859 -2093 -17 )
+			local.axis_size1 = ( -3550 0 0 )
+			local.axis_size2 = ( 0 3330 600 )
+
+			level.vehicle_spawnkill = 1
+		break
+		case "m5l2a":
+			local.allies_origin = ( 1090 -5965 31 )
+			local.allies_size1 = ( 0 0 0 )
+			local.allies_size2 = ( 2650 4800 600 )
+
+			local.axis_origin = ( -8394 7472 138 )
+			local.axis_size1 = ( 0 -2000 0 )
+			local.axis_size2 = ( 3300 0 340 )
+
+			level.vehicle_spawnkill = 1
+		break
+		case "m5l3":
+			local.allies_origin = ( 1970 5599 137 )
+			local.allies_size1 = ( -600 -100 0 )
+			local.allies_size2 = ( 2100 1000 400 )
+
+			local.axis_origin = ( -1520 -2245 212 )
+			local.axis_size1 = ( 0 0 0 )
+			local.axis_size2 = ( 2400 2700 550 )
+
+			level.vehicle_spawnkill = 1
+		break
+	}
+
+	if (level.vehicle_spawnkill != 1)
+		end
+
+	level.allies_vehicle_spawnkill_trigger = spawn trigger_vehicle
+	level.allies_vehicle_spawnkill_trigger.origin = local.allies_origin
+	level.allies_vehicle_spawnkill_trigger setsize local.allies_size1 local.allies_size2
+
+	level.axis_vehicle_spawnkill_trigger = spawn trigger_vehicle
+	level.axis_vehicle_spawnkill_trigger.origin = local.axis_origin
+	level.axis_vehicle_spawnkill_trigger setsize local.axis_size1 local.axis_size2
+
+end
+
+veh_coll:
+
+	local.gt = int ( getcvar "g_gametype" )
+	local.td = int ( getcvar "g_teamdamage" )
+
+	for (local.i = 1;local.i <= $vezetheto_jarmu.size;local.i++)
+	{
+		local.jarmu = $vezetheto_jarmu[local.i]
+		if ( local.jarmu != NULL && local.jarmu.fakehealth > 0 && local.jarmu.isturret != 1 )
+		{
+			local.surface = local.jarmu
+			if (local.jarmu.collisionent)
+				local.surface = local.jarmu.collisionent
+
+			if ( self.inveh != 1 && vector_length ( self.origin - local.jarmu.origin ) < 300 && local.jarmu.speed != 0.0 )
+			{
+				if ( local.gt != 1 && local.td != 1 && self.dmteam == local.jarmu.mpteam )
+				{
+					if (local.jarmu.istank == 1)
+						local.startpos = self.origin + ( 0 0 45 )
+					else
+						local.startpos = self.origin + ( 0 0 15 )
+
+					local.angles = vector_toangles ( local.jarmu.origin - local.startpos )
+					local.endpos = local.startpos + angles_toforward ( 0 local.angles[1] 0 ) * 50
+
+					local.traced = waitexec global/AA/trace.scr local.startpos local.endpos self.entnum ( -1 -1 -1 ) ( 1 1 1 ) 1107372801
+					if (local.traced["entityNum"] == local.surface.entnum)
+					{
+						local.angles = vector_toangles ( self.origin - local.jarmu.origin )
+						self.origin += ( 0 0 60 )
+
+						local.speed = local.jarmu.speed * 2.5
+						if (local.speed > 900.0)
+							local.speed = 900.0
+
+						if (local.jarmu.speed > 0.0)
+							self.velocity = angles_toforward ( -30 local.angles[1] 0 ) * local.speed
+						else if (local.jarmu.speed < 0.0)
+							self.velocity = angles_toforward ( -150 local.angles[1] 0 ) * local.speed
+
+						end
+					}
+				}
+			}
+		}
+	}
+
+end

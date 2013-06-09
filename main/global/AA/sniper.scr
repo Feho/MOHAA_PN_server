@@ -1,0 +1,25 @@
+main:
+
+	if (self.sniperextras == 1)
+	{
+		local.time = 20
+		while ( self != NULL && self.player_spawned == 1 && self getactiveweap 0 == NULL && local.time > 0 )
+		{
+			waitframe
+			local.time--
+		}
+
+		if ( self == NULL || self.player_spawned != 1 || self getactiveweap 0 == NULL )
+			end
+
+		local.weap = self getactiveweap 0
+		if ( local.weap.model != "models/weapons/springfield.tik" && local.weap.model != "models/weapons/kar98sniper.tik" )
+			end
+
+		local.weap zoom 8
+		local.weap dmzoomspreadmult 0
+		local.weap clipsize 10
+		local.weap ammo_in_clip 10
+	}
+
+end

@@ -1,0 +1,45 @@
+main local.team:
+
+	local.protection = getcvar "spawn_protect"
+	if (local.protection == "")
+		setcvar "spawn_protect" "0"
+
+	local.protection = int ( getcvar "spawn_protect" )
+	if (local.protection == 0)
+		end
+
+	local.light = ( 0 0 0 )
+
+	if (local.team == "allies")
+		local.light = ( 0 0 1 )
+	if (local.team == "axis")
+		local.light = ( 1 0 0 )
+
+	self.inveh = 1
+
+	self notsolid
+	self nodamage
+	self light local.light[0] local.light[1] local.light[2] 100
+
+	self.spawnprotected = 1
+
+	local.count = local.protection * 10
+
+	while ( self != NULL && self.player_spawned == 1 && local.count > 0 )
+	{
+		wait .1
+		local.count--
+	}
+
+	if (self == NULL)
+		end
+
+	self solid
+	self takedamage
+	self light 0 0 0 0
+
+	self.inveh = 0
+
+	self.spawnprotected = 0
+
+end

@@ -1,0 +1,285 @@
+main:
+
+	if (self.artillery_recharged == NIL)
+		self.artillery_recharged = 1
+
+	if (self.artillery_binoc_activated == NIL)
+		self.artillery_binoc_activated = 0
+
+	if (self.artillery_help != 1)
+	{
+		self.artillery_help = 1
+		self iprint "Use your binoculars and press the use button to call for Artillery!" 1
+	}
+
+	if (self.artillery_message == 1)
+	{
+		self.artillery_message = 0
+
+		self iprint "Artillery ready to go!" 1
+
+		self playsound artillery_ready
+	}
+
+	if (self.max_artillery == NIL)
+		self.max_artillery = 4
+
+	if (self.current_artillery == NIL)
+		self.current_artillery = self.max_artillery
+
+	self give models/items/binoculars.tik
+
+	while ( self != NULL && self.player_spawned == 1 )
+	{
+		if ( self.useheld == 1 && self.inveh != 1 && self.inturret != 1 && self.current_weapon != NULL && self.current_weapon.model == "models/items/binoculars.tik" && self.artillery_binoc_activated != 1 )
+		{
+			self.artillery_binoc_activated = 1
+
+			self thread binoc_active
+
+			if (self.current_artillery == 0)
+				self iprint "You are out of Artillery." 1
+			else
+			{
+				if (self.artillery_recharged == 1)
+				{
+					if (level.artillery_occupied != 1)
+					{
+						self.artillery_recharged = 0
+						level.artillery_occupied = 1
+
+						self.current_artillery--
+
+						self thread reloading_artillery
+
+						local.pos = self gettagposition "eyes bone"
+						local.angles = angles_toforward self.viewangles
+						local.trace = waitexec global/AA/trace.scr local.pos ( local.pos + local.angles * 20000 ) self.entnum ( -1 -1 -1 ) ( 1 1 1 ) 1107569441
+
+						self thread start_artillery local.trace["endPos"] self.dmteam
+					}
+					else
+						self iprint "The battery is still busy!" 1
+				}
+				else
+					self iprint "You can't call for Artillery now!" 1
+			}
+		}
+
+		waitframe
+	}
+
+end
+
+binoc_active:
+
+	wait .5
+
+	if (self != NULL)
+		self.artillery_binoc_activated = 0
+
+end
+
+reloading_artillery:
+
+	if (self.current_artillery == 0)
+		end
+
+	if (self.first_artillery == NIL)
+		self.first_artillery = 1
+
+	if (self.first_artillery == 1)
+	{
+		self.first_artillery = 0
+		local.time = 60
+	}
+	else
+		local.time = 90
+
+	wait local.time
+
+	if (self == NULL)
+		end
+
+	if ( self.player_spawned == 1 && self.artillery == 1 )
+	{
+		self iprint "Artillery ready to go!" 1
+
+		self playsound artillery_ready
+	}
+	else
+		self.artillery_message = 1
+
+	self.artillery_recharged = 1
+
+end
+
+start_artillery local.pos local.team:
+
+	if (self.current_artillery > 0)
+		self iprint ( "You can call for Artillery " + self.current_artillery + " times." ) 1
+	else
+		self iprint "You are out of Artillery." 1
+
+	self playsound artillery_target
+
+	local.marker_pos = self waitthread strike_marker local.pos
+
+	self dmmessage -1 ( "OUR ARTILLERY WILL SHAKE THEM UP!!!" )
+
+	local.weapon = spawn "models/weapons/weapon.tik" origin ( 0 0 -20000 )
+	local.weapon notsolid
+	local.weapon hide
+
+	local.weapon firetype heavy
+	local.weapon projectile "models/projectiles/artilleryshell.tik"
+	local.weapon dmprojectile "models/projectiles/artilleryshell.tik"
+
+	wait 2
+
+	self thread artillery_area local.weapon local.marker_pos local.team
+
+end
+
+artillery_area local.weapon local.marker_pos local.team:
+
+	local.radius = 650.0
+	local.num = 12
+
+	local.sound_org = spawn script_origin
+	local.sound_org.origin = local.marker_pos
+
+	for (local.i = 1;local.i <= local.num;local.i++)
+	{
+		local.x_neg = randomint 10
+		local.x_neg++
+
+		local.y_neg = randomint 10
+		local.y_neg++
+
+		local.x = randomfloat local.radius
+		local.y = randomfloat local.radius
+
+		if (local.x_neg > 5)
+			local.x = local.x * -1.0
+
+		if (local.y_neg > 5)
+			local.y = local.y * -1.0
+
+		local.pos = ( (local.marker_pos[0] + local.x) (local.marker_pos[1] + local.y) 20000 )
+		local.hit_pos = waitthread find_hit_pos local.pos
+
+		if ( self == NULL || self.dmteam != local.team )
+			end
+
+		self thread artillery_impact local.weapon local.hit_pos local.team local.sound_org
+
+		local.wait = randomfloat 1.5
+		if (local.wait < 0.35)
+			local.wait = 0.35
+
+		wait local.wait
+	}
+
+	wait 5
+
+	local.sound_org remove
+
+end
+
+artillery_impact local.weapon local.hit_pos local.team local.sound_org:
+
+	local.sound_org playsound tank_fire_dist
+
+	wait 2
+
+	local.fx = spawn script_model model "models/animate/fx_mortar_dirt.tik"
+	local.fx.origin = local.hit_pos
+	local.fx notsolid
+
+	local.fx playsound arty_leadinmp5
+
+	wait 1.7
+
+	if ( self != NULL && self.dmteam == local.team )
+	{
+		local.fx anim start
+
+		self bindweap local.weapon
+		local.weapon shoot
+		self bindweap local.weapon
+
+		self thread artillery_proj local.hit_pos
+	}
+
+	wait 3
+
+	local.fx remove
+
+	level.artillery_occupied = 0
+
+end
+
+artillery_proj local.pos:
+
+	local.artilleryshell = NULL
+	while (local.artilleryshell == NULL)
+	{
+		waitframe
+
+		if ($artilleryshell.size > 0)
+		{
+			for (local.i = 1;local.i <= $artilleryshell.size;local.i++)
+			{
+				local.proj = $artilleryshell[local.i]
+
+				if ( local.proj != NULL && local.proj.attacker != NIL && local.proj.attacker != NULL && local.proj.attacker == self && local.proj.checked != 1 )
+				{
+					local.proj.checked = 1
+					local.artilleryshell = local.proj
+
+					break
+				}
+			}
+		}
+	}
+
+	if (local.artilleryshell != NULL)
+	{
+		local.artilleryshell.origin = local.pos + ( 0 0 200 )
+		local.artilleryshell hitdamage 600
+		local.artilleryshell explodeontouch
+
+		local.artilleryshell.velocity = $world.upvector * -4000
+	}
+
+end
+
+find_hit_pos local.pos:
+
+	local.trace = waitexec global/AA/trace.scr local.pos ( local.pos - ( 0 0 20000 ) ) NIL ( -1 -1 -1 ) ( 1 1 1 ) 1107569441
+	local.traced_pos = local.trace["endPos"]
+
+	local.z = 30
+
+	for (local.i = 1;local.i <= 20;local.i++)
+	{
+		local.trace = waitexec global/AA/trace.scr ( local.traced_pos - ( 0 0 local.z ) ) local.traced_pos NIL ( -1 -1 -1 ) ( 1 1 1 ) 1107569441
+		local.new_traced_pos = local.trace["endPos"]
+
+		local.z += 30
+
+		if (local.new_traced_pos[2] != local.traced_pos[2])
+			break
+	}
+
+	local.trace = waitexec global/AA/trace.scr local.new_traced_pos ( local.new_traced_pos - ( 0 0 20000 ) ) NIL ( -1 -1 -1 ) ( 1 1 1 ) 1107569441
+	local.traced_pos = local.trace["endPos"]
+
+end local.traced_pos
+
+strike_marker local.pos:
+
+	local.trace = waitexec global/AA/trace.scr local.pos ( local.pos - ( 0 0 20000 ) ) NIL ( -1 -1 -1 ) ( 1 1 1 ) 1107569441
+
+end local.trace["endPos"]

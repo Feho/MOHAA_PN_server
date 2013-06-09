@@ -1,0 +1,73 @@
+/**
+ * Écrit des messages d'info, d'erreur ou de debug dans la console du serveur
+ *
+ * Utilisation :
+ * exec $logger.LogError "[nomScript.scr::nomThread]: message d'erreur"
+ * exec $logger.LogDebug "[nomScript.scr::nomThread]: message de debug"
+ * exec $logger.LogInfo "[nomScript.scr::nomThread]: message d'info"
+ *
+ * Exemple :
+ * exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + local.player.entnum + " playsound")
+ * Affichera dans la console :
+ * [INFO]: [voices.scr::play_a_sound]: Player 2 playsound
+ *
+ * Feho - 20/04/2013
+ */
+
+main:
+
+	if (level.logger == 1)
+		end
+
+	level.logger = 1
+
+	// Donne un targetname pour pouvoir y accéder de n'importe quel script
+	local.logger = local CreateListener
+	local.logger targetname "logger"
+	local.logger.LogDebug = global/logger.scr::LogDebug
+	local.logger.LogError = global/logger.scr::LogError
+	local.logger.LogInfo = global/logger.scr::LogInfo
+
+	while(1)
+	{
+		wait 60
+
+		if ($player.size == 0)
+		{
+			// Aucun joueur, wait 4 minutes
+			wait 240
+		}
+
+		// Affiche la map, le temps et le nombre de joueurs
+		exec $logger.LogInfo ("Map " + getcvar mapname + " (" + level.time / 60 + " min) | " + $player.size + " player(s)")
+	}
+
+end
+
+LogError local.message:
+
+	thread WriteLine ("[ERROR]: " + local.message)
+
+end
+
+LogInfo local.message:
+
+	thread WriteLine ("[INFO]: " + local.message)
+
+end
+
+LogDebug local.message:
+
+	thread WriteLine ("[DEBUG]: " + local.message)
+
+end
+
+WriteLine local.message:
+
+	// Écrit dans la console même si la cvar developer est à 0
+	local.prevdev = getcvar developer
+	setcvar developer "1"
+	println local.message
+	setcvar developer local.prevdev
+
+end

@@ -1,0 +1,22 @@
+/**
+ * Nades fix
+ * Ce script permet d'empêcher les crashs de grenades.
+ * Un crash de grenade consiste à jeter toutes ses armes en ne gardant qu'une grenade, la jeter et changer d'arme.
+ */
+
+while(1)
+{
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if ($player[local.i].dmteam == axis)
+		{
+			$player[local.i] give models/weapons/p38.tik
+		}
+		else if ($player[local.i].dmteam == allies)
+		{
+			$player[local.i] give models/weapons/colt45.tik
+		}
+	}
+
+	wait 0.5
+}

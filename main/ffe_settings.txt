@@ -1,0 +1,63 @@
+// Fire-For-Effect! Modification
+// Written by Rookie One
+// configuration file
+
+// Determines how often the instructions are displayed
+local.settings["instruction_frequency"] = 120
+// Whether or not let the players call artillery support; 1 = yes, 0 = no
+local.settings["artillery"] = 1
+
+// The number of fire missions a team can call at the same moment
+local.settings["firemissions"] = 4
+
+// Power timer value
+local.settings["powertimer"] = 40
+local.settings["powertimer2"] = 60
+
+// Power timer delay (initial power timer value is counted by subtracting this delay from power timer value)
+local.settings["powertimerdelay"] = 20
+local.settings["powertimerdelay2"] = 20
+
+// Should the explosions make the ground shake? 0 = no, 1 = yes
+local.settings["earthquakes"] = 1
+
+// Don't mess with these unless you really know what you're doing!
+local.settings["artillery_number"] = 4
+local.settings["artillery_radius"] = 400
+local.settings["artillery_damage"] = 400
+local.settings["artillery_spread"] = 250
+local.settings["artillery_delayfixed"] = 2.2
+local.settings["artillery_delayrandom"] = 1.6
+local.settings["spotter_damage"] = 90
+local.settings["spotter_radius"] = 50
+local.settings["spotter_spread"] = 50
+local.settings["airstrike_number"] = 10
+local.settings["airstrike_radius"] = 400
+local.settings["airstrike_damage"] = 400
+local.settings["airstrike_step"] = 150
+local.settings["airstrike_delay"] = 0.1
+local.settings["airstrike_spread"] = 64
+
+end local.settings
+
+localize:
+	// Lines below are used for localization
+	local.ized["Use your binoculars (7) to call artillery support (aim somewhere and click fire)."] = "Use your binoculars (7) to call artillery support (aim somewhere and click fire)."
+	local.ized["Use smoke grenades (Stielhandgranaten) to call airstrikes."] = "Use smoke grenades (Stielhandgranaten) to call airstrikes."
+	local.ized["One fire mission can be called each "] = "One fire mission can be called each "
+	local.ized[" seconds."] = " seconds."
+	local.ized["ARTILLERY SUPPORT: Cannot see target!"] = "ARTILLERY SUPPORT: Cannot see target!"
+	local.ized["ARTILLERY SUPPORT: Firing for effect!"] = "ARTILLERY SUPPORT: Firing for effect!"
+	local.ized["ARTILLERY SUPPORT: Insufficient fire support! Next fire mission available in "] = "ARTILLERY SUPPORT: Insufficient fire support! Next fire mission available in "
+	local.ized[" seconds!"] = " seconds!"
+	local.ized["AIR SUPPORT: Aborting, cannot see target!"] = "AIR SUPPORT: Aborting, cannot see target!"
+	local.ized["AIR SUPPORT: Cannot see target!"] = "AIR SUPPORT: Cannot see target!"
+	local.ized["AIR SUPPORT: Affirmative! On my way!"] = "AIR SUPPORT: Affirmative! On my way!"
+	local.ized["AIR SUPPORT: Too many airstrikes requested! Next fire mission available in "] = "AIR SUPPORT: Too many airstrikes requested! Next fire mission available in "
+	//local.ized[" seconds!"] = " seconds!"
+	local.ized["Not enough power to call fire support! Charging will take "] = "Not enough power to call fire support! Charging will take "
+	local.ized["Not enough power to call air support! Charging will take "] = "Not enough power to call air support! Charging will take "
+	local.ized[" more seconds!"] = " more seconds!"
+	local.ized["Charging complete!"] = "Artillery ready to go!"
+	local.ized["Air Support ready to go!"] = "Air Support ready to go!"
+end local.ized

@@ -1,0 +1,12 @@
+// German divisions in Ardennes
+
+local.a = makeArray
+
+"6. Leichte Div" 			german_wehrmacht_soldier 	german_wehrmacht_officer
+"1. SS Div" 				german_winter_1
+"36. Volksgrenadier Div" 	german_winter_2
+"5. SS Panzergrenadier Div"	german_panzer_shutze 		german_panzer_obershutze
+
+endArray
+
+end local.a

@@ -1,0 +1,24 @@
+main:
+
+	local.proj = spawn script_model model "models/projectiles/m2fgrenade_primary.tik" origin self.origin angles ( self.angles + ( 0 90 0 ) ) scale 0.6 // original us_bomb.tik
+	local.proj notsolid
+
+	while (self)
+	{
+		local.origin = self.origin
+		local.angles = self.angles
+		local.vel = self.velocity
+
+		local.proj.origin = local.origin
+		local.proj.angles = local.angles + ( 0 90 0 )
+
+		waitframe
+	}
+
+	if (local.proj)
+	{
+		local.proj notsolid
+		local.proj remove
+	}
+
+end

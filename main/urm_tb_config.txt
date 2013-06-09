@@ -1,0 +1,70 @@
+Main:
+
+  //Turns the Unrealmod Auto Team Balancer ON and OFF.
+  //If OFF, everything is off and the script will be disabled.
+  //1 = ON
+  //0 = OFF
+  setcvar "urm_tb" "1" //1 = ON, 0 = OFF
+
+  //Displays the Teams UNEVEN! message, e.g: "Teams UNEVEN! 2 players from allies switch to axis.
+  //1 = ON
+  //0 = OFF
+  setcvar "urm_tb_uneven_display" "1"
+
+  //Displays the teams HUD which displays the amount of players on each team on the upper-right of the game screen.
+  //1 = ON
+  //0 = OFF
+  setcvar "urm_tb_teamshud" "1"
+
+  //Related to "urm_tb_teamshud". This makes the title flash red when the teams are uneven.
+  //*This will only work when "urm_tb_teamshud" is set to 1.
+  //1 = ON
+  //0 = OFF
+  setcvar "urm_tb_teams_flasher" "1"
+
+  //Activates auto balance of teams, automatically switches players to make the teams even.
+  //1 = ON
+  //0 = OFF
+  setcvar "urm_tb_autobalance" "1"
+  
+  //Only switches dead players. Will cycle through the players until it finds a dead player.
+  //1 = ON
+  //0 = OFF
+  setcvar "urm_tb_dead_only" "1"
+
+  //Displays the advert every 5 minutes (300 seconds)
+  //*If you are happy with the mod, then let everyone know what it is. You can decide.
+  //*If you don't wish to advertise, it's fine with me. :)
+  //1 = ON
+  //0 = OFF
+  setcvar "urm_tb_advert" "1"
+
+
+
+  /*********************************
+  == DO NOT EDIT BELOW THIS POINT ==
+  *********************************/
+
+
+  local.cvar[0] = getcvar("urm_tb")
+  local.cvar[1] = getcvar("urm_tb_uneven_display")
+  local.cvar[2] = getcvar("urm_tb_teamshud")
+  local.cvar[3] = getcvar("urm_tb_teams_flasher")
+  local.cvar[4] = getcvar("urm_tb_autobalance")
+  local.cvar[5] = getcvar("urm_tb_advert")
+  local.cvar[6] = getcvar("urm_tb_dead_only")
+
+  for(local.i = 0; local.i < local.cvar.size; local.i ++) {
+    //iprintln ("local.cvar[" + local.i + "] is set to: " + local.cvar[local.i])
+    if( (local.cvar[local.i] == NIL) || (local.cvar[local.i] == "") ) {
+      local.broke = 1
+    }
+  }
+
+  if(local.broke) {
+    level.urm_tb_config_setup = 0
+  } else {
+    level.urm_tb_config_setup = 1
+  }
+
+end

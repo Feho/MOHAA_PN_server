@@ -1,0 +1,25 @@
+local.rewards = makeArray
+
+"Double class points"		"600"		"doublepoints"		0
+"Player extras"			"500"		"playerextras"		0
+"Instant medic healthpack"	"600"		"healthpack"		0
+"Instant medic reviving"	"1000"		"reviving"		0
+"Faster engineer repair"	"800"		"fastengineer"		0
+"Sniper extras"			"800"		"sniperextras"		0
+"Reduced bomb act/deact. time"	"550"		"reducedbombtime"	0
+"+50 perc. rifle damage"	"1000"		"rifledamage"		0
+"+50 perc. smg damage"		"1000"		"smgdamage"		0
+"+50 perc. mg damage"		"1000"		"machinegundamage"	0
+"Double cash"			"4000"		"doublecash"		0
+"Cash for class works"		"1600"		"classworks"		0
+"-1 sec tank reloading time"	"2000"		"tankreload"		0
+"+25 perc. vehicle speed"	"1500"		"extra_vehiclespeed"	0
+"Engineer Ammodrop"		"1000"		"ammodrop"		0
+"Airstrike"			"3500"		"airstrike"		0
+"Artillery"			"4000"		"artillery"		0
+"Portable machinegun"		"2200"		"portablemg"		0
+"Mortar"			"4000"		"mortar"		0
+
+endArray
+
+end local.rewards

@@ -1,0 +1,675 @@
+main local.model local.desmodel local.origin local.angles local.health:
+
+	if (local.health <= 0)
+		end
+
+	local.vehicle_id = "vehicle" + randomint 999999
+	local.vehicle = spawn local.model "targetname" local.vehicle_id
+	local.vehicle.origin = local.origin
+	local.vehicle.angles = local.angles
+	local.vehicle.desmodel = local.desmodel
+	local.vehicle.health = local.health
+	local.vehicle.gun = local.vehicle queryturretslotentity 0
+	local.vehicle anim idlenolights
+	local.vehicle.start_origin = local.origin
+	local.vehicle.start_angles = local.angles
+	local.vehicle.nb_passengers = 0
+	local.vehicle immune bash
+	local.vehicle immune vehicle
+	
+	// Seats
+	local.bindnode_id = "bindnode" + randomint 999999
+	local.bindnode = spawn script_origin "targetname" local.bindnode_id
+	local.bindnode.origin = local.vehicle.origin
+	local.bindnode glue local.vehicle "spawnflags" "1"
+
+	local.seat1 = "seat1" + randomint 999999
+	spawn script_origin "targetname" local.seat1 origin ($(local.bindnode_id).origin + ( -40 22 -5 )) bind $(local.bindnode_id) "spawnflags" "1" "dmg" "0"
+	$(local.seat1) setsize ( -1 -1 -1 ) ( 1 1 1 )
+	local.seat2 = "seat2" + randomint 999999
+	spawn script_origin "targetname" local.seat2 origin ($(local.bindnode_id).origin + ( -40 -22 -5 )) bind $(local.bindnode_id) "spawnflags" "1" "dmg" "0"
+	$(local.seat2) setsize ( -1 -1 -1 ) ( 1 1 1 )
+	local.seat3 = "seat3" + randomint 999999
+	spawn script_origin "targetname" local.seat3 origin ($(local.bindnode_id).origin + ( 25 -20 -5 )) bind $(local.bindnode_id) "spawnflags" "1" "dmg" "0"
+	$(local.seat3) setsize ( -1 -1 -1 ) ( 1 1 1 )
+
+	local.vehicle.free_seats = 3
+
+	local.vehicle thread player_check local.seat1 local.seat2 local.seat3 local.bindnode_id
+	local.vehicle thread vehicledeath local.model local.desmodel local.origin local.angles local.health local.seat1 local.seat2 local.seat3 local.bindnode_id
+
+end
+
+player_check local.seat1 local.seat2 local.seat3 local.bindnode_id:
+
+	self.player_press_use = 0
+	
+	while (self && isAlive self)
+	{
+		if (self.player_press_use != 1)
+		{
+			// self.hasdriver = 1 // test
+			
+			for (local.i = 1;local.i <= $player.size;local.i++)
+			{
+				local.player = $player[local.i]
+
+				if (local.player && local.player.dmteam != "spectator" && local.player.needrevive != 1 && local.player.justneedrevive != 1 && local.player istouching self && local.player.useheld && local.player.invehicule != 1)
+				{
+					if (self.hasdriver != 1)
+					{
+						self.player_press_use = 1
+						self thread playergetin local.player local.seat1 local.seat2 local.seat3 local.bindnode_id
+
+						wait .5
+
+						self.player_press_use = 0
+					}
+					else
+					{
+						self.player_press_use = 1
+						self thread attachpassenger local.player local.seat1 local.seat2 local.seat3
+
+						wait .5
+
+						self.player_press_use = 0								
+					}
+				}
+			}
+		}
+			
+		waitframe
+	}
+
+end
+
+playergetin local.player local.seat1 local.seat2 local.seat3 local.bindnode_id:
+
+	if (self.health < 1) // Feho - empêche de monter dans le vehicule si il a bug avec les explosions de bidons
+		end
+
+	self.driver = local.player			
+	local.team = self.driver.dmteam
+
+	self.driver safeholster 1
+
+	wait .5
+
+	if (!self.driver)
+		end
+	
+	if (self.driver.has_weapon == 1)
+	{
+		self.driver deactivateweapon righthand
+		self.driver.has_weapon = 0
+	}
+	
+	self attachdriverslot 0 self.driver
+	self.hasdriver = 1
+	self.driver.invehicule = 1
+
+	self.driver iprint ("Look behind : [ATTACK PRIMARY]") 1
+	self.driver iprint ("Slow down : [WALK]") 1
+
+	self thread driver_hud self.driver
+
+	local.org = spawn script_origin
+	local.org.origin = self.origin + angles_toforward self.angles * -18 + angles_toleft self.angles * -15 + ( 0 0 -8 )
+	local.org.angles = self.angles
+
+	self.driver glue local.org
+	self.driver rendereffects "-shadow"
+
+	local.kamera = self thread kamera self.driver
+		
+	self.driver forcetorsostate JARMUBEN
+
+	self turnrate 5
+	self.turnrate = 5
+	self.min_turnrate = self.turnrate
+	self.vehiclespeed = 0
+	self.max_speed = 4.2
+	self.min_speed = 2.2
+	self.klaxon = 1
+
+	while(self)
+	{
+		local.prevorigin = self.origin
+		
+		if(self.driver == NULL)
+		{
+			$(local.bindnode_id) remove
+			$(local.seat1) remove
+			$(local.seat2) remove
+			$(local.seat3) remove
+
+			exec global/vehicles/playervehicle.scr self.model self.desmodel self.origin self.angles self.health
+			println "[PlayerVehicle]: Player left server while using vehicle! - Removing vehicle to prevent Server Crash!"
+
+			self remove
+
+			if (local.kamera)
+			{
+				if (local.kamera.kam_trigger)
+					local.kamera.kam_trigger remove
+
+				local.kamera remove
+			}
+			
+			end
+		}
+		else
+		{
+			if (self && !IsAlive self.driver)
+			{
+				self.driver unglue
+
+				if (local.org)
+					local.org remove
+
+				if (local.kamera)
+				{
+					if (local.kamera.kam_trigger)
+						local.kamera.kam_trigger remove
+
+					local.kamera remove
+				}
+				
+				$(local.bindnode_id) remove
+				$(local.seat1) remove
+				$(local.seat2) remove
+				$(local.seat3) remove
+
+				exec global/vehicles/playervehicle.scr self.model self.desmodel self.origin self.angles self.health
+
+				self.driver show
+				self.driver solid
+				self.driver takedamage
+				self detachdriverslot 0 self.driver
+				self.driver.invehicule = 0
+				self.driver forcetorsostate STAND
+
+				self.driver stufftext "ui_removehud dday2"
+
+				wait 1
+				
+				if (self == NULL)
+					end
+
+				self remove
+				end
+			}
+			
+			if(self && self.driver.dmteam != local.team)
+			{
+				self.driver unglue
+
+				if (local.org)
+					local.org remove
+					
+				if (local.kamera)
+				{
+					if (local.kamera.kam_trigger)
+						local.kamera.kam_trigger remove
+
+					local.kamera remove
+				}
+						
+				$(local.bindnode_id) remove
+				$(local.seat1) remove
+				$(local.seat2) remove
+				$(local.seat3) remove
+
+				exec global/vehicles/playervehicle.scr self.model self.desmodel self.origin self.angles self.health
+
+				self.driver show
+				self.driver solid
+				self.driver takedamage
+				self detachdriverslot 0 self.driver
+				self.driver forcetorsostate STAND
+				self.driver respawn
+
+				wait 1			
+
+				if (self.driver)
+				{
+					self.driver.invehicule = 0
+					self.driver stufftext "ui_removehud dday2"
+				}
+
+				self remove
+				end
+			}
+			else
+			{
+				local.org.angles = self.angles
+				local.org.origin = self.origin + angles_toforward self.angles * -18 + angles_toleft self.angles * -15 + ( 0 0 -8 )
+				local.kamera.origin = self.origin + angles_toforward self.angles * -220 + ( 0 0 150 )
+				self.driver_kamera.kam_trigger douse self.driver
+				self.driver.viewangles = self.angles
+				self.driver_kamera.angles = self.angles + ( 10 0 0 )
+
+				if (self.driver.keyheld[ELORE] == 1) // Forward key
+				{
+					if (self.driver.keyheld[SETA] == 1) // Feho - walk key, slower speed
+					{
+						if (self.max_speed > 2)
+							self.max_speed -= 0.08
+					}
+					else
+						self.max_speed = 4.2
+
+					self.vehiclespeed += 0.04
+
+					local.turnrate = (self.turnrate / ( self.max_speed / self.vehiclespeed )) + 2 // feho +2
+					// self turnrate local.turnrate
+
+					if (self.vehiclespeed > self.max_speed)
+						self.vehiclespeed = self.max_speed
+				}
+				else if (self.driver.keyheld[HATRA] == 1) // Backward key
+				{
+					self.vehiclespeed += 0.03
+
+					local.turnrate = (self.turnrate / ( self.min_speed / self.vehiclespeed )) + 2 // Feho + 2
+					// local.turnrate = local.turnrate * 0.5
+					// self turnrate local.turnrate
+
+					if (self.vehiclespeed > self.min_speed)
+						self.vehiclespeed = self.min_speed
+				}
+				else
+					self.vehiclespeed = 0
+
+				if (local.turnrate != NIL) // Vaut NIL au premier démarrage du vehicule
+				{
+					// Feho - Virages plus réalistes, plus souples
+					if (self.driver.keyheld[JOBBRA] || self.driver.keyheld[BALRA]) // Right & Left keys 
+					{
+						if (self.driver.keyheld[JOBBRA] && self.driver.keyheld[BALRA])
+							self.min_turnrate = local.turnrate
+						else
+						{
+							self.min_turnrate -= 0.6
+
+							if (self.min_turnrate < 0)
+								self.min_turnrate = 0
+						}
+					}
+					else
+						self.min_turnrate = local.turnrate
+
+					
+					self turnrate (local.turnrate - self.min_turnrate)
+				}
+			
+				if(self.driver.fireheld)
+				{
+					self.driver_kamera.angles = self.angles + ( 10 180 0 )
+				}
+					
+			
+				if(self.driver.useheld)
+				{
+					if (self.driver)
+						self.driver unglue
+
+					if (local.org)
+						local.org remove				
+
+					if (local.kamera)
+					{
+						if (local.kamera.kam_trigger)
+							local.kamera.kam_trigger remove
+
+						local.kamera remove
+					}
+
+					self.driver show
+					self.driver solid
+					self.driver takedamage
+
+					self detachdriverslot 0 self.driver
+
+					self.driver.origin = self.origin + angles_toleft self.angles * -65 + ( 0 0 32 )
+					self.driver.viewangles = ( 0 self.angles[1] 0 )
+					self.driver rendereffects "+shadow"
+					self.driver forcetorsostate STAND
+
+					wait 1
+					
+					if (self.driver)
+					{
+						self.driver.invehicule = 0
+						self.driver stufftext "ui_removehud dday2"
+					}
+
+					self.driver = NIL
+					self.hasdriver = 0
+					
+					end
+				}
+			}
+		}
+
+		self.velocity = ( (self.velocity[0] * self.vehiclespeed) (self.velocity[1] * self.vehiclespeed) self.velocity[2] )
+		
+		waitframe
+	}
+
+end
+
+// display number of passengers on driver's screen
+driver_hud local.driver:
+
+	local.driver stufftext "globalwidgetcommand dday2 fgcolor 1.00 1.00 1.00 1.00"
+	local.driver stufftext "globalwidgetcommand dday2 bgcolor 0.50 0.50 0.50 0.00"
+	local.driver stufftext "globalwidgetcommand dday2 fadein 0"
+	local.driver stufftext "globalwidgetcommand dday2 menu dday2 640 480 NONE 0"
+	local.driver stufftext "globalwidgetcommand dday2 virtualres 1"
+	local.driver stufftext "globalwidgetcommand dday2 fullscreen 1"
+
+	local.driver stufftext "globalwidgetcommand charliesector borderstyle NONE"
+	local.driver stufftext "globalwidgetcommand charliesector textalign left "
+	local.driver stufftext "globalwidgetcommand charliesector rect 950 900 300 20"
+	local.driver stufftext "globalwidgetcommand charliesector fgcolor 0.0 1.0 0.0 1.0"
+	local.driver stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+	local.driver stufftext "globalwidgetcommand charliesector linkcvar driverhud"
+	local.driver stufftext "globalwidgetcommand charliesector font facfont-20"
+	local.driver stufftext "globalwidgetcommand charliesector shader townhallwindow"
+
+	waitframe
+
+	if (local.driver)
+	{
+		local.driver stufftext "ui_addhud dday2"
+		local.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+	}
+
+end
+
+kamera local.player:
+
+	local.name = "vehicle_kamera" + randomint 999999 + local.player.entnum
+	local.kamera = spawn func_camera targetname local.name
+	local.kamera.origin = self.origin + angles_toforward self.angles * -220 + ( 0 0 150 )
+	local.kam_trigger = spawn trigger_camerause target local.name
+	local.kam_trigger douse local.player
+	local.kam_trigger nottriggerable
+
+	self.driver_kamera = local.kamera
+	self.driver_kamera.kam_trigger = local.kam_trigger
+
+end local.kamera
+
+attachpassenger local.player local.seat1 local.seat2 local.seat3:
+ 
+	 local.passenger = local.player
+	 
+	 if ((local.passenger.is_in_vehicle == 1) || (self.passenger_is_in_que == 1))
+		end
+
+	 if (self.free_seats == 0)
+	 {
+		  if (local.passenger.informed != 1)
+		  {
+			  local.passenger iprint ("No free seats, better luck next time.")
+			  local.passenger.informed = 1
+			  wait 1
+			  local.passenger.informed = 0
+		  }
+		 end
+	 }
+	 
+	 self.passenger_is_in_que = 1
+
+	 local.seat = waitthread get_freeseat local.seat1 local.seat2 local.seat3
+
+	 self.passenger_is_in_que = 0
+	 
+	 // if ( (local.seat == NIL) && (self.free_seats != 0) )
+	 // {
+		//  thread attachpassenger
+		//  end
+	 // }
+	 
+	 //local.passenger stufftext ("say " + "Im on seat: " + local.seat)
+	 self.free_seats--
+	 self.nb_passengers++
+
+	 if (self.driver)
+	 	self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+	 // local.passenger.name = netname local.passenger
+
+	 // self.driver iprint (local.passenger.name+" has boarded the vehicle")
+	 self.driver iprint ("Someone has boarded the vehicle")
+
+	 local.passenger glue self.seats[local.seat] local.passenger.viewangles[2]
+	 self.seats[local.seat].passenger = local.passenger
+	 local.passenger.is_in_vehicle = 1
+	 
+	 wait 1
+
+	 self thread monitor local.passenger local.seat
+
+ end
+
+get_freeseat local.seat1 local.seat2 local.seat3:
+   
+	//iprintlnbold_noloc ("Get freeseat fired")
+	self.seats[1] = $(local.seat1)
+	self.seats[2] = $(local.seat2)
+	self.seats[3] = $(local.seat3)
+
+	local.seat = randomint(self.seats.size)+1
+	local.random_seat = self.seats[local.seat]
+
+	for ( local.seat = 1; local.seat <= self.seats.size; local.seat++ )
+	{
+		 if ( (self.seats[local.seat] && self.seats[local.seat].taken != 1) && (self.seats[local.seat] == local.random_seat) )
+		 {
+			 self.seats[local.seat].taken = 1
+			 end local.seat
+		 }
+
+		waitframe
+	}
+
+end
+
+monitor local.passenger local.seat:
+	
+	if (!local.passenger)
+		end
+
+	local.team = local.passenger.dmteam
+	
+	while (self)
+	{
+		if (local.passenger == NULL)
+		{
+			self.free_seats++
+			self.nb_passengers--
+
+			if (self.driver)
+				self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+			if (self.seats[local.seat])
+				self.seats[local.seat].taken = 0
+
+			end
+		}
+		else if (local.passenger.dmteam != local.team)
+		{
+			local.passenger unglue
+			local.passenger.is_in_vehicle = 0
+			local.passenger solid
+			self.free_seats++
+			self.nb_passengers--
+
+			if (self.driver)
+				self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+			if (self.seats[local.seat])
+				self.seats[local.seat].taken = 0
+
+			local.passenger.is_in_vehicle = 0
+			end		
+		}
+		else if (local.passenger.useheld)
+		{
+			local.passenger unglue
+			local.passenger.origin = local.passenger.origin  + ( 0 0 100 )
+			local.passenger solid
+			self.free_seats++
+			self.nb_passengers--
+
+			if (self.driver)
+				self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+			self.seats[local.seat].taken = 0
+			wait 1
+			local.passenger.is_in_vehicle = 0
+			end
+		}
+		else if (!IsAlive local.passenger)
+		{
+			local.passenger unglue
+			local.passenger solid
+			self.free_seats++
+			self.nb_passengers--
+
+			if (self.driver)
+				self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+			if (self.seats[local.seat])
+				self.seats[local.seat].taken = 0
+
+			local.passenger.is_in_vehicle = 0
+			end
+		}
+
+		// if (!IsAlive self)
+		// {
+		// 	local.passenger unglue
+		// 	local.passenger solid
+		// 	self.free_seats++
+		// 	self.nb_passengers--
+
+		// 	if (self.driver)
+		// 		self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+		// 	self.seats[local.seat].taken = 0
+		// 	local.passenger.is_in_vehicle = 0
+		// 	end
+		// }
+		
+		if (self)
+		{
+			if (self.driver)
+			{
+				if (self.driver.keyheld[ELORE] == 1 || self.driver.keyheld[HATRA] == 1)
+					local.passenger notsolid
+				else
+					local.passenger solid
+			}
+			else
+			{
+				local.passenger solid
+			}
+		}
+		
+		waitframe
+	}
+
+	if (local.passenger)
+	{
+		local.passenger unglue
+		local.passenger solid
+		local.passenger.is_in_vehicle = 0
+	}
+
+end
+
+vehicledeath local.model local.desmodel local.origin local.angles local.health local.seat1 local.seat2 local.seat3 local.bindnode_id:
+
+	self waittill death
+	self playsound explode_tank
+
+	local.desvehicle = spawn script_model
+	local.desvehicle model self.desmodel
+	local.desvehicle.origin = self.origin
+	local.desvehicle.angles = self.angles
+
+	if(self.driver)
+	{
+		self.driver show
+		self.driver solid
+		self.driver takedamage
+		self.driver unglue
+		self.driver.invehicule = 0
+		self.driver stufftext "ui_removehud dday2"
+
+		self detachdriverslot 0 self.driver
+
+		self.driver volumedamage 1000
+		
+		if (self.driver_kamera)
+		{
+			if (self.driver_kamera.kam_trigger)
+				self.driver_kamera.kam_trigger remove
+
+			self.driver_kamera remove
+			self.driver forcetorsostate STAND
+			self.driver rendereffects "+shadow"
+		}
+	}
+
+	if ($(local.seat1) && $(local.seat1).passenger)
+		$(local.seat1).passenger volumedamage 1000
+
+	if ($(local.seat2) && $(local.seat2).passenger)
+		$(local.seat2).passenger volumedamage 1000
+
+	if ($(local.seat3) && $(local.seat3).passenger)
+		$(local.seat3).passenger volumedamage 1000
+
+	self remove
+
+	local.boom = spawn script_model
+	local.boom model emitters/explosion_tank.tik
+	local.boom.origin = local.desvehicle.origin
+	local.boom anim start
+	radiusdamage local.boom.origin 640 384
+	waitframe
+	local.boom remove
+	wait 15
+	local.desvehicle remove
+
+	if ($(local.bindnode_id))
+		$(local.bindnode_id) remove
+
+	if ($(local.seat1))
+	{
+		$(local.seat1) remove
+		$(local.seat2) remove
+		$(local.seat3) remove
+	}
+
+	wait 45
+
+	exec global/vehicles/playervehicle.scr local.model local.desmodel local.origin local.angles local.health
+
+end
+
+klaxon:
+
+	self playsound truck_horn
+
+	wait 2
+
+	if (self)
+		self.klaxon = 1
+
+end

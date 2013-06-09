@@ -1,0 +1,1033 @@
+/**
+ * Ré-écrit par Feho - 2011
+ * 
+ * Spawn un bot avec sniper, ou bien avec une MG42 selon le rang du joueur
+ * 
+ * Exécuté par nagle_aa_torso.st
+ */
+
+main local.origin local.angle:
+
+	if (level.startingBots != 1)
+	{
+		level.startingBots = 1
+
+		level.alliedModels[0] = "player/allied_Airborne.tik"
+		level.alliedModels[1] = "player/allied_Manon.tik"
+		level.alliedModels[2] = "player/allied_Pilot.tik"
+		level.alliedModels[3] = "player/allied_SAS.tik"
+		level.alliedModels[4] = "player/american_Army.tik"
+		level.alliedModels[5] = "player/american_Ranger.tik"
+
+		level.axisModels[0] = "player/german_Afrika_Officer.tik"
+		level.axisModels[1] = "player/german_Afrika_Private.tik"
+		level.axisModels[2] = "player/german_Elite_Officer.tik"
+		level.axisModels[3] = "player/german_Elite_Sentry.tik"
+		level.axisModels[4] = "player/german_Kradshutzen.tik"
+		level.axisModels[5] = "player/german_Panzer_Grenadier.tik"
+		level.axisModels[6] = "player/german_Panzer_Obershutze.tik"
+		level.axisModels[7] = "player/german_Panzer_Shutze.tik"
+		level.axisModels[8] = "player/german_Panzer_Tankcommander.tik"
+		level.axisModels[9] = "player/german_Scientist.tik"
+		level.axisModels[10] = "player/german_Waffenss_Officer.tik"
+		level.axisModels[11] = "player/german_Waffenss_Shutze.tik"
+		level.axisModels[12] = "player/german_Wehrmacht_Officer.tik"
+		level.axisModels[13] = "player/german_Wehrmacht_Soldier.tik"
+		level.axisModels[14] = "player/german_Winter_1.tik"
+		level.axisModels[15] = "player/german_Winter_2.tik"
+		level.axisModels[16] = "player/german_Worker.tik"
+
+		level.botsStartHealth = 3000
+		level.botsHealthPoints = 100
+		level.dogsStartHealth = 3000
+		level.dogsHealthPoints = 400
+
+		thread player_teams
+	}
+
+	if (self.useheld == 1)
+	{
+		if (self.botsMode == NIL)
+			self.botsMode = 0
+
+		self.botsMode++
+
+		if (self.botsMode % 2 == 0)
+		{
+			self iprint "[Switched to dogs]" 1
+		}
+		else
+		{
+			self iprint "[Switched to bots]" 1
+		}
+		
+		end
+	}
+
+	if (local.origin == NULL || local.origin == NIL)
+	{
+		local.origin = self.origin - self.forwardvector * -50 + ( 0 0 30 )
+		local.angle = self.angle
+	}
+	
+	if (self.active_bots == NIL)
+		self.active_bots = 0
+
+	if (self.active_bots == 2)
+	{
+		self iprint "You can't place more than 2 bots at the same time"
+		end
+	}
+	
+	if (self.dogs == NIL)
+		self.dogs = 5
+
+	if (self.dogs > 0 && self.botsMode % 2 == 0)
+	{
+		self thread dog local.origin
+	}
+	else
+	{
+		if ( (self.special_bots != NIL) && (self.special_bots > 0) )
+		{
+			self thread fake_dude_MG42 local.origin local.angle
+		}
+		else
+		{
+			self thread fake_dude local.origin local.angle
+		}		
+	}
+
+	// self.special_bots = 5
+
+end
+
+//***************************************************
+//*************** Dog *******************************
+//***************************************************
+
+dog local.origin:
+	
+	self.dogs--
+	self.active_bots++
+
+	self iprint (self.dogs + " dogs left")
+
+	local.crazydog = spawn models/animal/german_shepherd "type_idle" "dog_idle" "type_attack" "dog_attack"
+
+	local.crazydog.origin = local.origin
+	local.crazydog.angles = self.angles
+	local.crazydog.mindist = 0 
+	local.crazydog.maxdist = 2 
+	local.crazydog.leash = 10000 
+	local.crazydog.fixedleash = 0 
+	local.crazydog.sight = 4000 
+	local.crazydog.noticescale = 50 
+	local.crazydog.enemysharerange = 2048 
+	local.crazydog.hearing = 4000 
+	local.crazydog.fov = 180 
+	local.crazydog.dmteam= self.dmteam 
+	local.crazydog.painhandler = anim/dog_pain.scr
+	local.crazydog.deathhandler = anim/dog_killed.scr
+	local.crazydog.startHealth = level.dogsStartHealth // prevents team killing
+	local.crazydog.health = local.crazydog.startHealth
+	local.crazydog.healthPoints = level.dogsHealthPoints
+	local.crazydog.player = self
+	local.crazydog forceactivate
+
+	if (self.dmteam == axis)
+		local.crazydog german
+	else
+		local.crazydog american
+
+	local.crazydog thread dog_avatar
+	local.crazydog thread setup_kill self 1
+
+	local.crazydog waittill death
+
+	iprintln "A dog was killed !"
+
+	wait 5
+	local.crazydog immediateremove
+	self.active_bots--
+
+end
+
+dog_avatar:
+
+	local.avatar = spawn func_beam
+	local.avatar shader ("textures/hud/" + self.dmteam + ".tga") 
+	local.avatar.origin = self.origin
+
+	local.avatar color ( 1.0 1.0 1.0 )
+	local.avatar scale 6
+	local.avatar numsegments 1
+
+	local.avatar activate
+
+	while(self && isAlive self)
+	{
+		local.avatar.origin =  ( self.origin + ( 0 0 82) )
+		local.avatar endpoint  ( self.origin + ( 0 0 95) )
+		waitframe
+	}
+
+	local.avatar remove
+
+end
+
+player_teams:
+
+	while (1)
+	{
+
+		if($player.size != NIL && $player.size != 0)
+		{
+
+			for (local.playtm=1;local.playtm <= $player.size;local.playtm++)
+			{
+				if ($player[local.playtm].dmteam == axis)
+					$player[local.playtm] german
+
+				if ($player[local.playtm].dmteam == allies)
+					$player[local.playtm] american
+
+				if ($player[local.playtm].dmteam == "spectator" || $player[local.playtm].needrevive == 1)
+					$player[local.playtm] threatbias ignoreme
+				else
+					$player[local.playtm] threatbias 1000
+			}
+		}
+
+		wait 1
+	}
+
+end
+
+//***************************************************
+//*************** Special bot ************************
+//***************************************************
+
+fake_dude_MG42 local.origin local.angle:
+
+	// if (self.special_bots == NIL)
+		// self.special_bots = 5
+		
+	if (self.special_bots == 0)
+	{
+		self iprint "0 special bots left"
+		end
+	}
+		
+	self.special_bots--
+	self.active_bots++
+	
+	self iprint (self.special_bots + " special bots left")
+	
+	if (self.dmteam == "allies")
+	{
+		local.model = level.alliedModels[randomint(level.alliedModels.size)]
+		local.bot = spawn animate model local.model origin local.origin angle local.angle takedamage 1 solid 1 anim unarmed_stand_idle
+		local.bot.team = "allies"
+	}
+	else
+	{
+		local.model = level.axisModels[randomint(level.alliedModels.size)]
+		local.bot = spawn animate model local.model origin local.origin angle local.angle takedamage 1 solid 1 anim unarmed_stand_idle
+		local.bot.team = "axis"
+	}
+	
+	local.bot.startHealth = level.botsStartHealth // prevents team killing
+	local.bot.health = local.bot.startHealth
+	local.bot.healthPoints = level.botsHealthPoints
+
+	// local.bot.origin = local.origin
+	// local.bot.angle = local.angle
+	// local.bot.health = 100 
+	// local.bot.scale = 1.0
+	// local.bot solid
+	local.bot droptofloor
+
+	local.crate = spawn script_model
+	local.crate model static/indycrate.tik
+	local.crate.origin = local.bot.origin - local.bot.forwardvector * -45
+	local.crate.angle = local.angle
+	local.crate.scale = 1.0
+	local.crate solid 
+	local.crate.health = 500
+
+	local.mg42 = spawn models/statweapons/mg42_gun.tik
+	local.mg42.origin = local.bot.origin - local.bot.forwardvector * -50 + ( 0 0 60 )
+	local.mg42 svflags "+broadcast"
+	local.mg42.angle = local.angle
+	local.mg42 yawCenter local.angle
+	local.mg42 maxyawoffset 70 
+	local.mg42 pitchCaps ( -15 50 0 )
+	// local.mg42 dmbulletDamage 10.0
+	local.mg42 firetype fakebullet
+	local.mg42B = spawn script_model 
+	local.mg42B model "statweapons/mg42_bipod.tik" 
+	local.mg42B.origin = local.bot.origin - local.bot.forwardvector * -50 + ( 0 0 62 )
+	local.mg42B svflags "+broadcast"
+	local.mg42B.angle = local.angle
+	local.mg42B solid
+	
+	thread check_team local.bot self
+	local.bot thread bot_death self
+	local.bot thread setup_kill self
+	
+	wait 2
+	
+	local.bot thread special_bots_anims self local.mg42 local.mg42B
+						
+	while (IsAlive local.bot)
+	{
+		for(local.dude=1;local.dude <= $player.size;local.dude++)
+		{
+			if (getcvar "g_gametype" == "1")
+			{
+				if ( (isAlive $player[local.dude]) && ($player[local.dude] != self) && ($player[local.dude].dmteam != "spectator") && (local.mg42B) && (local.mg42B cansee $player[local.dude] 140 3000) )
+				{
+					// bots are not allowed to damage players with parachutes
+					if ( ($player[local.dude]).isdrop != 1)
+					{						
+						//locprint 130 70 "ICU"
+						// local.bot anim turret_idle
+						local.mg42 setaimtarget $player[local.dude]
+						local.mg42 waittill ontarget
+						if (isAlive $player[local.dude] && local.mg42B cansee $player[local.dude] 140 3000)
+						{
+						local.mg42 anim fire start
+						local.bot exec global/feho/tracerbullet.scr::tracer_bot local.weapon
+						local.pain = randomint (10)
+						local.pain = (local.pain + 10)
+						local.death = randomint (17)
+						local.aim_skill = randomint (3)
+						if (local.aim_skill == 1)
+						{
+							$player[local.dude] damage self local.pain $player[local.dude] (0 0 0) (0 0 0) (0 0 0) 10 1 19 local.death
+							thread promotion $player[local.dude] self local.bot
+						}
+						local.mg42 clearAimTarget
+						}
+						else
+						{
+						local.mg42 clearAimTarget
+						}
+					}
+				}
+			}
+			else
+			{
+				if ( (isAlive $player[local.dude]) && (local.bot.team != $player[local.dude].dmteam) && ($player[local.dude].dmteam != "spectator") && ($player[local.dude].needrevive != 1) && (local.mg42B) && (local.mg42B cansee $player[local.dude] 140 3000) )
+				{
+					// bots are not allowed to damage players with parachutes
+					if ( ($player[local.dude]).isdrop != 1)
+					{			
+						//locprint 130 70 "ICU"
+						// local.bot anim turret_idle
+						local.mg42 setaimtarget $player[local.dude]
+						local.mg42 waittill ontarget
+						if (isAlive $player[local.dude] && local.mg42B cansee $player[local.dude] 140 3000)
+						{
+							local.mg42 anim fire start
+							local.bot exec global/feho/tracerbullet.scr::tracer_bot local.weapon
+							local.pain = randomint (10)
+							local.pain = (local.pain + 10)
+							local.death = randomint (17)
+							local.aim_skill = randomint (3)
+							if (local.aim_skill == 1)
+							{
+								$player[local.dude] damage self local.pain $player[local.dude] (0 0 0) (0 0 0) (0 0 0) 10 1 19 local.death
+								thread promotion $player[local.dude] self local.bot
+							}
+							local.mg42 clearAimTarget
+						}
+						else
+						{
+							local.mg42 clearAimTarget
+						}
+					}
+				}
+			}
+		}
+		wait .1
+	}
+	
+	local.mg42 firetype bullet
+	local.mg42 dmbulletDamage 10.0
+	
+	wait 30
+	
+	local.crate immediateremove
+	local.mg42 hide
+	local.mg42B immediateremove
+	
+	wait 60
+	
+	local.mg42 immediateremove
+	
+end
+	
+special_bots_anims local.player local.mg42 local.mg42B:
+
+	//local.bot = self
+	while(self)
+	{
+		for(local.dude=1;local.dude <= $player.size;local.dude++)
+		{
+			if (getcvar "g_gametype" == "1")
+			{
+				while( (isAlive $player[local.dude]) && ($player[local.dude] != self) && ($player[local.dude].dmteam != "spectator") && (local.mg42B) && (local.mg42B cansee $player[local.dude] 170 3000) )
+				{
+					if (!IsAlive self)
+						end
+					
+					self.origin = local.mg42.origin - self.forwardvector * 50 + ( 0 0 -60 )
+					self.angle = local.mg42.angle
+					
+					if (self.anim_turret != 1)
+					{
+						self anim turret_idle
+						self.anim_turret = 1
+						self.anim_stand = 0
+					}
+					wait 0.05
+				}
+				if (self.anim_stand != 1)
+				{
+					self anim unarmed_stand_idle
+					self.anim_stand = 1
+					self.anim_turret = 0
+				}
+			}
+			else
+			{
+				while( (isAlive $player[local.dude]) && (self.team != $player[local.dude].dmteam) && ($player[local.dude].dmteam != "spectator") && ($player[local.dude].needrevive != 1) && (local.mg42B) && (local.mg42B cansee $player[local.dude] 170 3000) )
+				{
+					if (!IsAlive self)
+						end
+						
+					self.origin = local.mg42.origin - self.forwardvector * 50 + ( 0 0 -60 )
+					self.angle = local.mg42.angle
+					
+					if (self.anim_turret != 1)
+					{
+						self anim turret_idle
+						self.anim_turret = 1
+						self.anim_stand = 0
+					}
+					wait 0.05
+				}
+				if (self.anim_stand != 1)
+				{
+					self anim unarmed_stand_idle
+					self.anim_stand = 1
+					self.anim_turret = 0
+				}
+			}
+		}
+		wait 0.05
+	}
+	
+end
+
+bot_death local.player:
+
+	local.fake_dude = self
+	
+	while (IsAlive local.fake_dude)
+		wait .06
+	
+	iprintln "A bot was killed !"
+
+	if (local.player)
+		local.player.active_bots--
+	
+	local.death_anim = randomint (5)+1
+	switch (local.death_anim)
+	{
+		case 1:
+		local.death_anim = death_fall_to_knees
+		local.fake_dude playsound player_death01
+		break
+		case 2:
+		local.death_anim = death_fall_back
+		local.fake_dude playsound player_death02
+		break
+		case 3:
+		local.death_anim = death_chest
+		local.fake_dude playsound player_death03
+		break
+		case 4:
+		local.death_anim = death_choke
+		local.fake_dude playsound player_death04
+		break
+		case 5:
+		local.death_anim = death_crotch
+		local.fake_dude playsound player_death05
+		break
+	}
+	local.fake_dude anim local.death_anim
+	local.fake_dude notsolid
+	wait 5
+	local.fake_dude immediateremove
+	
+end
+
+//***************************************************
+//*************** Normal bot ************************
+//***************************************************
+
+fake_dude local.origin local.angle:
+
+	if (self.bots == NIL)
+		self.bots = 10
+		
+	if (self.bots == 0)
+	{
+		self iprint "0 bots left"
+		end
+	}
+		
+	self.bots--
+	self.active_bots++
+	
+	self iprint (self.bots + " bots left")
+	
+	if (self.dmteam == "allies")
+	{
+		local.model = level.alliedModels[randomint(level.alliedModels.size)]
+		local.bot = spawn animate model local.model origin local.origin angle local.angle takedamage 1 solid 1 anim rifle_stand_idle
+		local.bot.team = "allies"
+		local.id_number = randomint 10000000
+		local.bot attachmodel "items/cigarette.tik" "Bip01 head" 1.3 ("cig" + local.id_number) 0 -1 -1 -1 -1 ( 3.6 7.5 2.0 ) spawnflags 1
+		$("cig" + local.id_number).angles = ( 100 180 0 )
+		local.bot attachmodel "weapons/springfield.tik" "tag_weapon_right" 1.0 ("weapon" + local.id_number) 0 -1 -1 -1 -1 ( 0 0 0 )
+	}
+	else
+	{
+		local.model = level.axisModels[randomint(level.alliedModels.size)]
+		local.bot = spawn animate model local.model origin local.origin angle local.angle takedamage 1 solid 1 anim rifle_stand_idle
+		local.bot.team = "axis"
+		local.id_number = randomint 10000000
+		local.bot attachmodel "items/cigarette.tik" "Bip01 head" 1.3 ("cig" + local.id_number) 0 -1 -1 -1 -1 ( 3.6 7.5 2.0 ) spawnflags 1
+		$("cig" + local.id_number).angles = ( 100 180 0 )
+		local.bot attachmodel "weapons/kar98sniper.tik" "tag_weapon_right" 1.0 ("weapon" + local.id_number) 0 -1 -1 -1 -1 ( 0 0 0 )
+	}
+	
+	local.bot.startHealth = level.botsStartHealth // prevents team killing
+	local.bot.health = local.bot.startHealth
+	local.bot.healthPoints = level.botsHealthPoints
+
+	local.weapon = $("weapon" + local.id_number)
+	
+	local.bot droptofloor
+
+	local.mg42 = spawn models/statweapons/mg42_gun.tik
+	local.mg42.origin = local.bot.origin - local.bot.forwardvector * -20 + ( 0 0 74 )
+	local.mg42 svflags "+broadcast"
+	local.mg42.angle = local.angle
+	// local.mg42 yawCenter local.angle
+	// local.mg42 maxyawoffset 70 
+	// local.mg42 pitchCaps ( -15 50 0 )
+	// local.mg42 dmbulletDamage 10.0
+	local.mg42 hide
+	local.mg42B = spawn script_model 
+	local.mg42B model "statweapons/mg42_bipod.tik" 
+	local.mg42B.origin = local.bot.origin - local.bot.forwardvector * -20 + ( 0 0 76 )
+	local.mg42B svflags "+broadcast"
+	local.mg42B.angle = local.angle
+	local.mg42B hide
+	
+	thread check_team local.bot self
+	local.bot thread bot_death self
+	local.bot thread setup_kill self
+	
+	wait 2
+	
+	local.bot thread bots_anims self local.mg42 local.mg42B
+			
+	local.player = self
+	
+	while (IsAlive local.bot)
+	{
+		for(local.dude=1;local.dude <= $player.size;local.dude++)
+		{
+			if (getcvar "g_gametype" == "1")
+			{
+				if ( (isAlive $player[local.dude]) && ($player[local.dude] != self) && ($player[local.dude].dmteam != "spectator") && (local.mg42B) && (local.mg42B cansee $player[local.dude] 360 3000) )
+				{
+					// bots are not allowed to damage players with parachutes
+					if ( ($player[local.dude]).isdrop != 1)
+					{			
+						//locprint 130 70 "ICU"
+						local.mg42 setaimtarget $player[local.dude]
+						local.mg42 waittill ontarget
+						if (isAlive $player[local.dude] && local.mg42B cansee $player[local.dude] 360 3000)
+						{
+							local.weapon anim fire start
+							local.bot exec global/feho/tracerbullet.scr::tracer_bot local.weapon
+							// wait .1
+							local.pain = randomint (50)
+							local.pain = (local.pain + 20)
+							local.death = randomint (17)
+							local.aim_skills = randomint (2)
+							local.sighted_sound = randomint 3
+							if (local.aim_skills == 1)
+							{
+								if (local.sighted_sound == 1)
+								{
+									if (local.bot.team == "allies")
+									{
+										local.bot playsound allied_sighted
+									}
+									else
+									{
+										local.bot playsound axis_sighted
+									}
+								}
+								$player[local.dude] damage local.player local.pain $player[local.dude] (0 0 0) (0 0 0) (0 0 0) 10 1 19 local.death
+								thread promotion $player[local.dude] local.player local.bot
+								wait .6
+								local.weapon anim rechamber start
+							}
+						}
+						else
+						{
+							local.mg42 clearAimTarget
+						}
+					}
+				}
+			}
+			else
+			{
+				if ( (isAlive $player[local.dude]) && (local.bot.team != $player[local.dude].dmteam) && ($player[local.dude].dmteam != "spectator") && ($player[local.dude].needrevive != 1) && (local.mg42B) && (local.mg42B cansee $player[local.dude] 360 3000) )
+				{
+					// bots are not allowed to damage players with parachutes
+					if ( ($player[local.dude]).isdrop != 1)
+					{
+						//locprint 130 70 "ICU"
+						local.mg42 setaimtarget $player[local.dude]
+						local.mg42 waittill ontarget
+						if (isAlive $player[local.dude] && local.mg42B cansee $player[local.dude] 360 3000)
+						{
+							local.weapon anim fire start
+							local.bot exec global/feho/tracerbullet.scr::tracer_bot local.weapon
+							// wait .1
+							local.pain = randomint (50)
+							local.pain = (local.pain + 20)
+							local.death = randomint (17)
+							local.aim_skills = randomint (2)
+							local.sighted_sound = randomint 3
+							if (local.aim_skills == 1)
+							{
+								if (local.sighted_sound == 1)
+								{
+									if (local.bot.team == "allies")
+									{
+										local.bot playsound allied_sighted
+									}
+									else
+									{
+										local.bot playsound axis_sighted
+									}
+								}
+								$player[local.dude] damage local.player local.pain $player[local.dude] (0 0 0) (0 0 0) (0 0 0) 10 1 19 local.death
+								thread promotion $player[local.dude] local.player local.bot
+								wait .6
+								local.weapon anim rechamber start
+							}
+						}
+						else
+						{
+						local.mg42 clearAimTarget
+						}
+					}
+				}
+			}
+		}
+		wait 1.5
+	}
+
+	local.mg42B immediateremove	
+	local.mg42 immediateremove
+	
+end
+
+bots_anims local.player local.mg42 local.mg42B:
+
+	//local.bot = self
+	while(self)
+	{
+		for(local.dude=1;local.dude <= $player.size;local.dude++)
+		{
+			if (getcvar "g_gametype" == "1")
+			{
+				while( (isAlive $player[local.dude]) && ($player[local.dude] != self) && ($player[local.dude].dmteam != "spectator") && (local.mg42B) && (local.mg42B cansee $player[local.dude] 360 3000) )
+				{
+					if (!IsAlive self)
+						end
+					
+					self.angle = local.mg42.angle
+					
+					wait 0.05
+				}
+			}
+			else
+			{
+				while( (isAlive $player[local.dude]) && (self.team != $player[local.dude].dmteam) && ($player[local.dude].dmteam != "spectator") && ($player[local.dude].needrevive != 1) && (local.mg42B) && (local.mg42B cansee $player[local.dude] 360 3000) )
+				{
+					if (!IsAlive self)
+						end
+						
+					self.angle = local.mg42.angle
+					
+					wait 0.05
+				}
+			}
+		}
+		wait 0.05
+	}
+
+end
+
+/*
+fake_dude local.origin local.angle:
+
+	if (self.bots == NIL)
+		self.bots = 15
+		
+	if (self.bots == 0)
+	{
+		self iprint "0 bots left"
+		end
+	}
+		
+	self.bots--
+	
+	self iprint (self.bots + " bots left")
+	
+	if (self.dmteam == "allies")
+	{
+		local.fake_dude = spawn animate model "player/american_Army.tik" origin local.origin angle local.angle health 100 takedamage 1 solid 1 anim rifle_stand_idle
+		local.fake_dude droptofloor
+		local.fake_dude.team = "allies"
+		local.id_number = randomint 10000000
+		local.fake_dude attachmodel "items/cigarette.tik" "Bip01 head" 1.3 ("cig" + local.id_number) 0 -1 -1 -1 -1 ( 3.6 7.5 2.0 ) spawnflags 1
+		$("cig" + local.id_number).angles = ( 100 180 0 )
+		local.fake_dude attachmodel "weapons/springfield.tik" "tag_weapon_right" 1.0 ("weapon" + local.id_number) 0 -1 -1 -1 -1 ( 0 0 0 )
+	}
+	else
+	{
+		local.fake_dude = spawn animate model "player/german_Waffenss_Shutze.tik" origin local.origin angle local.angle health 100 takedamage 1 solid 1 anim rifle_stand_idle
+		local.fake_dude droptofloor
+		local.fake_dude.team = "axis"
+		local.id_number = randomint 10000000
+		local.fake_dude attachmodel "items/cigarette.tik" "Bip01 head" 1.3 ("cig" + local.id_number) 0 -1 -1 -1 -1 ( 3.6 7.5 2.0 ) spawnflags 1
+		$("cig" + local.id_number).angles = ( 100 180 0 )
+		local.fake_dude attachmodel "weapons/kar98.tik" "tag_weapon_right" 1.0 ("weapon" + local.id_number) 0 -1 -1 -1 -1 ( 0 0 0 )
+	}
+	local.weapon = $("weapon" + local.id_number)
+	
+	//trick to move the bot :P
+	local.mg42 = spawn models/statweapons/mg42_gun.tik
+	local.mg42.origin = local.fake_dude.origin - local.fake_dude.forwardvector * -10 + ( 0 0 60 )
+	local.mg42 svflags "+broadcast"
+	local.mg42.angle = local.angle
+	local.mg42 hide
+	local.mg42B = spawn script_model 
+	local.mg42B model "statweapons/mg42_bipod.tik" 
+	local.mg42B.origin = local.fake_dude.origin - local.fake_dude.forwardvector * -10 + ( 0 0 62 )
+	local.mg42B svflags "+broadcast"
+	local.mg42B.angle = local.angle
+	local.mg42B hide
+	
+	thread check_team local.fake_dude self
+	thread fake_dude_anims local.fake_dude local.weapon self
+	while (isalive local.fake_dude)
+	{
+		waitframe
+	}
+	iprintln "A bot was killed !"
+	local.death_anim = randomint (5)+1
+	switch (local.death_anim)
+	{
+		case 1:
+		local.death_anim = death_fall_to_knees
+		local.fake_dude playsound player_death01
+		break
+		case 2:
+		local.death_anim = death_fall_back
+		local.fake_dude playsound player_death02
+		break
+		case 3:
+		local.death_anim = death_chest
+		local.fake_dude playsound player_death03
+		break
+		case 4:
+		local.death_anim = death_choke
+		local.fake_dude playsound player_death04
+		break
+		case 5:
+		local.death_anim = death_crotch
+		local.fake_dude playsound player_death05
+		break
+	}
+	local.fake_dude anim local.death_anim
+	local.fake_dude notsolid
+	local.smoke = spawn script_model "model" "items/cigarette.tik" scale 2.0 origin $("cig" + local.id_number).origin angles $("cig" + local.id_number).angles spawnflags 1
+	$("cig" + local.id_number) immediateremove
+	local.smoke physics_on
+	local.smoke.velocity = local.fake_dude.forwardvector * 100 + local.fake_dude.leftvector * 0 + local.fake_dude.upvector * 150
+	local.smoke notsolid
+	local.healthbox = spawn health "model" items/50_healthbox.tik origin (local.fake_dude.origin + ( local.fake_dude.forwardvector * 60) + ( 0 0 60 ))
+	local.healthbox.velocity = local.fake_dude.forwardvector * 200 + local.fake_dude.leftvector * 0 + local.fake_dude.upvector * 200
+	local.healthbox amount 50
+	local.healthbox set_respawn_time 30
+	local.healthbox droptofloor
+	thread life local.smoke local.fake_dude local.healthbox
+	wait 4
+	
+end
+
+life local.smoke local.fake_dude local.healthbox:
+
+	wait (randomint (6)+4)
+	local.smoke immediateremove
+	local.fake_dude immediateremove
+	local.healthbox immediateremove
+	
+end
+
+fake_dude_anims local.fake_dude local.weapon local.player:
+
+	wait 2
+	
+	while (local.fake_dude.health > 0)
+	{
+		for(local.dude=1;local.dude <= $player.size;local.dude++)
+		{
+			//if ( (isAlive $player[local.dude]) && (local.fake_dude cansee $player[local.dude] 90 3000) && (local.fake_dude.health > 0) )
+			if (getcvar "g_gametype" == "1")
+			{
+				if ( ($player[local.dude].needrevive != 1) && ($player[local.dude] != self) && (isAlive $player[local.dude]) && (local.fake_dude cansee $player[local.dude] 90 3000) && (local.fake_dude.health > 0))
+				{
+					{
+					}
+					local.distance = vector_length (local.fake_dude.origin - $player[local.dude].origin)
+					if ( (local.fake_dude cansee $player[local.dude] 90 3000 == 1) && (local.fake_dude.health > 0) )
+					{
+						local.weapon anim fire start
+						wait .1
+						local.pain = randomint (50)
+						local.pain = (local.pain + 50)
+						local.death = randomint (17)
+						local.aim_skills = randomint (3)+1
+						local.sighted_sound = randomint 3
+						if (local.aim_skills < 3)
+						{
+							if (local.sighted_sound == 1)
+							{
+								if (local.fake_dude.team == "allies")
+								{
+									local.fake_dude playsound allied_sighted
+								}
+								else
+								{
+									local.fake_dude playsound axis_sighted
+								}
+							}
+							$player[local.dude] damage local.player local.pain $player[local.dude] (0 0 0) (0 0 0) (0 0 0) 10 1 19 local.death
+							thread promotion $player[local.dude] local.player
+							wait .6
+							local.weapon anim rechamber start
+							if (!IsAlive $player[local.dude])
+							{
+								local.player addkills 1
+							}
+						}
+					}
+				}			
+			}
+			if (local.fake_dude.team == "allies")
+			{
+				if ( ($player[local.dude].needrevive != 1) && ($player[local.dude].dmteam == axis) && (isAlive $player[local.dude]) && (local.fake_dude cansee $player[local.dude] 90 3000) && (local.fake_dude.health > 0))
+				{
+					{
+					}
+					local.distance = vector_length (local.fake_dude.origin - $player[local.dude].origin)
+					if ( (local.fake_dude cansee $player[local.dude] 90 3000 == 1) && (local.fake_dude.health > 0) )
+					{
+						local.weapon anim fire start
+						wait .1
+						local.pain = randomint (50)
+						local.pain = (local.pain + 50)
+						local.death = randomint (17)
+						local.aim_skills = randomint (3)+1
+						local.sighted_sound = randomint 3
+						if (local.aim_skills < 3)
+						{
+							if (local.sighted_sound == 1)
+							{
+								local.fake_dude playsound allied_sighted
+							}
+							$player[local.dude] damage local.player local.pain $player[local.dude] (0 0 0) (0 0 0) (0 0 0) 10 1 19 local.death
+							thread promotion $player[local.dude] local.player
+							wait .6
+							local.weapon anim rechamber start
+						}
+					}
+				}
+			}
+			else
+			{
+				if ( ($player[local.dude].needrevive != 1) && ($player[local.dude].dmteam == allies) && (isAlive $player[local.dude]) && (local.fake_dude cansee $player[local.dude] 90 3000) && (local.fake_dude.health > 0))
+				{
+					{
+					}
+					local.distance = vector_length (local.fake_dude.origin - $player[local.dude].origin)
+					if ( (local.fake_dude cansee $player[local.dude] 90 3000 == 1) && (local.fake_dude.health > 0) )
+					{
+						local.weapon anim fire start
+						wait .1
+						local.pain = randomint (50)
+						local.pain = (local.pain + 50)
+						local.death = randomint (17)
+						local.aim_skills = randomint (3)+1
+						local.sighted_sound = randomint 3
+						if (local.aim_skills < 3)
+						{
+							if (local.sighted_sound == 1)
+							{
+								local.fake_dude playsound axis_sighted
+							}
+							$player[local.dude] damage local.player local.pain $player[local.dude] (0 0 0) (0 0 0) (0 0 0) 10 1 19 local.death
+							thread promotion $player[local.dude] local.player
+							wait .6
+							local.weapon anim rechamber start
+						}
+					}
+				}
+			}
+		}
+		if (local.fake_dude.health > 0)
+		{
+			wait 1.2
+		}
+	}
+	
+end
+*/
+
+check_team local.fake_dude local.player:
+
+	while (local.player && local.fake_dude.team == local.player.dmteam && IsAlive local.fake_dude)
+	{		
+		wait 0.5
+	}
+
+	local.fake_dude hurt local.fake_dude.startHealth
+	
+end
+
+promotion local.victim local.botowner local.bot:
+
+if (!IsAlive local.victim)
+{
+	// local.botowner addkills 1
+	if (local.botowner.dmteam == "allies") {
+		local.bot playsound allied_gotone
+	}
+	else {
+		local.bot playsound axis_gotone
+	}	
+}
+
+end
+
+setup_kill local.player local.dog:
+
+	self.detect = spawn trigger_multipleall "spawnflags" "128"
+	self.detect.origin = self.origin
+	self.detect.angle = self.angle
+	self.detect glue self
+	self.detect.player = self
+	self.detect.alive = 1
+	self.detect.attacker = NIL
+	self.detect solid
+
+	if (local.dog)
+	{
+		local.team = self.dmteam
+		self.detect setsize ( -25 -25 0 ) ( 25 25 60 ) // Original ( -17 -17 0 ) ( 17 17 72 )
+	}
+	else
+	{
+		local.team = self.team
+		self.detect setsize ( -25 -25 0 ) ( 25 25 85 ) // Original ( -17 -17 0 ) ( 17 17 72 )
+	}
+
+	while(self.detect)
+	{
+		self.detect waittill trigger
+
+		local.murderer = parm.other // Celui qui tire sur le bot
+
+		if (local.team != local.murderer.dmteam)
+		{
+			waitframe
+
+			if (self.hitByEnemy != 1)
+			{
+				self.hitByEnemy = 1
+
+				local.hitDamage = self.startHealth - self.health
+
+				self.health = self.healthPoints
+				self hurt local.hitDamage
+			}
+		}
+		
+		if (!IsAlive self)
+		{
+			if (getcvar "g_gametype" != "1")
+			{
+				if (local.team != local.murderer.dmteam)
+				{
+					// local.murderer.killcount++
+					local.murderer addkills 1
+					local.player.name = netname local.player
+
+					if (local.dog)
+						local.murderer iprint ("You killed " + local.player.name + "'s dog") 1
+					else
+						local.murderer iprint ("You killed " + local.player.name + "'s bot") 1
+				}
+				else
+				{
+					local.murderer.killcount--
+
+					if (local.dog)
+						local.murderer iprint ("Don't kill your team's dogs soldier!")
+					else
+						local.murderer iprint ("Don't kill your team's bots soldier!")
+
+					local.murderer damage local.murderer 10 local.murderer (0 0 0) (0 0 0) (0 0 0) 0 1 0 -1
+				}
+			}
+			else // FFA, OBJ
+			{
+				if (local.murderer != local.player)
+				{
+					local.murderer.killcount++
+				}
+			}
+			self.detect immediateremove
+		}
+			
+		waitframe
+		
+	}
+	
+end

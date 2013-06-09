@@ -1,0 +1,515 @@
+connected local.player:
+
+	if ( !local.player || local.player.classname != "Player" || level.intermission_started == 1 )
+		end
+
+	local.player.isplayer = 1
+	local.player.disable_spawn = 0
+
+	local.player stufftext ( "set rate 30000" )
+	local.player stufftext ( "set developer 0" )
+	local.player stufftext ( "set ui_console 1" )
+	local.player stufftext ( "set cg_forcemodel 0" )
+	local.player stufftext "ui_checkrestart"
+
+	local.player exec global/AA/clear_huds.scr
+	local.player exec global/AA/check_weapons.scr
+
+	if (local.player.dmteam != "spectator")
+		thread spawn local.player
+
+	if (level.account == 1)
+		local.player thread global/AA/accounts.scr::check_login
+
+	if (level.bas_huds == 1)
+		thread global/BAS/huds.scr::refresh_huds 4
+
+	if ( netname local.player == "" || netname local.player == "UnnamedSoldier" )
+		local.player stufftext ( "name Ihavetochangemyname" + randomint 9999 )
+
+	local.rand1 = randomint 1
+	local.rand1++
+
+	local.sound = "allied_medic_kialltas" + local.rand1
+	local.player.allies_medic_callsound = local.sound
+
+	local.rand2 = randomint 4
+	local.rand2++
+
+	local.sound = "axis_medic_kialltas" + local.rand2
+	local.player.axis_medic_callsound = local.sound
+
+end
+
+disconnected local.player:
+
+	if (local.player == NULL)
+		end
+
+	if (local.player.logged_in == 1)
+		local.player thread global/AA/accounts.scr::delete_login local.player.rew_username
+
+	if ( local.player.vehicle_trigger != NIL && local.player.vehicle_trigger != NULL )
+		local.player.vehicle_trigger remove
+
+end
+
+spawn local.player:
+
+	if ( local.player.dmteam == "spectator" || local.player.isplayer != 1 )
+		end
+
+	if ( level.intermission_started == 1 || level.bas_roundend == 1 )
+		end
+
+	local.team = local.player.dmteam
+
+	local.player.player_spawned = 0
+
+	if (local.player.disable_spawn > 0)
+	{
+		local.player.disable_spawn--
+		end
+	}
+
+	wait 0.051
+
+	if (local.player == NULL)
+		end
+
+	local.player.player_spawned = 1
+	local.player.poziciot_valt = 0
+
+	local.player waitthread remove_things
+
+	local.player exec global/AA/spawn_protection.scr local.team
+
+	local.player waitthread check_class local.team
+
+	if (local.player == NULL)
+		end
+
+	local.player thread global/AA/reward_store.scr::spawned_player_rewards
+
+	if (local.player.binded_call_key != 1)
+	{
+		local.player.binded_call_key = 1
+
+		// local.player stufftext ( "bind i scmd needammo" )
+		// local.player stufftext ( "bind k scmd needengineer" )
+		// local.player stufftext ( "bind l scmd needmedic" )
+
+		// local.player iprint "Press the 'i' button to call for ammo."
+		// local.player iprint "Press the 'k' button to call for engineers in vehicle."
+		// local.player iprint "Press the 'l' button to call for medics."
+	}
+
+	//local.player thread global/AA/telefrag.scr::telefrag
+
+	local.player thread maps/m4l0.scr::parachute
+
+	if (local.player.mortar_area_help != 1)
+	{
+		local.player.mortar_area_help = 1
+		local.player iprint "Use your binoculars to mark a target area for mortars by pressing the sec. attack button." 1
+	}
+
+	while ( local.player != NULL && isAlive local.player && local.player.dmteam == local.team && local.player.isplayer == 1 && local.player.player_spawned == 1 && level.bas_roundend != 1 )
+	{
+		local.player thread global/AA/vehicle_fixes.scr::veh_coll
+
+		if (local.player.ammodrop == 1)
+			local.player exec global/AA/ammodrop.scr local.player.dmteam
+
+		if ( local.player.current_weapon != NULL && local.player.current_weapon.model == "models/items/binoculars.tik" && local.player.fireheld == 1 && local.player.secfireheld == 1 )
+			local.player thread global/AA/mortar.scr::mortar_target
+
+		waitframe
+	}
+
+	if (local.player == NULL)
+		end // Player disconnected
+
+	local.player stufftext "ui_removehud dday1"
+	local.player stufftext "ui_removehud dday2"
+	local.player stufftext "ui_removehud credits1"
+
+	local.player.player_spawned = 0
+	local.player.poziciot_valt = 0
+	local.player.ismortarman = 0
+
+	if ( level.intermission_started == 1 || level.bas_roundend == 1 )
+		end
+
+	if !(isAlive local.player)
+		local.player thread global/AA/medic.scr::dead_player local.team
+
+end
+
+check_class local.team:
+
+	self surface all "-nodraw"
+
+	if (self.revived == 1)
+	{
+		self.revived = 0
+
+		if (self.isengineer == 1)
+			self exec global/AA/engineer.scr local.team
+		else if (self.ismedic == 1)
+			self exec global/AA/medic.scr local.team
+		else
+		{
+			self takeall
+
+			if (local.team == "allies")
+				self give models/weapons/colt45.tik
+			else if (local.team == "axis")
+				self give models/weapons/p38.tik
+
+			self useweaponclass pistol
+		}
+
+		end
+	}
+
+	self.isengineer = 0
+	self.ismedic = 0
+
+	if (self.current_weapon == NULL)
+	{
+		while ( self != NULL && self.player_spawned == 1 && self.current_weapon == NULL )
+			waitframe
+	}
+
+	if ( self != NULL && self.player_spawned == 1 && self.current_weapon != NULL )
+	{
+		switch (self.current_weapon.model)
+		{
+			case "models/weapons/kar98sniper.tik":
+			case "models/weapons/springfield.tik":
+				self exec global/AA/sniper.scr
+			break
+			case "models/weapons/bazooka.tik":
+			case "models/weapons/panzerschreck.tik":
+				self exec global/AA/engineer.scr local.team
+			break
+			case "models/weapons/shotgun.tik":
+				self exec global/AA/medic.scr local.team
+			break
+		}
+	}
+
+end
+
+remove_things:
+
+	if (self.medic_helmet)
+	{
+		self.medic_helmet detach
+		self.medic_helmet remove
+	}
+
+	if (self.medic_healthbox)
+	{
+		self.medic_healthbox detach
+		self.medic_healthbox remove
+	}
+
+	if (self.engineer_helmet)
+	{
+		self.engineer_helmet detach
+		self.engineer_helmet remove
+	}
+
+	if (self.wrench)
+	{
+		self.wrench detach
+		self.wrench remove
+	}
+
+	if (self.welding_torch)
+	{
+		self.welding_torch anim idleoff
+		self.welding_torch detach
+		self.welding_torch remove
+	}
+
+end
+
+damage local.target local.inflictor local.damage local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.entity:
+
+	if (local.entity.isplayer == 1)
+		local.entity thread player_damage local.target local.inflictor local.damage local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location
+	else if (local.entity.isvehicle == 1)
+		local.entity exec global/AA/vehicle_damage.scr local.target local.inflictor local.damage local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location
+	else if (local.entity.isbase == 1)
+	{
+		local.base = local.entity
+		if (local.base.classname == "VehicleTurretGun")
+			local.base = local.base.base
+
+		local.base thread global/BAS/baseassault.scr::damage_monitor local.target local.inflictor local.damage local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location
+	}
+
+end
+
+kill local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location local.player:
+
+	if ( local.attacker == NULL || local.attacker.isplayer != 1 )
+		end
+
+	//local.player thread check_last_weapons
+
+	if (local.player == local.attacker)
+		end
+
+	local.gt = int ( getcvar "g_gametype" )
+	local.td = int ( getcvar "g_teamdamage" )
+
+	if ( local.gt == 1 || ( local.gt != 1 && local.player.dmteam != local.attacker.dmteam ) )
+	{
+		if (local.attacker.playerextras == 1)
+			local.attacker playsound hitsound
+
+		local.attacker thread global/AA/reward_store.scr::give_cash 5
+
+		if (level.first_blood != 1)
+		{
+			level.first_blood = 1
+
+			if (local.attacker.dmteam == "allies")
+				local.team = "ALLIES"
+			else if (local.attacker.dmteam == "axis")
+				local.team = "AXIS"
+
+			local.attacker thread global/AA/reward_store.scr::give_cash 8
+
+			iprintlnbold ( "'" + (netname local.attacker) + "' got the first blood in " + local.team + " team." )
+		}
+	}
+
+end
+
+check_last_weapons:
+
+	local.weap = self getactiveweap 0
+	if (local.weap == NULL)
+	{
+		self weapnext
+		self activatenewweapon righthand
+	}
+
+	for (local.i = 1;local.i <= 20;local.i++)
+	{
+		local.weap = self getactiveweap 0
+		if (local.weap == NULL)
+			end
+		else
+		{
+			self iprint local.weap.model 1
+
+			self weapnext
+			self activatenewweapon righthand
+		}
+	}
+
+end
+
+player_damage local.target local.inflictor local.damage local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+
+	local.attacker = local.inflictor
+
+	if ( local.attacker == NULL || local.attacker.isplayer != 1 )
+		end
+
+	if (self == local.attacker)
+		end
+
+	local.gt = int ( getcvar "g_gametype" )
+	local.td = int ( getcvar "g_teamdamage" )
+
+	if ( local.gt == 1 || ( local.gt != 1 && self.dmteam != local.attacker.dmteam ) )
+	{
+		local.bonus_damage = 0
+		local.weap = local.attacker getactiveweap 0
+
+		if ( local.weap != NIL && local.weap != NULL && ( local.meansofdeath == 18 || local.meansofdeath == 19 )  )
+		{
+			if (local.attacker.rifledamage == 1)
+			{
+				if ( local.weap.model == "models/weapons/kar98.tik" || local.weap.model == "models/weapons/kar98sniper.tik" || local.weap.model == "models/weapons/m1_garand.tik" || local.weap.model == "models/weapons/springfield.tik" )
+					local.bonus_damage = 1
+			}
+
+			if ( local.bonus_damage != 1 && local.attacker.smgdamage == 1 )
+			{
+				if ( local.weap.model == "models/weapons/mp40.tik" || local.weap.model == "models/weapons/thompsonsmg.tik" )
+					local.bonus_damage = 1
+			}
+
+			if ( local.bonus_damage != 1 && local.attacker.mgdamage == 1 )
+			{
+				if ( local.weap.model == "models/weapons/bar.tik" || local.weap.model == "models/weapons/mp44.tik" )
+					local.bonus_damage = 1
+			}
+		}
+
+		if (local.bonus_damage == 1)
+		{
+			local.dmg = local.damage * 0.5
+			self damage local.attacker local.dmg local.attacker local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location
+		}
+
+		if (local.attacker.playerextras == 1)
+			local.attacker playsound hitsound
+	}
+
+end
+
+keypress local.player local.keynum:
+
+	if (local.player == NULL)
+		end
+
+	if (level.account == 1)
+	{
+		if (local.keynum == 1001)
+		{
+			if ( local.player.logged_in == 1 && local.player.market_isopen != 1 && local.player.store_isopen != 1 && local.player.player_spawned == 1 )
+				local.player exec global/AA/reward_market.scr
+		}
+		else if (local.keynum == 1002)
+		{
+			if ( local.player.logged_in == 1 && local.player.market_isopen != 1 && local.player.store_isopen != 1 && local.player.player_spawned == 1 )
+				local.player exec global/AA/reward_store.scr
+		}
+		else if (local.keynum == 111)
+		{
+			if (local.player isadmin == 1)
+				local.player thread global/AA/accounts.scr::print_logged_players
+		}
+	}
+
+end
+
+intermission local.type:
+
+	// 0 = Player intermission screen
+	// 1 = Map change (happens after using commands: map, gamemap , but also right after player intermission screen)
+	// 2 = Map restart (happens after restart command)
+
+	if (level.intermission_started != 1)
+	{
+		level.intermission_started = 1
+
+		if (level.account == 1)
+			thread global/AA/accounts.scr::save_login
+
+		if (level.original_timelimit != NIL)
+			setcvar "timelimit" level.original_timelimit
+	}
+
+end
+
+servercommand local.player local.command local.args:
+
+	if (local.player == NULL)
+		end
+
+	if ( level.intermission_started == 1 || level.bas_roundend == 1 )
+		end
+
+	local.player thread global/AA/accounts.scr::init_account local.command local.args
+
+	if (local.command == "r_pl")
+		local.player thread global/AA/check_cvars.scr::force_respawn_player local.args
+
+	if (local.command == "needammo")
+		local.player thread global/AA/ammodrop.scr::ammo_help
+
+	if (local.command == "needengineer")
+		local.player thread global/AA/engineer.scr::engineer_help
+
+	if (local.command == "needmedic")
+		local.player thread global/AA/medic.scr::medic_help
+
+end
+
+/*
+// Locations
+-1 General
+0 Pelvis
+1 Lower Torso
+2 Mid Torso
+3 Upper Torso
+4 Neck
+5 Head
+6 RUpperArm
+7 RForearm
+8 RHand
+9 LUpperArm
+10 LForearm
+11 LHand
+12 RThigh
+13 RCalf
+14 RFoot
+15 LThigh
+16 LCalf
+17 LFoot
+
+// Means of Death
+0 - none
+1 - suicide
+2 - crush
+3 - crush_every_frame
+4 - telefrag
+5 - lava
+6 - slime
+7 - falling
+8 - last_self_inflicted
+9 - explosion
+10 - explodewall
+11 - electric
+12 - electricwater
+13 - thrownobject
+14 - grenade
+15 - beam
+16 - rocket
+17 - impact
+18 - bullet
+19 - fast_bullet
+20 - vehicle
+21 - fire
+22 - flashbang
+23 - on_fire
+24 - gib
+25 - impale
+26 - bash
+27 - shotgun
+
+// Location damage
+-1 - 1.00
+0 - 2.00
+1 - 2.00
+2 - 2.00
+3 - 1.00
+4 - 0.95
+5 - 0.90
+6 - 0.85
+7 - 0.80
+8 - 0.80
+9 - 0.80
+10 - 0.80
+11 - 0.60
+12 - 0.60
+13 - 0.60
+14 - 0.60
+15 - 0.50
+16 - 0.50
+17 - 0.50
+18 - 0.50
+
+// Tanks
+Always immune: grenade (14), bullet (18), fast_bullet (19), vehicle (20), shotgun (27)
+*/

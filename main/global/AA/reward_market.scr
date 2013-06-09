@@ -1,0 +1,259 @@
+main:
+
+	if (self.logged_in != 1)
+		end
+
+	if ( self.inveh == 1 || self.inturret == 1 )
+	{
+		self iprint "You can't open the market in vehicle or in turret."
+		end
+	}
+
+	self.market_isopen = 1
+	self.inveh = 1
+
+	if (self.has_weapon == 1)
+	{
+		self deactivateweapon righthand
+		self exec global/AA/check_weapons.scr "0"
+	}
+
+	self forcetorsostate JARMUBEN_DEFAULT
+
+	local.org = spawn script_origin
+	local.org.origin = self.origin
+	local.org.angles = self.angles
+
+	self glue local.org
+
+	self waitthread market_hud
+	self thread in_market local.org self.dmteam
+
+	wait 1
+
+	if ( self != NULL && self.player_spawned == 1 && self.already_started_market != 1 )
+	{
+		self.already_started_market = 1
+
+		self iprint "PUSH THE USE BUTTON TO CLOSE THE MARKET!!!" 1
+	}
+
+end
+
+market_hud:
+
+	ihuddraw_align self level.rewards_background_id left top
+	ihuddraw_rect self level.rewards_background_id 45 150 550 250
+	ihuddraw_shader self level.rewards_background_id "textures/mohmenu/black.tga"
+	ihuddraw_virtualsize self level.rewards_background_id 1
+	ihuddraw_alpha self level.rewards_background_id 0.9
+
+	local.hud_id = level.rewards_hud_id
+	local.x = level.rewards_x
+	local.y = level.rewards_y
+
+	for (local.i = 1;local.i <= level.rewards_size;local.i++)
+	{
+		local.rew = (local.hud_id - level.rewards_hud_id) + 1
+
+		if (self.reward[level.rewards[local.rew][3]] != 1)
+		{
+			local.color = level.rewards_white
+			ihuddraw_string self (local.hud_id + level.rewards_size) ( level.rewards[local.i][2] + " $" )
+		}
+		else
+		{
+			local.color = level.rewards_green
+			ihuddraw_string self (local.hud_id + level.rewards_size) "PURCHASED"
+		}
+
+		ihuddraw_align self local.hud_id left top
+		ihuddraw_rect self local.hud_id local.x local.y 0 0
+		ihuddraw_color self local.hud_id local.color[0] local.color[1] local.color[2]
+		ihuddraw_font self local.hud_id "verdana-12"
+		ihuddraw_string self local.hud_id ( local.i + ". " + level.rewards[local.i][1] )
+		ihuddraw_virtualsize self local.hud_id 1
+		ihuddraw_alpha self local.hud_id 1
+
+		ihuddraw_align self (local.hud_id + level.rewards_size) left top
+		ihuddraw_rect self (local.hud_id + level.rewards_size) (local.x + level.rewards_x2) local.y 0 0
+		ihuddraw_color self (local.hud_id + level.rewards_size) local.color[0] local.color[1] local.color[2]
+		ihuddraw_font self (local.hud_id + level.rewards_size) "verdana-12"
+		ihuddraw_virtualsize self (local.hud_id + level.rewards_size) 1
+		ihuddraw_alpha self (local.hud_id + level.rewards_size) 1
+
+		local.y += 14
+		local.hud_id++
+
+		if (local.i == 17)
+		{
+			local.x += level.rewards_x2 + 100
+			local.y = level.rewards_y
+		}
+	}
+
+end
+
+in_market local.org local.team:
+
+	local.current_id = level.rewards_hud_id
+	local.current_price_id = level.rewards_hud_id + level.rewards_size
+
+	ihuddraw_color self local.current_id level.rewards_yellow[0] level.rewards_yellow[1] level.rewards_yellow[2]
+	ihuddraw_color self local.current_price_id level.rewards_yellow[0] level.rewards_yellow[1] level.rewards_yellow[2]
+
+	local.market_color = ( 0.96 0.87 0.10 )
+
+	self light local.market_color[0] local.market_color[1] local.market_color[2] 150
+
+	local.count = 0
+
+	while ( self != NULL && self.player_spawned == 1 && self.logged_in == 1 && self.useheld != 1 && self.keyheld[GUGOLAS] != 1 && self.keyheld[UGRAS] != 1 )
+	{
+		local.rew = (local.current_id - level.rewards_hud_id) + 1
+
+		if (local.count == 0)
+		{
+			if (self.keyheld[HATRA])
+			{
+				if ( local.current_id + 1 <= level.rewards_hud_id + (level.rewards_size - 1) )
+				{
+					if (self.reward[level.rewards[local.rew][3]] != 1)
+						local.color = level.rewards_white
+					else
+						local.color = level.rewards_green
+
+					ihuddraw_color self local.current_id local.color[0] local.color[1] local.color[2]
+					ihuddraw_color self local.current_price_id local.color[0] local.color[1] local.color[2]
+
+					local.current_id++
+					local.current_price_id++
+
+					ihuddraw_color self local.current_id level.rewards_yellow[0] level.rewards_yellow[1] level.rewards_yellow[2]
+					ihuddraw_color self local.current_price_id level.rewards_yellow[0] level.rewards_yellow[1] level.rewards_yellow[2]
+
+					local.count = 4
+				}
+			}
+			else if (self.keyheld[ELORE])
+			{
+				if (local.current_id - 1 >= level.rewards_hud_id)
+				{
+					if (self.reward[level.rewards[local.rew][3]] != 1)
+						local.color = level.rewards_white
+					else
+						local.color = level.rewards_green
+
+					ihuddraw_color self local.current_id local.color[0] local.color[1] local.color[2]
+					ihuddraw_color self local.current_price_id local.color[0] local.color[1] local.color[2]
+
+					local.current_id--
+					local.current_price_id--
+
+					ihuddraw_color self local.current_id level.rewards_yellow[0] level.rewards_yellow[1] level.rewards_yellow[2]
+					ihuddraw_color self local.current_price_id level.rewards_yellow[0] level.rewards_yellow[1] level.rewards_yellow[2]
+
+					local.count = 4
+				}
+			}
+		}
+
+		if ( self.fireheld && local.count == 0 )
+		{
+			local.price = int level.rewards[local.rew][2]
+
+			if (self.reward[level.rewards[local.rew][3]] != 1)
+			{
+				if (self.cash >= local.price)
+				{
+					self.cash -= local.price
+
+					ihuddraw_string self (local.current_id + level.rewards_size) "PURCHASED"
+
+					self.reward[level.rewards[local.rew][3]] = 1
+
+					self waitthread global/AA/reward_store.scr::update_rewards self.rew_username self.rew_password
+					self waitthread global/AA/reward_store.scr::update_cash
+				}
+				else
+					self iprint "You don't have enough cash to buy it!" 1
+			}
+
+			local.count = 4
+		}
+
+		waitframe
+
+		if (local.count > 0)
+			local.count--
+	}
+
+	if (self == NULL)
+		end
+
+	self light 0 0 0 0
+
+	ihuddraw_alpha self level.rewards_background_id 0
+
+	local.hud_id = level.rewards_hud_id
+
+	for (local.i = 1;local.i <= level.rewards_size;local.i++)
+	{
+		ihuddraw_alpha self local.hud_id 0
+		ihuddraw_alpha self (local.hud_id + level.rewards_size) 0
+
+		local.hud_id++
+	}
+
+	self unglue
+
+	if (local.org)
+		local.org remove
+
+	self.keyheld[GUGOLAS] = 0
+	self.keyheld[UGRAS] = 0
+
+	self.inveh = 0
+	self.market_isopen = 0
+
+	if (self.dmteam == local.team)
+		self forcetorsostate STAND
+	else
+	{
+		if (self.dmteam != "spectator")
+			self respawn
+	}
+
+end
+
+check_rewards local.username local.password:
+
+	local.text = waitthread global/AA/files.scr::string_lines ( "main/global/accounts/" + local.username + ".txt" )
+	if ( local.text == NIL || local.text.size < 2 )
+		end
+
+	self.cash = int (waitthread global/AA/files.scr::right local.text[2] "=")
+
+	for (local.i = 1;local.i <= level.rewards_size;local.i++)
+	{
+		local.rew = level.rewards[local.i][3]
+
+		local.line = waitthread global/AA/files.scr::string_to_find local.text local.rew
+		if (local.line != NIL)
+		{
+			local.value = int (waitthread global/AA/files.scr::right local.text[local.line] "=")
+
+			self.reward[local.rew] = local.value
+			self.reward_activated[local.i] = 0
+		}
+		else
+		{
+			self.reward[local.rew] = 0
+			self.reward_activated[local.i] = 0
+		}
+	}
+
+	self waitthread global/AA/reward_store.scr::update_rewards local.username local.password
+	self waitthread global/AA/reward_store.scr::update_cash
+
+end

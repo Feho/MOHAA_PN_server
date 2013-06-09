@@ -1,0 +1,501 @@
+main:
+
+	level.account = getcvar "sv_account"
+	if (level.account == "")
+		setcvar "sv_account" "0"
+
+	level.account = int ( getcvar "sv_account" )
+	if (level.account == 0)
+		end
+
+	level.rewards = waitexec rewards.txt
+	if (level.rewards == NIL)
+	{
+		level.account = 0
+		end
+	}
+
+	if ( getcvar "reset_login" != "1" )
+		waitthread reset_login
+
+	// Rewards
+	// [1] - reward's name
+	// [2] - reward's price
+	// [3] - reward's type for the script
+	// [4] - if reward needs to reset after restart
+
+	level.cash_id = 51
+
+	level.rewards_background_id = 166
+	level.rewards_hud_id = level.rewards_background_id + 1
+	level.rewards_x = 50
+	level.rewards_y = 155
+	level.rewards_x2 = level.rewards_x + 137
+	level.rewards_white = ( 1.0 1.0 1.0 )
+	level.rewards_green = ( 0.0 1.0 0.0 )
+	level.rewards_yellow = ( 1.0 1.0 0.0 )
+	level.rewards_blue = ( 0.04 0.85 0.96 )
+
+	level.rewards_size = level.rewards.size
+	if (level.rewards_size > 26)
+		level.rewards_size = 26
+
+end
+
+init_account local.command local.datas:
+
+	if (level.account != 1)
+		end
+
+	switch (local.command)
+	{
+		case "rew_reg":
+			if (self.logged_in == 1)
+			{
+				self iprint "You are logged in. Please log out to create another account." 1
+				end
+			}
+
+			local.strings = waitthread separate_strings local.datas
+			if ( local.strings == NIL || local.strings.size != 2 )
+			{
+				self iprint "Something is wrong with your registration datas." 1
+				end
+			}
+
+			local.existing_account = waitthread existing_account local.strings[1]
+			if (local.existing_account == 1)
+			{
+				self iprint "This account is already existing." 1
+				end
+			}
+
+			local.check_chars = waitthread check_characters local.strings[1]
+			if (local.check_chars != 1)
+			{
+				self iprint "Your username contains not allowed ( / : * ? < > | ) character(s)." 1
+				end
+			}
+
+			local.username = local.strings[1]
+			local.password = local.strings[2]
+
+			thread global/AA/reward_store.scr::update_rewards local.username local.password
+
+			self iprint "You successfully generated an account."
+			conprintf ( "<--ACCOUNT SYSTEM--> '" + (netname self) + "' generated an account.\n" )
+
+			self thread admin_message "generated"
+			self thread login_message
+		break
+		case "rew_login":
+			if (self.logged_in == 1)
+			{
+				self iprint "You already logged in." 1
+				end
+			}
+
+			local.strings = waitthread separate_strings local.datas
+			if ( local.strings == NIL || local.strings.size != 2 )
+			{
+				self iprint "Something is wrong with your login datas." 1
+				end
+			}
+
+			local.existing_account = waitthread existing_account local.strings[1]
+			if (local.existing_account != 1)
+			{
+				self iprint "This account doesn't exist." 1
+				end
+			}
+
+			local.username = local.strings[1]
+			local.password = local.strings[2]
+
+			local.check_password = waitthread check_password local.username local.password
+			if (local.check_password != 1)
+			{
+				self iprint "Wrong password." 1
+				end
+			}
+
+			local.other_user = waitthread check_other_user local.username
+			if (local.other_user == 1)
+			{
+				self iprint "Somebody else is using your account now." 1
+				end
+			}
+
+			self.logged_in = 1
+			self.rew_username = local.username
+			self.rew_password = local.password
+
+			thread global/AA/reward_market.scr::check_rewards self.rew_username self.rew_password
+
+			self iprint ( "You logged in into your '" + local.username + "' account." )
+			conprintf ( "<--ACCOUNT SYSTEM--> '" + (netname self) + "' logged in into his account.\n" )
+
+			self thread admin_message "login"
+
+			self stufftext ( "bind F7 keyp 1001" )
+			self stufftext ( "bind F8 keyp 1002" )
+
+			ihuddraw_alpha self 49 0
+			ihuddraw_alpha self 50 0
+
+			wait 1
+
+			if (self == NULL)
+				end
+
+			self iprint "To open the reward market press F7 or type in console: keyp 1001"
+			self iprint "To open your reward store press F8 or type in console: keyp 1002"
+		break
+		case "rew_logout":
+			if (int local.datas != 1)
+				end
+
+			if (self.logged_in == 1)
+			{
+				local.username = self.rew_username
+
+				self.logged_in = 0
+				self.rew_username = NIL
+				self.rew_password = NIL
+
+				self thread global/AA/reward_store.scr::reset_rewards
+				self thread delete_login local.username
+
+				self iprint ( "You logged out from your '" + local.username + "' account." )
+				conprintf ( "<--ACCOUNT SYSTEM--> '" + (netname self) + "' logged out from his account.\n" )
+
+				self thread admin_message "logout"
+			}
+			else
+				self iprint "You are not logged in." 1
+		break
+	}
+
+end
+
+admin_message local.type:
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.isplayer == 1 )
+		{
+			if ( local.player isadmin == 1 && self != local.player )
+			{
+				switch (local.type)
+				{
+					case "generated":
+						local.player iprint ( "<--ACCOUNT SYSTEM--> '" + (netname self) + "' generated an account." )
+					break
+					case "login":
+						local.player iprint ( "<--ACCOUNT SYSTEM--> '" + (netname self) + "' logged in." )
+					break
+					case "logout":
+						local.player iprint ( "<--ACCOUNT SYSTEM--> '" + (netname self) + "' logged out." )
+					break
+				}
+			}
+		}
+	}
+
+end
+
+print_logged_players:
+
+	self iprint "LOGGED PLAYERS:" 1
+
+	wait .5
+
+	if (self == NULL)
+		end
+
+	local.amount = 0
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.isplayer == 1 && local.player.logged_in == 1 )
+		{
+			if (local.player != self)
+				self iprint ( (local.amount + 1) + ". " + (netname local.player) )
+			else
+				self iprint ( (local.amount + 1) + ". " + (netname local.player) + " (YOU)" )
+
+			local.amount++
+		}
+	}
+
+	if (local.amount == 0)
+		self iprint "Nobody logged in."
+
+end
+
+save_login:
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.logged_in == 1 )
+		{
+			local.id = local.player waitthread global/AA/files.scr::player_identification (netname local.player)
+
+			if (local.content == NIL)
+				local.content[1] = ( "name=" + local.id + "username=" + local.player.rew_username + "\n" )
+			else
+				local.content[local.content.size + 1] = ( "name=" + local.id + "username=" + local.player.rew_username + "\n" )
+
+			for (local.j = 1;local.j <= level.rewards_size;local.j++)
+			{
+				local.rew = level.rewards[local.j][3]
+				local.rew_value = local.player.reward_activated[local.j]
+				local.rew_reset = int (level.rewards[local.j][4])
+
+				if ( local.rew_value == 1 && local.rew_reset != 1 )
+				{
+					if (local.content == NIL)
+						local.content[1] = local.rew + "=" + local.rew_value + "\n"
+					else
+						local.content[local.content.size + 1] = local.rew + "=" + local.rew_value + "\n"
+				}
+			}
+		}
+	}
+
+	if (local.content == NIL)
+	{
+		local.file = fopen "main/global/accounts/logged_players.txt" "w"
+		local.close = fclose local.file
+
+		end
+	}
+
+	thread global/AA/files.scr::save_new_file "main/global/accounts/logged_players.txt" local.content
+
+end
+
+delete_login local.username:
+
+	local.content = waitthread global/AA/files.scr::string_lines "main/global/accounts/logged_players.txt"
+	if (local.content == NIL)
+		end
+
+	if (self == NULL)
+		end
+
+	local.id = self waitthread global/AA/files.scr::player_identification (netname self)
+	local.string = ( "name=" + local.id + "username=" + local.username + "\n" )
+
+	local.line = waitthread global/AA/files.scr::string_to_find local.content local.string
+	if (local.line != NIL)
+	{
+		if (local.content.size > local.line)
+		{
+			for (local.i = local.line + 1;local.i <= local.content.size;local.i++)
+			{
+				if (local.content[local.i].size > 5)
+				{
+					if ( local.content[local.i][0] == "n" && local.content[local.i][1] == "a" && local.content[local.i][2] == "m" && local.content[local.i][3] == "e" && local.content[local.i][4] == "=" )
+					{
+						local.next_line = local.i
+						break
+					}
+				}
+			}
+		}
+
+		for (local.i = 1;local.i <= local.content.size;local.i++)
+		{
+			if (local.i != local.line)
+			{
+				if ( local.i < local.line || ( local.i > local.line && local.next_line != NIL && local.i >= local.next_line ) )
+				{
+					if (local.new_content == NIL)
+						local.new_content[1] = local.content[local.i]
+					else
+						local.new_content[local.new_content.size + 1] = local.content[local.i]
+				}
+			}
+			else
+			{
+				if (local.next_line == NIL)
+					break
+			}
+		}
+
+		if (local.new_content == NIL)
+		{
+			local.file = fopen "main/global/accounts/logged_players.txt" "w"
+			local.close = fclose local.file
+
+			end
+		}
+
+		thread global/AA/files.scr::save_new_file "main/global/accounts/logged_players.txt" local.new_content
+	}
+
+end
+
+existing_account local.username:
+
+	local.filepath = "main/global/accounts/" + local.username + ".txt"
+	if ( fexists local.filepath )
+		end 1
+
+end 0
+
+check_login:
+
+	local.content = waitthread global/AA/files.scr::string_lines "main/global/accounts/logged_players.txt"
+	if (local.content == NIL)
+	{
+		self thread register_message
+		end
+	}
+
+	local.id = self waitthread global/AA/files.scr::player_identification (netname self)
+	local.string = ( "name=" + local.id + "\n" )
+
+	local.line = waitthread global/AA/files.scr::string_to_find local.content local.string
+	if (local.line != NIL)
+	{
+		local.username = waitthread global/AA/files.scr::right local.content[local.line] "username="
+
+		local.text = waitthread global/AA/files.scr::string_lines ( "main/global/accounts/" + local.username + ".txt" )
+		local.pw = waitthread global/AA/files.scr::right local.text[1] "password="
+
+		self.logged_in = 1
+		self.rew_username = local.username
+		self.rew_password = local.pw
+
+		waitthread global/AA/reward_market.scr::check_rewards self.rew_username self.rew_password
+		waitthread global/AA/reward_store.scr::check_activated_rewards local.content (local.line + 1)
+
+		self iprint ( "You logged in into your '" + local.username + "' account." )
+
+		self thread admin_message "login"
+	}
+	else
+		self thread register_message
+
+end
+
+check_password local.username local.password:
+
+	local.text = waitthread global/AA/files.scr::string_lines ( "main/global/accounts/" + local.username + ".txt" )
+	if (local.text == NIL)
+		end 0
+
+	local.pw = waitthread global/AA/files.scr::right local.text[1] "password="
+	if (local.password != local.pw)
+		end 0
+
+end 1
+
+check_other_user local.username:
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.isplayer == 1 )
+		{
+			if ( local.player.logged_in == 1 && local.player.rew_username == local.username )
+				end 1
+		}
+	}
+
+end 0
+
+check_characters local.name:
+
+	local.no_chars[1] = "\"
+	local.no_chars[2] = "/"
+	local.no_chars[3] = ":"
+	local.no_chars[4] = "*"
+	local.no_chars[5] = "?"
+	local.no_chars[6] = "<"
+	local.no_chars[7] = ">"
+	local.no_chars[8] = "|"
+
+	for (local.i = 0;local.i < local.name.size;local.i++)
+	{
+		local.char = local.name[local.i]
+		if ( local.char == string local.no_chars[1] || local.char == string local.no_chars[2] || local.char == string local.no_chars[3] || local.char == string local.no_chars[4] || local.char == string local.no_chars[5] || local.char == string local.no_chars[6] || local.char == string local.no_chars[7] || local.char == string local.no_chars[8] )
+			end 0
+	}
+
+end 1
+
+register_message:
+
+	local.msg = (
+		"Welcome to the server!" + "\n" +
+		"Register new account or login." + "\n" +
+		"Enable the console in Options/Advanced." + "\n" +
+		"To register type in console: scmd rew_reg yourusername yourpassword" + "\n" +
+		"You can register any username and password." + "\n" +
+		"Don't use space characters in username and password neither." + "\n"
+		)
+
+	wait 2
+
+	if ( self != NULL && self.logged_in != 1 )
+	{
+		self exec global/AA/message.scr 270 50 361 78 0.75 local.msg "fromright" 1 0.5 60
+	}
+
+end
+
+login_message:
+
+	local.msg = (
+		"Your account succesfully generated." + "\n" +
+		"You can login now." + "\n" +
+		"Type in console: scmd rew_login yourusername yourpassword" + "\n" +
+		"After login you can earn cash and buy rewards." + "\n" +
+		"To log out: scmd rew_logout 1" + "\n"
+		)
+
+	self exec global/AA/message.scr 316 50 314 66 0.75 local.msg "fromright" 1 0.5 60
+
+end
+
+separate_strings local.datas:
+
+	local.chars = ""
+
+	for (local.i = 0;local.i < local.datas.size;local.i++)
+	{
+		local.space = chartoint local.datas[local.i]
+		if (local.space != 32)
+			local.chars += local.datas[local.i]
+
+		if ( local.space == 32 || local.i + 1 == local.datas.size )
+		{
+			if (local.strings == NIL)
+				local.strings[1] = local.chars
+			else
+				local.strings[local.strings.size + 1] = local.chars
+
+			local.chars = ""
+		}
+	}
+
+end local.strings
+
+reset_login:
+
+	setcvar "reset_login" "1"
+
+	local.filepath = "main/global/accounts/logged_players.txt"
+	local.file = fopen local.filepath "w"
+	local.close = fclose local.file
+
+end

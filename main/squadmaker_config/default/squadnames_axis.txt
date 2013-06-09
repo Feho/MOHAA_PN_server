@@ -1,0 +1,15 @@
+// Axis squad names
+// use '#' for the squad number
+
+local.a = makeArray // do not modifty
+
+	// start squad names
+	// add any lines as needed
+	"#. Gruppe"
+	// end squad names
+	
+endArray // do not modify
+
+end local.a // do not modify
+
+end // keep this line

@@ -1,0 +1,671 @@
+/*
+
+Update : remove medic bonus 23/06/11
+
+======================================================
+*** AIRborne; Ranking System Main Script for MoH:AA
+======================================================
+by Sor
+Version: v4.23 BETA
+-----------------------------------
+--- NOTE:
+
+ Customization Options are in the global/rank/ranks.txt file
+ You can set this option to 1 if like to enable 
+ your chosen bonuses.
+ 
+ level.ranking["bonus"] = 1
+
+-------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+main:
+
+	// local.rand = randomint(2)
+
+	if (level.running_ranking == 1)
+		end
+
+	level.running_ranking = 1
+	// level.run_radar = 0
+	// level.running_killstreaks_allies = 0
+	// level.running_killstreaks_axis = 0
+	
+	waitthread setup_array
+
+	if (level.stop_ranking != 1)
+	{
+		waitthread cache
+
+		level waittill spawn 
+
+		if (level.ranking["bonus"] == NIL)
+			level.ranking["bonus"] = 1
+
+		thread player_handler
+		// thread kill_streaks
+	}
+
+end
+
+
+//-----------------------------------
+setup_array:
+
+	println "[Ranking Sys::Array]: Adding entries to Array..."
+
+	level.rank = waitexec global/rank/ranks.txt
+
+	if (level.rank != NIL)
+	{
+		println "[Ranking Sys::Array]: ...COMPLETED"
+	}
+	else
+	{
+		level.stop_ranking = 1
+		println "[Ranking Sys::Array]: A fatal error has occurred! Terminating system!"
+	}
+
+end
+
+//-----------------------------------
+player_handler:
+
+	println "[Ranking Sys::MAIN]: Main player handler Active and Running!"
+	level.message = 0
+
+	while($player.size > 0)
+	{	
+		//feho
+		//--------------->
+		if ((getcvar("ranksys")) == "0")
+		{
+			level.running_ranking = 0
+			end
+		}
+		//<---------------
+		
+		for (local.a = 1; local.a <= $player.size; local.a++)
+		{
+			if ($player[local.a].dmteam != "spectator" && $player[local.a].status == "alive" && $player[local.a].rank != NIL)
+			{
+				//TEAM SWAP FIX
+				for (local.i = 1; local.i <= level.rank.size; local.i++)
+				{
+					if ($player[local.a].dmteam == "allies" && $player[local.a].rank == level.rank[local.i][2] && level.rank[local.i][1] != level.rank[local.i][2])
+					{
+						$player[local.a].rank = level.rank[local.i][1]
+						$player[local.a] waitthread hud_setup
+						waitframe
+					}
+					else if ($player[local.a].dmteam == "axis" && $player[local.a].rank == level.rank[local.i][1] && level.rank[local.i][1] != level.rank[local.i][2])
+					{
+						$player[local.a].rank = level.rank[local.i][2]
+						$player[local.a] waitthread hud_setup
+						waitframe
+					}
+				}
+				//Activate MAIN Rank Handler
+				waitframe
+				// $player[local.a] thread kill_streaks
+				$player[local.a] waitthread rank_handler
+			}
+		}
+
+		wait 0.4
+	}
+
+	//if there are 0 players
+	//boot backup handler
+	println "[Ranking Sys::MAIN]: No players on server; turning Main Player Handler off, switching to backup"
+	thread backup_player_handler
+
+end
+
+//-----------------------------------
+backup_player_handler:
+
+	println "[Ranking Sys::Backup]: Backup Handler initiated."
+
+	while ( $player.size == 0 || $player == NULL )
+	{
+		wait 1 //easing up loop
+	}
+
+	//boot the MAIN player handler back up
+	println "[Ranking Sys::Backup]: Main Player Handler has rebooted!"
+	thread player_handler
+	// thread kill_streaks
+
+end 
+
+
+//-----------------------------------
+rank_handler:
+
+	if (self == NULL)
+		end
+
+	waitframe
+
+	//MAIN PROMOTION AND DEMOTION HANDLER
+	for (local.i = 2; local.i <= level.rank.size && self != NULL; local.i++) 
+	{
+		local.nr = 0
+
+		//Check for traitors seperatly, because if 
+		//someone with -2 kills gains 1 kill(= -1), he gets 
+		//promotion drums and print, that wouldn't make sense
+		
+		// *** Modif Feho ***
+		self.killcount = self getkills // récupère le nombre de kills du joueur
+		
+		if (self.killcount == NIL)
+			self.killcount = 0
+			
+		if (self.killcount < 0 && self.killcount != self.prevrank && self != NULL)
+		{
+			if (self.dmteam == "allies")
+			{
+				self.rank = level.rank[1][1]
+			}
+			else if (self.dmteam == "axis")
+			{
+				self.rank = level.rank[1][2]
+			}
+			self.prevrank = self.killcount
+			self playsound demote
+
+			self iprint "YOU HAVE BEEN DEMOTED - DO YOU HAVE NO DISCIPLINE?" 1
+			self waitthread hud_setup
+		}
+		// Check for a new entitled rank
+		// Also prevents continuous "promoting" and checking for the same rank 
+		// Because the rank handler gets activated in a loop
+		
+		// *** Modif Feho ***
+		if (local.i < level.rank.size && self.killcount >= level.rank[local.i][3] && self.killcount < level.rank[(local.i + 1)][3] && self.prevrank != local.i)
+		{
+			local.nr = 1
+		}
+		else if (local.i == level.rank.size && self.killcount >= level.rank[local.i][3] && self.prevrank != local.i)
+		{
+			local.nr = 1
+		}
+
+		if (local.nr == 1 && self != NULL && self.prevrank != local.i)
+		{
+			//Give new allies Rank
+			if (self.dmteam == "allies" && level.rank[local.i][1] != self.rank && self != NULL)
+			{
+				self.rank = level.rank[local.i][1] 
+				self waitthread hud_setup
+				if(self.prevrank != NIL) 
+				{
+					if ( local.i > self.prevrank )
+					{
+						self playsound promote
+						self thread motion_display 1
+
+						if (level.ranking["bonus"] == 1)
+						{
+							self waitthread bonus_handler
+						}
+					}
+					else if ( local.i < self.prevrank )
+					{
+						self playsound demote
+						self thread motion_display 0
+
+						if (level.ranking["bonus"] == 1)
+						{
+							self waitthread bonus_handler
+						}
+					}
+				}
+				waitframe
+				self.prevrank = local.i
+			}
+			//Give new axis Rank
+			else if (self.dmteam == "axis" && level.rank[local.i][2] != self.rank && self != NULL)
+			{
+				self.rank = level.rank[local.i][2]
+				self waitthread hud_setup
+				if(self.prevrank != NIL) 
+				{
+					if ( local.i > self.prevrank )
+					{
+						self playsound promote
+						self thread motion_display 1
+
+						if (level.ranking["bonus"] == 1)
+						{
+							self waitthread bonus_handler
+						}
+					}
+					else if ( local.i < self.prevrank )
+					{
+						self playsound demote
+						self thread motion_display 0
+
+						if (level.ranking["bonus"] == 1)
+						{
+							self waitthread bonus_handler
+						}
+					}
+				}
+				waitframe
+				self.prevrank = local.i
+			}
+		}
+	}
+
+end
+
+//-----------------------------------
+hud_setup:
+
+	if (self.has_rank_hud != 1)
+	{
+		self.has_rank_hud = 1
+
+		self stufftext "globalwidgetcommand dday2 shader townhallwindow"
+		self stufftext "globalwidgetcommand dday2 fgcolor 1.00 0.00 1.00 1.00"
+		self stufftext "globalwidgetcommand dday2 bgcolor 0.00 0.00 0.00 0.00"
+		self stufftext "globalwidgetcommand dday2 fadein 0"
+		self stufftext "globalwidgetcommand dday2 menu dday1 640 480 NONE 0"
+		self stufftext "globalwidgetcommand dday2 virtualres 1"
+		self stufftext "globalwidgetcommand dday2 fullscreen 1"
+
+		self stufftext "globalwidgetcommand charliesector shader townhallwindow"
+		self stufftext "globalwidgetcommand charliesector textalign left"
+		self stufftext "globalwidgetcommand charliesector rect 700 5 392 64" // feho 100 525 392 64
+		self stufftext "globalwidgetcommand charliesector fgcolor 1.00 3.00 4.00 6.00"
+		self stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+		self stufftext "globalwidgetcommand charliesector font facfont-20"
+		self stufftext "globalwidgetcommand charliesector linkcvar rank_cvar"
+		self stufftext "showmenu dday2"
+	}
+
+	self stufftext ("set rank_cvar RANK: " + self.rank)
+
+	if (level.ranking["bonus"] == 1)
+	{
+		local.l = ""	
+		if (self.rankbonus["silencer"] == 1)
+			local.l += "[Si]"
+		if (self.rankbonus["planes"] == 1)
+			local.l += "[Pla]"
+		if (self.rankbonus["special_bots"] == 1)
+			local.l += "[Bots]"
+		if (self.rankbonus["airsupport"] == 1)
+			local.l += "[AS]"
+		if (self.rankbonus["mines"] == 1) // bonus mines
+			local.l += "[Mi]"
+		if (self.rankbonus["regenerate"] == 1)
+			local.l += "[Reg]"			
+		if (self.rankbonus["speed"] == 1)
+			local.l += "[Sp]"
+		if (self.rankbonus["explosion"] == 1) // bonus explosion
+			local.l += "[Exp]"
+		if (self.rankbonus["health"] == 1) // bonus vie
+			local.l += "[Hp]"
+		if (self.rankbonus["bazooka"] == 1) // bonus bazooka
+			local.l += "[Ba]"
+		if (self.rankbonus["damage"] == 1) // bonus dommages
+			local.l += "[Dmg]"
+
+		if (local.l != "")
+			self stufftext ("set bonus_cvar BONUS: " + local.l)
+		else
+			self stufftext ("set bonus_cvar BONUS: none")
+
+    	if (self.has_bonus_hud != 1)
+    	{
+    		self.has_bonus_hud = 1
+
+	    	self stufftext "globalwidgetcommand credits2 name credits1"
+			self stufftext "globalwidgetcommand credits1 shader townhallwindow"
+			self stufftext "globalwidgetcommand credits1 fgcolor 1.00 0.00 1.00 1.00"
+			self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+			self stufftext "globalwidgetcommand credits1 fadein 0"
+			self stufftext "globalwidgetcommand credits1 menu dday1 640 480 NONE 0"
+			self stufftext "globalwidgetcommand credits1 virtualres 1"
+			self stufftext "globalwidgetcommand credits1 fullscreen 1"
+	   		self stufftext "globalwidgetcommand credits1 name credits2"    
+
+			self stufftext "globalwidgetcommand credits1 shader townhallwindow"
+			self stufftext "globalwidgetcommand credits1 textalign left"
+			self stufftext "globalwidgetcommand credits1 rect 700 25 392 64" // feho 100 545 392 64
+			self stufftext "globalwidgetcommand credits1 fgcolor 1.00 3.00 4.00 6.00"
+			self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+			self stufftext "globalwidgetcommand credits1 font facfont-20"
+   			self stufftext "globalwidgetcommand credits1 linkcvar bonus_cvar"
+			self stufftext "showmenu credits1"
+		}
+	}
+
+	
+   	
+end
+
+//-----------------------------------
+bonus_handler local.de_pro:
+
+	//let's not make it too difficult - bunch of ifs
+	//check if player hasn't left the server yet
+	if ( self != NIL && self != NULL )
+	{
+		for (local.i = 1; local.i <= level.rank.size; local.i++)
+		{
+			if (self.rank == level.rank[local.i][1] || self.rank == level.rank[local.i][2])
+			{
+				local.bonus = waitthread global/strings.scr::split_line level.rank[local.i][4] 1 " "
+				for (local.o = 1; local.o <= local.bonus[1].size; local.o++)
+				{
+					local.t = local.bonus[1][local.o] 
+					if (local.t == "airsupport" || local.t == "silencer" || local.t == "planes" || local.t == "special_bots" || local.t == "regenerate" || local.t == "speed" || local.t == "health" || local.t == "mines" || local.t == "damage" || local.t == "bazooka" || local.t == "explosion") // bonus vie, mines, dommages, bazooka, explosion
+					{
+						local.b = int(local.bonus[1][(local.o + 1)])
+						if (self.rankbonus[local.t] != 1 && local.b == 1)
+						{
+							self thread display_bonus local.t
+						}
+						self.rankbonus[local.t] = local.b
+					}
+				}
+
+				end
+			}
+		}
+	}
+end
+
+
+
+//-----------------------------------
+cadet:
+
+	//give the newbie his rank
+	if (self == NULL)
+		end
+		
+
+	self.killcount = 0
+	self.deathcount = 0
+
+	if (self.dmteam == "allies")
+	{
+		self.rank = level.rank[2][1]
+		self.prevrank = 2
+	}
+	if (self.dmteam == "axis")
+	{
+		self.rank = level.rank[2][2]
+		self.prevrank = 2
+	}
+
+
+	waitframe
+	self waitthread hud_setup
+
+	wait 0.5
+	self iprint "Welcome Cadet to this Ranked Server!" 1
+	self iprint "Kill your way to glory or Kill yourself to shame!!!" 1
+
+end
+
+
+//-----------------------------------
+cache:
+	println "[Ranking Sys::SoundCache]: Soundcaching started..."
+
+	local.master = spawn ScriptMaster
+	local.master aliascache promote sound/items/Shell_DrumApply_01.wav soundparms 5.0 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+	local.master aliascache demote sound/items/Shell_DrumBack_01.wav soundparms 8.0 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+
+	println "[Ranking Sys::SoundCache]: Soundcaching COMPLETED..."
+
+end
+
+_bonus_regenerate:
+
+	local.origin = self.origin
+
+	while (self.status == "alive" && self.rankbonus["regenerate"] == 1)
+	{
+		if ( (vector_within local.origin self.origin 10) == 1 && self.health < 200) // original self.health < 100
+		{
+			self healthonly (self.health + 10) // original +1
+		}
+	
+		local.origin = self.origin
+		
+		local.time = 1.0
+		while(local.time > 0)
+		{
+			if (self.status != "alive" || self.rankbonus["regenerate"] != 1)
+			{
+				end
+			}
+			local.time -= 0.1
+			wait 0.1
+		}
+		wait 0.1
+	}
+
+end
+
+_bonus_health: // bonus vie
+
+	self.health += 100
+	// exec global/health.scr
+	
+end
+
+_bonus_silencer:
+
+	wait 2
+	self give "models/weapons/silencedpistol.tik"
+	self ammo pistol 16
+
+end
+
+_bonus_bazooka:
+
+	wait 2
+	self give "models/weapons/bazooka.tik"
+	
+end
+
+_bonus_speed:
+
+	if(self.sprt_has_ammo_belt)
+		end
+		
+	self weaponcommand dual dmmovementspeed 1.10
+
+end
+
+_bonus_damage: // bonus dommages
+
+	weaponcommand dual dmbulletdamage 120
+	
+end
+
+display_bonus local.bonus:
+
+	if (local.bonus == "planes")
+	{
+		local.l = "Bonus: Ability to use planes"
+	}
+	else if (local.bonus == "special_bots")
+	{
+		local.l = "Bonus: Special Bots (secondary fire with shotgun)"
+		self.special_bots = 5
+	}
+	else if (local.bonus == "airsupport")
+	{
+		local.l = "Bonus: Air Support (secondary fire with binoculars)"
+	}
+	else if (local.bonus == "silencer")
+	{
+		local.l = "Bonus: Silenced pistol (each spawn)"
+		self thread _bonus_silencer
+	}
+	else if (local.bonus == "speed")
+	{
+		local.l = "Bonus: Increased Movement Speed"
+		self thread _bonus_speed
+	}
+	else if (local.bonus == "regenerate")
+	{
+		local.l = "Bonus: Regeneration (when standing still)"
+		waitframe
+		self thread _bonus_regenerate
+	}
+	else if (local.bonus == "health") // bonus vie
+	{
+		local.l = "Bonus: Increased health (+100 HP)"
+		self thread _bonus_health
+	}
+	else if (local.bonus == "mines") // bonus mines
+	{
+		local.l = "Bonus: 2 Proximity mines (Hold [USE] down for 3 seconds)"
+	}
+	else if (local.bonus == "damage") // bonus dommages
+	{
+		local.l = "Bonus: Increased Bullet Damage"
+		self thread _bonus_damage
+	}
+	else if (local.bonus == "bazooka") // bonus bazooka
+	{
+		local.l = "Bonus: Bazooka (each spawn)"
+		self thread _bonus_bazooka
+	}
+	else if (local.bonus == "explosion") // bonus explosion
+	{
+		local.l = "Bonus: More powerful grenades"
+	}
+	
+    	// self stufftext "globalwidgetcommand credits2 name credits1"
+	// self stufftext "globalwidgetcommand credits1 shader townhallwindow"
+	// self stufftext "globalwidgetcommand credits1 fgcolor 1.00 0.00 1.00 1.00"
+	// self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+	// self stufftext "globalwidgetcommand credits1 fadein 0"
+	// self stufftext "globalwidgetcommand credits1 menu dday1 640 480 NONE 0"
+	// self stufftext "globalwidgetcommand credits1 virtualres 1"
+	// self stufftext "globalwidgetcommand credits1 fullscreen 1"
+   	// self stufftext "globalwidgetcommand credits1 name credits2"    
+
+	// self stufftext "globalwidgetcommand credits1 shader townhallwindow"
+	// self stufftext "globalwidgetcommand credits1 rect 280 70 596 354" // feho 280 30 596...
+	// self stufftext "globalwidgetcommand credits1 fgcolor 1.00 3.00 4.00 6.00"
+	// self stufftext "globalwidgetcommand credits1 bgcolor 0.00 0.00 0.00 0.00"
+	// self stufftext "globalwidgetcommand credits1 font handle-23"
+
+	// self stufftext ("set bonus_cvar " + local.l)
+	// self stufftext "globalwidgetcommand credits1 linkcvar rank_cvar
+
+	// self stufftext "showmenu credits1"
+
+	// Feho : iprint affichage rang pour éviter les lags
+	self iprint ("*** " + local.l + " ***") 1
+	// self stufftext ( "locationprint 350 420 Bonus : " + local.l + " 1" )
+
+	wait 10
+
+	self waitthread hud_setup
+
+end
+
+motion_display local.m:
+
+	// self stufftext "globalwidgetcommand dday2 shader townhallwindow"
+	// self stufftext "globalwidgetcommand dday2 fgcolor 1.00 0.00 1.00 1.00"
+	// self stufftext "globalwidgetcommand dday2 bgcolor 0.00 0.00 0.00 0.00"
+	// self stufftext "globalwidgetcommand dday2 fadein 0"
+	// self stufftext "globalwidgetcommand dday2 menu dday1 640 480 NONE 0"
+	// self stufftext "globalwidgetcommand dday2 virtualres 1"
+	// self stufftext "globalwidgetcommand dday2 fullscreen 1"
+
+	// self stufftext "globalwidgetcommand charliesector shader townhallwindow"
+	// self stufftext "globalwidgetcommand charliesector rect 280 30 596 354" // feho 280 0 596...
+	// self stufftext "globalwidgetcommand charliesector fgcolor 1.00 3.00 4.00 6.00"
+	// self stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+	// self stufftext "globalwidgetcommand charliesector font handle-23"
+
+	if (local.m == 1) {
+		// self stufftext ("set rank_cvar Promoted: " + self.rank)
+		
+		// Player announce his rank to other players
+		if (self.rank == "Captain" || self.rank == "Hauptmann") {
+			if (self.dmteam == "axis") {
+				self stufftext "sayteam I'm now Hauptmann, I can plant proximity mines !"
+			}
+			else {
+				self stufftext "sayteam I'm now Captain, I can plant proximity mines !"
+			}
+		}		
+		
+		if (self.rank == "Brigadier General" || self.rank == "Brigadegeneral") {		
+				self stufftext "say I'm Brigadier General, my speed has been increased !"
+		}
+		
+		if (self.rank == "Lieutenant General" || self.rank == "Generalleutnant") {
+			if (self.dmteam == "axis") {
+				self stufftext "say I'm now Generalleutnant, my health has been increased !"
+			}
+			else {
+				self stufftext "say I'm now Lieutenant General, my health has been increased !"
+			}
+		}
+		
+		if (self.rank == "General-of-the-Army" || self.rank == "Generalfeldmarschall") {
+			if (self.dmteam == "axis") {
+				self stufftext "say I'm now Generalfeldmarschall, the damage of my weapons has been increased !"
+			}
+			else {
+				self stufftext "say I'm now General-of-the-Army, the damage of my weapons has been increased !"
+			}
+		}
+	}		
+		
+	else {
+		// self stufftext ("set rank_cvar Demoted: " + self.rank)
+	}
+
+	// self stufftext "showmenu dday2"
+	
+	// Feho : iprint affichage rang pour éviter les lags
+	// self iprint ("*** PROMOTED: " + self.rank + " ***") 1
+
+	wait 10
+
+	self waitthread hud_setup
+
+end	

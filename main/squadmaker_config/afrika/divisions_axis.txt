@@ -1,0 +1,13 @@
+// German divisions in Africa
+
+local.a = makeArray
+
+"5. Leichte Afrika Div" 	german_afrika_private 		german_afrika_officer
+"90. Leichte Afrika Div" 	german_afrika_private 		german_afrika_officer
+"164. Leichte Afrika Div" 	german_afrika_private 		german_afrika_officer
+"15. Panzer Div"			german_panzer_shutze 		german_panzer_obershutze
+"22. Leichte Div" 			german_wehrmacht_soldier 	german_wehrmacht_officer
+
+endArray
+
+end local.a

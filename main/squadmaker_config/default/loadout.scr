@@ -1,0 +1,208 @@
+// Infantry type loadouts
+// by jv_map
+
+// this is used to tell squadmaker
+// we're using a custom loadout.scr
+// in this config instead of falling 
+// back to the default
+let_them_know_im_here:
+end 1
+
+// Allied loadouts
+loadout_allies local.type:
+
+	self.sprt_is_support_gunner = local.type == "support"
+
+	switch(local.type)
+	{
+		mg:
+			self give models/weapons/bar.tik
+			self useweaponclass mg
+			
+			local.pistol 	= 1
+			local.grenades	= 1
+			local.binocs 	= 1
+			
+			break		
+		smg:
+			self give models/weapons/thompsonsmg.tik
+			self useweaponclass smg
+			
+			local.pistol 	= 1
+			local.grenades 	= 2
+			local.binocs 	= 1
+			
+			break
+		sniper:
+			self give models/weapons/springfield.tik
+			self useweaponclass rifle
+			
+			local.pistol 	= 1
+			local.grenades 	= 2
+			local.binocs 	= 1
+			
+			break
+			
+			// Support type requires support gunner mod
+			// to be present (mod by jv_map)
+		support:
+			thread global/support/support.scr::make_supporter allies
+			
+			local.pistol 	= 0
+			local.grenades 	= 0
+			local.binocs 	= 1
+			
+			break
+			
+			// *blegh*, but in case someone wants them :/
+		shotgun:
+			self give models/weapons/shotgun.tik
+			self useweaponclass heavy
+		
+			local.pistol 	= 0
+			local.grenades 	= 2
+			local.binocs	= 1
+		
+			break
+			
+			// *blegh*, but in case someone wants them :/
+		bazooka:
+			self give models/weapons/bazooka.tik
+			self useweaponclass heavy
+			
+			local.pistol	= 1
+			local.grenades	= 0
+			local.binocs	= 1 // should be able to see em panzers from a long way
+			break
+		
+		// the common soldier :)
+		rifleman:
+		default:
+			self give models/weapons/m1_garand.tik
+			self useweaponclass rifle
+			
+			local.pistol 	= 1
+			local.grenades 	= 4
+			local.binocs 	= 1
+			
+			break
+	}
+	
+	if(local.pistol)
+	{
+		// give pistol
+		self give models/weapons/colt45.tik
+	}
+	
+	if(local.binocs)
+	{
+		// give binocs
+		self give models/items/binoculars.tik
+	}
+	
+	if(local.grenades)
+	{
+		// give right ammount of nades
+		self item models/weapons/m2frag_grenade.tik
+		self ammo grenade (local.grenades - level.sqdmk_grenade_start_ammo)
+	}
+	
+end
+
+// Axis loadouts
+loadout_axis local.type:
+
+	self.sprt_is_support_gunner = local.type == "support"
+
+	switch(local.type)
+	{
+		mg:
+			self give models/weapons/mp44.tik
+			self useweaponclass mg
+			
+			local.pistol 	= 1
+			local.grenades	= 1
+			local.binocs 	= 1
+			
+			break
+		smg:
+			self give models/weapons/mp40.tik
+			self useweaponclass smg
+			
+			local.pistol 	= 1
+			local.grenades	= 2
+			local.binocs 	= 1
+			
+			break
+		sniper:
+			self give models/weapons/kar98sniper.tik
+			self useweaponclass rifle
+			
+			local.pistol 	= 1
+			local.grenades	= 2
+			local.binocs 	= 1
+
+			break
+			
+		// Support type requires support gunner mod
+		// to be present (mod by jv_map)
+		support:
+			thread global/support/support.scr::make_supporter axis
+			
+			local.pistol 	= 0
+			local.grenades	= 0
+			local.binocs 	= 1
+			
+			break
+			
+		// *blegh*, but in case someone wants them :/
+		shotgun:
+			self give models/weapons/shotgun.tik
+			self useweaponclass heavy
+		
+			local.pistol 	= 0
+			local.grenades 	= 2
+			local.binocs	= 1
+		
+			break
+			
+			// *blegh*, but in case someone wants them :/
+		bazooka:
+			self give models/weapons/panzerschreck.tik
+			self useweaponclass heavy
+			
+			local.pistol	= 1
+			local.grenades	= 0
+			local.binocs	= 1 // should be able to see em shermans from a long way
+			break
+			
+		rifleman:
+		default:
+			self give models/weapons/kar98.tik
+			self useweaponclass rifle
+			
+			local.pistol 	= 1
+			local.grenades	= 4
+			local.binocs 	= 1
+			
+			break
+	}
+	
+	if(local.pistol)
+	{
+		self give models/weapons/p38.tik
+	}
+	
+	if(local.binocs)
+	{
+		// give binocs
+		self give models/items/binoculars.tik
+	}
+	
+	if(local.grenades)
+	{
+		// get 6 grenades unless some are taken away
+		self give models/weapons/steilhandgranate.tik
+		self ammo grenade (local.grenades - level.sqdmk_grenade_start_ammo)
+	}
+end

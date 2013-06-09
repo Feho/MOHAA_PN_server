@@ -1,0 +1,62 @@
+/*
+======================================================
+*** AIRborne; Spawned StateScript for MoH:AA
+======================================================
+by Sor
+Version: v1.0
+-----------------------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+spawned:
+
+	println "Client ID " self.entnum " has just spawned!"
+
+	if (self.rank == NIL && level.running_ranking == 1)
+	{
+		self waitthread global/rank/ranking.scr::cadet
+	}
+
+	if (self.rankbonus["silencer"] == 1 && level.running_ranking == 1)
+	{
+		self thread global/rank/ranking.scr::_bonus_silencer
+	}
+	if (self.rankbonus["regenerate"] == 1 && level.running_ranking == 1)
+	{
+		self thread global/rank/ranking.scr::_bonus_regenerate
+	}
+	if (self.rankbonus["health"] == 1 && level.running_ranking == 1) // bonus vie
+	{
+		self thread global/rank/ranking.scr::_bonus_health
+	}
+	if (self.rankbonus["bazooka"] == 1 && level.running_ranking == 1)
+	{
+		self thread global/rank/ranking.scr::_bonus_bazooka
+	}
+	
+	self item items/binoculars.tik
+
+end

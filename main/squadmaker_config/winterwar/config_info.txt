@@ -1,0 +1,10 @@
+// Config information.
+
+// This MUST return a non-empty string with some descriptive
+// text of the squad configuration (max 255 chars).
+// Squadmaker uses this information to determine if a 
+// user-specified configuration exists.
+
+end "Winter War"
+
+// End of config information. Keep this line.

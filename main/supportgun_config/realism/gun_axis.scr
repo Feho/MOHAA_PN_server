@@ -1,0 +1,36 @@
+// mg42 (prrrrrrrt) properties
+// by jv_map
+
+main:
+	self.name 			= "MG42"
+	self.normalteam		= axis
+	self.model 			= "models/statweapons/mg42_gun.tik"
+	
+	self.firedelay		= 0.05 // 1200 rpm
+	self.bulletdamage	= 30 // 45
+	
+	self.ammotype		= "Support"
+	self.movementspeed	= 0.4
+	
+	self.holstertag		= "Bip01 Spine2"
+	self.holsteroffset 	= ( -15.0 -7.0 0.0)
+	self.holsterangles 	= (15 0 170)
+	
+	self.showgunoffset 	= (36 0 0) //(37 0 0)
+	self.showgunangles  = (0 0 180)
+	self.showgunscale	= 1.0
+	
+	self.podmodel 		= "models/statweapons/mg42_bipod_nonstatic.tik"
+	self.podtag 		= "tag_barrel"
+	self.podoffset 		= ( -12 -1 0)
+	self.podangles		= (0 0 0)
+	
+	self.bulletspread	= 55 // 45
+	
+	self.viewkick_min	= ( -1.0 -0.25 -1.0)
+	self.viewkick_max	= ( 0.0  0.25  1.0)
+	
+	self.viewkick_lean_mult = 0.35 // a bit too heavy
+	
+	self.temperature_per_shot = 0.01 // 0.0055 // in fraction of max temperatures
+end 1 // MUST return 1

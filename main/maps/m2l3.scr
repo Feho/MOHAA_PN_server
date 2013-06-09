@@ -1,0 +1,593 @@
+/*
+======================================================
+*** AIRborne; M2L3 Mapscript for MoH:AA
+======================================================
+by Sor
+Version: v1.0
+-----------------------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+
+// =========================================================================================== //
+//////////////////////////////////////////SETUP MAP//////////////////////////////////////////////
+// =========================================================================================== //
+main:
+
+	thread organize_console
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
+	
+	setcvar "timelimit" "15"
+	setcvar "fraglimit" "3"
+	
+
+	exec global/AIR/AIR_Control.scr
+	waitthread settings_init
+	
+	// level.m2l3_setting = "obj" // feho
+	
+	switch(level.m2l3_setting)
+	{
+		// case "tdm":
+		// 	waitthread tdm_spawns
+		// 	setcvar "g_obj_alliedtext1" ""
+		// 	setcvar "g_obj_alliedtext2" ""
+		// 	setcvar "g_obj_alliedtext3" ""
+		// 	setcvar "g_obj_axistext1" "Map : M2L3"
+		// 	setcvar "g_obj_axistext2" ""
+		// 	setcvar "g_obj_axistext3" "178.32.28.179:12203 "
+		// 	setcvar "g_gametypestring" "Team Deathmatch"
+		// 	setcvar "g_gametype" "2"
+		// break
+		case "obj":
+			waitthread tdm_spawns
+			thread setup_obj
+			setcvar "g_obj_alliedtext1" "Double-Objective"
+			setcvar "g_obj_alliedtext2" "Axis destroy Radio"
+			setcvar "g_obj_alliedtext3" "Allies take the train!"
+			setcvar "g_obj_axistext1" "Map : M2L3"
+			setcvar "g_obj_axistext2" ""
+			setcvar "g_obj_axistext3" ""
+			setcvar "g_gametypestring" "Double Objective-Match"
+			setcvar "g_gametype" "4"
+		break
+		case "cnh":
+			waitthread tdm_spawns
+			thread global/AIRborne_sounds.scr::victory_only
+			setcvar "g_obj_alliedtext1" "Capture n' Hold"
+			setcvar "g_obj_alliedtext2" ""
+			setcvar "g_obj_alliedtext3" ""
+			setcvar "g_obj_axistext1" "Map : M2L3"
+			setcvar "g_obj_axistext2" ""
+			setcvar "g_obj_axistext3" ""
+			setcvar "g_gametypestring" "Capture n' Hold"
+			setcvar "g_gametype" "4"
+			thread setup_cnh
+		break
+		case "tdm": // Ajout Feho - Pour que le mode tdm soit remplacé par le mode Capture The Flag
+		case "ctf":
+			waitthread tdm_spawns
+			thread global/AIRborne_sounds.scr::victory_only
+			setcvar "g_obj_alliedtext1" "Airborne Capture-The-Flag"
+			setcvar "g_obj_alliedtext2" ""
+			setcvar "g_obj_alliedtext3" ""
+			setcvar "g_obj_axistext1" "Map : M2L3"
+			setcvar "g_obj_axistext2" ""
+			setcvar "g_obj_axistext3" ""
+			setcvar "g_gametypestring" "Capture-The-Flag"
+			setcvar "g_gametype" "4"
+			thread setup_ctf
+		break
+		default: 
+			waitthread tdm_spawns
+			setcvar "g_obj_alliedtext1" "Airborne Team Deathmatch"
+			setcvar "g_obj_alliedtext2" ""
+			setcvar "g_obj_alliedtext3" ""
+			setcvar "g_obj_axistext1" "Map : M2L3"
+			setcvar "g_obj_axistext2" ""
+			setcvar "g_obj_axistext3" "178.32.28.179:12203 "
+			setcvar "g_gametypestring" "Team Deathmatch"
+			setcvar "g_gametype" "2"
+		break
+	}
+ 
+	waitthread set_da_stuff_up
+
+	exec global/ladderspawn.scr ( -543 3753 -508) 235 wood -90
+
+	local.mur = spawn script_object
+	local.mur.origin = ( -693 2426 -525)
+	local.mur.angle = 90
+	local.mur setsize ( -1 1 1) ( 1 407 296)
+	local.mur solid
+
+	local.mur = spawn script_object
+	local.mur.origin = ( -693 2426 -525)
+	local.mur.angle = 0
+	local.mur setsize ( -1 1 1) ( 1 985 296)
+	local.mur solid
+	
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
+	level waittill prespawn
+
+	// *** Exec the DMprecache
+	exec global/DMprecache.scr
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m2l3
+	
+	level waittill spawn
+	
+	
+	thread global/AIR/AIR_Control.scr::clear_hud
+	thread setup_tele
+
+	level.clockside = kills
+end
+
+//========================================================================================//
+settings_init:													//
+															//
+	// ---------------------------------------------------------------------------------//
+	// Get setup settings											//
+	// ------------------											//
+	//														//
+	local.settings = waitthread global/AIR/AIR_Control.scr::get_msetting "m2l3"		//
+	if ((local.settings != NIL) && (local.settings != "") && 					//
+		(local.settings != "random"))									//
+	{														//
+		level.m2l3_setting = local.settings								//
+		println "[DEBUG AIR::M2L3]: Chosen mode: " level.m2l3_setting			//
+	}														//
+	else if (local.settings == "random")								//
+	{														//
+		local.mode = waitthread global/AIR/AIR_Control.scr::get_msetting "m2l3_modes"	//
+		local.p = (randomint(local.mode.size)) + 1						//
+		level.m2l3_setting = local.mode[local.p]							//
+															//
+		println "[DEBUG AIR::M2L3]: Randomly chosen mode: " level.m2l3_setting		//
+	}														//
+	else														//
+	{														//
+		level.m2l3_setting = ""										//
+		println "[DEBUG AIR::M2L3]: Error no mode available, choosing default..."	//
+	}														//
+end															//
+//========================================================================================//
+
+tdm_spawns:
+
+
+	spawn info_player_axis "origin" "-802.99 2044.99 -457.33" "angle" "68" "targetname" "X1"
+	spawn info_player_axis "origin" "-552.48 1876.24 -458.94" "angle" "88" "targetname" "X2"
+	spawn info_player_axis "origin" "-18.46 1946.37 -464.87" "angle" "103" "targetname" "X3"
+	spawn info_player_axis "origin" "72.88 1878.37 -466.89" "angle" "108" "targetname" "X4"
+	spawn info_player_axis "origin" "72.88 1738.27 -468.37" "angle" "106" "targetname" "X5"
+	spawn info_player_axis "origin" "-622.14 1439.56 -463.08" "angle" "83" "targetname" "X6" 
+	spawn info_player_axis "origin" "-828.49 1544.68 -462.01" "angle" "73" "targetname" "X7"
+	spawn info_player_axis "origin" "-1072.87 1469.06 -462.58" "angle" "64" "targetname" "X8"
+	spawn info_player_axis "origin" "-850.41 1121.68 -467.10" "angle" "77" "targetname" "X9"
+	spawn info_player_axis "origin" "-1058.54 2211.02 -456.87" "angle" "24" "targetname" "X10"
+	spawn info_player_axis "origin" "-890.65 2322.49 -464.56" "angle" "18" "targetname" "X11"
+	spawn info_player_axis "origin" "-159.13 2224.27 -460.15" "angle" "112" "targetname" "X12"
+	spawn info_player_axis "origin" "72.86 2651.88 -489.82" "angle" "145" "targetname" "X13"
+	spawn info_player_axis "origin" "45.22 2839.30 -501.41" "angle" "164" "targetname" "X14"
+	spawn info_player_axis "origin" "138.31 1048.51 -491.88" "angle" "102" "targetname" "X15"
+
+
+
+	spawn info_player_allied "origin" "80.87 4943.13 -255.88" "angle" "147" "targetname" "A1"
+	spawn info_player_allied "origin" "51.27 5301.04 -255.88" "angle" "170" "targetname" "A2"
+	spawn info_player_allied "origin" "58.91 5534.73 -255.88" "angle" "178" "targetname" "A3"
+	spawn info_player_allied "origin" "60.49 5712.87 -255.88" "angle" "-165" "targetname" "A4"
+	spawn info_player_allied "origin" "-511.29 5712.87 -255.88" "angle" "-138" "targetname" "A5" 
+	spawn info_player_allied "origin" "-715.78 5712.87 -255.88" "angle" "-105" "targetname" "A6"
+	spawn info_player_allied "origin" "-652.08 5115.22 -255.88" "angle" "117" "targetname" "A7"
+	spawn info_player_allied "origin" "-1040.87 5135.13 -255.88" "angle" "77" "targetname" "A8"
+	spawn info_player_allied "origin" "-960.43 5135.13 -255.88" "angle" "82" "targetname" "A9"
+	spawn info_player_allied "origin" "-879.23 5135.13 -255.88" "angle" "88" "targetname" "A10"
+	spawn info_player_allied "origin" "-1040.87 5485.67 -255.88" "angle" "62" "targetname" "A11"
+	spawn info_player_allied "origin" "-1258.77 6512.87 -255.88" "angle" "-38" "targetname" "A12"
+	spawn info_player_allied "origin" "-1409.76 6447.31 -255.88" "angle" "-16" "targetname" "A13"
+	spawn info_player_allied "origin" "-390.76 6478.67 -255.88" "angle" "-167" "targetname" "A14"
+	spawn info_player_allied "origin" "-581.50 6559.73 -255.88" "angle" "-141" "targetname" "A15"
+end
+
+// =========================================================================================== //
+////////////////////////////////////////////GAMETYPE SETUP///////////////////////////////////////
+// =========================================================================================== //
+setup_obj:
+
+
+	exec global/AIR_Spawner.scr ( -1045 5880 -255 ) ( 0 0 0 ) "models/static/planningtable.tik" 1 1.000
+	exec global/AIR_Spawner.scr ( -1000 5880 -202 ) ( 0 0 0 ) "models/static/microphone_ns.tik" 0 1.000
+
+	// waitexec global/AIRborne_sounds.scr //feho comment, too many sounds = crash server
+
+	level waittill spawn
+
+		// set the parameters for this round based match
+	level.dmrespawning = 1 // 1 or 0
+	level.dmroundlimit = 8 // round time limit in minutes
+	
+	local.array = makeArray
+	"shoot_radio" 1200 ( -1015 5880 -202 ) ( 0 0 0 ) "axis" 
+	endArray
+
+	waitexec global/AIRborne.scr::objective_setup local.array
+	thread trainsequence_obj
+
+	waitframe
+
+	waitthread global/AIRborne_utils.scr::add_objective_to_hud level.AIRborne_shoot[1] "shoot"
+	thread global/AIRborne_utils.scr::obj_hud
+	thread train_hud
+
+	level.clockside = "axis"
+
+	local.min = ( -2022 -2375 -502 )
+	local.max = ( -1822 -2205 -272 )
+	while(1)
+	{
+		if (level.AIRborne_shoot[1].shot == 1)
+		{
+			local.winner = "axis"
+		}
+
+		for (local.i = 1; local.i <= $player.size; local.i++)
+		{
+			if ($player[local.i].status == "alive" && $player[local.i].dmteam == "allies" && level.train_location[0] == "a")
+			{
+				local.pass = 0
+				if ($player[local.i].origin[0] >= local.min[0] && $player[local.i].origin[1] >= local.min[1] && $player[local.i].origin[2] >= local.min[2])
+				{
+					local.pass++
+				}
+				if ($player[local.i].origin[0] <= local.max[0] && $player[local.i].origin[1] <= local.max[1] && $player[local.i].origin[2] <= local.max[2])
+				{
+					local.pass++
+				}
+				if (local.pass == 2)
+				{
+					iprintlnbold_noloc "The Allies have boarded the train!!!!"
+					local.winner = "allies"				
+				}
+			}
+		}
+		
+		if(local.winner)
+		{
+			level.AIR_teamwin = 1
+
+			wait 2
+
+			local.gt = getcvar "g_gametype"
+			setcvar "g_gametype" "4"
+
+			level.global_win["winner"] = local.winner
+			level.global_win["winevent"] = "round_restart"
+			level.global_win["winevent_delay"] = 0.5
+			level.global_win["winevent_display"] = 0
+
+			waitexec global/win.scr::teamwins
+
+			setcvar "g_gametype" local.gt
+			end
+		}
+
+		wait 1
+	}
+
+end
+
+train_hud:
+
+	local.x = 20
+	local.y = 150
+	while(1)
+	{
+		huddraw_font 245 facfont-20
+		huddraw_align 245 "left" "center"
+		huddraw_rect 245 (local.x + 25) (local.y) 100 100
+		huddraw_string 245 "Allies must board the train:"
+		huddraw_color 245 1.0 0.4 0.4
+		huddraw_alpha 245 1.0
+
+		huddraw_align 246 "left" "center"
+		huddraw_rect 246 (local.x) (local.y - 40) 22 22
+		huddraw_shader 246 "textures/hud/axis"
+		huddraw_alpha 246 1.0
+
+		huddraw_font 247 facfont-20
+		huddraw_align 247 "left" "center"
+		huddraw_rect 247 (local.x + 25) (local.y + 20) 100 100
+		huddraw_string 247 ("Train is " + level.train_location + " " + level.train_time)
+		huddraw_color 247 level.train_colour[0] level.train_colour[1] level.train_colour[2]
+		huddraw_alpha 247 1.0
+
+		wait 1
+	}
+end
+
+trainsequence_obj:
+
+	$choochootraindoor bind $choochootrain 
+	$trainfront bind $choochootrain
+	$trainfront show
+	$choochootraindoor show
+	$choochootrain show
+
+	while (1)
+	{
+		level.train_location = "Moving"
+		level.train_colour = ( 1.0 1.0 1.0 )
+		level.train_time = ""
+
+		$choochootrain speed 400
+		$choochootrain moveto $choochootrainpath
+		$choochootrain waitmove
+		$choochootrain followpath $choochootrainpaths ignoreangles
+		$choochootrain playsound m2l3_train_approach
+		$choochootrain waitmove
+		wait 3
+		$choochootraindoor movewest 128
+		$choochootraindoor waitmove
+
+		level.train_location = "at the Station"
+		level.train_colour = ( 0.4 1.0 0.4 )
+
+		local.time = 90.000
+		while(local.time > 0.000)
+		{
+			level.train_time = ("[Time: " + int(local.time) + "]")
+			local.time -= 1.000
+			wait 1
+		}
+
+		level.train_location = "Moving"
+		level.train_colour = ( 1.0 1.0 1.0 )	
+		level.train_time = ""
+
+		$choochootraindoor moveeast 128
+		$choochootraindoor waitmove
+		wait 5
+		$choochootrain followpath $trainescapepath ignoreangles
+		$choochootrain playsound m2l3_train_approach
+		$choochootrain move
+		$choochootrain waitmove
+		wait 120
+		$choochootrain.origin = ( -5456 -2292 -384 )
+		$alarm_sound playsound den_m2l2_258p
+	}
+end
+
+setup_ctf:
+
+	waitexec global/AIR_library.scr
+
+	local.allied_models = waitthread global/AIRborne_utils.scr::player_models "allies"
+	local.axis_models = waitthread global/AIRborne_utils.scr::player_models "axis"
+
+	local.ctf_model_axis = local.axis_models[((randomint(local.axis_models.size)) + 1)]
+	local.ctf_model_allies = local.allied_models[((randomint(local.allied_models.size)) + 1)]
+
+	level waittill spawn
+
+	waitthread global/ctf.scr::add_ctf_base ( 180 6520 -510 ) "allies" local.ctf_model_allies ( 0 270 0 ) ( -30 0 0 )
+	waitthread global/ctf.scr::add_ctf_base ( -380 3700 -510 ) "axis" local.ctf_model_axis ( 0 270 0 ) ( 30 0 0 )
+
+	level.ctf["pointlimit"] = 8
+	level.ctf["capturetime"] = 0
+	level.ctf["countdown"] = 9.0
+	level.ctf["returntime"] = 0
+	level.ctf["returnboth"] = 1
+	level.ctf["enemyreturn"] = 90
+	level.ctf["groundreturn"] = 60
+	level.ctf["friendlyreturn"] = 1
+	level.ctf["flagcarrier_music"] = 0
+	level.ctf["HUD_underlay"] = 0
+
+	exec global/ctf.scr
+end
+
+setup_cnh:
+
+	exec global/AIR_Spawner.scr ( 994 3850 -705 ) ( 0 0 0 ) models/static/indycrate.tik 1 1.000
+	exec global/AIR_Spawner.scr ( 924 3890 -705 ) ( 0 33 0 ) models/static/indycrate.tik 1 1.000
+	exec global/AIR_Spawner.scr ( 1004 3940 -705 ) ( 0 133 0 ) models/static/indycrate.tik 1 1.000
+	exec global/AIR_Spawner.scr ( 1043 3865 -690 ) ( 0 90 30 ) models/static/indycrate.tik 1 1.000
+	exec global/AIR_Spawner.scr ( 1021 3940 -660 ) ( 0 0 0 ) models/static/indycrate.tik 1 1.000
+	exec global/AIR_Spawner.scr ( 974 3870 -660 ) ( 0 250 0 ) models/static/indycrate.tik 1 1.000
+	exec global/AIR_Spawner.scr ( 944 3910 -660 ) ( 0 315 0 ) models/static/indycrate.tik 1 1.000
+	exec global/AIR_Spawner.scr ( 984 3900 -610 ) ( 0 0 0 ) models/static/static_cablespool_full.tik 1 1.000
+	exec global/AIR_Spawner.scr ( 978 3900 -560 ) ( 0 180 0 ) models/miscobj/radio_military.tik 0 1.000
+
+	level.cnh["fms"] = 1.00
+	level.cnh["multi_bonus"] = 0
+	level.cnh["ticketcount"] = 300
+	level.cnh["tickettime"] = 2
+	level.cnh["ticketloss"] = 1
+	level.cnh["ticket_compensation"] = 1
+	level.cnh["HUD_display"] = 1
+	level.cnh["HUD_underlay"] = 0
+	level.cnh["HUD_rect"] = (( 20)::( 65))
+
+	local.o = makeArray
+			    	    // Minimum	     // Maximum	   // Flag Origin
+	"custom_capture" 0.1 ((( 920 3800 -630 )::( 1061 3991 -455 ))::( 1245 3870 -520)) "blank" "Garage Pile"
+	endArray
+	
+	exec global/cnh.scr local.o
+	wait 0.5
+	level.tickets["allies"] = 350
+
+end
+
+set_da_stuff_up:
+	
+	// Remove AI
+	removeclass actor
+
+	// Remove ammo
+	removeclass AmmoEntity
+	
+	
+	$world farplane 10000
+	$world farplane_color ".6 .6 .7"
+	
+	$radio1 loopsound m2l3_radio1
+	$radio2 loopsound m2l3_radio2
+
+	if (level.m2l3_setting != "obj")
+		thread trainsequence
+	
+end	
+
+
+trainsequence:
+
+	$choochootraindoor bind $choochootrain 
+	$trainfront bind $choochootrain
+	$trainfront show
+	$choochootraindoor show
+	$choochootrain show
+
+	while (1)
+	{
+		$choochootrain speed 1000
+		$choochootrain moveto $choochootrainpath
+		$choochootrain waitmove
+		$choochootrain followpath $choochootrainpaths ignoreangles
+		$choochootrain playsound m2l3_train_approach
+		$choochootrain waitmove
+		wait 3
+		$choochootraindoor movewest 128
+		$choochootraindoor waitmove
+
+		wait 10
+	
+		$choochootraindoor moveeast 128
+		$choochootraindoor waitmove
+		wait 5
+		$choochootrain followpath $trainescapepath ignoreangles
+		$choochootrain playsound m2l3_train_approach
+		$choochootrain move
+		$choochootrain waitmove
+		wait 120
+		$choochootrain.origin = ( -5456 -2292 -384 )
+		$alarm_sound playsound den_m2l2_258p
+	}
+end
+
+// =========================================================================================== //
+//////////////////////////////////////////SETUP MODS/////////////////////////////////////////////
+// =========================================================================================== //
+setup_tele:
+
+	exec global/AIR_TeleModel.scr ( -1739 6605 -213 ) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleModel.scr ( 646 6864 -213 ) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleModel.scr ( 892 4357 -634 ) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleModel.scr ( 840 3409 -634 ) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleModel.scr ( -348 -227 -434 ) "emitters/welding_spark.tik" 0.5
+
+	exec global/AIR_TeleTrig.scr ( -1739 6605 -213 ) ( -397 4599 -505 ) NIL 1 
+	exec global/AIR_TeleTrig.scr ( 646 6864 -213 ) ( -195 5849 -505 ) NIL 1 
+	exec global/AIR_TeleTrig.scr ( 892 4357 -634 ) ( -215 5632 -478 ) NIL 1 
+	exec global/AIR_TeleTrig.scr ( 840 3409 -634 ) ( 5 2922 -522 ) NIL 1 
+	exec global/AIR_TeleTrig.scr ( -348 -227 -434 ) ( -394 4145 -500 ) NIL 1 
+
+	local.info = makeArray
+	( -516 4482 -474 ) ( 0 0 0 ) "allweapon"
+	( -555 -1187 -481 ) ( 0 0 0 ) "armor"
+	( -319 6934 -232 ) ( 0 0 0 ) "allweapon"
+	( -564 5449 -455 ) ( 0 0 0 ) "armor"
+	endArray
+
+	thread global/AIR_gold.scr::treasure_spawn local.info
+
+end
+
+lockedgrate:
+	self playsound vent_gate_locked
+end
+
+lockeddoor:
+	self playsound door_metal_locked
+end
+
+lockedgarage:
+	self playsound garagedoor_locked
+end
+
+// End some labels
+ventcrawler:
+end
+jumpthegate2:
+end
+jumpthegate:
+end
+becomecoverguy:
+end
+
+// =========================================================================================== //
+////////////////////////////////////////HELPER THREADS///////////////////////////////////////////
+// =========================================================================================== //
+organize_console:
+
+	println "=================================================================================="
+	println ("                                                                          Executing " + (getcvar(mapname)) + ".scr")
+	println "=================================================================================="
+
+	level waittill prespawn
+
+	println "------------------------------------------------------------------------------------------------------------"
+	println "                                                     PRESPAWN"
+	println "------------------------------------------------------------------------------------------------------------"
+
+	level waittill spawn
+
+	println "------------------------------------------------------------------------------------------------------------"
+	println "                                                     SPAWN"
+	println "------------------------------------------------------------------------------------------------------------"
+
+	level waittill postthink
+
+	println "------------------------------------------------------------------------------------------------------------"
+	println "                                                     POSTTHINK"
+	println "------------------------------------------------------------------------------------------------------------"
+
+	if ((getcvar "g_gametype") == "4")
+	{
+		level waittill roundstart
+
+		println "------------------------------------------------------------------------------------------------------------"
+		println "                                                     ROUNDSTART"
+		println "------------------------------------------------------------------------------------------------------------"
+	}
+
+end

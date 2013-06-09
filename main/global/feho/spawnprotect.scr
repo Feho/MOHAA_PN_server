@@ -1,0 +1,28 @@
+/*
+Feho - 09/07/2012
+
+Protection 4 secondes au spawn
+*/
+/*
+
+main:
+if (getcvar "modematch" == "0")
+{
+	self nodamage
+	local.time = 0
+
+	while (self.fireheld != 1 && local.time < 4)
+	{
+		local.time += 0.04
+		wait 0.04
+	}
+
+	self.takedamage
+	self iprint "Spawn protection off"
+}
+else
+{
+
+}
+
+end*/

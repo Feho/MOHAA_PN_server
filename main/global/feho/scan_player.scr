@@ -1,0 +1,98 @@
+main:
+
+	local.bomb = "bomb" + randomint 999999 + self.entnum
+	self attachmodel level.bomb_model "Bip01 Pelvis" 0.8 local.bomb 1 -1 -1 -1 -1 ( 1.5 -4 -10.0 )
+	$(local.bomb).angles = ( 0 90 90 )
+	
+	self.bomb = $(local.bomb)
+	
+	self playsound pickup_bomb1
+	
+	self.has_the_bomb = 1
+	
+	
+	self stufftext "globalwidgetcommand dday1 shader townhallwindow"
+	self stufftext "globalwidgetcommand dday1 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand dday1 bgcolor 0.50 0.50 0.50 0.00"
+	self stufftext "globalwidgetcommand dday1 fadein 0"
+	self stufftext "globalwidgetcommand dday1 menu dday1 640 480 NONE 0"
+	self stufftext "globalwidgetcommand dday1 virtualres 1" 
+	self stufftext "globalwidgetcommand dday1 fullscreen 1" 
+
+	self stufftext "globalwidgetcommand june6 borderstyle NONE"
+	self stufftext "globalwidgetcommand june6 shader textures/hud/explosives.tga" //<---image here
+	self stufftext "globalwidgetcommand june6 rect 40 420 64 64" // first set are the coords side to side, second is top to bottom, third and fourth are the size of the image.
+	self stufftext "globalwidgetcommand june6 fgcolor 1.00 1.00 1.00 1.00"
+	self stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
+
+	self stufftext "globalwidgetcommand june6 linkcvar lala"
+
+	self stufftext "showmenu dday1"
+
+
+	local.team = self.dmteam
+	local.team  = waitexec global/strings.scr::to_upper local.team  0
+	iprintlnbold ("The " + local.team  + " recovered the explosives !")
+
+	wait 1
+
+	local.check = 1
+	local.team = self.dmteam
+	local.team1  = waitexec global/strings.scr::to_upper local.team  0
+	
+	self thread bomb_check local.team
+
+	while(local.check)
+	{
+		if(self == NULL)
+			local.check = 0
+		else
+		{
+			if (self.has_the_bomb != 1)
+				end
+				
+			if(self.dmteam != local.team || !isalive self)
+				{
+				//spawn a new trigger in original place
+				local.trigger = spawn trigger_multiple origin (self.origin + ( 0 0 20 ))
+				local.trigger model level.bomb_model
+				local.trigger show
+				local.trigger setsize ( -50 -50 0 ) ( 50 50 50 )
+				local.trigger light 1 0 0 50
+				local.trigger setthread global/feho/bomb.scr::main
+				local.trigger droptofloor
+				self.bomb remove
+				local.trigger playsound bomb_drop1
+				iprintlnbold ("The " + local.team1  + " have dropped the explosives !")
+				self.has_the_bomb = 0
+				self stufftext "hidemenu dday1"
+				end
+				}
+			
+		}
+		waitframe
+	}
+	
+	//player left
+	//spawn a new trigger in original place
+	local.trigger = spawn trigger_multiple origin (level.bomb_emplacement + ( 0 0 20 ))
+	local.trigger model level.bomb_model
+	local.trigger show
+	local.trigger setsize ( -50 -50 0 ) ( 50 50 50 )
+	local.trigger light 1 0 0 50
+	local.trigger setthread global/feho/bomb.scr::main
+	local.trigger droptofloor
+	local.trigger playsound bomb_drop1
+	iprintlnbold ("The " + local.team1  + " have dropped the explosives !")
+	
+end
+
+bomb_check local.team:
+
+	while (self && local.team == self.dmteam && isAlive self)
+	{
+		level.bomb_emplacement = self.origin
+		wait 1
+	}
+
+end

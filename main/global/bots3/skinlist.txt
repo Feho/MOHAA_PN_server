@@ -1,0 +1,50 @@
+// Bots3 skinlist
+
+// All entries must point to existing models
+// in the models/player/ folder.
+
+// Bots3 can not check if the skins exist so 
+// make sure that all skins mentioned here 
+// do actually exist.
+
+// Adding a skin here that doesn't exist
+// *will* crash your server, so add skin
+// names accurately and carefully!
+
+// Bots3 cannot check if .tik files exist!
+// Invalid filenames will crash your server!
+
+level.bots.skinlist[allies] = makeArray // do not modify this line
+	allied_Airborne.tik
+	allied_Manon.tik
+	allied_Pilot.tik
+	allied_SAS.tik
+	american_Army.tik
+	american_Ranger.tik
+endArray // do not modify this line
+
+// Bots3 cannot check if .tik files exist!
+// Invalid filenames will crash your server!
+
+level.bots.skinlist[axis] = makeArray // do not modify this line
+	german_Afrika_Officer.tik
+	german_Afrika_Private.tik
+	german_Elite_Officer.tik
+	german_Elite_Sentry.tik
+	german_Kradshutzen.tik
+	german_Panzer_Grenadier.tik
+	german_Panzer_Obershutze.tik
+	german_Panzer_Shutze.tik
+	german_Panzer_Tankcommander.tik
+	german_Scientist.tik
+	german_Waffenss_Officer.tik
+	german_Waffenss_Shutze.tik
+	german_Wehrmacht_Officer.tik
+	german_Wehrmacht_Soldier.tik
+	german_Winter_1.tik
+	german_Winter_2.tik
+	german_Worker.tik
+endArray // do not modify this line
+
+// Bots3 cannot check if .tik files exist!
+// Invalid filenames will crash your server!

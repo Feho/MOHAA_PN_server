@@ -1,0 +1,421 @@
+=================================
+#	ChangeLog serveur MOHAA		#
+=================================
+
+====================================================
+   + Ajout ou amélioration notable
+   - Correction d'un bug ou suppression d'un élément
+   * Modification ou info
+   ! Important
+====================================================
+
+30/05/2013
+~Feho
+- root.scr : correction bug (on n'entendait plus les explosions d'obus suite à la dernière màj)
+- nadeattach.scr : correction bug (on pouvait avoir le lance-grenade avec grenades ou balles illimitées après une petite manip. Merci à Mr. Radar à bug !)
+
+25/05/2013
+~Bgbros
++ root.scr : Ajout de voix spécifique a l'artillerie.
+
+14/05/2013
+~Feho
++ m1l2b, m4l1, m3l3, player_spawn.scr, ranking.scr, bot_spawn.scr : addkills / getkills
+* grenade_alert.scr, voices.scr, player_spawn.scr, bot_spawn.scr : netname
+
+12/05/2013
+~Bgbros
+* voices.scr : Double les chances de lancer l'alias a, c ou d pour le skin germain_worker.
+~Feho
++ Grenades/Trigger.scr (kicknade) : self.velocity = (0 0 0) // Règle en partie le bug des grenades qui ne font aucun dégât
+
+11/05/2013
+~Feho
+* m2l3.scr : le mode Capture The Flag sera lancé à la place du mode TDM
+* DMprecache.scr : + Base Assault
+				   - exec global/sv_intial.scr
+				   - cache sound/mechanics/lockpick2.wav
+				   - cache sound/weapons/fire/Flak88Fire4.wav
+- nagle_aa_torso.st : - Generic_Use.scr
+					  - show_gametype.scr
+* m1l3b.scr : + level.jeep_mask
+			  - ligne 336 : $playerjeep remove
+! Installation du patch 1.12
+~Bgbros
++ voices.scr : Voix pour german_worker (en attendant le skin perso.).
+
+10/05/2013
+~Feho
++ cadenceBAR.scr : ne s'active pas si le joueur appuie sur utiliser
+- ranking.scr : suppression de la variable aléatoire qui définit si le mode doit se lancer ou pas
+
+08/05/2013
+~Feho
++ tracerbullet.scr : Arrêt du script si plus de 20 joueurs (réduira peut-être les lags et crashs clients ?)
+- nadeattach.scr : local.master mis en commentaire
++ ubersound.scr : mountG
+
+05/05/2013
+~Feho
+* m4l1.scr : les battlelines ont été avancées (entrée de l'impasse pour les allies, et entrée de l'église pour les allemands)
+
+01/05/2013
+~Feho
++ global/feho/voices.scr : ajout voix pour allied_pilot, allied_airborne et american_ranger
++ uberdialog.scr : voix ajoutées
+
+28/04/2013
+~val
+Amélioration de la config modematch: maintenant "rcon exec modematch.cfg" -> le serv switch sur v2 avec le password "private",
+FF on, fraglimit 7, runspeed par default etc...
+"rcon exec server.cfg" quand le match est terminé (enleve le pass et remet les parametres).
+
+
+21/04/2013
+~Bgbros
+- Toutes les maps solo dans la rotation > Supression de la classe AmmoEntity ;
+* m1l2b > Cal.30 portable déplacé dans le hangar du centre ;
+* Map Battline > Temps d'affichage entre les messages x2.
+~Feho
+- ubersound.scr : mis en commentaire : MG42, 30cal, Grenades, Steilhandgranate, tank_snd_fire1, explode_aagun1,
+	Pickup Items
+
+19/04/2013
++ création global/logger.scr : Écrit des messages d'info, d'erreur ou de debug dans la console du serveur
++ voices.scr : thread global/logger.scr::LogInfo "[voices.scr::play_a_sound]: playsound"
+* server.cfg : rconpassword modifié --> rconpassword "PNraf22NHz!" pour voir si les reboots server s'arrêtent
+
+08/04/2013
+Bon en fait c'est bon, j'ai enlevé le patch et le prob semble réglé
+
+06/04/2013
+! val : quelqu'un s'amuse a crasher le serv, j'instale le patch reborn temporairement pour l'en empecher ( et par la même ocasion voir si celui ci est compatible avec tout les mods )
+*-> sa a l'air de marcher sans trop de probleme, sauf pour la map m3l3 qui n'arrive pas a ce lancer ( encore elle ! ) 
+
+02/03/2013
++ voices.scr : ajout d'un thread qui joue un son aléatoire sur un joueur aléatoire ayant un autre joueur dans son champ de vision tous les X temps
+
+24/02/2013
++ global/fire_for_effect/root.scr : self playsound arty_exp_sand (corrige le son manquant sur certaines maps solo)
+* ubersound.scr : lignes aliascache arty_exp_sand* décommentées
++ server.cfg : map m3l3 dans la maplist (enfin trouvé la cause des crashs clients sur cette map => les tik de nebelwerfer de la map Carentan... résolu en les virant)
+
+23/02/2013
+* global/feho/voices.scr : * voix différente en fonction du skin (Manon et Allied_army 100%)
+						   - voix transférées dans le fichier uberdialog.scr
++ grenade_alert.scr : voix Manon et Allied_army
++ uberdialog.scr : voix ajoutées
+
+15/02/2013
+~Bgbros
++ m2l3 > Murs bloquant l'accée aux caisses non solide du spawn axes ;
++ m2l3 > Echelle pour monter au-dessus du couloir axes ;
+* m2l3 > Modification des sorties des TPs & suppresion de l'un d'eux.
+
+08/02/2013
++ mohdm1.scr : ajout de code empêchant les portes de se refermer automatiquement (// Stop self closing doors)
+
+07/02/2013
+* ambient.scr (admin pro) : exécution des scripts admin pro seulement si cvar modematch != 1
++ Dmprecache.scr : squadmaker / support
+- .scr des maps : squadmaker / support
++ création main/modematch.cfg
+- suppression des conditions if (getcvar "modematch" == "0") qui ne sont plus utliles dans les scripts du dossier global et feho
+~Feho : squadmaker force le statefile dans une boucle infinie, ce qui explique pourquoi il faut exécuter modematch.cfg et relancer la map 2 fois pour que le changement de statefile soit prit en compte
+
+05/02/2013
+~val : on a enfin trouvé l'ereur qui etais en fait dans le dmprecache.
+j'ai regarder l'initialisation du tread :statefile de admin_pro vite fait (settings.scr) sa a l'air très très chaud. je ne m'en sens pas cable de le faire.
+ pour l'instant les conditions dans les scripts sufisent.
+
+
+04/02/2013
+############## Attention, le serveur ne démarre plus depuis ces dernières modifs ^^ ################
+Voir aussi à utiliser un mike_torso.st original si modematch == 1 (ou plutot trouver le premier fichier exécuté par admin_pro et l'empêcher de démarrer)
+plutôt que de mettre des conditions dans chaque script appelé par nagle_aa_torso.st, ça sera plus optimisé,
+notamment lorsque les tracers sont exécutés en masse par 30 joueurs à la fois.
+Un développeur est fénéant : il cherche à modifier le moins
+de fichiers et écrire le moins de code possible =P
+
+~val
++amélioration de la variable "modematch" :
+si modematch n'est pas egal a 0
+cadence du Bar/STG normale, drop de sante normal, pas de message de pub, pas de tracert, pas de voix en plus, pas de hud modé ( dossier feho ).
+
+*spéparation du script obj_dm.scr, le tread bomb_thinker etant utilisé pour le Search and destroy,
+J'ai remit le obj_dm.scr original en renomant le modé obj_dmsd.scr.
+Comme sa les maps en Search and Destroy on un script particulier detaché du script objectif. (objteam123 + remagen.scr modifié)
+
+
+
+* shotgun.tik : dégâts x 2
++ voices.scr : ajout de nouvelles voix
+- ubersound.scr, uberdialog.scr : Sons inutiles mis en commentaire
+- skins fps : version fps des skins (ex: allied_sas_fps.tik) vidés de leur contenu pour contrer les crashs
+
+03/02/2013
+~val
++amélioration de la variable "modematch" :
+si modematch n'est pas egal a 0
+pas de sys de grades, d'artillerie et d'alerte vocales. (Script dans le Dmprecache)
+
+02/02/2013
+~val
++ creation d'une nouvelle variable : "modematch"
+en test sur obj_team2.scr :
+si mode match = 0
+Mode de jeu Search and destroy
+sinon
+mode de jeu Objectif
+
+Defini par default dans server.cfg a 0.
+à l'avenir, pourrais servir pour desactiver les mode en cas de match. j'ai test vite fait sa marche :)
+
+~Feho
++ mohdm1.scr, mohdm4.scr : removeclass PlayerIntermission (Corrige les crashs clients aléatoires.)
+
+01/02/2013
+~Bgbros
+* m1l3b > Remplacement du "grand mur" par un plus petit sur le bord ;
++  m4l3 > Barbelés rendu solide pour véhicules ;
++  m4l3 > Mur bloquant le dessus du murret ;
+*  m4l3 > Déplacement sortie TP Mirador pour plus tomber.
+
+31/01/2013
++ création nadesfix.scr (anti crash grenades)
++ DMprecache.scr : nadesfix.scr
+
+29/01/2013
+- revive mod
+* bar.tik, cadenceBAR.scr : dmfiredelay 0.08 -->  dmfiredelay 0.12
+* armes : dégâts diminués de ~15% (C'était un peu trop one shot one kill...)
+
+28/01/2013
+* Toutes les armes sauf grenades : utilisation des .tik originaux. Dégâts multipliés par 3,4667
+								   (Nombre permettant d'obtenir 104 pour le BAR (30 * 3.4667 = 104 = CKR))
+								   pour les armes automatiques + Colt 45, les autres armes ont été ajustées
+								   afin de ne pas être surpuissantes...
+- semiauto.scr : mise en commentaire des lignes augmentant/diminuant la précision depuis que la StG 44 a retrouvé sa précision par défaut
+
+27/01/2013
+- val : supression du hud du server Airborne sur m2l3 et des acniens messages de ce même mod + supression de l'affichage obsoléte des message d'admin pro ( en rose en bas a droite )
+* le serveur est offline... peut etre ai je du faire une fausse manip cet aprem, je vais tenter de revenir au depart pour voir si sa vien de la.
+* Edit : bingo c'étais bien sa. j'ai vu mon erreur normalement. je rentente.
+* ReEdit : J'avais laissé un while (1) ... Maintenant les ecritures du serv airborne ont disparue, reste la taille du Hud a fixer. Tout est Ok.
+* semiauto.scr : self weaponcommand dual dmfiredelay --> self weaponcommand dual dmbulletrange
+				 (coup par coup remplacé par rafale de 3 coups et précision améliorée)
+
+26/01/2013
+* val : changement de l'ip dans les scorestexts des maps + effacement de quelques vestiges de l'airborne server.
+
+18/11/2012
++ global/nadeattach.scr : 	self safeholster 1
+							// self stopwatch 1.5
+							wait 1
+							self safeholster 0
+							wait 0.5
+
+13/10/2012
++ feho/scan_player.scr : + ( 0 0 20 )
+
+10/10/2012
++ bot_spawn.scr : (chiens) Amélioration du comportement, chien german attaque joueurs american et vice versa. Les chiens s'attaquent entre eux.
+- anim/dog_attack.scr : if (self.enemy.dmteam != self.playerTeam)
+
+- anim/dog_chase.scr : if (self.enemy.dmteam != self.playerTeam)
+
+07/10/2012
++ server_planes/server_fly.scr : ajout level.planes[local.team]-- avant chaque "end" dans boucle while
+
+04/10/2012
++ server_planes/trigger.scr : local.player.nbFlights (5 vols maxi par joueur)
+
+03/10/2012
++ bot_spawn.scr : ajout de 5 chiens
+* anim/dog_attack.scr :	+ if (self.enemy.dmteam != self.playerTeam)
+						* damage self 75 --> damage self.player 15
+						- mise en commentaire de goto AttackMain
+* anim/dog_chase.scr : 	- mise en commentaire de goto ChaseMain
+						+ if (self.enemy.dmteam != self.playerTeam)
+
+
+02/10/2012
+* obj_team1.scr : chute en parachute plus réaliste, création thread dropPara
+
+01/10/2012
+- server_planes/trigger.scr : bug nombre d'avions illimités par team corrigé -> ajout wait 5 (thread from_fly)
+
+30/09/2012
++ bot_spawn.scr : skins aléatoires pour chaque bot
+- m3l2 : avions supprimés stage 3
+- m4l1 : avions supprimés
+
+16/09/2012
+* bot_spawn.scr : 10 bots max, 3 actifs max
+* supportgun_config/realism/gun_allied.scr et gun_axis.scr : Dégâts diminués de moitié, bulletspread 45 --> 70
+* silencedpistol.tik : rank 130 130
+
+25/08/2012
++ revive.scr : randomint (2) (réduit le nombre de chances de pouvoir se faire relever par un coéquipier)
+
+06/08/2012
+* kick nade : randomint(450)+100 --> randomint(350)+200
+
+01/08/2012
++ playerEvents.scr (revive mod) : thread needmedic
++ uberdialog.scr : Voix appel medecin fin fichier
+
+23/07/2012
++ anticham
+
+22/07/2012
++ ubersound.scr : + ajout sons voitures m1l3b
+				  * dé-com sons haltrack et opel truck
+- reborn patch
+* global/ranking.scr, states/player_spawn.scr, bot_spawn.scr : addkills --> killcount, getkills et netname supprimées
+* playervehicle.scr : le script choisi le script à lancer selon le vehicule
++ global/vehicles/truck.scr, car.scr, bmwbike.scr, global/AA/sdkdz.scr
+
+18/07/2012
+* playervehicle.scr, halftrack.scr : + affichage du nombre de passagers à bord sur l'écran du conducteur
+									 * contrôle si joueur != NULL après les wait
+
+17/07/2012
+* playervehicle.scr, halftrack.scr : nom du joueur qui monte à bord, instructions (klaxon, vitesse lente)
+
+16/07/2012
+* playervehicle.scr, halftrack.scr : * if(self.driver != NIL) --> if(self.driver) (thread vehicledeath)
+									 * if (local.passenger == NIL) --> if (!local.passenger) (thread monitor)
+									 + $(local.seat5).passenger volumedamage 1000 (thread vehicledeath, tue les passagers quand le vehicule explose)
+
+15/07/2012
+* global/states/player_spawn.scr : com self thread setup_kill (pas très utile depuis la commande getkills)
+* playervehicle.scr, halftrack.scr : + if (local.passenger == NIL) end (thread monitor)
+									 * local.kamera --> self.driver_kamera (thread vehicledeath)
+									 * mis en com tous les immune (semble ne plus produire de crash !)
+* bot_spawn.scr : 	if (self.team != local.murderer.dmteam)
+						self takedamage
+					else
+						self nodamage
+
+
+14/07/2012
+* playervehicle.scr, halftrack.scr : 	* Virages plus souples, ralentissement progressif quand on maintient [marcher]
+										* self.driver.invehicule = 0 quand le véhicule est détruit (sinon le joueur ne peut plus utiliser aucun véhicule)
+										* while ( isAlive self && self.health > 0 ) --> while ( self && isAlive self && self.health > 0 )
+										* while (1) --> while (self)
+* halftrack.scr : immune bullet, bash, shotgun
+* PV véhicules : Halftrack : 800 (immunisé contre les balles)
+				 Reste : 2500
+
+13/07/2012
+* voices.scr : dé-com premier bloc voix alliés
+- playervehicle.scr, halftrack.scr : 	* mauvais chemin d'exécution du script corrigé
+										* l.144 : while(1) --> while(self)
+
+12/07/2012
+* global/playervehicle.scr : l.26 self.model --> local.model
++ mise en place des vehicules (zz_vehicules.pk3)
+
+10/07/2012
+* nagle_aa_torso.st : dé-com exec global/ac/spawn_detect.scr 1
++ pk3 admin pro
+* dé-com triggers planes sur les maps solo
+* bot_spawn.scr : affiche "You killed [nomProprioBot]'s bot" quand on tue un bot
+
+09/07/2012
+* bot_spawn.scr : 	- killcount --> addkills
+					- +10 dégâts, radomint (3) --> 2
++ ranking system
+
+07/07/2012
+* nagle_aa_torso.st : 	- mise en commentaire de toutes les lignes contenant "AA/"
+						+ dropitems
+* dropitems.scr : boucles supprimées
+
+04/07/2012
+* m1_garand.tik : peut recharger en milieu de chargeur
+* m2l1.scr : echelles supprimées (remplacées par des caisses). Caisses 1, 2 et 3 supprimmées au stage 2 pour bloquer l'accès au stage 1
+
+03/07/2012
+* global/AA/vezetheto_jeepek.scr : self immune bullet, fast_bullet, shotgun, explosion réactivés (sinon crash le serveur ?)
+
+02/07/2012
+* smoke grenades : la grenade disparait au bout de 10 secs. Possibilité de la kick pendant 10 secs.
+- viewkick des armes supprimé
+* global/feho/tracerbullet.scr : taille diminuée, 1 seule spawn au lieu de 2
+
+30/06/2012
+- echelles : mohdm1, 2, 6, m4l3
+* server.cfg : sets sqdmk "0"
++ DMprecache.scr : fichiers tik manquants mis en cache
+* ubersound.scr : aliascache steamloop m dm obj
+
+29/06/2012
+- DMprecache.scr :	> global/rank/ranking.scr
+					> view.scr
+					> hurt.scr
+					> medicmod.scr
+					> global/fire_for_effect/root.scr
+					> teambalance
+					> nocheat
+					> antinoob
+- revive mod (bons fichiers dans "global/Z revive")
+
+27/06/2012
+* [LAGS] global/rank/ranking.scr :	> hud_setup --> hud_setup_BACK
+									> display_bonus --> stufftext mis en commentaire
+									> l.646 : showmenu en commentaire
+
+25/06/2012
+- ironsite (modif vue armes)
+* global/rank/ranking.scr : dmmovementspeed 1.20 --> 1.10
+
+23/06/2012
+* global/ironsite.scr (amélioration vue armes 1ère pers.) : valeurs par défaut pour MP44 et Kar98, vm_offset_crouch_side diminué pour MP40 et Thompson
+* global/PlayerEvents.scr : appui sur TIR pour respawn instantanément lors de l'attente d'un médecin
+* global/hurt.scr : appui sur UTILISER pour appeller un médecin
+* server.cfg : map mohdm5 retiréé de la liste, sv_runspeed 300 --> 260
+- mohdm6.scr : mod Day & Night supprimé
+* squadmaker_config/default/squad_allied.txt et squad_axis.txt : 4 armes de même type par team sauf shotgun et support
+* squadmaker_config/default/loadout.scr : 1 seule grenade pour les MG, et 1 pistolet
+* supportgun_config/realism/gun_allied.scr et gun_axis.scr : self.temperature_per_shot = 0.02 (allied), self.temperature_per_shot = 0.01 (axis)
+* global/AA/vezetheto_jeepek.scr : diminution accélération et vitesse maxi
+* global/vehicles/halftrack.scr, playervehicle.scr : diminution accélération et vitesse maxi, immunité contre chocs vehicules
++ server.cfg : seta support_droppable_dm 1, seta support_droppable_obj 1 (support gun droppable) 
+
+
+==============================================================================================================
+* TODO *
+
+	m1l2b : est ce qu'on pourrait signaler les lignes ? Et peut-être les avancer à derrière la petite salle avec les caisses pour les Alliés et avant le 2ième hangar pour les Axes ? 
+
+	- a chaque fois que l'on met une bombe sur une map objective, le script des mines se declenche : resultat soit on a de la chance et sa met les deux mine a coté, soit on a pas de chance et on explose a vant de metre la bombe.
+
+	- En spectateur, parfois la camera a un probleme et semble "rebondir" sur le joueur
+
+	- il y a quelques problèmes de HUD avec la bombe en mode sabotage, on peut parfois avoir La bombe mais sans avoir l'icône, du coup on croit q'elle a disparue et on la cherche partout.
+
+	- val : M2l3 taille du Hud CTF et CNH incorrecte ( trop grosse ) +  hud inutile en haut ( version du mod )
+
+	- Sur les véhicules il y a parfois un bug ou on voit l'arme quand on les conduits (sourtout avec la Stg 44)
+
+	- bug similaire avec la voiture citadine de l’aéroport, dans on recharge et que l'on rentre dans la voiture on voit encore les mains qui rechargent dernière la voiture quand
+	on passe en vue 3eme personne
+
+	- mettre module TS sur le site
+
+	- Juste par rapport à la nouvelle map en gain ground (m1l2b) est ce qu'on pourrait signaler les lignes ? Et peut-être les avancer à derrière la petite salle avec les caisses pour les Alliés et avant le 2ième hangar pour les Axes ? 
+
+	- V2 : la bombe de la salle de contrôle semble bloquer le passage après explosion
+
+	- val : Faire du menage dans les script du serveur airborne, vu la complexité du mods sa doit être source de lag/crash sur le server vu que celui ci est combiné avec les autres mods.
+
+	- val : variable modmatch : reste a corriger : Caractèristiques des armes ( spread,degat,clips...) la hauteur du saut, mine, spawn protect, chien/Bots, Smokes grenades.
+		* les chiens/ bots ne devrai pas etre dur a enlever avec une condition.
+		* Les armes devraient etre une autre paire de manche ( 2 tiks ? sa me semble pas possible, avec un script peut etre... )
+ 		* la hauteur du saut, mine, spawn protect viennent d'admin-pro, il faudrai bien etudier le script.
+		* Le truc du mike_torso individuel semble très dur a metre en place pour moi.
+                                                       
+
+==============================================================================================================

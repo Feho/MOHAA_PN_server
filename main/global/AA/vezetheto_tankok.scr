@@ -1,0 +1,1693 @@
+spawn_tank local.origin local.angles local.type local.team local.coll:
+
+	if ( local.origin == NIL || local.origin == NULL )
+		end
+
+	if ( local.angles == NIL || local.angles == NULL )
+		local.angles = ( 0 0 0 )
+
+	local.existing_type = 0
+	switch (local.type)
+	{
+		case "kingtiger":
+			local.model = "models/vehicles/kingtank.tik"
+			local.existing_type = 1
+		break
+		case "tiger":
+			local.model = "models/vehicles/tigertank.tik"
+			local.existing_type = 1
+		break
+		case "panzer_brown":
+			local.model = "models/vehicles/panzer_tank.tik"
+			local.existing_type = 1
+		break
+		case "panzer_euro":
+			local.model = "models/vehicles/panzer_tank_europe.tik"
+			local.existing_type = 1
+		break
+	}
+
+	if (local.existing_type != 1)
+	{
+		conprintf "Not defined tank type detected!!!"
+		end
+	}
+
+	local.pos = local.origin + ( 0 0 10 )
+
+	local.tank = spawn local.model origin local.pos angles local.angles
+	local.turret = local.tank queryturretslotentity 0
+	local.turret2 = local.tank queryturretslotentity 1
+
+	local.tank hide
+	local.tank nodamage
+
+	if (local.turret)
+		local.turret hide
+
+	if (local.turret2)
+		local.turret2 hide
+
+	waitframe
+
+	local.tank.origin = local.pos
+
+	local.tank show
+
+	if (local.turret)
+		local.turret show
+
+	if (local.turret2)
+		local.turret2 show
+
+	local.tank thread init_tank local.type local.team local.coll local.origin
+
+end
+
+init_tank local.type local.team local.coll local.origin:
+
+	local.existing_type = 0
+	switch (local.type)
+	{
+		case "kingtiger":
+		case "tiger":
+		case "panzer_brown":
+		case "panzer_euro":
+			local.existing_type = 1
+		break
+	}
+
+	if (local.existing_type != 1)
+	{
+		conprintf "Not defined tank type detected!!!"
+		end
+	}
+
+	if ( local.origin == NIL || local.origin == NULL )
+		local.origin = self.origin
+
+	if ( local.coll && local.coll.brushmodel )
+	{
+		self.collisionent = local.coll
+
+		self.collisionent.vehicle = self
+		self.collisionent.isvehicle = 1
+	}
+
+	if ( local.team != "allies" && local.team != "axis" )
+		local.team = "allies"
+
+	self.targetname = "vezetheto_jarmu"
+	self.type = local.type
+	self.dmteam = local.team
+	self.mpteam = "neutral"
+
+	self lock
+	self unlockmovement
+	self removeondeath 0
+	self takedamage
+
+	self.torony = self queryturretslotentity 0
+	self.torony lock
+	self.torony removeondeath 0
+
+	self waitexec global/AA/immunities.scr
+
+	local.immunities = crush::telefrag::explosion::fire::bash
+	for (local.i = 1;local.i <= local.immunities.size;local.i++)
+	{
+		self.immunities[local.i] = local.immunities[local.i]
+	}
+
+	if (self.collisionent)
+	{
+		self notsolid
+		self.torony notsolid
+	}
+	else
+	{
+		self solid
+		self.torony solid
+
+		self.torony.vehicle = self
+		self.torony.isvehicle = 1
+	}
+
+	self.hasdriver = 0
+	self.driver = NULL
+
+	self.hasgunner = 0
+	self.gunner = NULL
+
+	self.captured = 0
+	self.capturing_time = 10 // sec
+	self.istank = 1
+	self.isvehicle = 1
+	self.destroyed = 0
+
+	self.death_exp = self thread spawn_fx "models/emitters/explosion_tank.tik"
+
+	switch (self.type)
+	{
+		case "kingtiger":
+			self.health = 1600
+			self.mass = 68500.0
+			self.vehiclespeed = 220.0
+			self.acceleration = 130.0
+			self.turnrate = 22
+			self.torony_turnspeed = 32
+
+			self turnrate self.turnrate
+			self.torony turnspeed self.torony_turnspeed
+
+			self.respawn_time = 60
+
+			if ( self.collisionent == NIL || self.collisionent == NULL )
+			{
+				self setsize ( -294 -128 0 ) ( 150 128 115 )
+				self.torony setsize ( -112 -72 0 ) ( 94 64 69 )
+			}
+
+			local.respawn_size1 = ( -334 -175 0 )
+			local.respawn_size2 = ( 214 175 120 )
+		break
+		case "tiger":
+			self.health = 1200
+			self.mass = 56900.0
+			self.vehiclespeed = 250.0
+			self.acceleration = 160.0
+			self.turnrate = 24
+			self.torony_turnspeed = 34
+
+			self turnrate self.turnrate
+			self.torony turnspeed self.torony_turnspeed
+
+			self.respawn_time = 60
+
+			if ( self.collisionent == NIL || self.collisionent == NULL )
+			{
+				self setsize ( -180 -103 0 ) ( 180 103 104 )
+				self.torony setsize ( -80 -50 0 ) ( 72 60 48 )
+			}
+
+			local.respawn_size1 = ( -214 -133 0 )
+			local.respawn_size2 = ( 232 133 120 )
+		break
+		case "panzer_brown":
+		case "panzer_euro":
+			self.health = 700
+			self.mass = 25000.0
+			self.vehiclespeed = 300.0
+			self.acceleration = 200.0
+			self.turnrate = 30
+			self.torony_turnspeed = 40
+
+			self turnrate self.turnrate
+			self.torony turnspeed self.torony_turnspeed
+
+			self.respawn_time = 45
+
+			if ( self.collisionent == NIL || self.collisionent == NULL )
+			{
+				self setsize ( -160 -85 0 ) ( 160 85 108 )
+				self.torony setsize ( -96 -48 0 ) ( 40 48 44 )
+			}
+
+			local.respawn_size1 = ( -191 -144 0 )
+			local.respawn_size2 = ( 191 144 120 )
+		break
+	}
+
+	self.speed = 0.0
+	self vehiclespeed 200.0
+
+	self.maxhealth = self.health
+	self.fakehealth = self.maxhealth
+
+	self.entered = 1
+
+	self thread tank_turretfix
+	self thread tank_funkciok local.team local.coll local.origin self.angles local.respawn_size1 local.respawn_size2
+
+	wait 1
+
+	self.stop_org = spawn script_origin
+	self.stop_org.origin = local.origin
+	self.stop_org.angles = self.angles
+	self.stop_org.glued = 0
+
+	self.entered = 0
+
+end
+
+tank_turretfix:
+
+	self.torony surface all "+nodraw"
+
+	self.fake_turret = spawn self.torony.model
+	self.fake_turret attach self "turret0" 1 ( 0 0 0 )
+	self.fake_turret notsolid
+	self.fake_turret nodamage
+	self.fake_turret lock
+	self.fake_turret turnspeed 9999
+	self.fake_turret pitchcaps "-90 90 0"
+	self.fake_turret maxyawoffset 180.0
+
+	self.fake_turret_target = spawn script_origin
+	self.fake_turret_target attach self.torony "tag_barrel" 1 ( 1000000 0 0 )
+	self.fake_turret setaimtarget self.fake_turret_target
+
+end
+
+tank_funkciok local.team local.coll local.origin local.angles local.size1 local.size2:
+
+	self waitthread torony_geppuska_spawn
+	self waitthread test_geppuska_spawn
+	self waitthread tank_municio
+
+	local.max_speed = self.vehiclespeed
+	local.oldangles = self.angles
+
+	self.torony_geppuska setaimtarget self.fake_turret_target
+
+	local.reduced_properties = 0
+
+	if ( getcvar "mapname" == "m4l1" )
+		self thread map_fix
+
+	while ( self != NULL && self.fakehealth > 0 )
+	{
+		if (self.entered != 1)
+			self thread wait_for_activate
+
+		self.torony_geppuska_org.angles = self.torony gettagangles "tag_barrel"
+
+		if (self.test_geppuska)
+		{
+			self.test_geppuska yawcenter self.angle
+
+			local.deltaangles = self.angles - local.oldangles
+
+			if (self.gunner != NULL)
+				self.test_geppuska_org.angles = ( self.gunner.viewangles[0] self.gunner.viewangles[1] self.angles[2] )
+			else
+				self.test_geppuska_org.angles = self.test_geppuska_org.angles + local.deltaangles
+
+			local.oldangles = self.angles
+		}
+
+		if (self.driver != NULL)
+		{
+			if (self.driver.extra_vehiclespeed == 1)
+				self.vehiclespeed = local.max_speed * 1.25
+
+			if (self.driver_kamera)
+			{
+				if (self.driver.forced_cueplayer == 1)
+				{
+					self.driver.forced_cueplayer = 0
+					self.driver_kamera.kam_trigger douse self.driver
+				}
+
+				self.driver_kamera.angles = ( self.driver.viewangles[0] self.driver.viewangles[1] self.angles[2] )
+			}
+		}
+
+		if ( self.gunner != NULL && self.gunner_kamera )
+		{
+			if (self.gunner.forced_cueplayer == 1)
+			{
+				self.gunner.forced_cueplayer = 0
+				self.gunner_kamera.kam_trigger douse self.gunner
+			}
+
+			self.gunner_kamera.angles = ( self.gunner.viewangles[0] self.gunner.viewangles[1] self.angles[2] )
+		}
+
+		local.perc = int ( (self.fakehealth / self.maxhealth) * 100 )
+		if ( local.perc < 25 && local.reduced_properties != 1 )
+		{
+			local.reduced_properties = 1
+
+			self.vehiclespeed = self.vehiclespeed * 0.75
+			local.turnrate = self.turnrate * 0.75
+			local.torony_turnspeed = self.torony_turnspeed * 0.5
+
+			self turnrate local.turnrate
+			self.torony turnspeed local.torony_turnspeed
+		}
+		else if ( local.perc >= 25 && local.reduced_properties == 1 )
+		{
+			local.reduced_properties = 0
+
+			self.vehiclespeed = local.max_speed
+
+			self turnrate self.turnrate
+			self.torony turnspeed self.torony_turnspeed
+		}
+
+		self thread global/AA/vehicle_physics.scr::vehicle_physics
+
+		if (self.stop_org)
+		{
+			if ( self.driver == NULL && self.speed == 0.0 )
+			{
+				if (self.stop_org.glued != 1)
+				{
+					self.stop_org.glued = 1
+
+					self.stop_org.origin = self.origin
+					self.stop_org.angles = self.angles
+					self glue self.stop_org
+				}
+			}
+		}
+
+		waitframe
+	}
+
+	self thread tank_respawn local.team local.coll local.origin local.angles local.size1 local.size2
+	self thread tank_destroyed
+
+	self.fake_turret remove
+	self.fake_turret_target remove
+
+	if (self.torony_geppuska)
+		self.torony_geppuska hide
+
+	if (self.torony_geppuska_org)
+		self.torony_geppuska_org remove
+
+	if (self.test_geppuska)
+		self.test_geppuska hide
+
+	wait 1
+
+	if (self.torony_geppuska)
+		self.torony_geppuska remove
+
+	if (self.test_geppuska)
+		self.test_geppuska remove
+
+	if (self.test_geppuska_org)
+		self.test_geppuska_org remove
+
+	if (self.turret_fix_org)
+		self.turret_fix_org remove
+
+end
+
+map_fix:
+
+	while ( self != NULL && self.fakehealth > 0 )
+	{
+		if (self.type == "kingtiger")
+		{
+			local.fwd = 150
+			local.bwd = -294
+		}
+		else if (self.type == "panzer_euro")
+		{
+			local.fwd = 160
+			local.bwd = -160
+		}
+
+		if ( local.fwd != NIL && local.bwd != NIL && self.speed != 0.0 )
+		{
+			if (self.speed > 0.0)
+			{
+				local.startpos = self.origin + angles_toup self.angles * 80
+				local.endpos = local.startpos + angles_toforward self.angles * local.fwd
+				local.trace = waitexec global/AA/trace.scr local.startpos local.endpos self.entnum ( -1 -1 -1 ) ( 1 1 1 ) 1107569569
+
+				if (local.trace["fraction"] != 1.0)
+				{
+					self.speed = -self.vehiclespeed
+					self.velocity = self.forwardvector * self.speed
+				}
+			}
+			else if (self.speed < 0.0)
+			{
+				local.startpos = self.origin + angles_toup self.angles * 80
+				local.endpos = local.startpos + angles_toforward self.angles * local.bwd
+				local.trace = waitexec global/AA/trace.scr local.startpos local.endpos self.entnum ( -1 -1 -1 ) ( 1 1 1 ) 1107569569
+
+				if (local.trace["fraction"] != 1.0)
+				{
+					self.speed = self.vehiclespeed
+					self.velocity = self.forwardvector * self.speed
+				}
+			}
+
+			wait .3
+		}
+
+		waitframe
+	}
+
+end
+
+torony_geppuska_spawn:
+
+	local.angles = self.torony gettagangles "pitch"
+
+	self.torony_geppuska_org = spawn script_origin
+	self.torony_geppuska_org.origin = self.origin
+	self.torony_geppuska_org.angles = local.angles
+
+	self waitthread torony_geppuska_pozicio self.torony_geppuska_org
+
+	self.torony_geppuska = spawn VehicleTurretGun model "models/statweapons/mg42_gun.tik"
+	self.torony_geppuska.origin = self.torony_geppuska_org.origin
+	self.torony_geppuska.angles = self.torony_geppuska_org.angles
+	self.torony_geppuska notsolid
+	self.torony_geppuska show
+	self.torony_geppuska turnspeed 9999
+	self.torony_geppuska lock
+
+	self.torony_geppuska glue self.torony_geppuska_org
+
+	self.torony_geppuska firetype bullet
+	self.torony_geppuska meansofdeath bullet
+
+	self.torony_geppuska bulletdamage 75
+	self.torony_geppuska bulletspread 35 35
+
+	self.torony_geppuska dmbulletdamage 75
+	self.torony_geppuska dmbulletspread 35 35
+
+end
+
+test_geppuska_spawn:
+
+	local.mg = self queryturretslotentity 1
+
+	if (local.mg)
+		local.mg remove
+
+	switch (self.type)
+	{
+		case "kingtiger":
+			local.hely = ( 1 0 -4 )
+			local.viewoffset = "0 0 0"
+			local.pitchcaps = "-17 9 0"
+			local.maxyawoffset = 30
+
+			self surface mg "+nodraw"
+		break
+		case "tiger":
+			local.hely = ( 6 0 -1 )
+			local.viewoffset = "0 0 0"
+			local.pitchcaps = "-17 17 0"
+			local.maxyawoffset = 30
+
+			self surface mg "+nodraw"
+		break
+		case "panzer_brown":
+		case "panzer_euro":
+			local.hely = ( 0 0 0 )
+			local.viewoffset = "0 0 0"
+			local.pitchcaps = "-17 10 0"
+			local.maxyawoffset = 25
+		break
+	}
+
+	self.test_geppuska_org = spawn script_origin
+	self.test_geppuska_org.origin = self.origin
+	self.test_geppuska_org.angles = self.angles
+
+	self.test_geppuska_org attach self "turret1" 1 local.hely
+
+	self.test_geppuska = spawn TurretGun model "models/statweapons/mg42_gun.tik" name "TANK MG42"
+	self.test_geppuska.origin = self.test_geppuska_org.origin
+	self.test_geppuska.angles = self.test_geppuska_org.angles
+	self.test_geppuska notsolid
+	self.test_geppuska show
+	self.test_geppuska turnspeed 9999
+	self.test_geppuska setplayerusable 0
+
+	self.test_geppuska glue self.test_geppuska_org
+
+	self.test_geppuska viewoffset local.viewoffset
+	self.test_geppuska pitchcaps local.pitchcaps
+	self.test_geppuska maxyawoffset local.maxyawoffset
+
+	self.test_geppuska firetype bullet
+	self.test_geppuska meansofdeath bullet
+
+	self.test_geppuska bulletdamage 75
+	self.test_geppuska bulletspread 35 35
+
+	self.test_geppuska dmbulletdamage 75
+	self.test_geppuska dmbulletspread 35 35
+
+	self.test_geppuska ammotype		"Fakeammo"
+	self.test_geppuska usenoammo 		0
+	self.test_geppuska ammorequired		1
+	self.test_geppuska startammo		0
+	self.test_geppuska clipsize		1
+	self.test_geppuska ammo_in_clip		0
+
+	self.test_geppuska dmammorequired	1
+	self.test_geppuska dmstartammo		0
+
+end
+
+torony_geppuska_pozicio local.org:
+
+	switch (self.type)
+	{
+		case "kingtiger":
+			local.org attach self.torony "pitch" 1 ( 18 4 -5.5 )
+		break
+		case "tiger":
+			local.org attach self.torony "pitch" 1 ( 28.5 5 -3 )
+		break
+		case "panzer_brown":
+		case "panzer_euro":
+			local.org attach self.torony "pitch" 1 ( -17.5 -6 -1 )
+		break
+	}
+
+end
+
+tank_municio:
+
+	switch (self.type)
+	{
+		case "kingtiger":
+			self.torony projectile "models/projectiles/tigercannonshell.tik"
+			self.torony dmprojectile "models/projectiles/tigercannonshell.tik"
+			self.torony pitchcaps "-20 15 0"
+
+			self.firetime = 5.0
+		break
+		case "tiger":
+			self.torony projectile "models/projectiles/tigercannonshell.tik"
+			self.torony dmprojectile "models/projectiles/tigercannonshell.tik"
+			self.torony pitchcaps "-20 15 0"
+
+			self.firetime = 5.0
+		break
+		case "panzer_brown":
+		case "panzer_euro":
+			self.torony projectile "models/projectiles/panzerivshell.tik"
+			self.torony dmprojectile "models/projectiles/panzerivshell.tik"
+			self.torony pitchcaps "-20 15 0"
+
+			self.firetime = 3.5
+		break
+	}
+
+	self.torony ammotype		"Fakeammo"
+	self.torony usenoammo 		0
+	self.torony ammorequired	1
+	self.torony startammo		0
+	self.torony clipsize		1
+	self.torony ammo_in_clip	0
+
+	self.torony dmammorequired	1
+	self.torony dmstartammo		0
+
+	self.max_lovedek_szama = 50
+	self.lovedek_szama = self.max_lovedek_szama
+
+	self.torony_geppuska.max_tolteny = 500
+	self.torony_geppuska.tolteny = self.torony_geppuska.max_tolteny
+	self.torony_geppuska.tarhely = 100
+	self.torony_geppuska.tolteny_tarban = 100
+
+	self.test_geppuska.max_tolteny = 500
+	self.test_geppuska.tolteny = self.test_geppuska.max_tolteny
+	self.test_geppuska.tarhely = 100
+	self.test_geppuska.tolteny_tarban = 100
+
+	self.tuzelhet = 1
+	self.torony_geppuska.tuzelhet = 1
+	self.test_geppuska.tuzelhet = 1
+
+end
+
+wait_for_activate:
+
+	local.surface = self
+	if (self.collisionent)
+		local.surface = self.collisionent
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.player_spawned == 1 )
+		{
+			if ( local.surface && ( local.player istouching local.surface || local.player istouching self.torony ) )
+			{
+				if ( local.player.useheld && local.player.inveh != 1 && local.player.inturret != 1 )
+				{
+					if (local.player.ismedic != 1)
+					{
+						if ( self.mpteam == "neutral" || local.player.dmteam == self.mpteam )
+						{
+							if ( self.hasdriver != 1 && self.hasgunner != 1 )
+							{
+								self.entered = 1
+								self thread tank_driver	local.player
+
+								wait 1
+
+								self.entered = 0
+							}
+							else if ( self.hasdriver == 1 && self.hasgunner != 1 )
+							{
+								self.entered = 1
+								self thread tank_gunner	local.player
+
+								wait 1
+
+								self.entered = 0
+							}
+							else if ( self.hasgunner == 1 && self.hasdriver != 1 )
+							{
+								self.entered = 1
+								self thread tank_driver	local.player
+
+								wait 1
+
+								self.entered = 0
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+end
+
+tank_driver local.driver:
+
+	self.hasdriver = 1
+	self.driver = local.driver
+	self.driver.inveh = 1
+	self.driver.capturing_tank = 0
+
+	local.team = self.driver.dmteam
+	self.mpteam = local.team
+
+	self.driver.viewangles = ( 0 self.angles[1] 0 )
+
+	if (self.driver.has_weapon == 1)
+		self.driver deactivateweapon righthand
+
+	local.org = spawn script_origin
+	local.org attach self "turret0" 1 ( 0 0 0 )
+	local.org.angles = self.angles
+
+	self.driver glue local.org
+
+	local.gt = int ( getcvar "g_gametype" )
+	if ( local.gt > 2 && self.captured != 1 && local.team != self.dmteam )
+	{
+		self.driver.capturing_tank = 1
+		self thread tank_capture self.driver
+	}
+	else
+	{
+		self unglue
+		self.stop_org.glued = 0
+
+		local.pitch = waitthread global/AA/math.scr::getanglediff self.angles[0] ( (self.torony gettagangles "tag_barrel")[0] )
+		local.yaw = waitthread global/AA/math.scr::getanglediff self.angles[1] ( (self.torony gettagangles "tag_barrel")[1] )
+		local.roll = waitthread global/AA/math.scr::getanglediff self.angles[2] ( (self.torony gettagangles "tag_barrel")[2] )
+
+		self attachdriverslot 0 self.driver
+
+		self.torony.viewangles = ( local.pitch local.yaw local.roll )
+
+		local.kamera = self thread kamera self.driver
+
+		self thread tank_driver_hud self.driver
+		self thread global/AA/vehicle_damage.scr::vehicle_health_hud self.driver
+	}
+
+	self.driver forcetorsostate JARMUBEN
+
+	self.driver notsolid
+	self.driver nodamage
+	self.driver show
+	self.driver rendereffects "-shadow"
+	self.driver rendereffects "+dontdraw"
+	self.driver surface all "+nodraw"
+
+	if (self.driver.isengineer == 1)
+	{
+		if (self.driver.engineer_helmet)
+			self.driver.engineer_helmet surface all "+nodraw"
+
+		if (self.driver.wrench)
+			self.driver.wrench surface all "+nodraw"
+	}
+
+	wait .2
+
+	while ( self.driver != NULL && local.driver.player_spawned == 1 && !(local.driver.useheld) )
+	{
+		if (self.driver.capturing_tank != 1)
+		{
+			if (self.driver.keyheld[TUZ])
+				self thread tank_torony_tuz
+			else
+			{
+				if (self.driver.secfireheld == 1)
+					self thread tank_geppuska_tuz self.torony_geppuska self.driver
+			}
+
+			if (self.driver.keyheld[GUGOLAS])
+			{
+				if (self.driver.poziciot_valt == 0)
+					self thread pozicio_valtas self.driver
+			}
+		}
+
+		local.org.angles = self gettagangles "turret0"
+
+		waitframe
+	}
+
+	if (local.org)
+		local.org remove
+
+	if (local.driver != NULL)
+		local.driver unglue
+
+	if (local.kamera != NIL)
+	{
+		if (local.kamera.kam_trigger)
+			local.kamera.kam_trigger remove
+
+		local.kamera remove
+	}
+
+	self unlock
+	self.torony unlock
+
+	if (isAlive self)
+	{
+		if (local.driver == NULL)
+		{
+			self detachturretslot 0 self.torony.origin
+			self.torony remove
+
+			self.fakehealth = 0
+
+			self takedamage
+			self removeimmune none
+			self normal_damage 10000
+		}
+	}
+
+	if ( local.driver != NULL && isAlive local.driver && local.driver.dmteam != "spectator" && local.driver.capturing_tank != 1 )
+	{
+		local.driver usestuff
+		self attachturretslot 0 local.driver
+		local.driver usestuff
+	}
+
+	self thread driver_getout local.driver local.team
+
+end
+
+tank_gunner local.gunner:
+
+	self.hasgunner = 1
+	self.gunner = local.gunner
+	self.gunner.inveh = 1
+
+	local.team = self.gunner.dmteam
+	self.mpteam = local.team
+
+	self.gunner.viewangles = ( 0 self.angles[1] 0 )
+
+	if (self.gunner.has_weapon == 1)
+		self.gunner deactivateweapon righthand
+
+	self.test_geppuska setplayerusable 1
+	self.test_geppuska douse self.gunner
+	self.test_geppuska setplayerusable 0
+
+	local.org = spawn script_origin
+	local.org attach self "turret1" 1 ( 0 0 0 )
+	local.org.angles = self.angles
+
+	self.gunner glue local.org
+
+	self.gunner forcetorsostate JARMUBEN
+
+	self.gunner notsolid
+	self.gunner nodamage
+	self.gunner show
+	self.gunner rendereffects "-shadow"
+	self.gunner surface all "+nodraw"
+
+	if (self.gunner.isengineer == 1)
+	{
+		if (self.gunner.engineer_helmet)
+			self.gunner.engineer_helmet surface all "+nodraw"
+
+		if (self.gunner.wrench)
+			self.gunner.wrench surface all "+nodraw"
+	}
+
+	local.kamera = self thread kamera self.gunner
+
+	self thread tank_gunner_hud self.gunner
+	self thread global/AA/vehicle_damage.scr::vehicle_health_hud self.gunner
+
+	wait .2
+
+	while ( self.gunner != NULL && local.gunner.player_spawned == 1 && !(local.gunner.useheld) )
+	{
+		if (self.gunner.keyheld[TUZ])
+			self thread tank_geppuska_tuz self.test_geppuska self.gunner
+
+		if (self.gunner.keyheld[GUGOLAS])
+		{
+			if (self.gunner.poziciot_valt == 0)
+				self thread pozicio_valtas self.gunner
+		}
+
+		local.org.angles = self gettagangles "turret1"
+
+		waitframe
+	}
+
+	if (local.org)
+		local.org remove
+
+	if (local.gunner != NULL)
+		local.gunner unglue
+
+	if (local.kamera != NIL)
+	{
+		if (local.kamera.kam_trigger)
+			local.kamera.kam_trigger remove
+
+		local.kamera remove
+	}
+
+	self thread gunner_getout local.gunner local.team
+
+end
+
+tank_capture local.driver:
+
+	local.max_count = self.capturing_time * 10.0
+	local.count = local.max_count
+
+	self thread tank_capturing_sounds
+
+	ihuddraw_align local.driver 40 left center
+	ihuddraw_rect local.driver 40 256 80 128 16
+	ihuddraw_shader local.driver 40 "textures/mohmenu/black.tga"
+	ihuddraw_virtualsize local.driver 40 1
+	ihuddraw_alpha local.driver 40 1.0
+
+	ihuddraw_align local.driver 41 left center
+	ihuddraw_rect local.driver 41 258 80 124 10
+	ihuddraw_shader local.driver 41 "textures/common/white.tga"
+	ihuddraw_color local.driver 41 1.0 1.0 1.0
+	ihuddraw_virtualsize local.driver 41 1
+	ihuddraw_alpha local.driver 41 2.0
+
+	ihuddraw_align local.driver 42 left center
+	ihuddraw_rect local.driver 42 260 90 0 0
+	ihuddraw_color local.driver 42 0.0 1.0 1.0
+	ihuddraw_font local.driver 42 "verdana-12"
+	ihuddraw_string local.driver 42 ( "Capturing enemy tank..." )
+	ihuddraw_virtualsize local.driver 42 1
+	ihuddraw_alpha local.driver 42 1
+
+	while ( self.driver != NULL && local.count > 0 )
+	{
+		wait .1
+		local.count--
+
+		local.x = int ( (local.count / local.max_count) * 124 )
+		ihuddraw_rect local.driver 41 258 80 local.x 10
+	}
+
+	if (local.count <= 0)
+		self.captured = 1
+
+	if (local.driver != NULL)
+	{
+		local.driver.capturing_tank = 0
+
+		ihuddraw_alpha local.driver 40 0
+		ihuddraw_alpha local.driver 41 0
+		ihuddraw_alpha local.driver 42 0
+
+		if (self.captured == 1)
+		{
+			self unglue
+			self.stop_org.glued = 0
+
+			self attachdriverslot 0 local.driver
+
+			local.kamera = self thread kamera local.driver
+
+			self thread tank_driver_hud local.driver
+			self thread global/AA/vehicle_damage.scr::vehicle_health_hud local.driver
+		}
+	}
+
+end
+
+tank_capturing_sounds:
+
+	while ( self.driver != NULL && self.driver.capturing_tank == 1 )
+	{
+		self playsound mp_tank_capturing_sound1
+
+		wait 0.7
+
+		if ( self.driver != NULL && self.driver.capturing_tank == 1 )
+		{
+			self playsound mp_tank_capturing_sound2
+
+			wait 1
+
+			if ( self.driver != NULL && self.driver.capturing_tank == 1 )
+				wait 1
+		}
+		else
+			self playsound mp_tank_capturing_sound2
+	}
+
+end
+
+kamera local.player:
+
+	local.name = "tank_kamera" + randomint 999999 + local.player.entnum
+	local.kamera = spawn func_camera targetname local.name
+
+	switch (self.type)
+	{
+		case "kingtiger":
+			if (local.player == self.driver)
+				local.kamera attach self.torony "eyebone" 1 ( 0 0 0 )
+		break
+		case "tiger":
+			if (local.player == self.driver)
+				local.kamera attach self.torony "Object01" 1 ( -32 30 40 )
+		break
+		case "panzer_brown":
+		case "panzer_euro":
+			if (local.player == self.driver)
+				local.kamera attach self.torony "Box01" 1 ( 0 0 60 )
+		break
+	}
+
+	if (local.player == self.gunner)
+		local.kamera attach self.test_geppuska "origin" 1 ( -25 0 5 )
+	else
+		local.player.viewangles = self.torony gettagangles "tag_barrel"
+
+	local.kamera.angles = ( local.player.viewangles[0] local.player.viewangles[1] self.angles[2] )
+
+	cueplayer
+
+	local.player waitthread global/AA/vehicle_fixes.scr::vehicle_camera
+
+	local.kam_trigger = spawn trigger_camerause target local.name
+	local.kam_trigger douse local.player
+	local.kam_trigger nottriggerable
+
+	if (local.player == self.driver)
+	{
+		self.driver_kamera = local.kamera
+		self.driver_kamera.kam_trigger = local.kam_trigger
+	}
+	else if (local.player == self.gunner)
+	{
+		self.gunner_kamera = local.kamera
+		self.gunner_kamera.kam_trigger = local.kam_trigger
+	}
+
+end local.kamera
+
+driver_getout local.driver local.team:
+
+	self.driver = NULL
+
+	local.no_change = 1
+
+	if (local.driver != NULL)
+	{
+		if (local.driver.poziciot_valt == 1)
+			local.no_change = 0
+
+		if (isAlive self)
+			self detachdriverslot 0 local.driver
+
+		local.driver.origin = self.torony.origin + ( 0 0 130 )
+		local.driver.viewangles = ( 0 self.angles[1] 0 )
+
+		if (local.driver.dmteam == local.team)
+			local.driver forcetorsostate STAND
+
+		local.driver solid
+		local.driver takedamage
+		local.driver show
+		local.driver rendereffects "+shadow"
+		local.driver rendereffects "-dontdraw"
+		local.driver surface all "-nodraw"
+
+		if (local.driver.isengineer == 1)
+		{
+			if (local.driver.engineer_helmet)
+				local.driver.engineer_helmet surface all "-nodraw"
+
+			if (local.driver.wrench)
+				local.driver.wrench surface all "-nodraw"
+		}
+
+		ihuddraw_alpha local.driver 42 0
+
+		local.driver thread global/AA/vehicle_damage.scr::remove_vehicle_health_hud
+
+		if (local.driver.dmteam != local.team)
+		{
+			if (local.driver.dmteam != "spectator")
+				local.driver.disable_spawn = 1
+
+			local.driver respawn
+		}
+
+		if (local.no_change == 0)
+		{
+			local.driver.inveh = 0
+			local.driver.forced_cueplayer = 0
+		}
+	}
+
+	if (isAlive self)
+	{
+		self lock
+		self.torony lock
+	}
+
+	if ( isAlive self && self.gunner == NULL && local.no_change == 1 )
+		self.mpteam = "neutral"
+
+	waitframe
+
+	if ( self.fakehealth > 0 && self.torony )
+	{
+		local.target = spawn script_origin origin ( self.torony gettagposition "tag_barrel" + angles_toforward (self.torony gettagangles "tag_barrel") * 10000 )
+		self.torony setaimtarget local.target
+	}
+
+	wait .5
+
+	if (local.target)
+		local.target remove
+
+	wait .5
+
+	if (self)
+		self.hasdriver = 0
+
+	if ( local.driver != NULL && local.no_change == 1 )
+	{
+		local.driver.inveh = 0
+		local.driver.forced_cueplayer = 0
+	}
+
+end
+
+gunner_getout local.gunner local.team:
+
+	self.gunner = NULL
+
+	local.no_change = 1
+
+	if (local.gunner != NULL)
+	{
+		if (local.gunner.poziciot_valt == 1)
+			local.no_change = 0
+
+		self.test_geppuska setplayerusable 1
+
+		if (local.gunner.dmteam != "spectator")
+			local.gunner usestuff
+		else
+			self.test_geppuska douse local.gunner
+
+		self.test_geppuska setplayerusable 0
+
+		local.pos = self gettagposition "turret1"
+		local.ang = ( 0 self.angles[1] 0 )
+		local.trace = sighttrace local.pos ( local.pos + angles_toleft local.ang * 160 )
+
+		if (local.trace == 1)
+			local.gunner.origin = local.pos + angles_toleft local.ang * 125
+		else
+		{
+			local.trace = sighttrace local.pos ( local.pos + angles_toleft local.ang * -210 )
+			if (local.trace == 1)
+				local.gunner.origin = local.pos + angles_toleft local.ang * -175
+			else
+				local.gunner.origin = local.pos + angles_toforward local.ang * 100
+		}
+
+		local.gunner.viewangles = local.ang
+
+		if (local.gunner.dmteam == local.team)
+			local.gunner forcetorsostate STAND
+
+		//if (local.no_change == 1)
+		//{
+			local.gunner solid
+			local.gunner takedamage
+			local.gunner show
+			local.gunner rendereffects "+shadow"
+			local.gunner rendereffects "-dontdraw"
+			local.gunner surface all "-nodraw"
+		//}
+
+		if (local.gunner.isengineer == 1)
+		{
+			if (local.gunner.engineer_helmet)
+				local.gunner.engineer_helmet surface all "-nodraw"
+
+			if (local.gunner.wrench)
+				local.gunner.wrench surface all "-nodraw"
+		}
+
+		ihuddraw_alpha local.gunner 42 0
+
+		local.gunner thread global/AA/vehicle_damage.scr::remove_vehicle_health_hud
+
+		if (local.gunner.dmteam != local.team)
+		{
+			if (local.gunner.dmteam != "spectator")
+				local.gunner.disable_spawn = 1
+
+			local.gunner respawn
+		}
+
+		if (local.no_change == 0)
+		{
+			local.gunner.inveh = 0
+			local.gunner.forced_cueplayer = 0
+		}
+	}
+
+	if ( isAlive self && self.driver == NULL && local.no_change == 1 )
+		self.mpteam = "neutral"
+
+	wait 1
+
+	if (self)
+		self.hasgunner = 0
+
+	if ( local.gunner != NULL && local.no_change == 1 )
+	{
+		local.gunner.inveh = 0
+		local.gunner.forced_cueplayer = 0
+	}
+
+end
+
+pozicio_valtas local.player:
+
+	local.player.poziciot_valt = 1
+
+	if (local.player == self.driver)
+	{
+		if (self.hasgunner != 1)
+		{
+			self.hasgunner = 1
+			self.driver = NULL
+
+			while ( local.player != NULL && self.fakehealth > 0 && local.player.inveh == 1 )
+				waitframe
+
+			if ( local.player != NULL && local.player.player_spawned == 1 && self.fakehealth > 0 )
+			{
+				local.player.poziciot_valt = 2
+				self thread tank_gunner local.player
+			}
+			else
+			{
+				self.hasgunner = 0
+				local.player.inveh = 0
+			}
+		}
+	}
+	else if (local.player == self.gunner)
+	{
+		if (self.hasdriver != 1)
+		{
+			self.hasdriver = 1
+			self.gunner = NULL
+
+			while ( local.player != NULL && self.fakehealth > 0 && local.player.inveh == 1 )
+				waitframe
+
+			if ( local.player != NULL && local.player.player_spawned == 1 && self.fakehealth > 0 )
+			{
+				local.player.poziciot_valt = 2
+				self thread tank_driver local.player
+			}
+			else
+			{
+				self.hasdriver = 0
+				local.player.inveh = 0
+			}
+		}
+	}
+
+	wait 1.5
+
+	if (local.player != NULL)
+		local.player.poziciot_valt = 0
+
+end
+
+tank_torony_tuz:
+
+	if ( self && self.torony )
+	{
+		if (self.tuzelhet == 1)
+		{
+			if (self.lovedek_szama > 0)
+			{
+				if ( ( self.mpteam == "allies" && level.axis_vehicle_spawnkill_trigger && self istouching level.axis_vehicle_spawnkill_trigger ) || ( self.mpteam == "axis" && level.allies_vehicle_spawnkill_trigger && self istouching level.allies_vehicle_spawnkill_trigger ) )
+				{
+					if (self.driver != NULL)
+						self.driver iprint "You are in the enemy spawn area and not able to spawnkill with tank."
+
+					end
+				}
+
+				local.can_fire = self waitthread check_turret
+				if (local.can_fire != 1)
+					end
+
+				self.tuzelhet = 0
+
+				self.fake_turret anim fire
+				self.torony shoot
+
+				if (self.type == "tiger")
+					self thread tiger_hatch
+
+				local.map_allj = m3l3::m5l2a::m5l2b::m5l3
+				local.ertek = waitthread global/AA/weaponsoundfix.scr::palyaellenorzes local.map_allj
+
+				if (local.ertek == 1)
+					self.torony playsound tank_snd_fire
+
+				self.torony playsound tank_fire_dist
+
+				local.pos = self.torony gettagposition "tag_barrel"
+				local.angles = self.torony gettagangles "tag_barrel"
+
+				local.smoke = spawn script_model model "models/fx/cannonsmoke.tik" origin local.pos angles local.angles
+				local.smoke notsolid
+				local.smoke anim idle
+
+				self.lovedek_szama--
+
+				if (self.driver != NULL)
+					ihuddraw_string self.driver 42 ( "Shell: " + self.lovedek_szama + " || MG: " + self.torony_geppuska.tolteny_tarban + " | " + self.torony_geppuska.tolteny )
+
+				if (self.fakehealth > 0)
+					self thread tank_agyu_ujratoltes self.firetime local.smoke
+				else
+					end
+			}
+		}
+	}
+
+end
+
+check_turret:
+
+	if (self.turret_fix_org == NIL)
+		self.turret_fix_org = spawn script_origin origin ( self.torony gettagposition "tag_barrel" )
+	else
+		self.turret_fix_org.origin = self.torony gettagposition "tag_barrel"
+
+	if (self.collisionent)
+	{
+		if (self.turret_fix_org cansee self.collisionent 360 2000)
+			end 1
+	}
+	else
+	{
+		if ( self.turret_fix_org cansee self 360 2000 || self.turret_fix_org cansee self.torony 360 2000 )
+			end 1
+	}
+
+end 0
+
+tiger_hatch:
+
+	wait .3
+
+	if (self.fake_turret)
+		self.fake_turret anim idle
+
+end
+
+tank_agyu_ujratoltes local.firetime local.smoke:
+
+	wait 0.05
+
+	while ( self.fakehealth > 0 && self.lovedek_szama <= 0 )
+		waitframe
+
+	if (self.fakehealth <= 0)
+		end
+
+	if ( self.driver != NULL && self.driver.tankreload == 1 )
+		local.firetime -= 1
+
+	wait (local.firetime - 0.05)
+
+	if (self)
+		self.tuzelhet = 1
+
+	local.smoke remove
+
+end
+
+tank_geppuska_tuz local.geppuska local.tulaj:
+
+	if ( self && local.geppuska )
+	{
+		if (local.geppuska.tuzelhet == 1)
+		{
+			if (local.geppuska.tolteny_tarban > 0)
+			{
+				if ( ( self.mpteam == "allies" && level.axis_vehicle_spawnkill_trigger && self istouching level.axis_vehicle_spawnkill_trigger ) || ( self.mpteam == "axis" && level.allies_vehicle_spawnkill_trigger && self istouching level.allies_vehicle_spawnkill_trigger ) )
+				{
+					if (local.tulaj != NULL)
+						local.tulaj iprint "You are in the enemy spawn area and not able to spawnkill with tank."
+
+					end
+				}
+
+				local.geppuska.tuzelhet = 0
+
+				local.geppuska.tolteny_tarban--
+
+				if (local.tulaj)
+				{
+					if (local.tulaj == self.driver)
+					{
+						local.tulaj bindweap local.geppuska
+						local.geppuska anim fire
+						local.tulaj bindweap local.geppuska
+
+						if (local.tulaj != NULL)
+							ihuddraw_string local.tulaj 42 ( "Shell: " + self.lovedek_szama + " || MG: " + self.torony_geppuska.tolteny_tarban + " | " + self.torony_geppuska.tolteny )
+					}
+					else if (local.tulaj == self.gunner)
+					{
+						local.geppuska ammo_in_clip 1
+
+						if (local.tulaj != NULL)
+							ihuddraw_string local.tulaj 42 ( "MG: " + self.test_geppuska.tolteny_tarban + " | " + self.test_geppuska.tolteny )
+					}
+				}
+
+				wait 0.06
+
+				local.geppuska anim idle
+
+				if (local.geppuska.tolteny_tarban <= 0)
+					local.geppuska thread tank_mg_reload self local.tulaj
+				else
+					local.geppuska.tuzelhet = 1
+			}
+		}
+	}
+
+end
+
+tank_mg_reload local.vehicle local.gunner:
+
+	while ( local.vehicle.fakehealth > 0 && self.tolteny <= 0 )
+		waitframe
+
+	if (local.vehicle.fakehealth <= 0)
+		end
+
+	wait 3
+
+	if (self != NULL)
+	{
+		if (self.tolteny > 0)
+		{
+			if (self.tolteny >= self.tarhely)
+			{
+				local.a = self.tolteny - self.tarhely
+				local.a = self.tolteny - local.a
+			}
+			else
+				local.a = self.tolteny
+
+			self.tolteny_tarban = local.a
+			self.tolteny -= self.tolteny_tarban
+
+			if (self.tolteny < 0)
+				self.tolteny = 0
+
+			if (self.tolteny_tarban > 0)
+				self.tuzelhet = 1
+
+			if ( self == local.vehicle.torony_geppuska && local.vehicle.driver != NULL && local.gunner == local.vehicle.driver )
+				ihuddraw_string local.gunner 42 ( "Shell: " + local.vehicle.lovedek_szama + " || MG: " + local.vehicle.torony_geppuska.tolteny_tarban + " | " + local.vehicle.torony_geppuska.tolteny )
+			else if ( self == local.vehicle.test_geppuska && local.vehicle.gunner != NULL && local.gunner == local.vehicle.gunner )
+				ihuddraw_string local.gunner 42 ( "MG: " + local.vehicle.test_geppuska.tolteny_tarban + " | " + local.vehicle.test_geppuska.tolteny )
+		}
+	}
+
+end
+
+tank_respawn local.team local.coll local.origin local.angles local.size1 local.size2:
+
+	local.type = self.type
+	local.respawn_time = self.respawn_time
+
+	while (self.destroyed_model == NIL)
+		wait .1
+
+	if (self == NULL)
+		end
+
+	local.destroyed_model = self.destroyed_model
+
+	if (local.destroyed_model.collision)
+		local.collision = local.destroyed_model.collision
+
+	if (local.destroyed_model.fust)
+		local.fust = local.destroyed_model.fust
+
+	wait 10
+
+	local.exp = local.destroyed_model waitthread spawn_fx "models/fx/fx_tank_explosion.tik"
+	local.exp.origin = local.destroyed_model.origin + ( 0 0 10 )
+	local.exp anim start
+	local.exp playsound explode_tank
+	local.exp thread remove_fx
+
+	radiusdamage ( local.exp.origin + ( 0 0 200 ) ) 200 200
+
+	wait .5
+
+	local.destroyed_model remove
+
+	if (local.collision)
+		local.collision remove
+
+	if (local.fust)
+		local.fust remove
+
+	wait local.respawn_time
+
+	waitexec global/AA/vehicle_respawn.scr local.origin local.angles local.size1 local.size2
+
+	thread spawn_tank local.origin local.angles local.type local.team local.coll
+
+end
+
+tank_destroyed:
+
+	self.destroyed = 1
+
+	self playsound explode_tank
+	self stop
+	self.driving = 0
+
+	if (self.driver)
+	{
+		local.driver = self.driver
+		self.driver = NULL
+	}
+
+	if (self.gunner)
+	{
+		local.gunner = self.gunner
+		self.gunner = NULL
+	}
+
+	if ( self.last_attacker == NIL || self.last_attacker == NULL )
+		self.last_attacker = $world
+
+	switch (self.type)
+	{
+		case "kingtiger":
+			local.model = "models/vehicles/kingtank_all_d.tik"
+		break
+		case "tiger":
+			local.model = "models/vehicles/tigertank_d.tik"
+		break
+		case "panzer_brown":
+			local.model = "models/vehicles/panzer_iv_d.tik"
+		break
+		case "panzer_euro":
+			local.model = "models/vehicles/panzer_iv_eud.tik"
+		break
+	}
+
+	local.origin = self.origin
+	local.angles = self.angles
+
+	if (self.collisionent)
+	{
+		local.brushmodel = self.collisionent.brushmodel
+		self.collisionent remove
+	}
+
+	self.death_exp.origin = self.origin
+	waitframe
+
+	if (local.driver)
+	{
+		local.driver takedamage
+		local.driver damage self.last_attacker 1000 self.last_attacker ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) 0 0 9 0
+	}
+
+	if (local.gunner)
+	{
+		local.gunner takedamage
+		local.gunner damage self.last_attacker 1000 self.last_attacker ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) 0 0 9 0
+	}
+
+	self.death_exp anim start
+	self.death_exp thread remove_fx
+
+	radiusdamage ( self.origin +  ( 0 0 200 ) ) 600 300
+
+	self hide
+	self notsolid
+
+	if (self.torony)
+		self.torony hide
+
+	self.velocity = ( 0 0 0 )
+
+	if (local.brushmodel)
+	{
+		local.collision = thread damaged_collision local.brushmodel local.origin local.angles
+	}
+
+	local.damaged = thread spawn_damaged local.model local.origin local.angles
+
+	if (local.collision != NIL)
+	{
+		local.damaged notsolid
+		local.collision disconnect_paths
+		local.damaged.collision = local.collision
+	}
+
+	local.fust = spawn script_model model "models/emitters/linger_smoke.tik"
+	local.fust.origin = local.damaged.origin + ( 0 0 50 )
+	local.fust notsolid
+	local.fust anim start
+
+	local.damaged.fust = local.fust
+
+	self.destroyed_model = local.damaged
+
+	wait 2
+
+	if (self.torony)
+	{
+		self detachturretslot 0 self.torony.origin
+		self.torony remove
+	}
+
+	if (self.stop_org)
+		self.stop_org remove
+
+	self remove
+
+end
+
+tank_driver_hud local.driver:
+
+	ihuddraw_align local.driver 42 left bottom
+	ihuddraw_rect local.driver 42 480 -50 0 0
+	ihuddraw_color local.driver 42 0.0 1.0 1.0
+	ihuddraw_font local.driver 42 "facfont-20"
+	ihuddraw_string local.driver 42 ( "Shell: " + self.lovedek_szama + " || MG: " + self.torony_geppuska.tolteny_tarban + " | " + self.torony_geppuska.tolteny )
+	ihuddraw_virtualsize local.driver 42 1
+	ihuddraw_alpha local.driver 42 1
+
+end
+
+tank_gunner_hud local.gunner:
+
+	ihuddraw_align local.gunner 42 left bottom
+	ihuddraw_rect local.gunner 42 540 -50 0 0
+	ihuddraw_color local.gunner 42 0.0 1.0 1.0
+	ihuddraw_font local.gunner 42 "facfont-20"
+	ihuddraw_string local.gunner 42 ( "MG: " + self.test_geppuska.tolteny_tarban + " | " + self.test_geppuska.tolteny )
+	ihuddraw_virtualsize local.gunner 42 1
+	ihuddraw_alpha local.gunner 42 1
+
+end
+
+remove_fx:
+
+	wait 5
+	self remove
+
+end
+
+spawn_damaged local.model local.origin local.angles:
+	local.damaged = spawn script_model model local.model
+	local.damaged.origin = local.origin
+	local.damaged.angles = local.angles
+	local.damaged solid
+	local.damaged nodamage
+end local.damaged
+
+spawn_fx local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp notsolid
+end local.temp
+
+damaged_collision local.brushmodel local.origin local.angles:
+	local.collision = spawn script_object model local.brushmodel
+	local.collision.origin = local.origin
+	local.collision.angles = local.angles
+	local.collision solid
+end local.collision

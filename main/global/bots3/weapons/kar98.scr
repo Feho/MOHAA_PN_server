@@ -1,0 +1,72 @@
+// kar98 rifle
+// by jv_map
+
+// let bots3 know I compiled ok.
+acte_de_presence:
+end 1
+
+info:
+	self.clipsize = 5
+	self.spread = 0.009 // average dmbulletspread / dmbulletrange
+	self.weapontype = "rifle"
+	
+	self.rounds_in_clip = self.clipsize
+end
+
+action:
+
+	self playsound snd_rifle_pullout
+	waitthread level.bots.anim::playupperanim rifle_stand_raise
+
+	// can only exit this loop 
+	// by dieing or changing weapon
+	
+	while(isAlive self)
+	{
+		if(self.new_weapon)
+		{
+			// holster rifle
+			self playsound snd_rifle_putaway
+			waitthread level.bots.anim::playupperanim rifle_stand_lower
+			break
+		}
+		else if((self.current_weapon.rounds_in_clip < self.current_weapon.clipsize && self.key_reload) || self.current_weapon.rounds_in_clip <= 0)
+		{
+			// reload
+			waitthread level.bots.anim::playupperanim kar98_reload
+			if(isAlive self)
+			{
+				self.current_weapon.rounds_in_clip = self.current_weapon.clipsize
+			}
+		}
+		else if(self.key_attack_primary && self readyToFire)
+		{
+			// fire
+			waitthread level.bots.common::fire_current_weapon
+			
+			// rechamber
+			wait 0.15
+			if(isAlive self)
+			{
+				waitthread level.bots.anim::playupperanim kar98_stand_rechamber
+			}
+		}
+		else if(level.time - self.last_pain_time <= 0.05)
+		{
+			// ouch
+			if(self.pose == level.bots.POSE_STAND)
+			{
+				waitthread level.bots.anim::playupperanim rifle_pain
+			}
+			else
+			{
+				waitthread level.bots.anim::playupperanim rifle_pain_ducked
+			}
+		}
+		else
+		{
+			// no action
+			waitframe
+		}
+	}
+end

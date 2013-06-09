@@ -1,0 +1,338 @@
+//
+// M1L2A - The Rescue
+//
+
+
+main: 
+
+	setcvar "g_gametype" "2"
+	setcvar "timelimit" "15"
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1" "Map Name: M1L2A" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" "The Rescue Mission"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "178.32.28.179:12203" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "Team-Match"
+	waitthread tdm_spawns
+	waitthread set_da_stuff_up
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	level waittill prespawn
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m1l1
+	exec global/shutter.scr
+	exec global/DMprecache.scr
+
+	level waittill spawn
+
+
+	level.clockside = kills
+
+end
+
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1" "Map Name: M1L2A" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" "The Rescue Mission"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	waitthread ffa_spawns
+	waitthread set_da_stuff_up
+	
+	level waittill prespawn
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m1l1
+	exec global/shutter.scr
+	exec global/DMprecache.scr
+
+	level waittill spawn
+
+	level.clockside = kills
+
+end
+
+
+
+tdm_spawns:
+
+	spawn info_player_axis "origin" "1608.13 3000.13 -130.13" "angle" "-90"
+	spawn info_player_axis "origin" "599.35 2549.11 0.13" "angle" "28" //*
+	spawn info_player_axis "origin" "2661.34 2017.13 -65.13" "angle" "-143"
+	spawn info_player_axis "origin" "2133.56 2815.23 64.13" "angle" "-79" // --
+	spawn info_player_axis "origin" "1999.13 3752.89 64.13" "angle" "-69" //*
+
+	spawn info_player_axis "origin" "2401.86 3653.67 -191.88" "angle" "-173" //*
+	spawn info_player_axis "origin" "2418.09 3726.27 -183.88" "angle" "147"
+	spawn info_player_axis "origin" "1752.26 3637.05 -511.88" "angle" "32" //*
+	spawn info_player_axis "origin" "980.61 4160.88 64.13" "angle" "-38"
+	spawn info_player_axis "origin" "2046.68 3983.13 64.13" "angle" "115"
+
+	spawn info_player_axis "origin" "386.39 2872.94 -400.86" "angle" "180"
+	spawn info_player_axis "origin" "1808.74 3605.56 -187.30" "angle" "132"
+	spawn info_player_axis "origin" "-1037.81 -879.70 -155.34" "angle" "4" //
+	spawn info_player_axis "origin" "-1444.29 -1490.05 -260.97" "angle" "19" //
+	spawn info_player_axis "origin" "-1351.02 -3060.56 -319.88" "angle" "60" //
+
+
+
+	spawn info_player_allied "origin" "6745 -4402.70 20.34" "angle" "141"
+	spawn info_player_allied "origin" "6730.29 -3841.05 30.97" "angle" "180" //
+	spawn info_player_allied "origin" "6723 -4102.34 20" "angle" "170"
+	spawn info_player_allied "origin" "5531 -4447.96 -20" "angle" "0"
+	spawn info_player_allied "origin" "5898 -4247.56 220.88" "angle" "-90" //
+
+	spawn info_player_allied "origin" "5337 -4729.27 190.88" "angle" "0"
+	spawn info_player_allied "origin" "5291.08 -4127.71 -70.26" "angle" "90"
+	spawn info_player_allied "origin" "4000.58 -2022.09 0.70" "angle" "0"
+	spawn info_player_allied "origin" "4059.09 -2695.11 -0.47" "angle" "21"
+	spawn info_player_allied "origin" "5723.83 -2790.76 0" "angle" "90"
+
+	spawn info_player_allied "origin" "4695.60 -3290.96 -80.88" "angle" "0"
+	spawn info_player_allied "origin" "4698.60 -3149.96 -80.88" "angle" "0"
+	spawn info_player_allied "origin" "5144.90 -4105.59 -70" "angle" "76"
+	spawn info_player_allied "origin" "4207.61 -2414.01 0" "angle" "0"
+	spawn info_player_allied "origin" "6422.78 -4346.13 30" "angle" "90"	 
+
+end
+
+
+ffa_spawns:
+
+	spawn info_player_deathmatch "origin" "-1726.56 -1817.59 -287.78" "angle" "14"
+	spawn info_player_deathmatch "origin" "-1608.00 -3215.95 -319.84" "angle" "21"
+	spawn info_player_deathmatch "origin" "520.22 -1229.44 -34.22" "angle" "87"
+	spawn info_player_deathmatch "origin" "1425.45 -1200.88 -11.03" "angle" "80"
+	spawn info_player_deathmatch "origin" "2240.88 -1000.77 -71.88" "angle" "85"
+
+	spawn info_player_deathmatch "origin" "3376.60 -323.97 -143.88" "angle" "-167"
+	spawn info_player_deathmatch "origin" "2031.35 2308.01 -199.66" "angle" "90"
+	spawn info_player_deathmatch "origin" "127.15 2711.29 -415.88" "angle" "13"
+	spawn info_player_deathmatch "origin" "2518.34 2189.92 -181.36" "angle" "-134"
+	spawn info_player_deathmatch "origin" "-48.19 1098.38 -91.14" "angle" "-19"
+
+	spawn info_player_deathmatch "origin" "614.16 3859.09 -39.88" "angle" "-86"
+	spawn info_player_deathmatch "origin" "591.13 2530.23 0.13" "angle" "7"
+	spawn info_player_deathmatch "origin" "1501.34 2095.93 96.13" "angle" "152"
+	spawn info_player_deathmatch "origin" "2327.50 3650.00 -191.88" "angle" "-177"
+	spawn info_player_deathmatch "origin" "-1267.79 -749.69 -149.22" "angle" "-18"
+
+end
+
+
+
+set_da_stuff_up:
+	
+	// Trucks Idle Sound
+	local.master= spawn scriptmaster
+	local.master aliascache opeltruck_snd_idle sound/vehicle/veh_truck_idle.wav soundparms 1.0 0.0 1.0 0.0 300 7000 auto loaded maps "m dm obj"
+
+	// Remove AI
+	removeclass actor
+
+	// Remove ammo
+	removeclass AmmoEntity
+	
+	// Make use of some things lying around
+	$latertruck.origin = ( 1496.11 242.15 -154.29 ) 
+	$latertruck.angles = ( 1.49 130 0.00 )
+	$latertruck anim stop_wheels
+	$latertruck anim idlenolights
+	$latertruck thread selfstuff
+	// $latertruck setcollisionentity $latertruck.target // Feho - cause bugs ?? (players are stuck)
+	// $truck setcollisionentity $latertruck.target // Feho - cause bugs ?? (players are stuck)
+	$latertruck.corona = 0
+	$truck.origin = ( 1585.73 2905.55 -200.87 ) 
+	$truck.angles = ( 0 -103 0 )
+	$truck anim stop_wheels
+	$truck anim idlenolights
+	$truck thread selfstuff
+
+	// use some junk as a player block
+	// $introdoorR.origin = ( 4749.21 -117.43 -107.88 )
+	// $introdoorR.angle = 87
+	// $introdoorL.origin = ( 4748.43 -259.87 -127.88 )
+	// $introdoorL.angle = 87
+
+
+
+	// remove some things not needed
+	$enddoor remove
+	$spotlight remove
+	$exploder remove
+	$explosivespulse100 remove
+	$explosivespulse101 remove
+	$explosives100 remove
+	$explosives101 remove
+	$explosives102 remove
+	$health1 remove
+	$health remove
+	$flak88b remove
+	$flak88a remove
+	// $introdoorL remove
+	// $introdoorR remove
+	// $ossdoor remove
+	// $doorB remove
+	// $doorA remove
+	// $ossdoorbar remove
+	// $doorR remove
+	// doorL remove
+		// $doorR time 1
+		// $doorL time 1
+		// $doorR thread rotateup 85
+		// $doorL thread rotatedown 85
+
+		// $introdoorL time 1
+		// $introdoorL time 1
+		// $introdoorL thread rotateup 85
+		// $introdoorR thread rotatedown 85
+		
+	$left_gate time 0.8
+	$right_gate time 0.9
+	$left_gate thread rotateup 85
+	$right_gate waitthread rotatedown 85
+	$left_gate connect_paths
+	$right_gate connect_paths
+	
+	$lock remove
+	
+	$introdoorL time 1
+	$introdoorL time 1
+	$introdoorL thread rotateup 85
+	$introdoorR thread rotatedown 85
+	$introclip connect_paths
+	$introclip delete
+	
+	$ossdoor dmg 0	
+	$ossdoor playsound door_vault_open
+	$ossdoorbar time 1
+	$ossdoorbar rotatexdown 90
+	$ossdoorbar waitmove
+	wait 0.3
+	$ossdoor time 1
+	$ossdoor rotateydown 80
+	$ossdoor waitmove
+	$ossdoor connect_paths
+//	$ossdoorbar connect_paths
+//	wait 0.8
+
+	
+end
+
+
+// Vehicle thread
+selfstuff:
+	
+	self loopsound opeltruck_snd_idle
+	self notsolid
+	self nodamage
+end
+
+
+// End some labels
+fillup_330:
+end
+hint1:
+end
+save1:
+end
+door_early:
+end
+enddoor:
+end
+use_gate:
+end
+papersthread:
+end
+earlyalert:
+end
+torture:
+end
+blowdoor:
+end
+earlyenemies:
+end
+friendchoice:
+end
+prisonertruck:
+end
+gotexplosives:
+end
+stage2:
+end
+chairstart:
+end
+gotruck:
+end
+ossdoor:
+end
+end
+getossgun:
+end
+torture2:
+end
+friendchoice2:
+end
+blowflak:
+end
+door_early2:
+end
+POW_damage:
+end
+spotshow:
+end
+large_door:
+end
+spothide:
+end
+hint_door:
+end
+sentryalarm:
+end
+
+rotatedown local.amount:
+	self rotateydown local.amount
+	self waitmove
+end
+
+rotateup local.amount:
+	self rotateyup local.amount
+	self waitmove
+end

@@ -1,0 +1,127 @@
+// DESTROYED VILLAGE
+// ARCHITECTURE: NED
+// SCRIPTING: NED
+
+main:
+
+setcvar "g_gametype" "2"
+setcvar "timelimit" "15"
+
+// set scoreboard messages
+setcvar "g_obj_alliedtext1" "Destroyed Village"
+setcvar "g_obj_alliedtext2" ""
+setcvar "g_obj_alliedtext3" "Server IP"
+setcvar "g_obj_axistext1" "178.32.28.179:12203"
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "mohdm2"
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	// call additional stuff for playing this map round based is needed
+	if(level.roundbased)
+		thread roundbasedthread
+
+	level waittill prespawn
+	
+	//*** Precache Dm Stuff
+	exec global/DMprecache.scr
+
+	exec global/door_locked.scr::lock
+	level.script = maps/dm/mohdm2.scr
+	exec global/ambient.scr mohdm2
+	
+	exec global/DETONATOR_SOUND.scr
+	exec global/RB_DETONATORS.scr::DETONATOR ( -2201.07 -2135.78 8.13 ) ( 0 0 0 )
+	exec global/RB_DETONATORS.scr::DETONATOR ( -901.99 751.52 40.12 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -1616.41 -3051.05 -15.88 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -1010.99 -727.24 40.13 ) ( 0 0 0 )
+	
+		// no fog
+	$world farplane_color 0 0.0.5 0.092
+	$world farplane 18000
+	
+	level waittill spawn
+
+	level.squadmaker_areaname = "in the village"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+	
+	exec global/flakfire.scr ( -480.99 -3030.77 -61.88 ) ( 0.000 134.13 0.000 ) 5 1 50
+	// thread global/AA/vezetheto_tankok.scr::spawn_tank ( -1429.00 -465.00 -22.79 ) ( 0 110 0 ) "panzer_brown" "axis"
+	// thread global/AA/vezetheto_tankok.scr::spawn_tank ( -3158.00 -1803.00 -64.54 ) ( 0 110 0 ) "panzer_brown" "allies"
+	
+	// Tanks & Jeeps Base Assault
+	if (level.already_started != 1)
+	{
+		level.already_started = 1
+
+		exec global/AA/global_detect.scr
+	}
+	
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 542.00 -1461.00 -63.88 ) ( 0 180 0 ) level.jeep_mask
+	
+	// exec global/AA/panceltorok.scr ( -1624.69 -3170.43 -15.75 ) ( 0 180 0 ) "bazooka"
+	// exec global/AA/panceltorok.scr ( 716.00 -449.00 -53.33 ) ( 0 180 0 ) "panzerschreck"
+	
+	// {sfx} mini planes - one per team
+	// exec server_planes/trigger.scr ( -3024 -1084 25 ) "allies"
+	// exec server_planes/trigger.scr ( 601 -1612 -11.88 ) "axis"
+
+	thread Map_Guard
+	
+end
+
+// Under Map Protection
+Map_Guard:
+
+	level.killcount = 0
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( -2460 1950 -20 ) 
+	$Killah setsize ( -500 -500 -30 ) ( 500 500 1 )
+	$Killah setthread die
+	// $Killah message "Play fair!"
+end
+
+die:
+	local.punk = parm.other
+	if ( (!isalive local.punk ) || (local.punk.needrevive == 1) )
+	{
+		end
+	}
+	iprintln "*** - Map_Guard Triggered - ***"
+	// local.punk thread spawn_fx models/animate/fx_mortar_dirt.tik 
+	local.punk kill
+	wait 1
+	if (local.punk.health == 0)
+	{
+	level.killcount ++
+	// waitthread hudprint ("Under Map Deaths:" + level.killcount ) .75 .65 .1
+	}
+end
+
+//-----------------------------------------------------------------------------
+
+roundbasedthread:
+
+	// Can specify different scoreboard messages for round based games here.
+
+	level waitTill prespawn
+
+	level waittill spawn
+
+	// set the parameters for this round based match
+	level.dmrespawning = 0 // 1 or 0
+	level.dmroundlimit = 5 // round time limit in minutes
+	level.clockside = kills // set to axis, allies, kills, or draw
+
+	level waittill roundstart
+
+end

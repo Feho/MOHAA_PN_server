@@ -1,0 +1,80 @@
+// Axis squad definition
+// This is a script file, don't make syntax errors
+
+// best viewed with 4 spaces per tab
+
+local.a = makeArray // don't change this line
+
+//----------------------------
+// squad definition below here
+//----------------------------
+
+// loadouts:
+//----------
+// rifleman
+// sniper
+// smg
+// mg
+// support
+// shotgun
+// bazooka
+
+// primary weapons:
+//----------
+// rifle
+// sniper
+// smg
+// mg
+// heavy
+// shotgun
+
+// You may change the size of the squad by adding/removing lines.
+
+//------------------------------------------------------------------------
+// 	loadout			name					associated with primary weapon
+//------------------------------------------------------------------------
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+	rifleman		"Schutze"				rifle
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	smg				"Hauptmann"				smg
+	smg				"Hauptmann"				smg
+	smg				"Hauptmann"				smg
+	smg				"Hauptmann"				smg
+	smg				"Hauptmann"				smg
+	smg				"Hauptmann"				smg
+	smg				"Hauptmann"				smg
+	smg				"Hauptmann"				smg
+	mg				"Sturmmann"				mg
+	mg				"Sturmmann"				mg
+	mg				"Sturmmann"				mg
+	mg				"Sturmmann"				mg
+	mg				"Sturmmann"				mg
+	mg				"Sturmmann"				mg
+	mg				"Sturmmann"				mg
+	mg				"Sturmmann"				mg
+	shotgun			"Hunter"				shotgun
+	support			"Grenadier"				heavy
+
+
+//----------------------------
+// end squad definition
+//----------------------------
+
+endArray // don't change this line
+
+end local.a // don't change this line
+
+// don't change this line

@@ -1,0 +1,7 @@
+// Config information.
+
+// Name of the configuration (required).
+
+end "Standard"
+
+// End of config information. Keep this line.

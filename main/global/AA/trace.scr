@@ -1,0 +1,256 @@
+main local.startpos local.endpos local.pass_entity local.vector_mins local.vector_maxs local.mask:
+
+	if ( local.vector_mins == NIL || local.vector_mins == NULL )
+		local.vector_mins = ( -1 -1 -1 )
+
+	if ( local.vector_maxs == NIL || local.vector_maxs == NULL )
+		local.vector_maxs = ( 1 1 1 )
+
+	if ( local.pass_entity == NIL || local.pass_entity == NULL )
+		local.pass_entity = 0
+
+	if (local.pass_entity < 0)
+		local.pass_entity = 0
+
+	if ( local.mask == NIL || local.mask == NULL )
+		local.mask = 1
+
+	local.traced = traced local.startpos local.endpos local.pass_entity local.vector_mins local.vector_maxs local.mask
+	local.traced["surfacetype"] = waitthread surfacetypes local.traced["surfaceFlags"]
+	local.traced["content"] = waitthread contents local.traced["contents"]
+
+end local.traced
+
+surfacetypes local.surfaceflag:
+
+	switch (local.surfaceflag)
+	{
+		case "1":
+			end "nodamage"
+		break
+		case "2":
+			end "slick"
+		break
+		case "4":
+			end "sky"
+		break
+		case "8":
+			end "ladder"
+		break
+		case "16":
+			end "noimpact"
+		break
+		case "32":
+			end "nomarks"
+		break
+		case "64":
+			end "castshadow"
+		break
+		case "8192":
+			end "paper"
+		break
+		case "16384":
+			end "wood"
+		break
+		case "32768":
+			end "metal"
+		break
+		case "65536":
+			end "stone"
+		break
+		case "131072":
+			end "dirt"
+		break
+		case "262144":
+			end "metalgrill"
+		break
+		case "524288":
+			end "grass"
+		break
+		case "1048576":
+			end "mud"
+		break
+		case "2097152":
+			end "puddle"
+		break
+		case "4194304":
+			end "glass"
+		break
+		case "8388608":
+			end "gravel"
+		break
+		case "16777216":
+			end "sand"
+		break
+		case "33554432":
+			end "foliage"
+		break
+		case "67108864":
+			end "snow"
+		break
+		case "134217728":
+			end "carpet"
+		break
+		case "268435456":
+			end "backside"
+		break
+		case "536870912":
+			end "nodlight"
+		break
+		case "1073741824":
+			end "hint"
+		break
+		case "65812":
+			end "sky"
+		break
+		case "65696":
+			end "sky"
+		break
+	}
+
+end "none"
+
+contents local.content:
+
+	switch (local.content)
+	{
+		case "1":
+			end "solid"
+		break
+		case "8":
+			end "lava"
+		break
+		case "16":
+			end "slime"
+		break
+		case "32":
+			end "water"
+		break
+		case "64":
+			end "fog"
+		break
+		case "32768":
+			end "areaportal"
+		break
+		case "65536":
+			end "playerclip"
+		break
+		case "131072":
+			end "monsterclip"
+		break
+		case "262144":
+			end "weaponclip"
+		break
+		case "1048576":
+			end "shootableonly"
+		break
+		case "16777216":
+			end "origin"
+		break
+		case "33554432":
+			end "body"
+		break
+		case "67108864":
+			end "corpse"
+		break
+		case "134217728":
+			end "detail"
+		break
+		case "268435456":
+			end "structural"
+		break
+		case "536870912":
+			end "translucent"
+		break
+		case "1073741824":
+			end "trigger"
+		break
+		case "2147483648":
+			end "nodrop"
+		break
+	}
+
+end "none"
+
+/*
+TRACE FUNCTIONS:
+
+local.trace["allSolid"] - Integer : it tells wheter trace was inside of a solid object
+local.trace["startSolid"] - Integer : it tells wheter trace started in solid object
+local.trace["fraction"] - Float
+local.trace["endPos"] - Vector : position where trace finished because it may finish before it reaches end point specified by caller when it hits object with specified mask before it reaches end point
+local.trace["surfaceFlags"] - Integer
+local.trace["shaderNum"] - Integer
+local.trace["contents"] - Integer
+local.trace["entityNum"] - Integer : entity number that was hit
+local.trace["location"] - Integer
+local.trace["entity"] - Entity : entity that was hit by the trace
+
+Surface Flags:
+
+SURF_NODAMAGE          1
+SURF_SLICK                  2
+SURF_SKY                     4
+SURF_LADDER               8
+SURF_NOIMPACT           16
+SURF_NOMARKS            32
+SURF_CASTSHADOW     64
+SURF_PAPER                 8192
+SURF_WOOD                 16384
+SURF_METAL                 32768
+SURF_STONE                 65536
+SURF_DIRT                    131072
+SURF_METALGRILL         262144
+SURF_GRASS                 524288
+SURF_MUD                     1048576
+SURF_PUDDLE                2097152
+SURF_GLASS                 4194304
+SURF_GRAVEL               8388608
+SURF_SAND                  16777216
+SURF_FOLIAGE              33554432
+SURF_SNOW                 67108864
+SURF_CARPET               134217728
+SURF_BACKSIDE            268435456
+SURF_NODLIGHT            536870912
+SURF_HINT                    1073741824
+
+Masks:
+
+MASK_SOLID                        1 (collision)
+
+MASK_COLLISION                    637537057 ( collision (except the m5l2a), solid )
+MASK_PERMANENTMARK                1073741825
+MASK_AUTOCALCLIFE                1073750049
+MASK_EXPLOSION                    1074003969 (collision)
+MASK_TREADMARK                    1107372801 (collision, solid)
+MASK_THIRDPERSON                1107372857
+MASK_FOOTSTEP                    1107437825
+MASK_BEAM                        1107569409
+MASK_VISIBLE                    1107569409
+MASK_VEHICLE                    1107569409
+MASK_BULLET                        1107569441
+MASK_SHOT                        1107569569
+MASK_CROSSHAIRSHADER            1107897089
+MASK_TRACER                        1108618017
+
+Contents:
+
+CONTENTS_SOLID			1
+CONTENTS_LAVA			8
+CONTENTS_SLIME			16
+CONTENTS_WATER			32
+CONTENTS_FOG			        64
+CONTENTS_AREAPORTAL		32768
+CONTENTS_PLAYERCLIP		65536
+CONTENTS_MONSTERCLIP	        131072
+CONTENTS_WEAPONCLIP		262144
+CONTENTS_SHOOTABLEONLY	1048576
+CONTENTS_ORIGIN			16777216
+CONTENTS_BODY			33554432
+CONTENTS_CORPSE			67108864
+CONTENTS_DETAIL			134217728
+CONTENTS_STRUCTURAL		268435456
+CONTENTS_TRANSLUCENT	        536870912
+CONTENTS_TRIGGER                 1073741824
+CONTENTS_NODROP                  2147483648
+*/

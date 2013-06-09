@@ -1,0 +1,30 @@
+main local.num:
+
+	self.inturret = int local.num
+
+	if (self.inveh != 1)
+	{
+		local.team = self.dmteam
+
+		while ( self != NULL && self.player_spawned == 1 && self.inturret == 1 )
+			waitframe
+
+		if (self == NULL)
+			end
+
+		self surface all "-nodraw"
+
+		if (self.dmteam != local.team)
+		{
+			self usestuff
+
+			if (self.dmteam != "spectator")
+				self.disable_spawn = 1
+
+			self respawn
+		}
+
+		self.inturret = 0
+	}
+
+end

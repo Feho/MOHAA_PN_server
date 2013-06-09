@@ -1,0 +1,467 @@
+/*
+// Modifs Feho : Bleeding, rebound damage, General murder, players voices
+
+======================================================
+*** AIRborne; Player Handler StateScript for MoH:AA
+======================================================
+by Sor
+Version: v1.4
+-----------------------------------
+--- INFO:
+
+ STATUS: <player_alias>.status 
+  "alive"
+  "killed"
+  "spectator"
+  "entered_server"
+
+ JUST SPAWNED: <player_alias>.jspawned
+  This variable gets set to 1 when the player has just spawned and
+  back to 0 after max 5 seconds!
+
+ KILLCOUNT: <player_alias>.killcount
+ DEATHCOUNT: <player_alias>.deathcount
+
+-------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+main local.dead_or_alive:
+
+
+	//feho
+	//--------------->
+	if ((getcvar("ranksys")) == "0")
+	{
+		level.running_ranking = 0
+		end
+	}
+	//<---------------
+		
+	if (self != NULL)
+	{
+		if (isAlive self && self.status != "alive" && local.dead_or_alive == "spawned" && self.dmteam != "spectator")
+		{
+			//self exec global/fix/anti_fps.scr
+			self.status = "alive"
+			self.jspawned = 1
+
+			self thread follow_player
+			if (level.running_ranking == 1)
+			{
+				waitframe
+				if (self.detect)
+				{
+					self.detect remove
+				}
+
+				self thread setup_kill
+			}
+		}
+		else if (self.status != "killed" && local.dead_or_alive == "killed") //&& !(Isalive self))
+		{
+			self.status = "killed"
+			//just in case
+			self.jspawned = 0
+
+			// wait till the states have reported if the player has cratered
+			waitframe
+			if (self.has_cratered == 1)
+			{
+				if (self.killcount == NIL)
+					self.killcount = 0
+
+				self.killcount--
+				self.has_cratered = NIL
+			}
+				
+		}
+		else if (local.dead_or_alive == "cratered")
+		{
+			self.has_cratered = 1
+		}
+		else if (self.status == NIL && self.dmteam == "spectator" && local.dead_or_alive == NIL)
+		{
+			self.status = "entered_server"
+			self exec global/states/new_player.scr
+		}
+		// Buggy Spawn...
+		else if (self.status == NIL || self.status != "alive" && isAlive self)
+		{
+			wait 1
+			self exec global/states/player_spawn.scr "spawned"
+			end
+		}
+	}
+
+end
+
+//-----------------------------------
+follow_player:
+
+	if (self.followed == 1)
+		end
+	else
+		self.followed = 1
+
+	local.time = 0
+	local.team = self.dmteam
+	local.num = self.entnum
+
+
+	// *****************************************************
+	self exec global/states/just_spawned.scr
+
+	while ( self && self.health >= 96 && local.time <= 5.00 && self.status != "killed" && self.dmteam == local.team )
+	{
+		waitframe
+		local.time += 0.05
+	}
+	// *****************************************************
+
+	// ...Left the server
+	if (self == NULL || self == NIL)
+	{
+		exec global/states/just_left.scr local.num
+		end
+	}	
+	else
+	{
+		self.followed = NIL
+		self.jspawned = 0
+
+		//...or Joined the spectators
+		if (self.dmteam != local.team && self.dmteam == "spectator")
+		{
+			self.status = "joined_spectator"
+			self exec global/states/joined_spec.scr
+			end
+		}
+		//...or Joined the Axis
+		else if (self.dmteam != local.team && self.dmteam == "axis")
+		{
+			self.status = "joined_axis"
+			self exec global/states/joined_axis.scr
+			end
+		}
+		//...or Joined the Allies
+		else if (self.dmteam != local.team && self.dmteam == "allies")		
+		{
+			self.status = "joined_allies"
+			self exec global/states/joined_allies.scr
+			end
+		}
+		else if !(isAlive self)
+		{
+			self exec global/states/player_died.scr
+			end
+		}	
+	}
+
+	// *******************************************************************************************
+	while ( self && self.status != "killed" && self.dmteam == local.team && isAlive self )
+	{
+		waitframe
+	}
+	// *******************************************************************************************
+
+	//... left the server
+	if (self == NULL || self == NIL)
+	{
+		exec global/states/just_left.scr local.num
+		end
+	}
+	else if (self.dmteam != local.team)
+	{
+		self.followed = NIL
+
+		if(self.dmteam == "spectator")
+		{
+			self.status = "joined_spectator"
+			self exec global/states/joined_spec.scr
+			end
+		}
+		else if (self.dmteam == "axis")
+		{
+			self.status = "joined_axis"
+			self exec global/states/joined_axis.scr
+			end
+		}
+		else if (self.dmteam == "allies")		
+		{
+			self.status = "joined_allies"
+			self exec global/states/joined_allies.scr
+			end
+		}
+	}
+	else if !(isAlive self)
+	{
+		self.followed = NIL
+		self exec global/states/player_died.scr
+		end
+	}
+
+end
+
+//-----------------------------------
+setup_kill:
+
+	if(self.detect != NIL && self.detect != NULL)
+	{
+		self.detect remove
+	}
+
+	self.detect = spawn trigger_multipleall "spawnflags" "128"
+	self.detect.origin = self.origin
+	self.detect.angle = self.angle
+	self.detect glue self
+	self.detect.player = self
+	self.detect.team = self.dmteam
+	self.detect.alive = 1
+	self.detect.attacker = NIL
+	self.detect setsize ( -17 -17 0 ) ( 17 17 72 )
+	self.detect solid
+
+	self.detect thread correct_detect
+
+	while(1)
+	{
+		//check if player is still on the server or on the same team
+		if (self == NIL || self == NULL || level.running_ranking != 1)
+		{
+			self.detect remove
+			end
+		}
+
+		self.detect waittill trigger
+		local.murderer = parm.other
+		waitframe
+		
+		// if (self.detect != NULL || self.detect != NIL) {
+			// self.detect waittill trigger
+			// waitframe
+		// }
+		// local.murderer = parm.other
+
+		// Bleeding *** Feho ***
+		thread bleeding self local.murderer
+		
+		//*** Rebound damage *** Feho
+		thread rebound_damage self local.murderer
+
+			
+		//MAIN KILL-HANDLER
+		if ( isAlive self != 1 && self.detect.alive == 1 && self.dmteam != "spectator" )
+		{	
+			self.detect nottriggerable
+			self.detect.alive = 0
+			self.detect.attacker = local.murderer
+			waitframe
+		
+			//benzin barrel
+			if (local.murderer == NULL) 
+			{
+				if (self.deathcount == NIL)
+					self.deathcount = 0
+			
+				self.deathcount++
+				end
+			}
+			//committed suicide
+			if ( local.murderer == self)
+			{
+				if ( local.murderer.killcount == NIL )
+				{
+					local.murderer.killcount = 0
+					local.murderer.killcount--
+				}
+				else if ( local.murderer.killcount != NIL )
+				{
+					local.murderer.killcount--
+				}
+			}
+			else if (local.murderer.dmteam == self.dmteam && (getcvar "g_gametype") != "1")
+			{
+				if ( local.murderer.killcount == NIL )
+				{
+					local.murderer.killcount = 0
+					local.murderer.killcount--
+				}
+				else if ( local.murderer.killcount != NIL )
+				{
+					local.murderer.killcount--
+				}
+			}
+			//no traitor
+			else 
+			{
+				if ( local.murderer.killcount == NIL )
+					local.murderer.killcount = 0
+
+				local.murderer.killcount++
+				local.rand = randomint 5
+				
+				if (local.rand == 2)
+				{
+					wait 0.7
+					if (local.murderer.dmteam == "allies")
+					{
+						exec $logger.LogInfo ("[player_spawn.scr::setup_kill]: Player " + netname local.murderer + " playsound allied_gotone")
+						local.murderer playsound allied_gotone
+					}
+					else if (local.murderer.dmteam == "axis")
+					{
+						exec $logger.LogInfo ("[player_spawn.scr::setup_kill]: Player " + netname local.murderer + " playsound den_attack_074b")
+						local.murderer playsound den_attack_074b //axis_gotone
+					}
+				}
+				
+				if (self.rank == "General-of-the-Army" || self.rank == "Generalfeldmarschall") {
+					local.nbKillsMurderer = local.murderer.killcount
+					if (local.nbKillsMurderer >= 0 && local.nbKillsMurderer < 25) {
+						local.murderer iprint "You killed a General of the Army"
+						// local.murderer.killcount++
+						local.murderer addkills 1
+					}
+					else if (local.nbKillsMurderer >= 25 && local.nbKillsMurderer < 35) {
+						local.murderer iprint "You killed a General of the Army"
+						// local.murderer.killcount = local.murderer.killcount+2
+					}
+				}
+			}
+
+			if (self.deathcount == NIL)
+				self.deathcount = 0
+
+			self.deathcount++
+			self.detect immediateremove
+			end
+		}
+	}
+end
+
+correct_detect:
+
+	while(self && self.player)
+	{
+		if ( (self.player getposition)[0] == "c" && local.last_pos != 1)
+		{
+			local.last_pos = 1
+			self setsize ( -17 -17 0 ) ( 17 17 42 )
+		}
+		else if ( (self.player getposition)[0] != "c" && local.last_pos == 1)
+		{
+			local.last_pos = 0
+			self setsize ( -17 -17 0 ) ( 17 17 72 )
+		}
+
+		wait 0.2
+	}
+end
+
+// threads Feho --------------------------------->
+bleeding local.victim local.murderer:
+
+	if (local.victim == local.murderer)
+		end
+		
+	if (local.victim.health < 20)
+	{
+		// local.victim = local.victim
+		local.victim.bleeding = 1
+		local.oldteam = local.victim.dmteam
+
+		while(local.victim.health < 20 && IsAlive local.victim && local.victim.dmteam == local.oldteam)
+        {
+			if (local.victim == NULL || local.victim == NIL) {
+				end
+			}
+			local.victim damage local.murderer 1 local.murderer (0 0 0) (0 0 0) (0 0 0) 0 1 0 -1
+			local.victim iprint "***You are bleeding, find a healthpack or a medic***"
+			wait 3
+        }
+			local.victim.bleeding = 0
+	}
+	
+end
+
+rebound_damage local.victim local.murderer:
+
+	if ( getcvar "g_teamdamage" != "1" || getcvar "g_gametype" == "1" || local.murderer == local.victim)
+		end
+	
+	if (local.victim.dmteam == local.murderer.dmteam)
+	{
+		if (local.victim.health > 50)
+			end
+			
+		if (local.murderer.warning == NIL)
+		{
+			local.murderer.warning = 0
+		}
+		
+		if (local.murderer.warning == 4)
+		{
+			// local.murderer stufftext "kill"
+			local.murderer damage local.murderer 200 local.murderer (0 0 0) (0 0 0) (0 0 0) 0 1 0 -1
+			local.murderer iprint "Play fair soldier, don't kill your Teammates !" 1
+			local.murderer.warning++
+			end
+		}
+		else if (local.murderer.warning == 7)
+		{
+			local.murderer damage local.murderer 200 local.murderer (0 0 0) (0 0 0) (0 0 0) 0 1 0 -1
+			local.murderer iprint "Play fair soldier, don't kill your Teammates !" 1
+			local.murderer.warning++
+			end
+		}
+		else if (local.murderer.warning == 10)
+		{
+			local.murderer stufftext "spectator"
+			local.murderer iprint "Play fair soldier, don't kill your Teammates !" 1
+			local.murderer.warning++
+			end
+		}
+		else if (local.murderer.warning == 12)
+		{
+			local.murderer takeall
+			local.murderer iprint "Play fair soldier, don't kill your Teammates !" 1
+			local.murderer.warning++
+			end
+		}
+		else if (local.murderer.warning == 14)
+		{
+			local.murderer stufftext "disconnect"
+			end
+		}
+		
+		local.murderer.warning++
+		local.murderer iprint ("Friendly fire is not allowed [warning : " + local.murderer.warning + "]")
+		local.murderer damage local.murderer 20 local.murderer (0 0 0) (0 0 0) (0 0 0) 0 1 0 -1
+	}
+	
+end
+//<-------------------------------------

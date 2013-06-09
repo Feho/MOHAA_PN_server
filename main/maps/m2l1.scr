@@ -1,0 +1,578 @@
+//
+// M2L1 - Secret Documents of the Kriegsmarine
+//
+
+
+main: 
+
+	setcvar "g_gametype" "2"
+	setcvar "developer" "0" // temporaire
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M2L1" 
+	setcvar "g_obj_alliedtext2" "Secret Documents of "
+	setcvar "g_obj_alliedtext3"  " the Kriegsmarine"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "Team-Match"
+	setcvar "timelimit" "15"
+
+		// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	waitthread tdm_spawns
+	waitthread set_da_stuff_up
+
+	level waittill prespawn
+	
+	//Sorrids ladders // Lags... :(
+	// exec global/ladderspawn.scr ( -1754 -2671 480) 315 wood 180
+	// exec global/ladderspawn.scr ( 1543 1628 500) 155 metal -90
+	// exec global/ladderspawn.scr ( 1543 1594 500) 155 metal 90
+
+	exec global/AIR_TeleModel.scr ( -1754 -2671 500 ) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleTrig.scr ( -1754 -2671 500 ) ( -1754 -2671 770 ) NIL 1 
+
+	// Caisses pour passer au dessus de la grille
+	local.fix1 = spawn script_model "targetname" "caisse1"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( 1543 1678 500 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model "targetname" "caisse2"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( 1543 1658 547 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model "targetname" "caisse3"
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( 1543 1638 594 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( 1543 1558 500 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+
+	local.fix1 = spawn script_model
+	local.fix1 model static/indycrate.tik
+	local.fix1.origin = ( 1543 1578 547 )
+	local.fix1.angles = ( 00.00 90.00 0.00)
+	local.fix1.scale = 1.0
+	local.fix1 solid
+	local.fix1 nodamage 
+	local.fix1 immune bullet
+	local.fix1 immune fast_bullet
+	local.fix1 immune bash	
+	local.fix1 immune mg
+	local.fix1 immune grenade
+	local.fix1 immune explosion
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m2l1
+	exec global/DMprecache.scr
+
+	// Bloque l'accès au toit qui mène sous la map
+	spawn script_object "targetname" "blocker"
+	$blocker.origin = ( 1478 2414 650 )
+	$blocker setsize ( -50 -1 -10 ) ( 50 1 100 )
+	$blocker solid
+	$blocker nodamage
+
+	local.mur = spawn script_object
+	local.mur.origin = ( 3200 3209 752)
+	local.mur.angle = -180
+	local.mur setsize ( -1 0 -96) ( 1 396 100)
+	local.mur solid
+	level waittill spawn
+	
+	level.squadmaker_areaname 	= "in the camp"
+	level.squadmaker_config		= "winterwar"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	// Tanks & Jeeps Base Assault
+	if (level.already_started != 1)
+	{
+		level.already_started = 1
+
+		exec global/AA/global_detect.scr
+	}
+	
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 3980.00 6370.00 -63.88 ) ( 0 180 0 ) level.jeep_mask
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 3980.00 6155.00 -63.88 ) ( 0 180 0 ) level.jeep_mask
+
+	// exec global/vehicles/playervehicle.scr models/vehicles/opeltruckgreen_canopy.tik models/vehicles/opeltruckgreen_d.tik ( 733 2968 -23.88 ) ( 0 60 0 ) 2500
+	
+	thread Stage_Timer
+	
+	level.clockside = kills
+
+	 //The snow
+ level.rain_speed = "32"
+ level.rain_speed_vary = "16"
+ level.rain_length = "2"
+ level.rain_width = "1"
+ level.rain_density = ".2"
+ level.rain_slant = "250"
+ level.rain_min_dist = "1800"
+ level.rain_numshaders = 12
+ level.rain_shader = "textures/snow0"
+
+	
+end
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M2L1" 
+	setcvar "g_obj_alliedtext2" "Secret Documents of "
+	setcvar "g_obj_alliedtext3"  " the Kriegsmarine"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
+
+	
+	setcvar "g_gametype" "1"
+	
+	waitthread ffa_spawns
+	waitthread set_da_stuff_up
+	
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m2l1
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	level.clockside = kills
+
+	
+
+end
+
+
+tdm_spawns:
+
+
+
+	// Stage 1
+	spawn info_player_axis "origin" "944.45 2385.03 624.13" "angle" "-86" "targetname" "X1"
+	spawn info_player_axis "origin" "765.40 2350.61 624.13" "angle" "-96" "targetname" "X2"
+	spawn info_player_axis "origin" "575.13 2374.71 624.13" "angle" "-68" "targetname" "X3"
+	spawn info_player_axis "origin" "796.37 2548.91 448.13" "angle" "14" "targetname" "X4"
+	spawn info_player_axis "origin" "791.13 2676.48 448.13" "angle" "3" "targetname" "X5"
+
+	spawn info_player_axis "origin" "1264.87 2605.44 448.13" "angle" "160" "targetname" "X6" 
+	spawn info_player_axis "origin" "1424.88 2447.13 448.13" "angle" "98" "targetname" "X7"
+	spawn info_player_axis "origin" "1768.57 2115.37 448.13" "angle" "121" "targetname" "X8"
+	spawn info_player_axis "origin" "1937.80 2251.59 448.13" "angle" "142" "targetname" "X9"
+	spawn info_player_axis "origin" "2106.38 2326.16 448.13" "angle" "158" "targetname" "X10"
+
+	spawn info_player_axis "origin" "2218.13 2137.92 448.13" "angle" "148" "targetname" "X11"
+	spawn info_player_axis "origin" "2563.74 2220.75 448.13" "angle" "161" "targetname" "X12"
+	spawn info_player_axis "origin" "1696.55 2767.52 499.36" "angle" "-135" "targetname" "X13"
+	spawn info_player_axis "origin" "1893.32 2715.71 491.19" "angle" "-155" "targetname" "X14"
+	spawn info_player_axis "origin" "576.07 3328.87 448.13" "angle" "-69" "targetname" "X15"
+
+
+	// Stage 1
+	spawn info_player_allied "origin" "392.50 -3776.87 488.12" "angle" "46" "targetname" "A1"
+	spawn info_player_allied "origin" "1900.07 -3721.16 536.39" "angle" "112" "targetname" "A2"
+	spawn info_player_allied "origin" "1989.64 -3120.86 478.63" "angle" "141" "targetname" "A3"
+	spawn info_player_allied "origin" "-323.81 -3776.87 488.13" "angle" "128" "targetname" "A4"
+	spawn info_player_allied "origin" "-1425.31 -3772.59 472.58" "angle" "44" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "-1520.86 -3753.95 584.13" "angle" "61" "targetname" "A6"
+	spawn info_player_allied "origin" "-1801.17 -3760.86 584.13" "angle" "9" "targetname" "A7"
+	spawn info_player_allied "origin" "-2132.56 -3378.35 484.00" "angle" "33" "targetname" "A8"
+	spawn info_player_allied "origin" "-2062.78 -3148.61 484.00" "angle" "8" "targetname" "A9"
+	spawn info_player_allied "origin" "-1972.37 -3065.31 484.00" "angle" "58" "targetname" "A10"
+
+	spawn info_player_allied "origin" "-1750.48 -3085.53 484.00" "angle" "87" "targetname" "A11"
+	spawn info_player_allied "origin" "-1314.70 -2969.85 487.08" "angle" "0" "targetname" "A12"
+	spawn info_player_allied "origin" "-1704.20 -3392.42 484.13" "angle" "23" "targetname" "A13"
+	spawn info_player_allied "origin" "-2241.29 -2957.43 486.41" "angle" "-27" "targetname" "A14"
+	spawn info_player_allied "origin" "-2387.16 -3133.96 481.26" "angle" "-2" "targetname" "A15"
+	 
+	// Stage2
+	spawn info_player_axis "origin" "4103.13 7814.87 50.13" "angle" "-90" "targetname" "XX1"
+	spawn info_player_axis "origin" "4081.06 6896.33 180.86" "angle" "180" "targetname" "XX2"
+	spawn info_player_axis "origin" "3615.81 6883.52 180.47" "angle" "90" "targetname" "XX3"
+	spawn info_player_axis "origin" "4114.91 7263.41 -10.13" "angle" "180" "targetname" "XX4"
+	spawn info_player_axis "origin" "4089.06 6889.05 -10.13" "angle" "180" "targetname" "XX5"
+
+	spawn info_player_axis "origin" "4127.59 7298.58 180.53" "angle" "180" "targetname" "XX6" 
+	spawn info_player_axis "origin" "3152.87 7313.91 -10.13" "angle" "-90" "targetname" "XX7"
+	spawn info_player_axis "origin" "4308.99 6224.44 -50.13" "angle" "180" "targetname" "XX8"
+	spawn info_player_axis "origin" "2664.88 7313.91 -50.13" "angle" "-90" "targetname" "XX9"
+	spawn info_player_axis "origin" "84.60 5620 -60.13" "angle" "0" "targetname" "XX10"
+
+	spawn info_player_axis "origin" "95.13 6118.88 -60.13" "angle" "0" "targetname" "XX11"
+	spawn info_player_axis "origin" "2400.81 4950.84 -30.13" "angle" "-39" "targetname" "XX12"
+	spawn info_player_axis "origin" "4121.49 4546.90 170.13" "angle" "-90" "targetname" "XX13"
+	spawn info_player_axis "origin" "4000.52 4552.09 170.13" "angle" "-90" "targetname" "XX14"
+	spawn info_player_axis "origin" "3286.30 3275.36 30.13" "angle" "0" "targetname" "XX15"
+
+
+	// Stage 2
+	spawn info_player_allied "origin" "1540.46 2564.12 455.13" "angle" "0" "targetname" "AA1"
+	spawn info_player_allied "origin" "1556.32 1711.24 500.96" "angle" "0" "targetname" "AA2"
+	spawn info_player_allied "origin" "3709.65 2334.13 510.13" "angle" "-180" "targetname" "AA3"
+	spawn info_player_allied "origin" "3773.48 2957.29 520.13" "angle" "-128" "targetname" "AA4"
+	spawn info_player_allied "origin" "3226.13 2911.87 520.37" "angle" "-90" "targetname" "AA5" 
+
+	spawn info_player_allied "origin" "3600.65 2731.51 520.13" "angle" "-136" "targetname" "AA6"
+	spawn info_player_allied "origin" "3641.04 1420.66 500.13" "angle" "-180" "targetname" "AA7"
+	spawn info_player_allied "origin" "1939.51 100.66 480.13" "angle" "90" "targetname" "AA8"
+	spawn info_player_allied "origin" "1957.13 395.84 460.92" "angle" "0" "targetname" "AA9"
+	spawn info_player_allied "origin" "2185.49 69.85 460.86" "angle" "0" "targetname" "AA10"
+
+	spawn info_player_allied "origin" "2192.64 -459.87 460.13" "angle" "0" "targetname" "AA11"
+	spawn info_player_allied "origin" "2273.40 -1065.68 460.19" "angle" "0" "targetname" "AA12"
+	spawn info_player_allied "origin" "2084.27 -1401.39 475.07" "angle" "0" "targetname" "AA13"
+	spawn info_player_allied "origin" "3660.78 515.48 500.30" "angle" "180" "targetname" "AA14"
+	spawn info_player_allied "origin" "5933.28 -2099.06 465.13" "angle" "90" "targetname" "AA15"
+
+	$XX1 disablespawn
+	$XX2 disablespawn
+	$XX3 disablespawn
+	$XX4 disablespawn
+	$XX5 disablespawn
+	$XX6 disablespawn
+	$XX7 disablespawn
+	$XX8 disablespawn
+	$XX9 disablespawn
+	$XX10 disablespawn
+	$XX11 disablespawn
+	$XX12 disablespawn
+	$XX13 disablespawn
+	$XX14 disablespawn
+	$XX15 disablespawn
+
+	$AA1 disablespawn
+	$AA2 disablespawn
+	$AA3 disablespawn
+	$AA4 disablespawn
+	$AA5 disablespawn
+	$AA6 disablespawn
+	$AA7 disablespawn
+	$AA8 disablespawn
+	$AA9 disablespawn
+	$AA10 disablespawn
+	$AA11 disablespawn
+	$AA12 disablespawn
+	$AA13 disablespawn
+	$AA14 disablespawn
+	$AA15 disablespawn
+
+end
+
+Stage_Timer:
+
+	wait 20
+	
+	local.messagetosay = "S T A G E  1"
+	thread scrollMsg local.messagetosay
+
+	wait 580
+
+	// Initiate Stage 2
+	
+	// Stop Allies going to stage 1
+	spawn script_object "targetname" "blocker1"
+	$blocker1.origin = ( 1463 2528 450 )
+	$blocker1 setsize ( -1 -50 -10 ) ( 1 50 100 )
+	$blocker1 solid
+	$blocker1 nodamage
+	
+	spawn script_object "targetname" "blocker2"
+	$blocker2.origin = ( 1544 1632 500 )
+	$blocker2 setsize ( -30 -30 -10 ) ( 30 30 100 )
+	$blocker2 solid
+	$blocker2 nodamage
+
+	$caisse1 remove
+	$caisse2 remove
+	$caisse3 remove
+	
+	$X1 disablespawn
+	$X2 disablespawn
+	$X3 disablespawn
+	$X4 disablespawn
+	$X5 disablespawn
+	$X6 disablespawn
+	$X7 disablespawn
+	$X8 disablespawn
+	$X9 disablespawn
+	$X10 disablespawn
+	$X11 disablespawn
+	$X12 disablespawn
+	$X13 disablespawn
+	$X14 disablespawn
+	$X15 disablespawn
+
+	$A1 disablespawn
+	$A2 disablespawn
+	$A3 disablespawn
+	$A4 disablespawn
+	$A5 disablespawn
+	$A6 disablespawn
+	$A7 disablespawn
+	$A8 disablespawn
+	$A9 disablespawn
+	$A10 disablespawn
+	$A11 disablespawn
+	$A12 disablespawn
+	$A13 disablespawn
+	$A14 disablespawn
+	$A15 disablespawn
+
+	$XX1 enablespawn
+	$XX2 enablespawn
+	$XX3 enablespawn
+	$XX4 enablespawn
+	$XX5 enablespawn
+	$XX6 enablespawn
+	$XX7 enablespawn
+	$XX8 enablespawn
+	$XX9 enablespawn
+	$XX10 enablespawn
+	$XX11 enablespawn
+	$XX12 enablespawn
+	$XX13 enablespawn
+	$XX14 enablespawn
+	$XX15 enablespawn
+
+	$AA1 enablespawn
+	$AA2 enablespawn
+	$AA3 enablespawn
+	$AA4 enablespawn
+	$AA5 enablespawn
+	$AA6 enablespawn
+	$AA7 enablespawn
+	$AA8 enablespawn
+	$AA9 enablespawn
+	$AA10 enablespawn
+	$AA11 enablespawn
+	$AA12 enablespawn
+	$AA13 enablespawn
+	$AA14 enablespawn
+	$AA15 enablespawn
+
+	$player respawn
+
+	wait 5
+
+	local.messagetosay = "S T A G E  2"
+	thread scrollMsg local.messagetosay
+
+end
+
+
+ffa_spawns: 
+
+
+	spawn info_player_deathmatch "origin" "-1814.51 -2672.87 776.13" "angle" "58"
+	spawn info_player_deathmatch "origin" "431.13 -3641.05 489.66" "angle" "75"
+	spawn info_player_deathmatch "origin" "-1623.08 -1170.81 452.94" "angle" "3"
+	spawn info_player_deathmatch "origin" "-2132.54 447.73 464.39" "angle" "-2"
+	spawn info_player_deathmatch "origin" "-1619.10 1552.47 488.40" "angle" "11"
+
+	spawn info_player_deathmatch "origin" "307.13 2400.87 624.13" "angle" "-87"
+	spawn info_player_deathmatch "origin" "1008.87 2400.87 624.13" "angle" "-122"
+	spawn info_player_deathmatch "origin" "820.88 1519.13 624.13" "angle" "159"
+	spawn info_player_deathmatch "origin" "1315.79 1687.46 448.13" "angle" "-177"
+	spawn info_player_deathmatch "origin" "891.24 1963.57 448.13" "angle" "99"
+
+	spawn info_player_deathmatch "origin" "872.87 3252.87 448.13" "angle" "-113"
+	spawn info_player_deathmatch "origin" "807.13 2613.46 448.13" "angle" "26"
+	spawn info_player_deathmatch "origin" "1490.65 1656.19 502.26" "angle" "72"
+	spawn info_player_deathmatch "origin" "3688.93 2288.74 503.85" "angle" "173"
+	spawn info_player_deathmatch "origin" "3564.65 1390.24 484.13" "angle" "174"
+
+end
+
+
+
+set_da_stuff_up:
+	
+	// Some sounds
+	local.master = spawn scriptmaster
+	local.master aliascache m2l1_radio1 sound/mechanics/shortwave2.wav soundparms 0.7 0.0 1.0 0.0 100 900 auto streamed maps "m dm moh obj"
+	local.master aliascache radio_loop sound/mechanics/Mec_RadioMusic_01.wav soundparms 0.5 0.0 1.0 0.0 150 800 local streamed maps "m2l1 m6l2a dm moh obj train"
+	local.master aliascache m2l1_radio3 sound/mechanics/Mec_RadioLoop_05.wav soundparms 0.7 0.0 1.0 0.0 100 500 auto loaded maps "m2 dm moh obj train"
+
+
+	// Remove AI
+	removeclass actor
+
+	$gate_clip remove
+	$main_gate remove
+
+	$radio1_sound loopsound m2l1_radio1
+	$radio2_sound loopsound radio_loop
+	$radio3_sound loopsound m2l1_radio1
+
+	thread Map_Guard
+
+end	
+
+
+// Under Map Protection
+Map_Guard:
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( 1646.92 5333.01 -1023.88 ) 
+	$Killah setsize ( -9999 -9999 -30 ) ( 9999 9999 1 )
+	$Killah setthread die
+	// $Killah message "Play fair!"
+end
+
+die:
+	local.punk = parm.other
+	if ( (!isalive local.punk ) || (local.punk.needrevive == 1) )
+	{
+		end
+	}
+	iprintln "*** - Map_Guard Triggered - ***"
+	// local.punk thread spawn_fx models/animate/fx_mortar_dirt.tik 
+	local.punk kill
+end
+
+
+hudprint local.nstring local.r local.g local.b:
+
+	huddraw_rect 187 140 -84 50 50 
+	huddraw_color 187 local.r local.g local.b 
+	huddraw_font 187 "facfont-20" 
+	huddraw_string 187 local.nstring 
+	huddraw_align 187 left bottom 
+	huddraw_alpha 187 1 
+end 
+
+spawn_fx local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp notsolid
+	local.temp.origin = self.origin
+	local.temp anim start
+	wait 3
+	local.temp remove
+end
+
+
+
+// End some labels
+document2:
+end
+document1:
+end
+s7_test:
+end
+music2:
+end
+document4:
+end
+document3:
+end
+ladder_hint:
+end
+enable_hall_guards:
+end
+
+scrollMsg local.messagetosay:
+
+	huddraw_align 223 left center
+	huddraw_font 223 facfont-20
+	huddraw_alpha 223 1
+
+	huddraw_color 223 1 1 1
+
+	huddraw_rect 223 20 150 200 40
+	huddraw_string 223 local.messagetosay
+
+	for(local.i=1;local.i<=local.messagetosay.size;local.i++)
+	{
+	local.x = ""
+	for(local.z=1;local.z<=(local.messagetosay.size - local.i);local.z++)
+	{
+	local.x = (local.x + " ")
+	}
+	local.tmpstring4 = ""
+	for (local.o=0;local.o<local.i;local.o++) local.tmpstring4 = local.tmpstring4 + local.messagetosay[local.o]
+	huddraw_string 223 (local.x + local.tmpstring4)
+	wait .03
+	}
+	wait 3
+	for (local.o=1;local.o>0;local.o=local.o - 0.01)
+	{
+	huddraw_alpha 223 local.o
+	wait 0.05
+	}
+	huddraw_alpha 223 0 
+end

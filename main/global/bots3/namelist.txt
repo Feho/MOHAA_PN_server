@@ -1,0 +1,112 @@
+// Bots3 namelist
+
+level.bots.namelist = makeArray
+
+	// .Map top 30 posters as of Aug. 16, 2006
+	// http://map.planetmedalofhonor.gamespy.com
+	
+	"[.Map] Community Bot"
+	"jv_map"
+	"tltrude"
+	"lizardkid"
+	"Bjarne BZR"
+	"mohaa_rox"
+	"bdbodger"
+	"Rookie One.pl"
+	"wacko"
+	"Master-Of-Fungus-Foo-D"
+	"Alcoholic"
+	"hogleg"
+	"M&M"
+	"Jack Ruby"
+	"Surgeon"
+	"Mj"
+	"blue60007"
+	"PKM"
+	"General Death"
+	"At0miC"
+	"Yarik"
+	"nuggets"
+	"small_sumo"
+	"Elgan"
+	"Krane"
+	"Shifty"
+	"m4rine"
+	"Gen Cobra"
+	"IvaN [K47a]"
+	"omniscient"
+	"Axion"
+
+	// TMT top 30 posters as of Aug. 16, 2006
+	// http://modtheater.com
+
+	"[TMT] Community Bot"
+	"General Death"
+	"Balr14"
+	"kdjac"
+	"tgillespie"
+	"TheStorm"
+	"tritone"
+	"Elgan"
+	"@(...:.:...)@"
+	"scorpio Midget"
+	"gReensmith"
+	"Spiff"
+	"Private_Parts"
+	"Cyborg"
+	"Kalti"
+	"imtheheadhunter"
+	"zaney"
+	"sorridstroker"
+	".:|DaN|:."
+	"jv_map"
+	"brendank310"
+	"Sudano"
+	"Unreal_Demon"
+	"Tanner8"
+	"Bdbodger"
+	"Herr_Kruger"
+	"Ghost Dog"
+	".:RIGGS:."
+	"KillerKind"
+	"Flipsen"
+	"Maxx130"
+
+	// MRU admins, {SFX} team leaders and {SFX} team members as of Aug. 16, 2006
+	// http://mods-r-us.net
+	
+	"[Mods-r-us] Community Bot"
+	"Cobra"
+	"Elgan"
+	"Herr_Kruger"
+	"bdbodger"
+	"CTpenok"
+	"Don"
+	"Floyd"
+	"Gen Cobra"
+	"gorilla.qasma"
+	"iluro"
+	"infectious"
+	"Jed"
+	"Kalti"
+	"mainframe"
+	"Marlboro"
+	"nightcommando"
+	"Petey"
+	"ric-hard"
+	"Rookie One"
+	"Runt"
+	"Salombo"
+	"Vince"
+	"Whitesnake"
+	"Iceman"
+	
+	// 'Special' people
+	
+	"jv_map" 		// bot maker :P
+	"proximo" 		// many thanks for your bot mapping efforts
+	"$oldier Of Ra" // as above, thanks!
+	"Cobra"			// inspirator, an extra plug for you m8y ;)
+	"Cheech"		// bot mapper, thanks!
+	"wombat23"		// keep up moh:dev!
+endArray

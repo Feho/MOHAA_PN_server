@@ -1,0 +1,2626 @@
+// Gain Ground - All OK
+//
+// M3l3 - The Nebelwerfer Hunt
+
+// Ive made this into 2 stages so players dont have to run too far for combat.
+// 
+// Cobs
+
+
+main: 
+
+	setcvar "g_gametype" "2"
+	setcvar "timelimit" "20"
+	setcvar "push" "1"
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M3L3" 
+	setcvar "g_obj_alliedtext2"    ""
+	setcvar "g_obj_alliedtext3" "The Nebelwerfer Hunt"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing3a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "Team-Match"
+	thread global/bomber.scr::main
+
+	waitthread tdm_spawns
+	waitthread Initiate_whats_needed
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	// fadeout .1 0 0 0 1 // black screen on start
+	
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m3l3
+	exec global/DMprecache.scr
+	
+	thread music
+	
+	// exec server_planes/trigger.scr ( 1293 4962 -190 ) "allies"
+	// exec server_planes/trigger.scr ( -4538 -5133 -150 ) "axis"
+	
+	level waittill spawn
+
+	// thread fadescreen // looks like Omaha start
+	
+	thread setup
+	thread hudstuff
+	thread triggers
+	thread messages
+	thread eventeams
+	thread spawnswitch
+	
+
+	
+	// Tanks & Jeeps Base Assault
+	if (level.already_started != 1)
+	{
+		level.already_started = 1
+
+		exec global/AA/global_detect.scr
+	}
+	
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -4078.00 -4194.00 -0.88 ) ( 0 7 0 ) level.jeep_mask
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3600.00 -4108.00 -0.88 ) ( 0 21 0 ) level.jeep_mask
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3243.00 -3948.00 -0.88 ) ( 0 37 0 ) level.jeep_mask
+	
+	exec global/vehicles/playervehicle.scr models/vehicles/opeltruck.tik models/vehicles/opeltruck_d.tik ( -3243.00 -3948.00 -0.88 ) ( 0 37 0 ) 2500
+	// exec global/vehicles/playervehicle.scr models/vehicles/m3.tik models/vehicles/sdkfz_green_d.tik ( -4078.00 -4194.00 -0.88 ) ( 0 7 0 ) 2500
+	// exec global/vehicles/playervehicle.scr models/vehicles/sdkfz.tik models/vehicles/sdkfz_green_d.tik ( -3600.00 -4108.00 -0.88 ) ( 0 21 0 ) 800
+	
+	level.clockside = kills
+
+	
+	thread Map_Guard
+	thread Stage_Timer
+	
+	// Uncomment if you want the minefield on
+
+	//thread scene7_minefields
+
+end
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M3L3" 
+	setcvar "g_obj_alliedtext2"    ""
+	setcvar "g_obj_alliedtext3" "The Nebelwerfer Hunt"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing3a.tga" 
+	
+
+	
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	waitthread ffa_spawns
+	waitthread Initiate_whats_needed
+	
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m3l3
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	
+	level.clockside = kills
+
+	thread Map_Guard
+	
+
+	// Uncomment if you want the minefield on
+	//thread scene7_minefields
+end
+
+
+
+
+
+Initiate_whats_needed:
+	
+	// Remove AI
+	removeclass actor
+	
+	// Remove ammo
+	removeclass AmmoEntity
+	
+	// level.farplane = 4200	
+	// $world farplane 4200	
+	// $world farplane_color (.62 .62 .61)
+	$world farplane_color ( 0.3 0.3 0.3 )
+	$world farplane 6000
+	
+	// Relocate some origins for the Halftracks Mg42
+	$playertarget_center.origin = ( 3368 4000 0 ) 
+	$playertarget_front1.origin = ( 2752 3420 -144 ) 
+	$playertarget_front2.origin = ( 3056 3888 -128 ) 
+	$playertarget_right1.origin = ( 3076 3960 48 ) 
+	$playertarget_right2.origin = ( 2352 3968 -144 ) 
+	$playertarget_left1.origin = ( 1568 3936 -128 ) 
+	$playertarget_left2.origin = ( 3592 4224 -128 ) 
+
+	// Relocate the 2 P47s to re-bomb the Halftrack :)
+	$bomberpath.origin = ( 1543 -966 1319 )
+	$t546.origin = ( 1820 -796 1195 )
+	$t547.origin = ( 2239 -270 1085 )
+	$t548.origin = ( 2623 215 957 )
+	$t549.origin = ( 3489 1038 842 )
+	$t550.origin = ( 4193 1853 711 )
+	$t551.origin = ( 4366 2380 635 )
+	$t552.origin = ( 4357 3258 620 )
+	$t553.origin = ( 4542 4021 721 )
+	$t554.origin = ( 5518 5560 1804 )
+	$t555.origin = ( 7571 6339 2032 )
+
+	// Bomb path
+	$bomber.origin = ( 4411 2832 545 )
+	$t556.origin = ( 4423 2852 439 )
+	$t557.origin = ( 4481 3109 199 )
+	$t558.origin = ( 4529 3285 -23 )
+	$t559.origin = ( 4587 3405 -228 ) 
+
+	// 2nd Planes path
+	$t560.origin = ( 3211 2419 636 )
+	$t561.origin = ( 3041 1898 716 )
+	$t562.origin = ( 3472 3299 875 )
+	$t563.origin = ( 3678 4069 1177 )
+	$t564.origin = ( 6419 6387 2040 )
+	$t565.origin = ( 4638 5592 1812 )
+	$t566.origin = ( 2337 1086 850 )
+	$t567.origin = ( 1471 263 965 )
+	$t568.origin = ( 668 -748 1203 )
+	$t569.origin = ( 1087 -222 1093 )
+
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1	
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1 
+
+	$exploder remove 
+	$exploderchunk remove 
+
+	// Use this as Battlefield junk for Stage 2
+	$scene1_dead_panzer.origin = ( -4470.12 -3081.72 -175.88 )
+	$scene1_dead_panzer.angles = ( 3 39 0 )
+
+	// Its collision
+	$scene1_dead_panzer_mask.origin = $scene1_dead_panzer.origin
+	$scene1_dead_panzer_mask.angles = $scene1_dead_panzer.angles
+
+	$scene4_tank.origin = ( 2910.91 1514.95 -276.96 )
+	$scene4_tank.angles = ( -7.35 47.67 0.00 )
+
+	// Set its collision
+	$scene4_tank_barrel_collision notsolid
+	$scene4_tank setcollisionentity $tigertank_mask
+
+	$tigertank_mask notsolid
+
+	$scene4_tank.gun = $scene4_tank QueryTurretSlotEntity 0
+	$scene4_tank.gun setaimtarget $scene4_tankshot1_trigger
+
+	$scene4_tank nodamage
+
+	$scene4_tank loopsound tank_snd_idle
+
+	// Relocate the Halftrack to the street
+	$halftrack.origin = ( 4568 3412 -259 )
+	$halftrack.angles = ( 0 150 0 )
+	$halftrack setcollisionentity $halftrack_mask
+
+	// Set Halftrack up with health bit
+	$halftrack thread global/vehicles_thinkers.scr::enemy_half-trak_think
+	$halftrack.health = 300
+	$halftrack attachmodel "vehicles/sdkfz_shield.tik" "shield" 1.5 "halftrack_gunnershield"
+	$halftrack_gunnershield.angles = (0 270 0)
+
+	$scene7_mg1 maxyawoffset 45
+	$scene7_mg1 pitchcaps (0 5 0)
+
+	$scene7_mg4 maxyawoffset 45
+	$scene7_mg4 pitchcaps (0 5 0)
+
+	$scene7_mg5 maxyawoffset 45
+	$scene7_mg5 pitchcaps (0 5 0)
+
+	$scene0_destroyed_flak88 exec global/loopsound.scr fire_med
+
+	$scene0_panzerschreck remove
+	$scene0_shell1 remove
+	$scene0_shell2 remove
+	$scene0_shell3 remove
+	$scene0_shell4 remove
+	$scene0_shell5 remove
+	$scene0_shell6 remove
+	$scene0_shell7 remove
+
+	$scene4_tank_radiusdamage_source remove
+
+	$scene7_nebelwerfer1_weaponmask.origin = $scene7_nebelwerfer1.origin
+	$scene7_nebelwerfer2_weaponmask.origin = $scene7_nebelwerfer2.origin
+	$scene7_nebelwerfer3_weaponmask.origin = $scene7_nebelwerfer3.origin
+	$scene7_nebelwerfer4_weaponmask.origin = $scene7_nebelwerfer4.origin
+
+	$scene7_nebelwerfer1_weaponmask.angles = $scene7_nebelwerfer1.angles
+	$scene7_nebelwerfer2_weaponmask.angles = $scene7_nebelwerfer2.angles
+	$scene7_nebelwerfer3_weaponmask.angles = $scene7_nebelwerfer3.angles
+	$scene7_nebelwerfer4_weaponmask.angles = $scene7_nebelwerfer4.angles
+
+	$scene7_nebelwerfer1 nodamage	
+	$scene7_nebelwerfer2 nodamage
+	$scene7_nebelwerfer3 nodamage
+	$scene7_nebelwerfer4 nodamage
+
+	$scene7_solid_bombpoint1 show
+	$scene7_nebelwerfer1_destroyed remove
+	$scene7_solid_bombpoint2 show
+	$scene7_nebelwerfer2_destroyed remove
+	$scene7_solid_bombpoint3 show
+	$scene7_nebelwerfer3_destroyed remove
+	$scene7_solid_bombpoint4 show
+	$scene7_nebelwerfer4_destroyed remove
+
+	thread global/bomber.scr::main	
+
+	local.master = spawn scriptmaster
+	local.master aliascache tank_snd_idle sound/vehicle/veh_tank_idle1.wav soundparms 0.5 0.0 0.9 0.0 800 4000 auto streamed maps "m dm obj"
+	local.master aliascache m3l2_first_airstrike sound/vehicle/plane4.wav soundparms 1.5 0.0 1.0 0.0 10000 16000 weapon streamed maps "m dm moh obj train"
+	local.master aliascache m3l2_second_airstrike sound/vehicle/plane4.wav soundparms 1.5 0.0 1.0 0.0 10000 16000 weapon streamed maps "m dm moh obj train"
+	local.master aliascache drop_bomb6 sound/weapons/explo/Exp_LeadIn_11.wav soundparms 0.9 0.2 0.7 0.5 160 9000 auto loaded maps "m dm moh obj train"
+	local.master aliascache drop_bomb7 sound/weapons/explo/Exp_LeadIn_12.wav soundparms 0.9 0.2 0.7 0.5 160 9000 auto loaded maps "m dm moh obj train"
+	local.master aliascache drop_bomb8 sound/weapons/explo/Exp_LeadIn_13.wav soundparms 0.9 0.2 0.7 0.5 160 9000 auto loaded maps "m dm moh obj train"
+
+
+
+	// Plank of wood mod (unused) - enable if you like - near where tank blew holes in the wall :)
+
+	// spawn func_beam "targetname" "plank" origin ( 4467.67 1347.27 -307.42 )  endpoint ( 4772.31 1339.58 -135.88 ) maxoffset 1
+	// $plank.scale = 5
+	// $plank shader ("textures/general_structure/woodgate")
+	// $plank numsegments 1
+	
+
+	// plank of wood mods solid bit
+
+	// spawn script_object "targetname" "solidbit"
+	// $solidbit.origin = ( 4467.67 1347.27 -307.42 )
+	// $solidbit setsize ( -5 -3 0 ) ( 5 3 250 )
+	// $solidbit.angles = ( 45 0 0 ) 
+	// $solidbit solid
+	// $solidbit nodamage
+
+
+	// Uncomment if you want the Halftrack to fire at preset targets  ;)
+	$halftrack.mg42 thread halftrack_mg_targeting 
+
+end
+
+
+scene7_minefields:
+
+	thread global/minefield.scr::minefield_setup
+end
+
+
+
+
+Map_Guard:
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( 2561.14 1418.73 -511.88 ) 
+	$Killah setsize ( -9999 -9999 -100 ) ( 9999 9999 10 )
+	$Killah setthread die
+	$Killah message "Play fair!"
+end
+
+die:
+	local.punk = parm.other
+	local.punk kill
+end	
+
+
+halftrack_mg_targeting:
+
+	
+	// half track relocated targets
+
+	$playertarget_center.origin = ( 3368 4000 0 ) 
+	$playertarget_front1.origin = ( 2752 3420 -144 ) 
+	$playertarget_front2.origin = ( 3056 3888 -128 ) 
+	$playertarget_right1.origin = ( 3076 3960 48 ) 
+	$playertarget_right2.origin = ( 2352 3968 -144 ) 
+	$playertarget_left1.origin = ( 1568 3936 -128 ) 
+	$playertarget_left2.origin = ( 3592 4224 -128 )	
+
+	if !(isAlive $halftrack)
+	end
+
+	self maxyawoffset 55
+	self bulletdamage 5 // Just for show this 1 so less damage ;)
+	self bulletspread 90 90 
+	self startfiring		
+	
+	self setaimtarget $playertarget_front1
+	wait 1.25 		
+	if !(isAlive $halftrack)
+	end
+				
+	self setaimtarget $playertarget_front2
+	wait 0.75 	
+	if !(isAlive $halftrack)
+	end
+		
+	self setaimtarget $playertarget_right1
+	wait 2.2 	
+	if !(isAlive $halftrack)
+	end
+
+	self setaimtarget $playertarget_right2
+	wait 1.4 	
+	if !(isAlive $halftrack)
+	end
+
+	self setaimtarget $playertarget_left1
+	wait 1.8 	
+	if !(isAlive $halftrack)
+	end
+
+	self setaimtarget $playertarget_left2
+	wait 1.6 	
+	if !(isAlive $halftrack)
+	end
+
+	self setaimtarget $playertarget_center
+	wait 1.6 	
+	if !(isAlive $halftrack)
+	end
+
+	self stopfiring
+
+	wait 15
+		
+	if !(isAlive $halftrack)
+	end
+	
+	goto halftrack_mg_targeting
+end	
+
+trigger_bomber:
+end
+
+
+
+bomb_explodes:
+	
+	$halftrack.health = 1
+	radiusdamage ( ($halftrack.origin) + (0 0 16) ) 200 200
+	wait 2
+	$bomber playsound dfr_m3l3_add10 
+end
+
+
+
+tdm_spawns:
+
+	local.allies1 = spawn info_player_allied targetname alh
+	local.allies1.angle = -3
+	local.allies1.origin = ( -276 5753 -90 )
+
+	local.allies2 = spawn info_player_allied targetname alh
+	local.allies2.angle = -22
+	local.allies2.origin = ( 146 5868 -100 )
+
+	local.allies3 = spawn info_player_allied targetname alh
+	local.allies3.angle = -52
+	local.allies3.origin = ( 766 5687 -120 )
+
+	local.allies4 = spawn info_player_allied targetname al2
+	local.allies4.origin = ( 2224 4231 -150 )
+	local.allies4.angle = -90 //ok
+
+	local.allies5 = spawn info_player_allied targetname al2
+	local.allies5.origin = ( 2760 3080 -173 )
+	local.allies5.angle = 90 //ok
+
+	local.allies6 = spawn info_player_allied targetname al3
+	local.allies6.origin = ( 5522 2926 -250 )
+	local.allies6.angle = -174 //ok
+
+	local.allies7 = spawn info_player_allied targetname al3
+	local.allies7.origin = ( 4178 2303 -200 )
+	local.allies7.angle = 0 //ok
+
+	local.allies8 = spawn info_player_allied targetname al4
+	local.allies8.origin = ( 3526 2707 -190 )
+	local.allies8.angle = -90 //ok
+
+	local.allies9 = spawn info_player_allied targetname al4
+	local.allies9.origin = ( 3500 1136 -200 )
+	local.allies9.angle = 146 //ok
+
+	local.allies10 = spawn info_player_allied targetname al5
+	local.allies10.origin = ( 3053 111 -55 )
+	local.allies10.angle = -36 //ok
+
+	local.allies11 = spawn info_player_allied targetname al5
+	local.allies11.origin = ( 4196 -468 -280 )
+	local.allies11.angle = -90 //ok
+
+	local.allies12 = spawn info_player_allied targetname al6
+	local.allies12.origin = ( 5453 -3043 -300 )
+	local.allies12.angle = 180 //ok
+
+	local.allies13 = spawn info_player_allied targetname al6
+	local.allies13.origin = ( 4200 -1000 -250 )
+	local.allies13.angle = -102 //ok
+
+	local.allies14 = spawn info_player_allied targetname al7
+	local.allies14.origin = ( 1525 -2121 -200 )
+	local.allies14.angle = -113 //ok
+
+	local.allies15 = spawn info_player_allied targetname al7
+	local.allies15.origin = ( 1257 -2780 -200 )
+	local.allies15.angle = 118 //ok
+
+	local.allies16 = spawn info_player_allied targetname al8
+	local.allies16.origin = ( -4142 -1704 -200 )
+	local.allies16.angle = -90 //ok
+
+	local.allies17 = spawn info_player_allied targetname al8
+	local.allies17.origin = ( -1514 -2757 -100 )
+	local.allies17.angle = -130 //ok
+
+	local.allies18 = spawn info_player_allied targetname al9
+	local.allies18.origin = ( -1811 -4459 -100 )
+	local.allies18.angle = -180 //ok
+
+	local.allies19 = spawn info_player_allied targetname al9
+	local.allies19.origin = ( -6016 -4100 -80 )
+	local.allies19.angle = -76 //ok
+
+	local.allies19 = spawn info_player_allied targetname al9
+	local.allies19.origin = ( -3192 -4400 -50 )
+	local.allies19.angle = -144 //ok
+
+	///////////////////////////////////////////////////////////axis
+
+	local.axis1 = spawn info_player_axis targetname axh
+	local.axis1.angle = -45
+	local.axis1.origin = ( -5907 -6302 -53 )
+
+	local.axis2 = spawn info_player_axis targetname axh
+	local.axis2.origin = ( -5227 -6593 -53 )
+	local.axis2.angle = -138
+
+	local.axis3 = spawn info_player_axis targetname axh
+	local.axis3.origin = ( -3300 -6800 60 )
+	local.axis3.angle = 92 //ok
+
+	local.axis4 = spawn info_player_axis targetname ax2
+	local.axis4.origin = ( -3380 -1860 -190 )
+	local.axis4.angle = 2 //ok
+
+	local.axis5 = spawn info_player_axis targetname ax2
+	local.axis5.origin = ( -1435 -3378 -90 )
+	local.axis5.angle = 106 //ok
+
+	local.axis6 = spawn info_player_axis targetname ax3
+	local.axis6.origin = ( -271 -544 -210 )
+	local.axis6.angle = -41 //ok
+
+	local.axis7 = spawn info_player_axis targetname ax3
+	local.axis7.origin = ( -37 -991 -230 )
+	local.axis7.angle = -30
+
+	local.axis8 = spawn info_player_axis targetname ax4
+	local.axis8.origin = ( 1641 -2430 -200 )
+	local.axis8.angle = -0 //ok
+
+	local.axis9 = spawn info_player_axis targetname ax4
+	local.axis9.origin = ( 4522 -3605 -280 )
+	local.axis9.angle = 90 //ok
+
+	local.axis10 = spawn info_player_axis targetname ax5
+	local.axis10.origin = ( 5134 -790 -300 )
+	local.axis10.angle = 95 //ok
+
+	local.axis11 = spawn info_player_axis targetname ax5
+	local.axis11.origin = ( 4678 -483 -270 )
+	local.axis11.angle = 178 //ok
+
+	local.axis12 = spawn info_player_axis targetname ax6
+	local.axis12.origin = ( 2756 1897 -210 )
+	local.axis12.angle = -24 //ok
+
+	local.axis13 = spawn info_player_axis targetname ax6
+	local.axis13.origin = ( 3375 1143 -200 )
+	local.axis13.angle = 60 //ok
+
+	local.axis14 = spawn info_player_axis targetname ax7
+	local.axis14.origin = ( 4274 2191 -195 )
+	local.axis14.angle = -41 //ok
+
+	local.axis15 = spawn info_player_axis targetname ax7
+	local.axis15.origin = ( 5760 1745 -230 )
+	local.axis15.angle = -180 //ok
+
+	local.axis16 = spawn info_player_axis targetname ax8
+	local.axis16.origin = ( 3527 2905 -190 )
+	local.axis16.angle = 88 //ok
+
+	local.axis17 = spawn info_player_axis targetname ax8
+	local.axis17.origin = ( 3081 4234 30 )
+	local.axis17.angle = -90 //ok
+
+	local.axis18 = spawn info_player_axis targetname ax9
+	local.axis18.origin = ( 1043 4251 -110 )
+	local.axis18.angle = -0
+
+	local.axis19 = spawn info_player_axis targetname ax9
+	local.axis18.origin = ( 2445 4766 -140 )
+	local.axis18.angle = -180	
+	
+	local.axis19 = spawn info_player_axis targetname ax9
+	local.axis18.origin = ( 2191 4178 -150 )
+	local.axis18.angle = 166
+
+end
+
+
+
+
+
+
+Stage_Timer:
+
+	wait 58
+
+	// Initiate the Relocated P-47s that takes out the Halftrack :)
+
+	thread global/bomber.scr::bomb 1
+	wait 1
+	$bomberplane1 playsound m3l2_first_airstrike
+
+	thread global/bomber.scr::bomb 2
+	wait 1
+	$bomberplane2 playsound m3l2_second_airstrike
+
+	// wait 388 
+
+	// $X1 disablespawn
+	// $X2 disablespawn
+	// $X3 disablespawn
+	// $X4 disablespawn
+	// $X5 disablespawn
+	// $X6 disablespawn
+	// $X7 disablespawn
+	// $X8 disablespawn
+	// $X9 disablespawn
+	// $X10 disablespawn
+	// $X11 disablespawn
+	// $X12 disablespawn
+	// $X13 disablespawn
+	// $X14 disablespawn
+	// $X15 disablespawn
+
+	// $A1 disablespawn
+	// $A2 disablespawn
+	// $A3 disablespawn
+	// $A4 disablespawn
+	// $A5 disablespawn
+	// $A6 disablespawn
+	// $A7 disablespawn
+	// $A8 disablespawn
+	// $A9 disablespawn
+	// $A10 disablespawn
+	// $A11 disablespawn
+	// $A12 disablespawn
+	// $A13 disablespawn
+	// $A14 disablespawn
+	// $A15 disablespawn
+
+	// $XX1 enablespawn
+	// $XX2 enablespawn
+	// $XX3 enablespawn
+	// $XX4 enablespawn
+	// $XX5 enablespawn
+	// $XX6 enablespawn
+	// $XX7 enablespawn
+	// $XX8 enablespawn
+	// $XX9 enablespawn
+	// $XX10 enablespawn
+	// $XX11 enablespawn
+	// $XX12 enablespawn
+	// $XX13 enablespawn
+	// $XX14 enablespawn
+	// $XX15 enablespawn
+
+	// $AA1 enablespawn
+	// $AA2 enablespawn
+	// $AA3 enablespawn
+	// $AA4 enablespawn
+	// $AA5 enablespawn
+	// $AA6 enablespawn
+	// $AA7 enablespawn
+	// $AA8 enablespawn
+	// $AA9 enablespawn
+	// $AA10 enablespawn
+	// $AA11 enablespawn
+	// $AA12 enablespawn
+	// $AA13 enablespawn
+	// $AA14 enablespawn
+	// $AA15 enablespawn
+
+	// Relocate this tank for show/cover in Stage 2
+	// $scene4_tank.origin = ( -4632.10 -6405.15 -50.30 )
+	// $scene4_tank.angle = 111
+
+	// $player respawn
+
+	// local.messagetosay = "S T A G E  2 ...  T H E  B A T T L E F I E L D "
+	// thread scrollMsg local.messagetosay
+
+end
+
+
+
+
+ffa_spawns: 
+
+	spawn info_player_deathmatch "origin" "2201.55 -2803.98 -247.88" "angle" "63"
+	spawn info_player_deathmatch "origin" "4047.13 -879.13 -332.53" "angle" "-64"
+	spawn info_player_deathmatch "origin" "5579.18 -2977.96 -368.85" "angle" "98"
+	spawn info_player_deathmatch "origin" "3010.44 -443.81 -351.59" "angle" "-54"
+	spawn info_player_deathmatch "origin" "3471.13 2736.88 -279.09" "angle" "-88"
+
+	spawn info_player_deathmatch "origin" "4448.87 1792.88 -271.87" "angle" "-161"
+	spawn info_player_deathmatch "origin" "5552.87 2152.88 -303.88" "angle" "-139"
+	spawn info_player_deathmatch "origin" "5433.62 3161.92 -341.63" "angle" "-150"
+	spawn info_player_deathmatch "origin" "4327.87 4321.51 -242.30" "angle" "-89"
+	spawn info_player_deathmatch "origin" "3568.88 2783.13 -263.50" "angle" "95"
+
+	spawn info_player_deathmatch "origin" "3176.88 3983.13 -39.88" "angle" "157"
+	spawn info_player_deathmatch "origin" "2425.45 4877.13 -206.03" "angle" "-45"
+	spawn info_player_deathmatch "origin" "1495.16 3046.49 -229.43" "angle" "-7"
+	spawn info_player_deathmatch "origin" "3168.87 3077.64 -247.88" "angle" "-168"
+	spawn info_player_deathmatch "origin" "4592.87 -3696.87 -353.88" "angle" "124"
+end
+
+
+
+// End some labels
+scene4_tank_initialize:
+end
+scene4_tank_sequence:
+end
+scene7_mgspawn3_terminate:
+end
+scene7_mgspawn2_terminate:
+end
+scene7_neb4_terminate:
+end
+scene7_neb3_terminate:
+end
+scene7_neb2_terminate:
+end
+scene7_bombplant4:
+end
+scene7_bombplant3:
+end
+scene7_bombplant2:
+end
+scene7_bombplant1:
+end
+scene7_neb1_terminate:
+end
+scene4_tank_feedback:
+end
+scene4_tank_death:
+end
+scene4_tank_hint:
+end
+scene4_tank_move local.path:
+end
+scene4_drive_path local.path local.speed:
+end
+scene4_tank_targeting:
+end
+scene4_tank_attack1:
+end
+scene4_tank_attack2:
+end
+scene4_tank_attack3:
+end
+scene4_tank_attack4:
+end
+scene4_tank_attack5:
+end
+scene4_tank_shoot_target local.targetpoint:
+end
+scene4_tank_shoot_player local.targetplayer:
+end
+scene4_manualgun1:
+end
+scene4_manualgun1_targeting local.gunner:
+end
+farplane_near:
+end
+scene3_spawn5_terminate:
+end
+scene7_spawn3_terminate:
+end
+scene7_spawn2_terminate:
+end
+scene4_spawn1_terminate:
+end
+scene4_panzerschreck_trigger:
+end
+scene1_waveterminate_trigger:
+end
+scene7_mgspawn5_terminate:
+end
+scene7_mgspawn4_terminate:
+end
+scene7_mgspawn1_terminate:
+end
+scene6_mgspawn3_terminate:
+end
+scene6_mgspawn2_terminate:
+end
+scene6_mgspawn1_terminate:
+end
+scene6_spawn2_terminate:
+end
+scene6_spawn1_terminate:
+end
+scene4_spawn4_terminate:
+end
+scene4_spawn3_terminate:
+end
+scene4_spawn2_terminate:
+end
+scene3_spawn4_terminate:
+end
+scene3_sniperboardspawn:
+end
+scene3_spawn3_terminate:
+end
+scene3_spawn2_terminate:
+end
+scene3_spawn1_terminate:
+end
+scene1:
+end
+scene3:
+end
+scene7:
+end
+scene4:
+end
+scene4_mgfodderspawn_deactivate:
+end
+scene6:
+end
+scene0_panzerschreck_trigger:
+end
+scene7_defender_spawn1:
+end
+scene7_spawn1_terminate:
+end
+scene4_team_regroup:
+end
+farplane_far:
+end
+scene4_captain_hint:
+end
+// Blergh
+
+
+
+scrollMsg local.messagetosay:
+
+	huddraw_align 223 left center
+	huddraw_font 223 facfont-20
+	huddraw_alpha 223 1
+
+	huddraw_color 223 1 1 1
+
+	huddraw_rect 223 20 150 200 40
+	huddraw_string 223 local.messagetosay
+
+	for(local.i=1;local.i<=local.messagetosay.size;local.i++)
+	{
+	local.x = ""
+	for(local.z=1;local.z<=(local.messagetosay.size - local.i);local.z++)
+	{
+	local.x = (local.x + " ")
+	}
+	local.tmpstring4 = ""
+	for (local.o=0;local.o<local.i;local.o++) local.tmpstring4 = local.tmpstring4 + local.messagetosay[local.o]
+	huddraw_string 223 (local.x + local.tmpstring4)
+	wait .03
+	}
+	wait 3
+	for (local.o=1;local.o>0;local.o=local.o - 0.01)
+	{
+	huddraw_alpha 223 local.o
+	wait 0.05
+	}
+	huddraw_alpha 223 0 
+end
+
+setup:
+	$axh enablespawn
+	$alh enablespawn
+
+	$ax9 disablespawn
+	$al2 disablespawn
+	$ax8 disablespawn
+	$al3 disablespawn
+	$ax7 disablespawn
+	$al4 disablespawn
+	$ax6 disablespawn
+	$al5 disablespawn
+	$ax5 disablespawn
+	$al6 disablespawn
+	$ax4 disablespawn
+	$al7 disablespawn
+	$ax3 disablespawn
+	$al8 disablespawn
+	$ax2 disablespawn
+	$al9 disablespawn
+	level.alliesscore = 0
+	level.axisscore = 0
+	level.sflag = 1
+	level.sflagx = 1
+end
+
+triggers:
+
+// Not needed ?
+// local.sptrg = spawn trigger_multipleall
+// local.sptrg.origin = ( -4023 2216 -165 )
+// local.sptrg setsize ( -200 -100 -100 ) ( 200 100 100 )
+// local.sptrg targetname sptrgstart
+
+//not needed ?
+// local.sptrg = spawn trigger_multipleall
+// local.sptrg.origin = ( -3887 2945 -173 )
+// local.sptrg setsize ( -704 -2055 -100 ) ( 704 2055 500 )
+// local.sptrg targetname sptrg1
+
+local.sptrg = spawn trigger_multipleall //OK
+local.sptrg.origin = ( 1886 4000 -173 )
+local.sptrg setsize ( -20 -1300 -100 ) ( 20 1030 500 )
+local.sptrg targetname sptrg2
+
+local.sptrg = spawn trigger_multipleall //OK
+local.sptrg.origin = ( 4300 3580 -180 )
+local.sptrg setsize ( -20 -580 -100 ) ( 20 1000 500 )
+local.sptrg targetname sptrg3
+
+local.sptrg = spawn trigger_multipleall //OK
+local.sptrg.origin = ( 4013 1921 -173 )
+local.sptrg setsize ( -20 -330 -100 ) ( 20 330 500 )
+local.sptrg targetname sptrg4
+
+local.sptrg = spawn trigger_multipleall //OK
+local.sptrg.origin = ( 3648 202 -260 )
+local.sptrg setsize ( -700 -20 -100 ) ( 850 20 500 )
+local.sptrg targetname sptrg5
+
+local.sptrg = spawn trigger_multipleall //OK
+local.sptrg.origin = ( 5280 -2098 -270 )
+local.sptrg setsize ( -20 -1050 -100 ) ( 20 700 500 )
+local.sptrg targetname sptrg6
+
+local.sptrg = spawn trigger_multipleall //OK
+local.sptrg.origin = ( 2055 -2428 -380 )
+local.sptrg setsize ( -20 -2150 -100 ) ( 20 2000 500 )
+local.sptrg targetname sptrg7
+
+local.sptrg = spawn trigger_multipleall //OK
+local.sptrg.origin = ( -1812 -1471 -125 )
+local.sptrg setsize ( -330 -20 -100 ) ( 300 20 500 )
+local.sptrg targetname sptrg8
+
+local.sptrg = spawn trigger_multipleall //OK
+local.sptrg.origin = ( -4126 -4348 -70 )
+local.sptrg setsize ( -2100 -20 -100 ) ( 2900 20 500 )
+local.sptrg targetname sptrg9
+
+// Allies score
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( -5000 -6400 -10 )
+local.sptrg setsize ( -2250 -20 -100 ) ( 4000 20 500 )
+//local.sptrg.origin = ( 2848 -3977 -173 )
+//local.sptrg setsize ( -722 -794 -100 ) ( 722 794 500 )
+local.sptrg targetname sptrg10
+
+level.avatarallies = spawn func_beam
+level.avatarallies.origin = ( 149 5506 50 )
+level.avatarallies.angles = ( 0 0 0 )
+level.avatarallies endpoint ( 149 6036 50 )
+level.avatarallies minoffset 1.0
+level.avatarallies maxoffset 1.0
+level.avatarallies color ( 1 0 0 )
+level.avatarallies scale 25
+level.avatarallies tileshader ("textures/hud/allies.tga")
+level.avatarallies numsegments 1
+level.avatarallies activate
+
+// Trigger to prevent axis to score with planes
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 1501 4870 -20 )
+local.sptrg setsize ( -400 -100 -100 ) ( 400 100 4000 )
+local.sptrg setthread axis_detected
+
+////////////////////////////////////////////
+
+// Trigger to prevent allies to score with planes and jeeps
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( -5000 -5140 -10 )
+local.sptrg setsize ( -2250 -1000 -100 ) ( 4000 200 4000 )
+local.sptrg setthread allied_detected
+
+
+level.avataraxis = spawn func_beam
+level.avataraxis.origin = ( -7250 -6400 160 )
+level.avataraxis.angles = ( 0 0 0 )
+level.avataraxis endpoint ( 1000 -6400 160 )
+level.avataraxis minoffset 1.0
+level.avataraxis maxoffset 1.0
+level.avataraxis color ( 1 0 0 )
+level.avataraxis scale 25
+level.avataraxis tileshader ("textures/hud/axis.tga")
+level.avataraxis numsegments 1
+level.avataraxis activate
+
+// Axis score
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 149 5736 -100 )
+local.sptrg setsize ( -20 -230 -100 ) ( 20 300 500 )
+//local.sptrg.origin = ( -3887 2945 -173 )
+//local.sptrg setsize ( -704 -2055 -100 ) ( 704 2055 500 )
+local.sptrg targetname sptrg10x
+
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 1886 4000 -173 )
+local.sptrg setsize ( -20 -1300 -100 ) ( 20 1030 500 )
+local.sptrg targetname sptrg9x
+
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 4300 3580 -180 )
+local.sptrg setsize ( -20 -580 -100 ) ( 20 1000 500 )
+local.sptrg targetname sptrg8x
+
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 4013 1921 -173 )
+local.sptrg setsize ( -20 -330 -100 ) ( 20 330 500 )
+local.sptrg targetname sptrg7x
+
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 3648 202 -260 )
+local.sptrg setsize ( -700 -20 -100 ) ( 850 20 500 )
+local.sptrg targetname sptrg6x
+
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 5280 -2098 -270 )
+local.sptrg setsize ( -20 -1050 -100 ) ( 20 700 500 )
+local.sptrg targetname sptrg5x
+
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 2055 -2428 -380 )
+local.sptrg setsize ( -20 -2150 -100 ) ( 20 2000 500 )
+local.sptrg targetname sptrg4x
+
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( -1812 -1471 -125 )
+local.sptrg setsize ( -330 -20 -100 ) ( 300 20 500 )
+local.sptrg targetname sptrg3x
+
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( -4126 -4348 -70 )
+local.sptrg setsize ( -2100 -20 -100 ) ( 2900 20 500 )
+local.sptrg targetname sptrg2x
+
+// Not needed ?
+// local.sptrg = spawn trigger_multipleall
+// local.sptrg.origin = ( 2848 -3977 -173 )
+// local.sptrg setsize ( -722 -794 -100 ) ( 722 794 500 )
+// local.sptrg targetname sptrg1x
+
+// Allies score
+local.edatrg = spawn trigger_multipleall
+local.edatrg.origin = ( -5000 -6400 -10 )
+local.edatrg setsize ( -2250 -20 -100 ) ( 4000 20 500 )
+local.edatrg targetname endtrgal
+
+// exec global/showbox.scr::show ( 2196 -3489 -113 ) 80 160 80 ( 0 0 1)
+
+// Axis score
+local.edxtrg = spawn trigger_multipleall
+local.edxtrg.origin = ( 149 5736 -100 )
+local.edxtrg setsize ( -20 -230 -100 ) ( 20 300 500 )
+local.edxtrg targetname endtrgax
+
+// exec global/showbox.scr::show ( -3220 3366 -173 ) 80 4000 80 ( 1 0 0)
+
+if(getcvar "push" == "1")
+  {
+  thread pushtrgcheck2
+  thread pushtrgcheck2x
+  thread messagepush
+  }
+  else
+  {
+  thread areastrgcheck2
+  thread areastrgcheck2x
+  thread messagepass
+  }
+
+thread endtriggeral
+thread endtriggerax
+// thread triggerstart
+
+end
+
+
+endtriggeral:
+while(1)
+{
+$endtrgal waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+   local.player = parm.other 
+   local.player tele ( 1166 5311 -130 ) 
+   local.player.angle = -57
+   // local.player.killcount = ((local.player.killcount)+5)
+   local.player addkills 5
+   local.player iprint "You've won 5 points for scoring !" 1
+   level.alliesscore++
+   thread Scorethread
+   iprintlnbold "Allies Score !"
+   if(level.resetals == 1)
+	{
+   	level.resetals = 0
+	}
+  }
+wait .5
+}
+end
+
+endtriggerax:
+while(1)
+{
+$endtrgax waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+   local.player = parm.other 
+   local.player tele ( -4909 -6563 45 )
+   local.player.angle = 59
+   // local.player.killcount = ((local.player.killcount)+5)
+   local.player addkills 5
+   local.player iprint "You've won 5 points for scoring !" 1
+   level.axisscore++
+   thread Scorethread
+   iprintlnbold "Axis Score !"
+   if(level.resetaxs == 1)
+	{
+   	level.resetaxs = 0
+	}
+  }
+wait .5
+}
+end
+
+triggerstart:
+
+while(1)
+{
+$sptrgstart waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+   local.player = parm.other 
+   local.player tele ( 3123 -4126 -245 )
+  }
+
+wait .5
+}
+end
+
+end
+
+hudstuff:
+
+	while(1){
+
+//removing Team Balancer HUD ------>
+setcvar "urm_tb_teamshud" "0"
+  huddraw_alpha  101 0
+  huddraw_alpha  102 0
+  huddraw_alpha  103 0
+  huddraw_alpha  104 0
+  huddraw_alpha  105 0
+//<--------------------------------
+
+	wait .5
+
+	huddraw_virtualsize 200 1
+	huddraw_align  200 right top
+	huddraw_font   200 "verdana-12"
+	huddraw_rect   200 -100 57 200 14
+	huddraw_color  200 .85 .85 .10
+	huddraw_alpha  200 1.0
+	huddraw_string 200 "Gain Ground"
+
+	huddraw_virtualsize 201 1
+	huddraw_align  201 right top
+	huddraw_font   201 "verdana-12"
+	huddraw_rect   201 -100 67 200 14
+	huddraw_color  201 .85 .85 .10
+	huddraw_alpha  201 1.0
+	huddraw_string 201 "by <TWL>ViPER"
+	
+	huddraw_virtualsize 203 1
+	huddraw_shader 203 ("textures/hud/allies")
+	huddraw_align  203 right top
+	huddraw_rect   203 -100 85 14 14
+	huddraw_alpha  203 1.0
+
+	huddraw_virtualsize 205 1
+	huddraw_shader 205 ("textures/hud/axis")
+	huddraw_align  205 right top
+	huddraw_rect   205 -100 100 14 14
+	huddraw_alpha  205 1.0
+
+	huddraw_virtualsize 202 1
+	huddraw_align  202 right top
+	huddraw_font   202 "verdana-12"
+	huddraw_rect   202 -80 85 100 14
+	huddraw_color  202 0 1 1
+	huddraw_alpha  202 1.0
+	huddraw_string 202 ("points: " + level.alliesscore )
+
+	huddraw_virtualsize 204 1
+	huddraw_align  204 right top
+	huddraw_font   204 "verdana-12"
+	huddraw_rect   204 -80 100 100 14
+	huddraw_color  204 1 0 0
+	huddraw_alpha  204 1.0
+	huddraw_string 204 ("points: " + level.axisscore )
+
+	wait 1
+
+	huddraw_virtualsize 206 1
+	huddraw_align  206 right top
+	huddraw_font   206 "verdana-12"
+	huddraw_rect   206 -100 117 200 14
+	huddraw_color  206 0 1 0
+	huddraw_alpha  206 1.0
+	huddraw_string 206 ("Battline        Allies")
+
+	huddraw_virtualsize 219 1
+	huddraw_align  219 right top
+	huddraw_font   219 "verdana-12"
+	huddraw_rect   219 -40 250 200 14
+	huddraw_color  219 0 1 0
+	huddraw_alpha  219 1.0
+	huddraw_string 219 (" Axis")
+
+	huddraw_virtualsize 207 1
+	huddraw_align  207 right bottom
+	huddraw_font   207 "verdana-12"
+	huddraw_rect   207 -275 -12 100 14
+	huddraw_color  207 .90 .90 .90
+	huddraw_alpha  207 1.0
+	huddraw_string 207 "Strategic Mods by: <TWL>ViPER"
+
+	wait 1
+
+	huddraw_virtualsize 220 1
+	huddraw_shader 220 ("textures/hud/allies")
+	huddraw_align  220 right top
+	huddraw_rect   220 -40 130 14 14
+
+	huddraw_virtualsize 221 1
+	huddraw_shader 221 ("textures/hud/allies")
+	huddraw_align  221 right top
+	huddraw_rect   221 -40 145 14 14
+
+	huddraw_virtualsize 222 1
+	huddraw_shader 222 ("textures/hud/allies")
+	huddraw_align  222 right top
+	huddraw_rect   222 -40 160 14 14
+
+	huddraw_virtualsize 223 1
+	huddraw_shader 223 ("textures/hud/allies")
+	huddraw_align  223 right top
+	huddraw_rect   223 -40 175 14 14
+
+	huddraw_virtualsize 224 1
+	huddraw_shader 224 ("textures/hud/allies")
+	huddraw_align  224 right top
+	huddraw_rect   224 -40 190 14 14
+
+	huddraw_virtualsize 225 1
+	huddraw_shader 225 ("textures/hud/allies")
+	huddraw_align  225 right top
+	huddraw_rect   225 -40 205 14 14
+
+	huddraw_virtualsize 226 1
+	huddraw_shader 226 ("textures/hud/allies")
+	huddraw_align  226 right top
+	huddraw_rect   226 -40 220 14 14
+
+	huddraw_virtualsize 227 1
+	huddraw_shader 227 ("textures/hud/allies")
+	huddraw_align  227 right top
+	huddraw_rect   227 -40 235 14 14
+
+	wait 1
+
+	huddraw_virtualsize 230 1
+	huddraw_shader 230 ("textures/hud/axis")
+	huddraw_align  230 right top
+	huddraw_rect   230 -20 235 14 14
+
+	huddraw_virtualsize 231 1
+	huddraw_shader 231 ("textures/hud/axis")
+	huddraw_align  231 right top
+	huddraw_rect   231 -20 220 14 14
+
+	huddraw_virtualsize 232 1
+	huddraw_shader 232 ("textures/hud/axis")
+	huddraw_align  232 right top
+	huddraw_rect   232 -20 205 14 14
+
+	huddraw_virtualsize 233 1
+	huddraw_shader 233 ("textures/hud/axis")
+	huddraw_align  233 right top
+	huddraw_rect   233 -20 190 14 14
+
+	huddraw_virtualsize 234 1
+	huddraw_shader 234 ("textures/hud/axis")
+	huddraw_align  234 right top
+	huddraw_rect   234 -20 175 14 14
+
+	huddraw_virtualsize 235 1
+	huddraw_shader 235 ("textures/hud/axis")
+	huddraw_align  235 right top
+	huddraw_rect   235 -20 160 14 14
+
+	huddraw_virtualsize 236 1
+	huddraw_shader 236 ("textures/hud/axis")
+	huddraw_align  236 right top
+	huddraw_rect   236 -20 145 14 14
+
+	huddraw_virtualsize 237 1
+	huddraw_shader 237 ("textures/hud/axis")
+	huddraw_align  237 right top
+	huddraw_rect   237 -20 130 14 14
+
+
+	wait .5
+
+}
+
+end
+
+Scorethread:
+
+
+
+	setcvar "g_obj_alliedtext3" ("Allies: " + level.alliesscore)
+	setcvar "g_obj_axistext1" ("Axis: " + level.axisscore)
+	setcvar "g_obj_axistext2" ("Winning Team")
+
+	if(level.alliesscore > level.axisscore)
+		{
+		setcvar "g_obj_axistext3" ("is ALLIES")
+		}
+	else if(level.axisscore > level.alliesscore)
+		{
+		setcvar "g_obj_axistext3" ("is AXIS")
+		}
+	else
+		{
+		setcvar "g_obj_axistext3" ("it's a DRAW")
+		}
+
+	huddraw_virtualsize 202 1
+	huddraw_align  202 right top
+	huddraw_font   202 "verdana-12"
+	huddraw_rect   202 -80 85 100 14
+	huddraw_color  202 0 1 1
+	huddraw_alpha  202 1.0
+	huddraw_string 202 ("points: " + level.alliesscore )
+
+	huddraw_virtualsize 204 1
+	huddraw_align  204 right top
+	huddraw_font   204 "verdana-12"
+	huddraw_rect   204 -80 100 100 14
+	huddraw_color  204 1 0 0
+	huddraw_alpha  204 1.0
+	huddraw_string 204 ("points: " + level.axisscore )
+
+
+end
+
+//-----------------------------------------------------------------------------
+
+areastrgcheck2:
+
+while(1)
+{
+$sptrg2 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 2
+  goto areastrgcheck3
+  }
+
+wait 1
+}
+end
+
+areastrgcheck3:
+
+while(1)
+{
+
+$sptrg3 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 3
+  goto areastrgcheck4
+  }
+
+wait 1
+}
+end
+
+areastrgcheck4:
+
+while(1)
+{
+
+$sptrg4 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 4
+  goto areastrgcheck5
+  }
+
+wait 1
+}
+end
+
+areastrgcheck5:
+
+while(1)
+{
+
+$sptrg5 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 5
+  goto areastrgcheck6
+  }
+
+wait 1
+}
+end
+
+areastrgcheck6:
+
+while(1)
+{
+
+$sptrg6 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 6
+  goto areastrgcheck7
+  }
+
+wait 1
+}
+end
+
+areastrgcheck7:
+
+while(1)
+{
+
+$sptrg7 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 7
+  goto areastrgcheck8
+  }
+
+wait 1
+}
+end
+
+areastrgcheck8:
+
+while(1)
+{
+
+$sptrg8 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 8
+  goto areastrgcheck9
+  }
+
+wait 1
+}
+end
+
+areastrgcheck9:
+
+while(1)
+{
+
+$sptrg9 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 9
+  goto areastrgcheck10
+  }
+
+wait 1
+}
+
+areastrgcheck10:
+
+while(1)
+{
+
+$sptrg10 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 1
+  goto areastrgcheck2
+  }
+
+wait .4
+}
+
+end
+
+//-----------------------------------------------------------------------------
+
+areastrgcheck2x:
+
+while(1)
+{
+$sptrg2x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 2
+  goto areastrgcheck3x
+  }
+
+wait 1
+}
+end
+
+areastrgcheck3x:
+
+while(1)
+{
+
+$sptrg3x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 3
+  goto areastrgcheck4x
+  }
+
+wait 1
+}
+end
+
+areastrgcheck4x:
+
+while(1)
+{
+
+$sptrg4x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 4
+  goto areastrgcheck5x
+  }
+
+wait 1
+}
+end
+
+areastrgcheck5x:
+
+while(1)
+{
+
+$sptrg5x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 5
+  goto areastrgcheck6x
+  }
+
+wait 1
+}
+end
+
+areastrgcheck6x:
+
+while(1)
+{
+
+$sptrg6x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 6
+  goto areastrgcheck7x
+  }
+
+wait 1
+}
+end
+
+areastrgcheck7x:
+
+while(1)
+{
+
+$sptrg7x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 7
+  goto areastrgcheck8x
+  }
+
+wait 1
+}
+end
+
+areastrgcheck8x:
+
+while(1)
+{
+
+$sptrg8x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 8
+  goto areastrgcheck9x
+  }
+
+wait 1
+}
+end
+
+areastrgcheck9x:
+
+while(1)
+{
+
+$sptrg9x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 9
+  goto areastrgcheck10x
+  }
+
+wait 1
+}
+
+areastrgcheck10x:
+
+while(1)
+{
+
+$sptrg10x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 1
+  goto areastrgcheck2x
+  }
+
+wait .4
+}
+
+end
+
+//-----------------------------------------------------------------------------
+
+pushtrgcheck2:
+
+while(1)
+{
+$sptrg2 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 2
+  goto pushtrgcheck3
+  }
+  else
+  {
+  level.sflag = 1
+  wait 1
+  goto pushtrgcheck2
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck3:
+
+while(1)
+{
+$sptrg3 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 3
+  goto pushtrgcheck4
+  }
+  else
+  {
+  level.sflag = 1
+  wait 1
+  goto pushtrgcheck2
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck4:
+
+while(1)
+{
+
+$sptrg4 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 4
+  goto pushtrgcheck5
+  }
+  else
+  {
+  level.sflag = 2
+  wait 1
+  goto pushtrgcheck3
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck5:
+
+while(1)
+{
+
+$sptrg5 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 5
+  goto pushtrgcheck6
+  }
+  else
+  {
+  level.sflag = 3
+  wait 1
+  goto pushtrgcheck4
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck6:
+
+while(1)
+{
+
+$sptrg6 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 6
+  goto pushtrgcheck7
+  }
+  else
+  {
+  level.sflag = 4
+  wait 1
+  goto pushtrgcheck5
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck7:
+
+while(1)
+{
+
+$sptrg7 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 7
+  goto pushtrgcheck8
+  }
+  else
+  {
+  level.sflag = 5
+  wait 1
+  goto pushtrgcheck6
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck8:
+
+while(1)
+{
+
+$sptrg8 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 8
+  goto pushtrgcheck9
+  }
+  else
+  {
+  level.sflag = 6
+  wait 1
+  goto pushtrgcheck7
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck9:
+
+while(1)
+{
+
+$sptrg9 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 9
+  goto pushtrgcheck10
+  }
+  else
+  {
+  level.sflag = 7
+  wait 1
+  goto pushtrgcheck8
+  }
+
+wait 1
+}
+
+pushtrgcheck10:
+
+while(1)
+{
+
+$sptrg10 waittill trigger
+if(parm.other.dmteam == allies) 
+  { 
+  level.sflag = 1
+  goto pushtrgcheck2
+  }
+  else
+  {
+  level.sflag = 7
+  wait 1
+  goto pushtrgcheck8
+  }
+
+wait .4
+}
+
+end
+
+//-----------------------------------------------------------------------------
+
+pushtrgcheck2x:
+
+while(1)
+{
+$sptrg2x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 2
+  goto pushtrgcheck3x
+  }
+  else
+  {
+  level.sflagx = 1
+  wait 1
+  goto pushtrgcheck2x
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck3x:
+
+while(1)
+{
+$sptrg3x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 3
+  goto pushtrgcheck4x
+  }
+  else
+  {
+  level.sflagx = 1
+  wait 1
+  goto pushtrgcheck2x
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck4x:
+
+while(1)
+{
+
+$sptrg4x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 4
+  goto pushtrgcheck5x
+  }
+  else
+  {
+  level.sflagx = 2
+  wait 1
+  goto pushtrgcheck3x
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck5x:
+
+while(1)
+{
+
+$sptrg5x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 5
+  goto pushtrgcheck6x
+  }
+  else
+  {
+  level.sflagx = 3
+  wait 1
+  goto pushtrgcheck4x
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck6x:
+
+while(1)
+{
+
+$sptrg6x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 6
+  goto pushtrgcheck7x
+  }
+  else
+  {
+  level.sflagx = 4
+  wait 1
+  goto pushtrgcheck5x
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck7x:
+
+while(1)
+{
+
+$sptrg7x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 7
+  goto pushtrgcheck8x
+  }
+  else
+  {
+  level.sflagx = 5
+  wait 1
+  goto pushtrgcheck6x
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck8x:
+
+while(1)
+{
+
+$sptrg8x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 8
+  goto pushtrgcheck9x
+  }
+  else
+  {
+  level.sflagx = 6
+  wait 1
+  goto pushtrgcheck7x
+  }
+
+wait 1
+}
+end
+
+pushtrgcheck9x:
+
+while(1)
+{
+
+$sptrg9x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 9
+  goto pushtrgcheck10x
+  }
+  else
+  {
+  level.sflagx = 7
+  wait 1
+  goto pushtrgcheck8x
+  }
+
+wait 1
+}
+
+pushtrgcheck10x:
+
+while(1)
+{
+
+$sptrg10x waittill trigger
+if(parm.other.dmteam == axis) 
+  { 
+  level.sflagx = 1
+  goto pushtrgcheck2x
+  }
+  else
+  {
+  level.sflagx = 7
+  wait 1
+  goto pushtrgcheck8x
+  }
+
+wait .4
+}
+
+end
+
+//-----------------------------------------------------------------------------
+
+spawnswitch:
+while(1)
+{
+
+switch(level.sflag)  
+{ 
+case 1: 
+  $alh enablespawn
+  wait 1
+  $al2 disablespawn
+  $al3 disablespawn
+  $al4 disablespawn
+  $al5 disablespawn
+  $al6 disablespawn
+  $al7 disablespawn
+  $al8 disablespawn
+  $al9 disablespawn
+	huddraw_alpha  220 0
+	huddraw_alpha  221 0
+	huddraw_alpha  222 0
+	huddraw_alpha  223 0
+	huddraw_alpha  224 0
+	huddraw_alpha  225 0
+	huddraw_alpha  226 0
+	huddraw_alpha  227 0
+  ;break //
+case 2: 
+  $alh enablespawn
+  $al2 enablespawn
+  wait 1
+  $al3 disablespawn
+  $al4 disablespawn
+  $al5 disablespawn
+  $al6 disablespawn
+  $al7 disablespawn
+  $al8 disablespawn
+  $al9 disablespawn
+	huddraw_alpha  220 1.0
+	huddraw_alpha  221 0
+	huddraw_alpha  222 0
+	huddraw_alpha  223 0
+	huddraw_alpha  224 0
+	huddraw_alpha  225 0
+	huddraw_alpha  226 0
+	huddraw_alpha  227 0
+  ;break //
+case 3: 
+  $al2 enablespawn
+  $al3 enablespawn
+  wait 1
+  $alh disablespawn
+  $al4 disablespawn
+  $al5 disablespawn
+  $al6 disablespawn
+  $al7 disablespawn
+  $al8 disablespawn
+  $al9 disablespawn
+	huddraw_alpha  220 1.0
+	huddraw_alpha  221 1.0
+	huddraw_alpha  222 0
+	huddraw_alpha  223 0
+	huddraw_alpha  224 0
+	huddraw_alpha  225 0
+	huddraw_alpha  226 0
+	huddraw_alpha  227 0
+  ;break //
+case 4: 
+  $al3 enablespawn
+  $al4 enablespawn
+  wait 1
+  $alh disablespawn
+  $al2 disablespawn
+  $al5 disablespawn
+  $al6 disablespawn
+  $al7 disablespawn
+  $al8 disablespawn
+  $al9 disablespawn
+	huddraw_alpha  220 1.0
+	huddraw_alpha  221 1.0
+	huddraw_alpha  222 1.0
+	huddraw_alpha  223 0
+	huddraw_alpha  224 0
+	huddraw_alpha  225 0
+	huddraw_alpha  226 0
+	huddraw_alpha  227 0
+  ;break // 
+case 5: 
+  $al4 enablespawn
+  $al5 enablespawn
+  wait 1
+  $alh disablespawn
+  $al2 disablespawn
+  $al3 disablespawn
+  $al6 disablespawn
+  $al7 disablespawn
+  $al8 disablespawn
+  $al9 disablespawn
+	huddraw_alpha  220 1.0
+	huddraw_alpha  221 1.0
+	huddraw_alpha  222 1.0
+	huddraw_alpha  223 1.0
+	huddraw_alpha  224 0
+	huddraw_alpha  225 0
+	huddraw_alpha  226 0
+	huddraw_alpha  227 0
+  ;break //
+case 6: 
+  $al5 enablespawn
+  $al6 enablespawn
+  wait 1
+  $alh disablespawn
+  $al2 disablespawn
+  $al3 disablespawn
+  $al4 disablespawn
+  $al7 disablespawn
+  $al8 disablespawn
+  $al9 disablespawn
+	huddraw_alpha  220 1.0
+	huddraw_alpha  221 1.0
+	huddraw_alpha  222 1.0
+	huddraw_alpha  223 1.0
+	huddraw_alpha  224 1.0
+	huddraw_alpha  225 0
+	huddraw_alpha  226 0
+	huddraw_alpha  227 0
+  ;break //
+case 7: 
+  $al6 enablespawn
+  $al7 enablespawn
+  wait 1
+  $alh disablespawn
+  $al2 disablespawn
+  $al3 disablespawn
+  $al4 disablespawn
+  $al5 disablespawn
+  $al8 disablespawn
+  $al9 disablespawn
+	huddraw_alpha  220 1.0
+	huddraw_alpha  221 1.0
+	huddraw_alpha  222 1.0
+	huddraw_alpha  223 1.0
+	huddraw_alpha  224 1.0
+	huddraw_alpha  225 1.0
+	huddraw_alpha  226 0
+	huddraw_alpha  227 0
+  ;break //
+case 8: 
+  $al7 enablespawn
+  $al8 enablespawn
+  wait 1
+  $alh disablespawn
+  $al2 disablespawn
+  $al3 disablespawn
+  $al4 disablespawn
+  $al5 disablespawn
+  $al6 disablespawn
+  $al9 disablespawn
+	huddraw_alpha  220 1.0
+	huddraw_alpha  221 1.0
+	huddraw_alpha  222 1.0
+	huddraw_alpha  223 1.0
+	huddraw_alpha  224 1.0
+	huddraw_alpha  225 1.0
+	huddraw_alpha  226 1.0
+	huddraw_alpha  227 0
+  ;break //
+case 9: 
+  $al8 enablespawn
+  $al9 enablespawn
+  wait 1
+  $alh disablespawn
+  $al2 disablespawn
+  $al3 disablespawn
+  $al4 disablespawn
+  $al5 disablespawn
+  $al6 disablespawn
+  $al7 disablespawn
+	huddraw_alpha  220 1.0
+	huddraw_alpha  221 1.0
+	huddraw_alpha  222 1.0
+	huddraw_alpha  223 1.0
+	huddraw_alpha  224 1.0
+	huddraw_alpha  225 1.0
+	huddraw_alpha  226 1.0
+	huddraw_alpha  227 1.0
+  ;break //
+   } 
+
+wait 2
+
+//-----------------------------------------------------------------------------
+
+
+switch(level.sflagx)  
+{ 
+case 1: 
+  $axh enablespawn
+  wait 1
+  $ax2 disablespawn
+  $ax3 disablespawn
+  $ax4 disablespawn
+  $ax5 disablespawn
+  $ax6 disablespawn
+  $ax7 disablespawn
+  $ax8 disablespawn
+  $ax9 disablespawn
+	huddraw_alpha  230 0
+	huddraw_alpha  231 0
+	huddraw_alpha  232 0
+	huddraw_alpha  233 0
+	huddraw_alpha  234 0
+	huddraw_alpha  235 0
+	huddraw_alpha  236 0
+	huddraw_alpha  237 0
+  ;break //
+case 2: 
+  $axh enablespawn
+  $ax2 enablespawn
+  wait 1
+  $ax3 disablespawn
+  $ax4 disablespawn
+  $ax5 disablespawn
+  $ax6 disablespawn
+  $ax7 disablespawn
+  $ax8 disablespawn
+  $ax9 disablespawn
+	huddraw_alpha  230 1.0
+	huddraw_alpha  231 0
+	huddraw_alpha  232 0
+	huddraw_alpha  233 0
+	huddraw_alpha  234 0
+	huddraw_alpha  235 0
+	huddraw_alpha  236 0
+	huddraw_alpha  237 0
+  ;break //
+case 3: 
+  $ax2 enablespawn
+  $ax3 enablespawn
+  wait 1
+  $axh disablespawn
+  $ax4 disablespawn
+  $ax5 disablespawn
+  $ax6 disablespawn
+  $ax7 disablespawn
+  $ax8 disablespawn
+  $ax9 disablespawn
+	huddraw_alpha  230 1.0
+	huddraw_alpha  231 1.0
+	huddraw_alpha  232 0
+	huddraw_alpha  233 0
+	huddraw_alpha  234 0
+	huddraw_alpha  235 0
+	huddraw_alpha  236 0
+	huddraw_alpha  237 0
+  ;break //
+case 4: 
+  $ax3 enablespawn
+  $ax4 enablespawn
+  wait 1
+  $axh disablespawn
+  $ax2 disablespawn
+  $ax5 disablespawn
+  $ax6 disablespawn
+  $ax7 disablespawn
+  $ax8 disablespawn
+  $ax9 disablespawn
+	huddraw_alpha  230 1.0
+	huddraw_alpha  231 1.0
+	huddraw_alpha  232 1.0
+	huddraw_alpha  233 0
+	huddraw_alpha  234 0
+	huddraw_alpha  235 0
+	huddraw_alpha  236 0
+	huddraw_alpha  237 0
+  ;break //
+case 5: 
+  $ax4 enablespawn
+  $ax5 enablespawn
+  wait 1
+  $axh disablespawn
+  $ax2 disablespawn
+  $ax3 disablespawn
+  $ax6 disablespawn
+  $ax7 disablespawn
+  $ax8 disablespawn
+  $ax9 disablespawn
+	huddraw_alpha  230 1.0
+	huddraw_alpha  231 1.0
+	huddraw_alpha  232 1.0
+	huddraw_alpha  233 1.0
+	huddraw_alpha  234 0
+	huddraw_alpha  235 0
+	huddraw_alpha  236 0
+	huddraw_alpha  237 0
+  ;break //
+case 6: 
+  $ax5 enablespawn
+  $ax6 enablespawn
+  wait 1
+  $axh disablespawn
+  $ax2 disablespawn
+  $ax3 disablespawn
+  $ax4 disablespawn
+  $ax7 disablespawn
+  $ax8 disablespawn
+  $ax9 disablespawn
+	huddraw_alpha  230 1.0
+	huddraw_alpha  231 1.0
+	huddraw_alpha  232 1.0
+	huddraw_alpha  233 1.0
+	huddraw_alpha  234 1.0
+	huddraw_alpha  235 0
+	huddraw_alpha  236 0
+	huddraw_alpha  237 0
+  ;break //
+case 7: 
+  $ax6 enablespawn
+  $ax7 enablespawn
+  wait 1
+  $axh disablespawn
+  $ax2 disablespawn
+  $ax3 disablespawn
+  $ax4 disablespawn
+  $ax5 disablespawn
+  $ax8 disablespawn
+  $ax9 disablespawn
+	huddraw_alpha  230 1.0
+	huddraw_alpha  231 1.0
+	huddraw_alpha  232 1.0
+	huddraw_alpha  233 1.0
+	huddraw_alpha  234 1.0
+	huddraw_alpha  235 1.0
+	huddraw_alpha  236 0
+	huddraw_alpha  237 0
+  ;break //
+case 8: 
+  $ax7 enablespawn
+  $ax8 enablespawn
+  wait 1
+  $axh disablespawn
+  $ax2 disablespawn
+  $ax3 disablespawn
+  $ax4 disablespawn
+  $ax5 disablespawn
+  $ax6 disablespawn
+  $ax9 disablespawn
+	huddraw_alpha  230 1.0
+	huddraw_alpha  231 1.0
+	huddraw_alpha  232 1.0
+	huddraw_alpha  233 1.0
+	huddraw_alpha  234 1.0
+	huddraw_alpha  235 1.0
+	huddraw_alpha  236 1.0
+	huddraw_alpha  237 0
+  ;break // 
+case 9: 
+  $ax8 enablespawn
+  $ax9 enablespawn
+  wait 1
+  $axh disablespawn
+  $ax2 disablespawn
+  $ax3 disablespawn
+  $ax4 disablespawn
+  $ax5 disablespawn
+  $ax6 disablespawn
+  $ax7 disablespawn
+	huddraw_alpha  230 1.0
+	huddraw_alpha  231 1.0
+	huddraw_alpha  232 1.0
+	huddraw_alpha  233 1.0
+	huddraw_alpha  234 1.0
+	huddraw_alpha  235 1.0
+	huddraw_alpha  236 1.0
+	huddraw_alpha  237 1.0
+  ;break //
+   } 
+
+wait 2
+
+}
+end
+
+//-----------------------------------------------------------------------------
+
+
+messages:
+
+while(1)
+{
+wait 90
+	iprintlnbold "Push forward to your enemies base to score !"
+wait 60
+	iprintlnbold "Push forward to your opponents base! Gain Ground and score for your team !"
+wait 60
+	iprintlnbold "Push your teams Battleline forward !"
+wait 60
+	iprintlnbold "Push forward to your opponents base to score for your team !"
+wait 10
+	iprintlnbold "Battline Mod moves the spawns forward with your team !"
+wait 30
+}
+end
+
+messagepush:
+wait 60
+	iprintlnbold "Push mode is on !"
+wait 1
+	iprintlnbold "Push back your opponents spawn !"
+end
+
+messagepass:
+wait 60
+	iprintlnbold "Pass mode is on !"
+wait 1
+	iprintlnbold "Push forward to gain ground and score !"
+end
+
+//-----------------------------------------------------------------------------
+
+eventeams:
+
+wait 30
+ 
+while(1) 
+   { 
+   level.allies = 0 
+   level.axis = 0 
+   for(local.dude=1;local.dude <= $player.size;local.dude++) 
+   { 
+   if ($player[local.dude].dmteam == "axis") 
+   level.axis++ 
+   if ($player[local.dude].dmteam == "allies") 
+   level.allies++ 
+   } 
+	setcvar axiscount level.axis
+	setcvar alliescount level.allies
+
+     if((level.allies > ( level.axis + 1 )) || (level.axis > ( level.allies + 1 )))
+     {
+	huddraw_virtualsize 214 1
+	huddraw_align  214 right top
+	huddraw_font   214 "verdana-12"
+	huddraw_rect   214 -100 40 200 14
+	huddraw_color  214 .10 .95 .10
+	huddraw_alpha  214 1.0
+	huddraw_string 214 "TEAMS"
+
+	huddraw_virtualsize 215 1
+	huddraw_shader 215 ("textures/hud/allies")
+	huddraw_align  215 right top
+	huddraw_rect   215 -60 40 14 14
+	huddraw_alpha  215 1.0
+
+	huddraw_virtualsize 216 1
+	huddraw_shader 216 ("textures/hud/axis")
+	huddraw_align  216 right top
+	huddraw_rect   216 -30 40 14 14
+	huddraw_alpha  216 1.0
+
+	huddraw_virtualsize 217 1
+	huddraw_align  217 right top
+	huddraw_font   217 "verdana-12"
+	huddraw_rect   217 -45 40 20 14
+	huddraw_color  217 .10 .95 .10
+	huddraw_alpha  217 1.0
+	huddraw_string 217 level.allies
+
+	huddraw_virtualsize 218 1
+	huddraw_align  218 right top
+	huddraw_font   218 "verdana-12"
+	huddraw_rect   218 -15 40 20 14
+	huddraw_color  218 .10 .95 .10
+	huddraw_alpha  218 1.0
+	huddraw_string 218 level.axis
+
+     } 
+
+   wait 2 
+	huddraw_alpha  214 0
+	huddraw_alpha  215 0
+	huddraw_alpha  216 0
+	huddraw_alpha  217 0
+	huddraw_alpha  218 0
+   wait 1
+   } 
+end
+
+allied_detected:
+
+	local.player = parm.other
+	if ( (local.player.dmteam == "allies") && (local.player.inveh == 1) )
+	{
+		local.player stufftext ("+use; wait 200; -use")
+	}
+	else if ( (local.player.dmteam == "allies") && (local.player.flying == 1) )
+	{
+		local.player stufftext ("+moveup; wait 200; -moveup")
+	}
+	
+end
+
+axis_detected:
+
+	local.player = parm.other
+
+	if ( (local.player.dmteam == "axis") && (local.player.flying == 1) )
+	{
+		local.player stufftext ("+moveup; wait 200; -moveup")
+	}
+	
+end
+
+fadescreen:
+
+	// wait 12
+	for (local.t = 0; local.t <= 12; local.t++)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			local.p = $player[local.i]
+			local.p stufftext "ui_hud 0"
+		}
+		wait 1
+	}
+	
+	fadein 4 0 0 0 1
+	
+	wait 2
+	
+	for(local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.p = $player[local.i]
+		local.p stufftext "ui_hud 1"
+	}
+
+end
+
+music:
+
+	wait 949
+	local.STUFFSTRING = "tmstart sound/music/mus_10a_action.mp3; seta s_musicvolume 0.3"
+
+	while(1)
+	{
+		for(local.i = 1; local.i <= $player.size; local.i++)
+		{
+			local.p = $player[local.i]
+			if(local.p.music_handled != 1)
+			{
+				local.p.music_handled = 1
+				local.p stufftext local.STUFFSTRING
+			}
+		}
+		waitframe
+	}
+
+end

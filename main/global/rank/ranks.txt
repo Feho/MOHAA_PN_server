@@ -1,0 +1,147 @@
+/*
+======================================================
+*** AIRborne; Ranking System Customization for MoH:AA
+======================================================
+by Sor
+Version: v4.23 BETA
+-----------------------------------
+--- NOTE:
+
+ Customization Options for the Airborne ranking script.
+ Here you can customize the following things:
+  - the names for each rank (for both teams)
+  - add new ranks
+  - remove ranks
+  - change the required kills for each rank
+  - define the bonuses for each rank. Available bonuses:
+    
+	* "silencer"	- Get Silencer
+	* "nades"	- Ability to kick nades
+	* "zoom"	- Double Zoom for Snipers
+        * "speed"	- Increased movement speed
+	* "regenerate"	- You gain health slowly while standing still
+
+  A few IMPORTANT REMARKS:
+   1. Do not remove the Traitor rank! You may rename it.
+   2. Do not enter a kill requirement for the Traitor rank!
+   3. For every rank, if you are going to use bonuses, then all
+      the bonuses must be defined (!) in the following layout:
+
+      "bonus1 value ; bonus2 value ; bonus3 value ; bonus4 value"
+
+
+-------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+
+Original :
+
+
+	//Rankname - Allies		//Rankname - Axis		//kills needed		//Bonuses
+
+	"Traitor"			"Verraeter"						"speed 0 ; zoom 0 ; planes 0 ; silencer 0 ; regenerate 0"    
+	"Army Cadet"			"Cadet"				0			"speed 0 ; zoom 0 ; planes 0 ; silencer 0 ; regenerate 0"  
+	"Private"			"Schuetze"			1			"speed 0 ; zoom 0 ; planes 0 ; silencer 0 ; regenerate 0"   
+	"Private-First-Class"		"Oberschuetze"			2			"speed 0 ; zoom 0 ; planes 0 ; silencer 1 ; regenerate 0"   
+	"Corporal"			"Gefreiter"			4			"speed 0 ; zoom 0 ; planes 0 ; silencer 1 ; regenerate 0"   
+	"Sergeant"			"Unteroffizier"			6			"speed 0 ; zoom 0 ; planes 0 ; silencer 1 ; regenerate 0"  
+	"Staff Sergeant"		"Stabsunteroffizier"		8			"speed 0 ; zoom 0 ; planes 1 ; silencer 1 ; regenerate 0"
+	"Sergeant-First-Class"		"Feldwebel"			10			"speed 0 ; zoom 0 ; planes 1 ; silencer 1 ; regenerate 0"
+	"2nd Lieutenant"		"Leutnant"			14			"speed 0 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0"
+	"1st Lieutenant"		"Oberleutnant"			18			"speed 0 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0"
+	"Captain"			"Hauptmann"			21			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0"
+	"Major"				"Major"				25			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0"
+	"Lieutenant Colonel" 		"Oberstleutnant"		30			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0"
+	"Colonel"			"Oberst"			35			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1"
+	"Brigadier General" 		"Brigadegeneral"		40			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1"
+	"Major General" 		"Generalmajor"			45			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1"
+	"Lieutenant General" 		"Generalleutnant"		50			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1"
+	"General"			"General"			60			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1"
+	"General-of-the-Army"		"Generalfeldmarschall"		70			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1"
+
+*/
+
+/*
+main:
+
+	local.ranks = makeArray
+
+	//Rankname - Allies		//Rankname - Axis		//kills needed		//Bonuses
+
+	"Traitor"			"Verraeter"						"speed 0 ; zoom 0 ; planes 0 ; silencer 0 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"    
+	"Army Cadet"			"Cadet"				0			"speed 0 ; zoom 0 ; planes 0 ; silencer 0 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"  
+	"Private"			"Schuetze"			1			"speed 0 ; zoom 0 ; planes 0 ; silencer 0 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"   
+	"Private-First-Class"		"Oberschuetze"			2			"speed 0 ; zoom 0 ; planes 0 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"   
+	"Corporal"			"Gefreiter"			4			"speed 0 ; zoom 0 ; planes 0 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"   
+	"Sergeant"			"Unteroffizier"			5			"speed 0 ; zoom 0 ; planes 0 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"  
+	"Staff Sergeant"		"Stabsunteroffizier"		6			"speed 0 ; zoom 0 ; planes 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"
+	"Sergeant-First-Class"		"Feldwebel"			8			"speed 0 ; zoom 0 ; planes 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"
+	"2nd Lieutenant"		"Leutnant"			10			"speed 0 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"
+	"1st Lieutenant"		"Oberleutnant"			12			"speed 0 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"
+	"Captain"			"Hauptmann"			15			"speed 0 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Major"				"Major"				18			"speed 0 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Lieutenant Colonel" 		"Oberstleutnant"		20			"speed 0 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Colonel"			"Oberst"			25			"speed 0 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Brigadier General" 		"Brigadegeneral"		30			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Major General" 		"Generalmajor"			35			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 1"
+	"Lieutenant General" 		"Generalleutnant"		40			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1 ; health 1 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 1"
+	"General"			"General"			50			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1 ; health 1 ; damage 0 ; mines 1 ; bazooka 1 ; explosion 1"
+	"General-of-the-Army"		"Generalfeldmarschall"		60			"speed 1 ; zoom 1 ; planes 1 ; silencer 1 ; regenerate 1 ; health 1 ; damage 1 ; mines 1 ; bazooka 1 ; explosion 1"
+
+	endArray
+
+end local.ranks
+*/
+
+main:
+
+	local.ranks = makeArray
+
+	//Rankname - Allies		//Rankname - Axis		//kills needed		//Bonuses
+
+	"Traitor"			"Verraeter"						"speed 0 ; airsupport 0 ; planes 0 ; special_bots 0 ; silencer 0 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"    
+	"Army Cadet"			"Cadet"				0			"speed 0 ; airsupport 0 ; planes 0 ; special_bots 0 ; silencer 0 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"  
+	"Private"			"Schuetze"			1			"speed 0 ; airsupport 0 ; planes 0 ; special_bots 0 ; silencer 0 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"   
+	"Private-First-Class"		"Oberschuetze"			2			"speed 0 ; airsupport 0 ; planes 0 ; special_bots 0 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"   
+	"Corporal"			"Gefreiter"			4			"speed 0 ; airsupport 0 ; planes 0 ; special_bots 0 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"   
+	"Sergeant"			"Unteroffizier"			6			"speed 0 ; airsupport 0 ; planes 0 ; special_bots 0 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"  
+	"Staff Sergeant"		"Stabsunteroffizier"		8			"speed 0 ; airsupport 0 ; planes 1 ; special_bots 0 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"
+	"Sergeant-First-Class"		"Feldwebel"			10			"speed 0 ; airsupport 0 ; planes 1 ; special_bots 0 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"
+	"2nd Lieutenant"		"Leutnant"			12			"speed 0 ; airsupport 0 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"
+	"1st Lieutenant"		"Oberleutnant"			14			"speed 0 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 0 ; bazooka 0 ; explosion 0"
+	"Captain"			"Hauptmann"			16			"speed 0 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Major"				"Major"				18			"speed 0 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Lieutenant Colonel" 		"Oberstleutnant"		20			"speed 0 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 0 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Colonel"			"Oberst"			22			"speed 0 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 1 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Brigadier General" 		"Brigadegeneral"		24			"speed 1 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 1 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 0"
+	"Major General" 		"Generalmajor"			26			"speed 1 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 1 ; health 0 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 1"
+	"Lieutenant General" 		"Generalleutnant"		28			"speed 1 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 1 ; health 1 ; damage 0 ; mines 1 ; bazooka 0 ; explosion 1"
+	"General"			"General"			30			"speed 1 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 1 ; health 1 ; damage 0 ; mines 1 ; bazooka 1 ; explosion 1"
+	"General-of-the-Army"		"Generalfeldmarschall"		35			"speed 1 ; airsupport 1 ; planes 1 ; special_bots 1 ; silencer 1 ; regenerate 1 ; health 1 ; damage 1 ; mines 1 ; bazooka 1 ; explosion 1"
+
+	endArray
+
+end local.ranks

@@ -1,0 +1,85 @@
+/*
+======================================================
+*** AIRborne; Player Info StateScript for MoH:AA
+======================================================
+by Sor
+Version: v0.9
+-----------------------------------
+--- INFO:
+
+ <player_alias>.secondary_Fireheld
+ <player_alias>.usingTurret 
+
+-------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+main local.setting local.extra_setting local.more_settings:
+
+	if (self == NULL)
+		end
+
+	switch(local.setting)
+	{
+		// TURRET:
+		// (1) Player is using an turret 
+		// (0) Player stopped using a turret 
+		// (NIL) Player hasn't used a turret yet
+		// <player_alias>.usingTurret 
+
+		case "turret_on":
+			if (self.usingTurret != 1)
+			{
+				self.usingTurret = 1
+			}
+		break
+		case "turret_off":
+			if (self.usingTurret != 0 && self.usingTurret != NIL)
+			{
+				self.usingTurret = 0
+			}
+		break
+
+		// SECONDARY FIREHELD
+		// (0/NIL) Player isn't holding the Right Mouse Button (= Secondary Fireheld)
+		// (1) Player is holding the Right Mouse Button (= Secondary Fireheld)
+		// <player_alias>.secondary_Fireheld
+
+		case "rmb_on":
+			if (self.secondary_Fireheld != 1)
+			{
+				self.secondary_Fireheld = 1
+			}
+		break
+		case "rmb_off":
+			if (self.secondary_Fireheld != 0 && self.secondary_Fireheld != NIL)
+			{
+				self.secondary_Fireheld = 0
+			}
+		break
+	}
+
+end

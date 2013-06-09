@@ -1,0 +1,32 @@
+/*
+95th Server Mods
+----------------
+By Paul "GiffE" Gifford
+=|95th|=GenDonut
+www.95thDivision.com
+----------------
+Do not RIP this mod or any part of this mod without
+Proper credits.
+Do not remove THESE credits from this file.
+----------------
+*/
+
+main:
+if(self.weaponname == "FG 42")
+{
+	self forcetorsostate "STAND_PROPER"
+	end
+}
+// Secondary fire Attributes
+self weaponcommand mainhand secondary firetype melee
+self weaponcommand mainhand	secondary ammotype none
+self weaponcommand mainhand	secondary meansofdeath bash
+self weaponcommand mainhand	secondary bulletrange 64
+self weaponcommand mainhand	secondary bulletdamage 55
+self weaponcommand mainhand	secondary bulletknockback 50
+self weaponcommand mainhand	secondary quiet
+self weaponcommand mainhand	secondary dmammorequired 0
+self weaponcommand mainhand	secondary dmbulletrange	96
+self weaponcommand mainhand	secondary dmbulletdamage 75
+
+end

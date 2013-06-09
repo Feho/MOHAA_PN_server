@@ -1,0 +1,112 @@
+// SOUTHERN FRANCE
+// ARCHITECTURE: SENN
+// SCRIPTING: POWZER
+
+main:
+
+// Stop self closing doors
+removeclass rotatingdoor
+
+local.clone = spawn func_rotatingdoor model "*2" targetname "door2" wait "-1" origin ( -264 534 456 ) angle ( 180 ) alwaysaway "1"
+local.clone = spawn func_rotatingdoor model "*3" targetname "door3" wait "-1" origin ( -264 426 456 ) angle ( 180 ) alwaysaway "1"
+local.clone = spawn func_rotatingdoor model "*4" targetname "door4" wait "-1" origin ( 712 534 456 ) angle ( 0 ) alwaysaway "1"
+local.clone = spawn func_rotatingdoor model "*5" targetname "door5" wait "-1" origin ( 712 426 456 ) angle ( 0 ) alwaysaway "1"
+$door2 linkdoor $door3
+$door4 linkdoor $door5
+// Stop self closing doors
+
+// Random client crash fix
+removeclass PlayerIntermission
+
+setcvar "g_gametype" "2"
+setcvar "timelimit" "15"
+
+// set scoreboard messages
+setcvar "g_obj_alliedtext1" "Southern France"
+setcvar "g_obj_alliedtext2" ""
+setcvar "g_obj_alliedtext3" "Server IP"
+setcvar "g_obj_axistext1" "178.32.28.179:12203"
+setcvar "g_obj_axistext2" ""
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "mohdm1"
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	// call additional stuff for playing this map round based is needed
+	if(level.roundbased)
+		thread roundbasedthread
+		
+	level waitTill prespawn
+
+	// Stop self closing doors
+	local.clone = spawn func_rotatingdoor model "*1" targetname "door1" wait "-1" origin ( -482 888 446 ) angle ( 90 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*6" targetname "door6" wait "-1" origin ( 346 1160 110 ) angle ( 270 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*7" targetname "door7" wait "-1" origin ( -8 1354 110 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*8" targetname "door8" wait "-1" origin ( 90 1656 190 ) angle ( 270 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*9" targetname "door9" wait "-1" origin ( 1336 1434 446 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*10" targetname "door10" wait "-1" origin ( 1154 8 318 ) angle ( 270 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*11" targetname "door11" wait "-1" origin ( -1178 264 230 ) angle ( 90 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*12" targetname "door12" wait "-1" origin ( 1336 2106 574 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*13" targetname "door13" wait "-1" origin ( -376 1418 446 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*14" targetname "door14" wait "-1" origin ( 712 1482 446 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*15" targetname "door15" wait "-1" origin ( -792 546 46 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*16" targetname "door16" wait "-1" origin ( 1032 2818 446 ) angle ( 180 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*17" targetname "door17" wait "-1" origin ( -1272 610 230 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*18" targetname "door18" wait "-1" origin ( -1154 888 230 ) angle ( 90 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*19" targetname "door19" wait "-1" origin ( 218 1656 446 ) angle ( 90 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*20" targetname "door20" wait "-1" origin ( 602 1160 446 ) angle ( 90 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*21" targetname "door21" wait "-1" origin ( 994 2984 622 ) angle ( 270 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*22" targetname "door22" wait "-1" origin ( 1302 888 446 ) angle ( 270 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*23" targetname "door23" wait "-1" origin ( 920 770 446 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*24" targetname "door24" wait "-1" origin ( 920 330 446 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*25" targetname "door25" wait "-1" origin ( 1400 666 446 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*26" targetname "door26" wait "-1" origin ( 1442 2344 574 ) angle ( 90 ) alwaysaway "1"
+	// Stop self closing doors
+
+	//*** Precache Dm Stuff
+	exec global/DMprecache.scr
+
+	level.script = maps/dm/mohdm1.scr
+	exec global/ambient.scr mohdm1
+
+	//exec global/ambient.scr mohdm2
+
+	//$world farplane 5000
+	//$world farplane_color (.333 .333 .329)
+
+			// Portable 30 cals
+	exec models/create_guns.scr ( -806 -353 48.12 )
+	
+	exec global/DETONATOR_SOUND.scr
+	exec global/RB_DETONATORS.scr::DETONATOR ( 1361.71 339.49 304.12 ) ( 0 0 0 )
+	exec global/RB_DETONATORS.scr::DETONATOR ( -838.75 760.46 216.18 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( 1313 403 256.12 ) ( 0 0 0 )
+	exec global/TNT_DETONATORS.scr::DETONATOR ( -435.76 166 434.12 ) ( 0 0 0 )
+		
+	
+	level waittill spawn
+
+
+	
+end
+
+//-----------------------------------------------------------------------------
+
+roundbasedthread:
+
+	// Can specify different scoreboard messages for round based games here.
+	
+	level waitTill prespawn
+
+	level waittill spawn
+
+	// set the parameters for this round based match
+	level.dmrespawning = 0 // 1 or 0
+	level.dmroundlimit = 5 // round time limit in minutes
+	level.clockside = kills // set to axis, allies, kills, or draw
+
+	level waittill roundstart
+
+end

@@ -1,0 +1,35 @@
+//------
+// Dog Attack
+//------
+
+waitexec "anim/dog_inithandler.scr"
+
+//======================================================================
+AttackMain:
+
+if (vector_length (self.origin - self.enemy.origin) < 100)
+{
+	self setmotionanim dog_bite_leg
+
+	wait .1
+
+	//bite enemy
+	if ( self . enemy != $player )
+		self.enemy damage self.player 15 self.player (0 0 0) (0 0 0) (0 0 0) 1 9 0 0;
+	else
+	{
+		local . dir = $player . origin - self . origin;
+		self.enemy damage self.player 15 self.player (0 0 0) local . dir (0 0 0) 1 9 0 0;
+	}
+}
+
+self waittill flaggedanimdone
+
+// goto AttackMain
+end
+
+
+
+
+
+//======================================================================

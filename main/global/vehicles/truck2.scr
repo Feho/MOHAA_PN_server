@@ -1,0 +1,109 @@
+/**
+ * Spawn un véhicule conduisible
+ *
+ * Exemple d'utilisation :
+ * exec global/vehicles/truck.scr::SpawnTruck "opeltruck" "opeltruck_d" ( 1568 -256 83 ) 90 2500
+ *
+ * local.ucmd[ELORE] = local.input[FORWARD]
+ * local.ucmd[HATRA] = local.input[BACKWARD]
+ * local.ucmd[BALRA] = local.input[STRAFE_LEFT]
+ * local.ucmd[JOBBRA] = local.input[STRAFE_RIGHT]
+ * local.ucmd[TUZ] = local.input[ATTACK_PRIMARY]
+ * local.ucmd[MASODLAGOSTUZ] = local.input[ATTACK_SECONDARY]
+ * local.ucmd[UGRAS] = local.input[JUMP]
+ * local.ucmd[GUGOLAS] = local.input[CROUCH]
+ * local.ucmd[SETA] = !local.input[RUN]
+ * local.ucmd[FEGYVERVALTAS] = local.input[NEW_WEAPON]
+ *
+ * Feho - 2013
+ */
+
+/**
+ * Initialisation du véhicule
+ */
+SpawnTruck local.modelName local.destroyedModelName local.origin local.angle local.collision:
+
+	if (!local.origin)
+		end
+
+	if (!local.angle)
+		local.angle = 0
+
+	local.model = "models/vehicles/" + local.modelName + ".tik"
+	local.truck = spawn local.model origin local.origin angle local.angle
+
+	// Propriétés du véhicule
+	local.truck.destroyedModel = "models/vehicles/" + local.destroyedModelName + ".tik"
+	local.truck.health = 2500
+	local.truck.speed = 0
+	local.truck.minPower = 10
+	local.truck.maxPower = 350
+	local.truck.minTurnRate = 4
+	local.truck.maxTurnRate = 7
+	local.truck.turnRate = local.truck.maxTurnRate
+	local.truck.headLights = 0
+	local.truck.nbPassengers = 0
+	local.truck.maxPassengers = 6
+	local.truck.driver = null
+
+	// Immunités
+	local.truck immune bash
+	local.truck immune vehicle
+
+	if (local.collision && local.collision.brushmodel)
+	{
+		local.truck.collisionent = local.collision
+
+		local.truck.collisionent.vehicle = local.truck
+		local.truck.collisionent.isvehicle = 1
+	}
+
+	exec $logger.LogInfo ("[truck2.scr::spawnTruck]: Truck spawned at origin " + local.origin)
+
+	local.truck thread Monitor
+
+end
+
+Monitor:
+
+	while (self)
+	{
+		for (local.i = 1; local.i <= $player.size; local.i++)
+		{
+			local.player = $player[local.i]
+
+			if (local.player IsTouching self && local.player.useheld && !local.player.isInVehicle)
+			{
+				self thread DriverGetIn local.player
+			}
+		}
+
+		waitframe
+	}
+
+end
+
+WaitForActivate:
+
+	
+
+end
+
+DriverGetIn local.driver:
+
+	self unlock
+	self AttachDriverSlot 0 local.driver
+	self lock
+
+	self.driver = local.driver
+	self.driver.isInVehicle = 1
+
+	self exec global/vehicles/vehicle_drive.scr
+
+end
+
+DriverGetOut:
+
+
+
+end

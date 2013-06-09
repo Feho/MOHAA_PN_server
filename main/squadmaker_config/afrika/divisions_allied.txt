@@ -1,0 +1,14 @@
+// Allied divisions in Africa
+
+local.a = makeArray
+
+"Special Air Service" allied_SAS
+"1st Rangers" american_ranger
+"2nd Rangers" american_ranger
+"6th Infantry" american_army // part of 1st Armored Division
+"36th Infantry" american_army // part of 1st Armored Division
+"9th Infantry" american_army
+
+endArray
+
+end local.a

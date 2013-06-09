@@ -1,0 +1,949 @@
+//
+// M4L0 - FARM HOUSE
+
+//
+// 
+// Cobs
+
+
+main: 
+
+	// setcvar "g_gametype" "2"
+	setcvar "timelimit" "15"
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M4L0" 
+	setcvar "g_obj_alliedtext2"    ""
+	setcvar "g_obj_alliedtext3"     "Farm House"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing4a.tga" 
+
+	setcvar "g_gametype" "2"
+setcvar "g_gametypestring" "Team-Match"
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	thread global/bomber.scr::main
+
+	waitthread tdm_spawns
+	waitthread Initiate_whats_needed
+
+	level waittill prespawn
+
+	exec global/ladderspawn.scr ( -4957 -2669 70 ) 220 wood 0
+	
+	$world farplane color "0.25 0.15 0.1"
+	$world farplane 24000 //7200
+
+	exec global/bomber.scr
+	exec global/ambient.scr m4l0
+	exec global/door_locked.scr
+	exec global/DMprecache.scr
+	
+	
+	level waittill spawn
+
+	// Murs invisibles
+	waitthread blokkok
+
+	// {sfx} mini planes - one per team
+	exec server_planes/trigger.scr ( -4367 -2555 90 ) "allies"
+	exec server_planes/trigger.scr ( 2103 -3451 -72 ) "axis"
+
+	// Tanks & Jeeps Base Assault
+	if (level.already_started != 1)
+	{
+		level.already_started = 1
+
+		exec global/AA/global_detect.scr
+	}
+	
+	// Jeep côté Alliés
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3174.00 -2926.00 150 ) ( 0 -76 0 ) level.jeep_mask
+	// Jeep côté Axe
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -2047.00 1354.00 -23.88 ) ( 0 0 0 ) level.jeep_mask
+	
+	level.clockside = kills
+
+	level.flyplane = 1
+
+	thread Map_Guard
+	thread Pool_Guard
+
+	
+	
+	
+
+end
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M4L0" 
+	setcvar "g_obj_alliedtext2"    ""
+	setcvar "g_obj_alliedtext3"     "Farm House"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing4a.tga" 
+	
+
+	
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	waitthread ffa_spawns
+	waitthread Initiate_whats_needed
+	
+	level waittill prespawn
+
+	exec global/ladderspawn.scr ( -4957 -2669 70 ) 220 wood 0
+	
+	$world farplane color "0.25 0.15 0.1"
+	$world farplane 24000 //7200
+
+	exec global/bomber.scr
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m4l0
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	level.flyplane = 1
+	
+	level.clockside = kills
+
+	thread Map_Guard
+	thread Pool_Guard
+
+end
+
+
+
+
+
+Initiate_whats_needed:
+	
+	// Remove AI
+	removeclass actor
+
+	// Remove ammo
+	removeclass AmmoEntity
+	
+	$documents show
+
+	local.master = spawn scriptmaster
+	local.master aliascache snd_gasp sound/dialogue/Generic/G/fear/Fer_010e.wav soundparms 0.7 0.6 0.6 0.6 300 1000 auto loaded maps "m dm obj"
+	local.master aliascache snd_step_wade1 sound/characters/body_mvmtwater_01.wav soundparms 0.75 0.3 0.9 0.2 160 1600 body loaded maps "m dm moh obj train"
+	
+	
+
+end
+
+
+Map_Guard:
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( 866.22 1313.05 -327.88 ) 
+	$Killah setsize ( -9999 -9999 -32 ) ( 9999 9999 16 )
+	$Killah setthread die
+	// $Killah message "Play fair!"
+end
+
+die:
+	self waittill trigger
+	local.punk = parm.other
+
+	if( !(isalive local.punk) || (local.punk.needrevive == 1) )
+	{
+		end
+	}
+	local.punk kill
+end	
+
+
+Pool_Guard:
+
+	spawn trigger_multipleall "targetname" "Pool_Attendant"
+	$Pool_Attendant.origin = ( -2008.34 -6053.13 -249.88 ) 
+	$Pool_Attendant setsize ( -750 -750 -20 ) ( 750 750 16 )
+	$Pool_Attendant setthread pool
+	$Pool_Attendant message "No Swimming Allowed"
+end
+
+
+pool:
+	self waittill trigger
+	local.swimmer = parm.other
+	if!(isalive local.swimmer)
+	{
+	end
+	}
+
+	local.swimmer playsound snd_gasp
+	local.swimmer hurt 10 impale ( 200 0 200 ) 
+end
+
+
+
+tdm_spawns:
+
+	 
+	spawn info_player_axis "origin" "1958.30 -3628.81 -90.13" "angle" "-145" "targetname" "X1"
+	spawn info_player_axis "origin" "1961.08 -2096.13 -90.13" "angle" "-101" "targetname" "X2"
+	spawn info_player_axis "origin" "2092.49 -2587.04 -90.13" "angle" "-118" "targetname" "X3"
+	spawn info_player_axis "origin" "-119.13 -1957.19 500.13" "angle" "180" "targetname" "X4"
+	spawn info_player_axis "origin" "44.13 -2868.34 500.13" "angle" "180" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-902.09 -1274.87 480.13" "angle" "-180" "targetname" "X6" 
+	spawn info_player_axis "origin" "-796.13 -1421.87 490.13" "angle" "-90" "targetname" "X7"
+	spawn info_player_axis "origin" "23.67 -3264.14 450.13" "angle" "180" "targetname" "X8"
+	spawn info_player_axis "origin" "-72.05 -2364.65 500.13" "angle" "95" "targetname" "X9"
+	spawn info_player_axis "origin" "-623.23 -6995.48 -90.13" "angle" "119" "targetname" "X10"
+
+	spawn info_player_axis "origin" "-1414.37 -7372.46 -90.24" "angle" "106" "targetname" "X11"
+	spawn info_player_axis "origin" "-2278.27 -7247.67 -90.20" "angle" "95" "targetname" "X12"
+	spawn info_player_axis "origin" "-2742.05 -7090.08 -90.43" "angle" "85" "targetname" "X13"
+	spawn info_player_axis "origin" "-3182.52 -6923.64 -75.44" "angle" "87" "targetname" "X14"
+	spawn info_player_axis "origin" "1996.69 -1255.02 -30.68" "angle" "-90" "targetname" "X15"
+
+
+	spawn info_player_allied "origin" "-5712.33 -5727.58 -160.32" "angle" "83" "targetname" "A1"
+	spawn info_player_allied "origin" "-5644.18 -5571.55 -160.92" "angle" "83" "targetname" "A2"
+	spawn info_player_allied "origin" "-6116.94 -4118.47 70.25" "angle" "-4" "targetname" "A3"
+	spawn info_player_allied "origin" "-6099.69 -3761.96 90.24" "angle" "0" "targetname" "A4"
+	spawn info_player_allied "origin" "-6105.97 -3378.33 90.92" "angle" "0" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "-5751.06 -1497.87 80.88" "angle" "0" "targetname" "A6"
+	spawn info_player_allied "origin" "-5392.54 -1104.09 80.29" "angle" "-90" "targetname" "A7"
+	spawn info_player_allied "origin" "-4756.47 -1040.02 110.89" "angle" "-90" "targetname" "A8"
+	spawn info_player_allied "origin" "-5590.87 -1761.36 80.88" "angle" "0" "targetname" "A9"
+	spawn info_player_allied "origin" "-5004.84 -3183.25 80.37" "angle" "90" "targetname" "A10"
+
+	spawn info_player_allied "origin" "-5859.80 -2822.71 90.61" "angle" "0" "targetname" "A11"
+	spawn info_player_allied "origin" "-5043.02 -1002.07 100.65" "angle" "-90" "targetname" "A12"
+	spawn info_player_allied "origin" "-677.67 -7353.79 -90.47" "angle" "122" "targetname" "A13"
+	spawn info_player_allied "origin" "-2391.16 -7402.13 -90.16" "angle" "94" "targetname" "A14"
+	spawn info_player_allied "origin" "-3519.41 -6771.11 -0.85" "angle" "61" "targetname" "A15"
+	
+end
+
+
+ffa_spawns: 
+
+	// spawn info_player_deathmatch "origin" "-5616.88 -2167.78 68.13" "angle" "6"
+	// spawn info_player_deathmatch "origin" "-3353.43 -1609.72 219.66" "angle" "-28"
+	// spawn info_player_deathmatch "origin" "-84.92 -2593.50 482.35" "angle" "-91"
+	// spawn info_player_deathmatch "origin" "-3448.01 -6301.84 -22.90" "angle" "83"
+	// spawn info_player_deathmatch "origin" "1509.62 -4944.87 -95.39" "angle" "85"
+
+	// spawn info_player_deathmatch "origin" "1129.72 -904.86 337.46" "angle" "72"
+	// spawn info_player_deathmatch "origin" "4724.54 2649.63 472.59" "angle" "-133"
+	// spawn info_player_deathmatch "origin" "5876.39 564.04 692.25" "angle" "92"
+	// spawn info_player_deathmatch "origin" "4703.13 1783.13 536.13" "angle" "5"
+	// spawn info_player_deathmatch "origin" "709.42 1970.59 390.49" "angle" "-151"
+
+	// spawn info_player_deathmatch "origin" "382.02 5031.92 68.13" "angle" "-57"
+	// spawn info_player_deathmatch "origin" "-632.02 6897.30 112.85" "angle" "-174"
+	// spawn info_player_deathmatch "origin" "-3267.78 6579.50 -41.95" "angle" "-99"
+	// spawn info_player_deathmatch "origin" "-4865.88 6042.86 -135.25" "angle" "-44"
+	// spawn info_player_deathmatch "origin" "-5200.03 1874.27 68.13" "angle" "29"
+	
+	spawn info_player_deathmatch "origin" "1958.30 -3628.81 -90.13" "angle" "-145" "targetname" "X1"
+	spawn info_player_deathmatch "origin" "1961.08 -2096.13 -90.13" "angle" "-101" "targetname" "X2"
+	spawn info_player_deathmatch "origin" "2092.49 -2587.04 -90.13" "angle" "-118" "targetname" "X3"
+	spawn info_player_deathmatch "origin" "-119.13 -1957.19 500.13" "angle" "180" "targetname" "X4"
+	spawn info_player_deathmatch "origin" "44.13 -2868.34 500.13" "angle" "180" "targetname" "X5"
+
+	spawn info_player_deathmatch "origin" "-902.09 -1274.87 480.13" "angle" "-180" "targetname" "X6" 
+	spawn info_player_deathmatch "origin" "-796.13 -1421.87 490.13" "angle" "-90" "targetname" "X7"
+	spawn info_player_deathmatch "origin" "23.67 -3264.14 450.13" "angle" "180" "targetname" "X8"
+	spawn info_player_deathmatch "origin" "-72.05 -2364.65 500.13" "angle" "95" "targetname" "X9"
+	spawn info_player_deathmatch "origin" "-623.23 -6995.48 -90.13" "angle" "119" "targetname" "X10"
+
+	spawn info_player_deathmatch "origin" "-1414.37 -7372.46 -90.24" "angle" "106" "targetname" "X11"
+	spawn info_player_deathmatch "origin" "-2278.27 -7247.67 -90.20" "angle" "95" "targetname" "X12"
+	spawn info_player_deathmatch "origin" "-2742.05 -7090.08 -90.43" "angle" "85" "targetname" "X13"
+	spawn info_player_deathmatch "origin" "-3182.52 -6923.64 -75.44" "angle" "87" "targetname" "X14"
+	spawn info_player_deathmatch "origin" "1996.69 -1255.02 -30.68" "angle" "-90" "targetname" "X15"
+
+
+	spawn info_player_deathmatch "origin" "-5712.33 -5727.58 -160.32" "angle" "83" "targetname" "A1"
+	spawn info_player_deathmatch "origin" "-5644.18 -5571.55 -160.92" "angle" "83" "targetname" "A2"
+	spawn info_player_deathmatch "origin" "-6116.94 -4118.47 70.25" "angle" "-4" "targetname" "A3"
+	spawn info_player_deathmatch "origin" "-6099.69 -3761.96 90.24" "angle" "0" "targetname" "A4"
+	spawn info_player_deathmatch "origin" "-6105.97 -3378.33 90.92" "angle" "0" "targetname" "A5" 
+
+	spawn info_player_deathmatch "origin" "-5751.06 -1497.87 80.88" "angle" "0" "targetname" "A6"
+	spawn info_player_deathmatch "origin" "-5392.54 -1104.09 80.29" "angle" "-90" "targetname" "A7"
+	spawn info_player_deathmatch "origin" "-4756.47 -1040.02 110.89" "angle" "-90" "targetname" "A8"
+	spawn info_player_deathmatch "origin" "-5590.87 -1761.36 80.88" "angle" "0" "targetname" "A9"
+	spawn info_player_deathmatch "origin" "-5004.84 -3183.25 80.37" "angle" "90" "targetname" "A10"
+
+	spawn info_player_deathmatch "origin" "-5859.80 -2822.71 90.61" "angle" "0" "targetname" "A11"
+	spawn info_player_deathmatch "origin" "-5043.02 -1002.07 100.65" "angle" "-90" "targetname" "A12"
+	spawn info_player_deathmatch "origin" "-677.67 -7353.79 -90.47" "angle" "122" "targetname" "A13"
+	spawn info_player_deathmatch "origin" "-2391.16 -7402.13 -90.16" "angle" "94" "targetname" "A14"
+	spawn info_player_deathmatch "origin" "-3519.41 -6771.11 -0.85" "angle" "61" "targetname" "A15"
+end
+
+
+
+// End some labels
+mass_ending4:
+end
+mass_ending3:
+end
+mass_ending2:
+end
+mass_ending1:
+end
+trigger1:
+end
+trigger2:
+end
+change_to_objective2:
+end
+objective2:
+end
+level_end_trigger:
+end
+objective3:
+end
+charge1:
+end
+charge2:
+end
+
+
+
+blokkok:
+
+	local.block = spawn script_object
+	local.block.origin = ( 384 -5392 1416 )
+	local.block setsize ( -64 -16 -1864 ) ( 6712 0 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 260 -3902 584 )
+	local.block setsize ( 0 -70 -700 ) ( 292 0 0 )
+	local.block.angles = ( 0 -10 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 126 -3774 584 )
+	local.block setsize ( 0 -70 -700 ) ( 205 0 0 )
+	local.block.angles = ( 0 -45 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 112 -2872 584 )
+	local.block setsize ( 0 -960 -700 ) ( 64 0 0 )
+	local.block.angles = ( 0 0 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 552 -3972 584 )
+	local.block setsize ( 0 -70 -700 ) ( 292 0 0 )
+	local.block.angles = ( 0 10 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 790 -3928 584 )
+	local.block setsize ( 0 -70 -700 ) ( 205 0 0 )
+	local.block.angles = ( 0 45 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 996 -3822 27 )
+	local.block setsize ( 0 0 -300 ) ( 544 100 500 )
+	local.block.angles = ( 0 83 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 1061 -3282 163 )
+	local.block setsize ( 0 0 -300 ) ( 2741 100 500 )
+	local.block.angles = ( 0 91.4 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 986 -472 300 )
+	local.block setsize ( 0 0 -300 ) ( 651 100 500 )
+	local.block.angles = ( 0 104.5 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 825 157 300 )
+	local.block setsize ( 0 0 -300 ) ( 556 100 500 )
+	local.block.angles = ( 0 123 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 516 639 300 )
+	local.block setsize ( 0 0 -300 ) ( 295 100 500 )
+	local.block.angles = ( 0 139.7 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 303 825 300 )
+	local.block setsize ( 0 0 -300 ) ( 295 100 500 )
+	local.block.angles = ( 0 167 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 15 893 300 )
+	local.block setsize ( 0 0 -300 ) ( 295 100 500 )
+	local.block.angles = ( 0 191 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -273 837 300 )
+	local.block setsize ( 0 0 -300 ) ( 291 100 500 )
+	local.block.angles = ( 0 220 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -495 649 260 )
+	local.block setsize ( 0 0 -300 ) ( 741 100 500 )
+	local.block.angles = ( 0 176 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -1234 702 160 )
+	local.block setsize ( 0 0 -300 ) ( 927 100 500 )
+	local.block.angles = ( 0 159 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -2099 1036 261 )
+	local.block setsize ( 0 0 -300 ) ( 405 100 500 )
+	local.block.angles = ( 0 153 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -2476 1225 245 )
+	local.block setsize ( 0 0 -300 ) ( 394 100 500 )
+	local.block.angles = ( 0 169 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -2863 1299 240 )
+	local.block setsize ( 0 0 -300 ) ( 463 100 500 )
+	local.block.angles = ( 0 185 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -3324 1257 233 )
+	local.block setsize ( 0 0 -300 ) ( 525 100 500 )
+	local.block.angles = ( 0 198 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -3823 1094 218 )
+	local.block setsize ( 0 0 -300 ) ( 458 100 500 )
+	local.block.angles = ( 0 172 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -4277 1157 134 )
+	local.block setsize ( 0 0 -300 ) ( 1145 100 500 )
+	local.block.angles = ( 0 145 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -5240 1889 68 )
+	local.block setsize ( 0 0 -300 ) ( 1875 100 500 )
+	local.block.angles = ( 0 92 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -5304 3763 122 )
+	local.block setsize ( 0 0 -300 ) ( 2054 100 500 )
+	local.block.angles = ( 0 85 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -5145 5811 -96 )
+	local.block setsize ( 0 0 -300 ) ( 769 100 500 )
+	local.block.angles = ( 0 40 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -4560 6310 -80 )
+	local.block setsize ( 0 0 -300 ) ( 526 100 500 )
+	local.block.angles = ( 0 59 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -3460 6650 -35 )
+	local.block setsize ( 0 0 -300 ) ( 410 100 500 )
+	local.block.angles = ( 0 2 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -3050 6661 -27 )
+	local.block setsize ( 0 0 -300 ) ( 248 100 500 )
+	local.block.angles = ( 0 27 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -2829 6773 -44 )
+	local.block setsize ( 0 0 -300 ) ( 516 100 500 )
+	local.block.angles = ( 0 38 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -2421 7089 14 )
+	local.block setsize ( 0 0 -300 ) ( 530 100 500 )
+	local.block.angles = ( 0 23 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -1932 7295 79 )
+	local.block setsize ( 0 0 -300 ) ( 593 100 500 )
+	local.block.angles = ( 0 5 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -1342 7346 185 )
+	local.block setsize ( 0 0 -300 ) ( 753 100 500 )
+	local.block.angles = ( 0 354 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -594 7267 159 )
+	local.block setsize ( 0 0 -300 ) ( 2091 100 500 )
+	local.block.angles = ( 0 306 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 627 5569 68 )
+	local.block setsize ( 0 0 -300 ) ( 1904 100 500 )
+	local.block.angles = ( 0 270 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 633 3649 109 )
+	local.block setsize ( 0 0 -300 ) ( 496 100 500 )
+	local.block.angles = ( 0 229 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 306 3276 148 )
+	local.block setsize ( 0 0 -300 ) ( 568 100 500 )
+	local.block.angles = ( 0 247 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 73 2757 233 )
+	local.block setsize ( 0 0 -300 ) ( 319 100 500 )
+	local.block.angles = ( 0 278 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 118 2441 299 )
+	local.block setsize ( 0 0 -300 ) ( 325 100 500 )
+	local.block.angles = ( 0 298 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 531 2075 398 )
+	local.block setsize ( 0 0 -300 ) ( 225 100 500 )
+	local.block.angles = ( 0 336 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 815 1955 380 )
+	local.block setsize ( 0 0 -300 ) ( 575 100 500 )
+	local.block.angles = ( 0 2 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 1389 1974 375 )
+	local.block setsize ( 0 0 -300 ) ( 910 100 500 )
+	local.block.angles = ( 0 18 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 2252 2262 394 )
+	local.block setsize ( 0 0 -300 ) ( 926 100 500 )
+	local.block.angles = ( 0 29 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 3146 2706 398 )
+	local.block setsize ( 0 0 -300 ) ( 1900 100 500 )
+	local.block.angles = ( 0 0 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( 233 -5417 -111 )
+	local.block setsize ( 0 0 -300 ) ( 665 100 500 )
+	local.block.angles = ( 0 204 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -376 -5682 -105 )
+	local.block setsize ( 0 0 -300 ) ( 924 100 500 )
+	local.block.angles = ( 0 268 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -401 -6606 -105 )
+	local.block setsize ( 0 0 -300 ) ( 886 100 500 )
+	local.block.angles = ( 0 259 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -564 -7477 -105 )
+	local.block setsize ( 0 0 -300 ) ( 1539 100 500 )
+	local.block.angles = ( 0 185 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -2097 -7608 -105 )
+	local.block setsize ( 0 0 -300 ) ( 874 100 500 )
+	local.block.angles = ( 0 157 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -2903 -7269 -105 )
+	local.block setsize ( 0 0 -300 ) ( 812 100 500 )
+	local.block.angles = ( 0 147 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -5346 -5342 30 )
+	local.block setsize ( 0 0 -300 ) ( 264 100 500 )
+	local.block.angles = ( 0 352 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -3442 -1648 195 )
+	local.block setsize ( 0 0 -300 ) ( 1422 100 500 )
+	local.block.angles = ( 0 35 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -2273 -839 397 )
+	local.block setsize ( 0 0 -300 ) ( 412 100 500 )
+	local.block.angles = ( 0 19 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -1250 -943 349 )
+	local.block setsize ( 0 0 -300 ) ( 747 100 500 )
+	local.block.angles = ( 0 324 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -641 -1377 485 )
+	local.block setsize ( 0 0 -300 ) ( 745 100 500 )
+	local.block.angles = ( 0 318 0 )
+	local.block solid
+	local.block nodamage
+
+	local.block = spawn script_object
+	local.block.origin = ( -91 -1879 497 )
+	local.block setsize ( 0 0 -300 ) ( 808 100 500 )
+	local.block.angles = ( 0 281 0 )
+	local.block solid
+	local.block nodamage
+
+	// ROAD
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -3384 -4164 -15 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 460 170 0 )
+	local.roadblock.angles = ( -353 307 -10 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -3108 -4528 -70 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 503 170 0 )
+	local.roadblock.angles = ( -355 330 -6 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -2636 -4816 -112 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 2763 170 0 )
+	local.roadblock.angles = ( 0 0 -0.8 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 129 -4839 -117 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 747 170 0 )
+	local.roadblock.angles = ( 0 4.8 -0.28 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 873 -4776 -115 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 534 170 0 )
+	local.roadblock.angles = ( 0 25 -0.4 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 1358 -4550 -117 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 720 170 0 )
+	local.roadblock.angles = ( 0 51 0 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 1834 -3959 -105 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 1547 170 0 )
+	local.roadblock.angles = ( 0 85 0 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 1950 -2417 -105 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 1322 170 0 )
+	local.roadblock.angles = ( -3 87 -0.2 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 2004 -1097 -46 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 467 170 0 )
+	local.roadblock.angles = ( -3 86 0 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	/////////// FELFELÉ
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 2033 -632 -10 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 912 170 0 )
+	local.roadblock.angles = ( -10 101 -3 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 1853 246 150 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 574 170 0 )
+	local.roadblock.angles = ( -10 120 -1.3 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 1568 738 252 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 710 170 0 )
+	local.roadblock.angles = ( -6.8 140 -3.4 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 1027 1192 337 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 587 170 0 )
+	local.roadblock.angles = ( -3.3 154 -5 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 498 1443 362 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 423 170 0 )
+	local.roadblock.angles = ( 0 156 -5.2 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 110 1612 366 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 787 170 0 )
+	local.roadblock.angles = ( -346 130 -6.7 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -387 2194 183 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 961 170 0 )
+	local.roadblock.angles = ( -352 100 -6 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -561 3132 72 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 674 170 0 )
+	local.roadblock.angles = ( -358 104 -5.5 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -721 3787 55 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 737 170 0 )
+	local.roadblock.angles = ( -351 135 -0.8 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -1239 4300 -47 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 1448 170 0 )
+	local.roadblock.angles = ( -351 173 -358 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -2661 4476 -260 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 520 170 0 )
+	local.roadblock.angles = ( -1 170 -351 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -3173 4560 -249 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 427 170 0 )
+	local.roadblock.angles = ( 0 151 -353 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -3550 4763 -243 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 795 170 0 )
+	local.roadblock.angles = ( 0 124 -356 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -3998 5419 -245 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 588 170 0 )
+	local.roadblock.angles = ( -3 99 -353 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -4092 5999 -215 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 1413 170 0 )
+	local.roadblock.angles = ( -12 90 -353 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -4091 7381 88 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 1600 170 0 )
+	local.roadblock.angles = ( 0 173 0 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	////////ELÁGAZÁS
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 1877 719 223 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 1286 170 0 )
+	local.roadblock.angles = ( -358 7 -349 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( 3174 897 211 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 1396 170 0 )
+	local.roadblock.angles = ( -11 357 -2 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	//ALLIES KEZDÕ
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -3481 -4092 10 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 450 170 0 )
+	local.roadblock.angles = ( -6 160 -357 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -3900 -3937 60 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 1382 170 0 )
+	local.roadblock.angles = ( 0 180 0 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -5282 -3937 63 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 427 170 0 )
+	local.roadblock.angles = ( -353 219 0 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+	local.roadblock = spawn script_object
+	local.roadblock.origin = ( -5609 -4209 18 )
+	local.roadblock setsize ( 0 -170 -100 ) ( 690 170 0 )
+	local.roadblock.angles = ( -346 267 -355 )
+	local.roadblock solid
+	local.roadblock nodamage
+
+end

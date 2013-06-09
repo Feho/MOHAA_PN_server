@@ -1,0 +1,66 @@
+/*
+-=[PN]=- Feho - 2011
+
+Affiche le mode de jeu lors du premier spawn
+
+Exécuté par nagle_aa_torso.st
+*/
+
+main:
+	if (self.show_gametype == 1)
+		end
+	
+	wait 1
+	
+	// local.gametype = getcvar("g_gametypestring")
+	
+	// if (local.gametype == "Stalingrad Nightfall)
+		// local.gametype = "Team-Match"
+		
+	self stufftext ("set gametype_cvar " + getcvar("g_gametypestring"))
+	
+	if (getcvar("g_gametypestring") == "Stalingrad Nightfall") {
+		self stufftext ("set gametype_cvar Team Match")
+	}
+
+	self stufftext "globalwidgetcommand dday1 shader townhallwindow"
+	self stufftext "globalwidgetcommand dday1 fgcolor 1.00 0.00 1.00 1.00"
+	self stufftext "globalwidgetcommand dday1 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand dday1 fadein 0"
+	self stufftext "globalwidgetcommand dday1 menu dday1 640 480 NONE 0"
+	self stufftext "globalwidgetcommand dday1 virtualres 1"
+	self stufftext "globalwidgetcommand dday1 fullscreen 1"
+
+	self stufftext "globalwidgetcommand june6 shader townhallwindow"
+	self stufftext "globalwidgetcommand june6 textalign left"
+	self stufftext "globalwidgetcommand june6 rect 565 300 392 64" // feho 100 525 392 64
+	self stufftext "globalwidgetcommand june6 fgcolor 1.00 3.00 4.00 6.00"
+	self stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
+	self stufftext "globalwidgetcommand june6 font handle-23"
+	
+	self stufftext "globalwidgetcommand june6 linkcvar gametype_cvar"
+	
+	self stufftext "showmenu dday1"
+	
+	wait 5
+	
+	if (getcvar("g_gametypestring") == "Sabotage" || getcvar("g_gametypestring") == "***Airborne*** Sabotage")
+	{
+		self stufftext ("set gametype_cvar Find the explosives and destroy the ennemy radio")
+		self stufftext "globalwidgetcommand june6 rect 400 300 600 64"
+		self stufftext "globalwidgetcommand june6 linkcvar gametype_cvar"
+		wait 5
+	}
+	
+	if (getcvar("g_gametypestring") == "Domination")
+	{
+		self stufftext ("set gametype_cvar Capture all the flags")
+		self stufftext "globalwidgetcommand june6 rect 542 300 600 64"
+		self stufftext "globalwidgetcommand june6 linkcvar gametype_cvar"
+		wait 5
+	}
+	
+	self stufftext "hidemenu dday1"
+	
+	self.show_gametype = 1
+end

@@ -1,0 +1,5 @@
+// Feho Items Drop
+// Executed from nagle_aa_torso.st
+main:
+	self dropitems
+end

@@ -1,0 +1,616 @@
+// bots3
+// by jv_map
+
+legs:
+	//self.onground = 1
+	local.wasonground = 0
+	local.last_landing_time = 0.0
+
+	while(isAlive self)
+	{
+		// grab weapon type
+		if(self.current_weapon)
+		{
+			local.scr = self.current_weapon.scr
+			local.wtype = self.current_weapon.weapontype
+		}
+		else
+		{
+			local.scr = level.bots.unarmed_scr
+			local.wtype = "unarmed"
+		}
+		
+		self.onground = !(self sighttrace self.origin (self.origin - (0 0 1)) 0 level.bots.bbox_mins level.bots.bbox_maxs)
+		
+		// check if falling
+		if(!self.onground)
+		{
+			if(!local.die_on_landing && self.velocity[2] <= level.bots.CRATER_SPEED)
+			{
+				// normally an error, but
+				// some servers may have this aliased
+				self playsound snd_fall
+				
+				local.die_on_landing = 1
+			}
+			
+			// yup, falling
+			// some of the anims don't loop properly, so always use smg anim
+			self setmotionanim smg_fall
+			waitframe
+		}
+		else if(local.die_on_landing)
+		{
+			// crater
+			if(self)
+			{
+				self killed self 10000 $world (0 0 0) (0 0 0) (0 0 0) 0 0 7 0
+			}
+			break
+		}
+		else if(!local.wasonground)
+		{	
+			// land
+			if(self.pose == level.bots.POSE_STAND && self.botmovedir == (0 0 0))
+			{
+				self setmotionanim (local.wtype + "_land")
+				self waittill flaggedanimdone
+			}
+			else
+			{
+				// only play land anim when standing
+				// but have to wait anyway to get wasonground set properly
+				waitframe
+			}
+			local.last_landing_time = level.time
+		}
+		else if(self.key_jump && level.time - local.last_landing_time >= level.bots.jump_interval && self sighttrace self.origin (self.origin + (0 0 level.bots.JUMP_HEIGHT)) 0 level.bots.jumpbbox_mins level.bots.jumpbbox_maxs)
+		{			
+			// check if we have room to jump
+			// must go to idle anim before we can jump properly
+			self setmotionanim (local.wtype + "_stand_idle")
+			waitframe
+			
+			if(isAlive self)
+			{
+				// mice! eek! jump
+				
+				// jump up
+				self pusher $world self $world.upvector level.bots.JUMP_HEIGHT
+				self setmotionanim (local.wtype + "_jump_takeoff")
+				waitframe
+				
+				if(isAlive self)
+				{
+					// jump in pref. direction
+					self pusher $world self self.botmovedir level.bots.JUMP_DISTANCE
+					self waittill flaggedanimdone
+				}
+			}
+		}
+		else
+		{			
+			// normal run behaviour
+			waitthread set_legs_anim local.wtype
+			waitframe
+		}
+		
+		local.wasonground = self.onground
+	}
+end
+
+torso:
+	while(isAlive self)
+	{
+		if(self.new_weapon)
+		{
+			// unholster the new weapon
+			self.current_weapon = self.new_weapon
+			self.new_weapon = NIL
+			
+			self weapon_internal self.current_weapon.tik
+			
+			// make sure the new weap doesn't do damage
+			self weaponcommand mainhand dmbulletdamage 0
+			
+			// update fake weapon
+			self.fakeweapon model self.current_weapon.tik
+			self.fakeweapon tracerfrequency 0
+			
+			waitthread self.current_weapon.scr::action
+		}
+		else
+		{
+			if(self.current_weapon)
+			{
+				self weapon_internal ""
+				self.current_weapon = NIL
+			}
+			waitframe
+		}
+	}
+end
+
+misc_controller:
+
+	local.yawfrac = 0.2 + 0.7 * level.bots.skill //0.4
+	local.pitchfrac = 0.2 + 0.7 * level.bots.skill //0.4
+
+	while(isAlive self)
+	{
+		if(self.cueued_upperanim)
+		{
+			// force no pitch
+			local.target_pitch = 0.0
+			
+			// force no lean
+			local.lean = 0
+		}
+		else
+		{
+			local.target_pitch = self.bot_target_viewangles[0]
+			
+			local.lean = self.key_lean // -1, 0 or 1
+		}
+		
+		// aiming
+		
+		// yaw
+		local.target_yaw = self.bot_target_viewangles[1]
+		local.delta = local.target_yaw - self.angles[1]
+		local.delta = waitthread level.bots.common::anglemod local.delta
+		self.angles += (0 (local.delta * local.yawfrac) 0)
+		
+		// pitch
+		local.delta = local.target_pitch - self.pitch
+		self.pitch += local.delta * local.pitchfrac
+		
+		// view vector
+		self.viewvector = angles_toforward (self.pitch self.angles[1] 0)
+		self.target_viewvector = angles_toforward self.bot_target_viewangles
+		
+		self.ontarget = self.viewvector * self.target_viewvector > 0.98 + 0.019 * level.bots.skill
+		
+		// leaning
+		local.target_lean_angle = local.lean * level.bots.lean_angle
+		local.delta = local.target_lean_angle - self.lean_angle
+		self.lean_angle += local.delta * level.bots.lean_speed * 0.05
+	
+		// air move
+		if(!self.onground)
+		{
+			// jump in spec. direction
+			//self pusher $world self self.botmovedir (level.bots.JUMP_DISTANCE * 0.05)
+			local.vel = self.velocity
+			local.vel[0] = self.botmovedir[0] * level.bots.AIRSPEED
+			local.vel[1] = self.botmovedir[1] * level.bots.AIRSPEED
+			self.velocity = local.vel
+		}
+	
+		// reduce viewkick
+		self.viewkick = self.viewkick * level.bots.viewkickfalloff
+		
+		self.recoil_controlled = self.viewkick < level.bots.MAX_PREFERED_VIEWKICK * (2.0 - level.bots.skill)
+	
+		waitframe
+	}
+	
+end
+
+upperanimhandler:
+	while(isAlive self)
+	{
+		// lean angle must be reduced before doing an upperanim
+		if(self.cueued_upperanim && abs self.pitch < 5.0 && abs self.lean_angle < 5.0)
+		{
+			// this anim does play
+			self setupperanim self.cueued_upperanim
+			self waittill upperanimdone
+			
+			if(self)
+			{
+				self.cueued_upperanim = NIL
+			}
+		}
+		else
+		{
+			// set controllerangles just for fun
+			self setcontrollerangles 1 (self.pitch 0.0 self.lean_angle)
+			
+			// set a dummy anim
+			// so setcontrollerangles can be used
+			// this anim doesn't actually play
+			self upperanim rifle_stand_idle
+			self waittill upperanimdone
+		}
+	}
+
+end
+
+playupperanim local.anim:
+
+	// assert currently no anim is busy
+	if(self.cueued_upperanim)
+	{
+		println "[BOTS3] Cueued upperanim assertion failure: " self.cueued_upperanim
+	}
+
+	self.cueued_upperanim = local.anim
+
+	while(isAlive self && self.cueued_upperanim)
+	{
+		waitframe
+	}
+
+end
+
+set_legs_anim local.weapontype:
+	local.prefix = local.weapontype + "_"
+	
+	if(self.pose == level.bots.POSE_STAND)
+	{
+		local.prefix += "stand_"
+	}
+	else if(self.pose == level.bots.POSE_CROUCH)
+	{
+		local.prefix += "crouch_"
+	}
+	else
+	{
+		println "[BOTS3] Assertion failure in level.bots.move::get_legs_anim: Unkown pose '" self.pose "'"
+		local.prefix += "stand_"
+	}
+	
+	// determines clipmovedir
+	waitthread clipmove
+	
+	if(self.botclipmovedir == (0 0 0))
+	{
+		self setmotionanim (local.prefix + "idle")
+	}
+	else
+	{			
+		if(self.botclipmovedir * self.botclipmovedir != 1.0)
+		{
+			println "[BOTS3] Assertion failure in level.bots.move::get_legs_anim: Not a unit vector " self.botclipmovedir
+			self setmotionanim (local.prefix + "idle")
+			end
+		}
+		
+		if(self.key_move_slow)
+		{
+			local.prefix += "walk_"
+		}
+		else
+		{
+			local.prefix += "run_"
+		}
+		
+		local.fwddot 	= self.forwardvector 	* self.botclipmovedir
+		local.lfdot 	= self.leftvector 		* self.botclipmovedir
+		
+		local.slot = 0
+		
+		if(local.fwddot > 0.0)
+		{
+			self setanim (local.prefix + "fwd") local.slot local.fwddot flagged
+			local.slot++
+		}
+		else if(local.fwddot < 0.0)
+		{
+			self setanim (local.prefix + "back") local.slot -local.fwddot flagged
+			local.slot++
+		}
+		
+		if(local.lfdot > 0.0)
+		{
+			self setanim (local.prefix + "left") local.slot local.lfdot flagged
+		}
+		else if(local.lfdot < 0.0)
+		{
+			self setanim (local.prefix + "right") local.slot -local.lfdot flagged
+		}
+	}
+end
+
+clipmove:
+	
+	local.EPS = 0.02
+	local.MAX_ATTEMPTS = 3
+	
+	self.botclipmovedir = self.botmovedir
+	
+	for(local.attempt = 1; local.attempt <= local.MAX_ATTEMPTS; local.attempt++)
+	{
+		// check if wanting to move
+		if(self.botclipmovedir == (0 0 0))
+		{
+			//self.botclipmovedir = (0 0 0)
+			
+			// all good
+			break
+		}
+		else
+		{
+			// check if there's a collision
+			if(self sighttrace self.origin (self.origin + level.bots.movebb_checklength * self.botclipmovedir) 0 level.bots.movebbox_mins level.bots.movebbox_maxs)
+			{
+				// no collision, all good
+				//self.botclipmovedir = self.botmovedir
+				break
+			}
+			else
+			{
+				// yes, collision
+				
+				// try to find normal (diff. part)
+				
+				// NOTE: self trace doesn't take bbox into account :S, so use local trace
+				
+				local.endpoint = self.origin + 10.0 * level.bots.movebb_checklength * self.botclipmovedir
+				
+				// special cases: axis aligned movement
+				if(abs self.botclipmovedir[0] < local.EPS)
+				{
+					// move along y-axis
+					if(self.botclipmovedir[1] > 0.0)
+					{
+						// move to positive y
+						local.trace3 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[3] level.bots.partmovebbox_maxs[3]
+						local.trace4 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[4] level.bots.partmovebbox_maxs[4]
+						
+						if(local.trace3 == local.endpoint && local.trace4 == local.endpoint)
+						{
+							// false hit
+							local.falsehit = 1
+						}
+						else
+						{
+							local.in_plane_vec = local.trace3 - local.trace4 + (level.bots.partmovesep 0 0)
+							
+							// may be an inward normal, and is also unnormalized, but that doesn't matter
+							local.normal = vector_cross local.in_plane_vec $world.upvector
+						}
+					}
+					else
+					{
+						// move to negative y
+						local.trace1 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[1] level.bots.partmovebbox_maxs[1]
+						local.trace2 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[2] level.bots.partmovebbox_maxs[2]
+						
+						if(local.trace1 == local.endpoint && local.trace2 == local.endpoint)
+						{
+							// false hit
+							local.falsehit = 1
+						}
+						else
+						{
+							local.in_plane_vec = local.trace1 - local.trace2 - (level.bots.partmovesep 0 0)
+							
+							// may be an inward normal, and is also unnormalized, but that doesn't matter
+							local.normal = vector_cross local.in_plane_vec $world.upvector
+						}
+					}
+				}
+				else if(abs self.botclipmovedir[1] < local.EPS)
+				{
+					// move along x-axis
+					if(self.botclipmovedir[0] > 0.0)
+					{
+						// move to positive x
+						local.trace2 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[2] level.bots.partmovebbox_maxs[2]
+						local.trace3 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[3] level.bots.partmovebbox_maxs[3]
+						
+						if(local.trace2 == local.endpoint && local.trace3 == local.endpoint)
+						{
+							// false hit
+							local.falsehit = 1
+						}
+						else
+						{
+							local.in_plane_vec = local.trace2 - local.trace3 - (0 level.bots.partmovesep 0)
+							
+							// may be an inward normal, and is also unnormalized, but that doesn't matter
+							local.normal = vector_cross local.in_plane_vec $world.upvector
+						}
+					}
+					else
+					{
+						// move to negative x
+						local.trace4 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[4] level.bots.partmovebbox_maxs[4]
+						local.trace1 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[1] level.bots.partmovebbox_maxs[1]
+						
+						if(local.trace4 == local.endpoint && local.trace1 == local.endpoint)
+						{
+							// false hit
+							local.falsehit = 1
+						}
+						else
+						{
+							local.in_plane_vec = local.trace4 - local.trace1 + (0 level.bots.partmovesep 0)
+							
+							// may be an inward normal, and is also unnormalized, but that doesn't matter
+							local.normal = vector_cross local.in_plane_vec $world.upvector
+						}
+					}
+				}
+				else
+				{
+					// general move
+					
+					if(self.botclipmovedir[0] > 0.0 && self.botclipmovedir[1] > 0.0)
+					{
+						local.trace2 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[2] level.bots.partmovebbox_maxs[2]
+						local.trace3 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[3] level.bots.partmovebbox_maxs[3]
+						local.trace4 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[4] level.bots.partmovebbox_maxs[4]
+						
+						if(local.trace2 == local.endpoint && local.trace3 == local.endpoint && local.trace4 == local.endpoint)
+						{
+							// false hit
+							local.falsehit = 1
+						}
+						else
+						{
+							local.dot2 = local.trace2 * self.botclipmovedir
+							local.dot4 = local.trace4 * self.botclipmovedir
+							
+							local.dot_delta = local.dot4 - local.dot2
+							
+							// grab smallest of the 2 side traces
+							if(local.dot_delta > local.EPS)
+							{
+								local.in_plane_vec = local.trace2 - local.trace3 - (0 level.bots.partmovesep 0)
+								local.normal = vector_cross local.in_plane_vec $world.upvector
+							}
+							else if(local.dot_delta < -local.EPS)
+							{
+								local.in_plane_vec = local.trace4 - local.trace3 - (level.bots.partmovesep 0 0)
+								local.normal = vector_cross local.in_plane_vec $world.upvector
+							}
+							else
+							{
+								// stuck in a concave corner
+								local.normal = self.botclipmovedir
+							}
+						}
+					}
+					else if(self.botclipmovedir[0] < 0.0 && self.botclipmovedir[1] > 0.0)
+					{
+						local.trace3 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[3] level.bots.partmovebbox_maxs[3]
+						local.trace4 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[4] level.bots.partmovebbox_maxs[4]
+						local.trace1 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[1] level.bots.partmovebbox_maxs[1]
+						
+						if(local.trace3 == local.endpoint && local.trace4 == local.endpoint && local.trace1 == local.endpoint)
+						{
+							// false hit
+							local.falsehit = 1
+						}
+						else
+						{
+							local.dot3 = local.trace3 * self.botclipmovedir
+							local.dot1 = local.trace1 * self.botclipmovedir
+							
+							local.dot_delta = local.dot3 - local.dot1
+							
+							// grab smallest of the 2 side traces
+							if(local.dot_delta > local.EPS)
+							{
+								local.in_plane_vec = local.trace1 - local.trace4 - (0 level.bots.partmovesep 0)
+								local.normal = vector_cross local.in_plane_vec $world.upvector
+							}
+							else if(local.dot_delta < -local.EPS)
+							{
+								local.in_plane_vec = local.trace3 - local.trace4 + (level.bots.partmovesep 0 0)
+								local.normal = vector_cross local.in_plane_vec $world.upvector
+							}
+							else
+							{
+								// stuck in a concave corner
+								local.normal = self.botclipmovedir
+							}
+						}
+					}
+					else if(self.botclipmovedir[0] > 0.0 && self.botclipmovedir[1] < 0.0)
+					{
+						local.trace1 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[1] level.bots.partmovebbox_maxs[1]
+						local.trace2 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[2] level.bots.partmovebbox_maxs[2]
+						local.trace3 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[3] level.bots.partmovebbox_maxs[3]
+						
+						if(local.trace1 == local.endpoint && local.trace2 == local.endpoint && local.trace3 == local.endpoint)
+						{
+							// false hit
+							local.falsehit = 1
+						}
+						else
+						{
+							local.dot3 = local.trace3 * self.botclipmovedir
+							local.dot1 = local.trace1 * self.botclipmovedir
+							
+							local.dot_delta = local.dot3 - local.dot1
+							
+							// grab smallest of the 2 side traces
+							if(local.dot_delta > local.EPS)
+							{
+								local.in_plane_vec = local.trace1 - local.trace2 - (level.bots.partmovesep 0 0)
+								local.normal = vector_cross local.in_plane_vec $world.upvector
+							}
+							else if(local.dot_delta < -local.EPS)
+							{
+								local.in_plane_vec = local.trace3 - local.trace2 + (0 level.bots.partmovesep 0)
+								local.normal = vector_cross local.in_plane_vec $world.upvector
+							}
+							else
+							{
+								// stuck in a concave corner
+								local.normal = self.botclipmovedir
+							}
+						}
+					}
+					else if(self.botclipmovedir[0] < 0.0 && self.botclipmovedir[1] < 0.0)
+					{
+						local.trace4 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[4] level.bots.partmovebbox_maxs[4]
+						local.trace1 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[1] level.bots.partmovebbox_maxs[1]
+						local.trace2 = trace self.origin local.endpoint 0 level.bots.partmovebbox_mins[2] level.bots.partmovebbox_maxs[2]
+						
+						if(local.trace1 == local.endpoint && local.trace2 == local.endpoint && local.trace4 == local.endpoint)
+						{
+							// false hit
+							local.falsehit = 1
+						}
+						else
+						{
+							local.dot2 = local.trace2 * self.botclipmovedir
+							local.dot4 = local.trace4 * self.botclipmovedir
+							
+							local.dot_delta = local.dot2 - local.dot4
+							
+							// grab smallest of the 2 side traces
+							if(local.dot_delta > local.EPS)
+							{
+								local.in_plane_vec = local.trace1 - local.trace4 - (0 level.bots.partmovesep 0)
+								local.normal = vector_cross local.in_plane_vec $world.upvector
+							}
+							else if(local.dot_delta < -local.EPS)
+							{
+								local.in_plane_vec = local.trace1 - local.trace2 - (level.bots.partmovesep 0 0)
+								local.normal = vector_cross local.in_plane_vec $world.upvector
+							}
+							else
+							{
+								// stuck in a concave corner
+								local.normal = self.botclipmovedir
+							}
+						}
+					}
+				}
+				
+				if(local.falsehit)
+				{
+					// test
+					//iprintln "falsehit"
+					//self.botclipmovedir = self.botmovedir
+					
+					// all good
+					break
+				}
+				else
+				{
+					//iprintln "normal: " local.normal
+					// use normal to determine clipmove
+					self.botclipmovedir = vector_normalize (self.botclipmovedir - self.botclipmovedir * local.normal / (local.normal * local.normal) * local.normal)
+				}
+			}
+		}
+	}
+	
+	// no solution
+	if(local.attempt >= local.MAX_ATTEMPTS)
+	{
+		self.botclipmovedir = (0 0 0)
+	}
+	
+//	if(local.attempt > 1)
+//	{
+//		iprintln "#attempts: " (local.attempt - 1)
+//	}
+end

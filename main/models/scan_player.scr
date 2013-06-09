@@ -1,0 +1,109 @@
+main:
+
+	local.num = randomint 999999999
+	self attachmodel models/vehicles/jeep_30cal.tik "Bip01 Pelvis" 1 ("portable" + local.num) 1 -1 -1 -1 -1 ( 0 -30 -30 )
+	self.packed_30cal = $("portable" + local.num)
+	$("portable" + local.num).angles = ( 45 45 0 )
+	self give models/Portable30cal.tik
+	self use models/Portable30cal.tik
+	self iprint "Press (fire) to Deploy" 1
+	level.MG_ON = 1
+
+	wait 2
+
+	local.check = 1
+	local.team = self.dmteam
+
+
+
+	while(local.check)
+		{
+		if(self == NULL)
+			local.check = 0
+		else
+			{
+			if(self.dmteam != local.team || !isalive self)
+				{
+				//spawn a new trigger in original place
+				local.trigger = spawn trigger_use origin self.origin
+				local.trigger model models/vehicles/jeep_30cal.tik
+				local.trigger show
+				local.trigger setthread models/30cal.scr::main
+				local.trigger droptofloor
+				local.trigger playsound mg_drop
+				self.packed_30cal remove
+				level.MG_ON = 0
+				end
+				}
+			else
+				{
+
+				if(self.fireheld)
+				{
+					self forcelegsstate STAND // Feho - prevent under map bug when crouched
+					self.packed_30cal remove
+					self exec models/place_30cal.scr
+					self take models/Portable30cal.tik
+					self thread truck_cam //feho
+					
+					end
+				}
+					
+				local.weapon = waitthread check_weapon self
+
+				if(!local.weapon)
+					{
+					//spawn a new trigger
+					local.trigger = spawn trigger_use origin self.origin
+					local.trigger model models/vehicles/jeep_30cal.tik
+					local.trigger show
+					local.trigger setthread models/30cal.scr::main
+					local.trigger droptofloor
+					local.trigger playsound mg_drop
+					self.packed_30cal remove
+					level.MG_ON = 0
+					end
+					}
+				}
+			}
+		waitframe
+		}
+
+
+
+
+end 
+
+check_weapon local.weapon:
+	
+	local.ok = 1
+
+	local.ran = randomint 999999
+
+	local.model = models/portable30cal.tik
+
+	local.weapon weaponcommand dual targetname ("Weaponcheck" + local.ran)
+
+	if($("Weaponcheck" + local.ran) != NIL && $("Weaponcheck" + local.ran) != NULL)
+		{
+		if($("Weaponcheck" + local.ran).model != local.model)
+			{
+			local.weapon weaponcommand dual targetname ""
+			local.ok = 0
+			end local.ok
+			}
+		}
+
+	local.weapon weaponcommand dual targetname ""
+
+end local.ok
+
+truck_cam:
+
+if (level.MG_ON == 1) {
+	wait 1
+	cueplayer
+	// thread truck_cam
+}
+
+end

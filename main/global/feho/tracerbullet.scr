@@ -1,0 +1,64 @@
+/**
+ * Tracer ammunition by Feho
+ *
+ * Executed from nagle_aa_torso.st
+ */
+
+main:
+	// can lag or crash if too many players fire at the same time
+	if ($player.size > 20)
+		end
+
+	local.speed = (int(getcvar(tracer_speed)))
+	
+	if (!local.speed)
+		local.speed = 8000
+
+	local.tracermodel = "models/fx/muzflash.tik"
+	
+	local.fwd_vec = angles_toforward self.viewangles
+	
+	local.tracer = spawn local.tracermodel "classname" "scriptmodel"
+	local.tracer.scale = 0.4
+	local.tracer notsolid
+	local.tracer.origin = self gettagposition "Bip01 Head"
+	local.tracer.angles = self.viewangles
+	// local.tracer light 0.3 0.2 0.1 64
+	
+	// 2nd spawn to allow players to see their own tracers
+	// local.tracer2 = spawn local.tracermodel "classname" "scriptmodel"
+	// local.tracer2.scale = 0.2
+	// local.tracer2 notsolid
+	// local.tracer2.origin = (local.tracer.origin - (local.fwd_vec * -10))
+	// local.tracer2.angles = self.viewangles + ( 0 90 0 )
+	
+	local.tracer.velocity =  local.fwd_vec * local.speed
+	// local.tracer2.velocity =  local.fwd_vec * local.speed
+	
+	wait 1
+	
+	local.tracer immediateremove
+	// local.tracer2 immediateremove
+end
+
+tracer_bot local.weapon:
+	if (local.weapon)
+	{
+		local.weapon.tracermodel = "models/fx/muzflash.tik"
+		
+		local.fwd_vec = self.forwardvector
+		
+		// add a tracer for MG bullets
+		local.tracer = spawn local.weapon.tracermodel "classname" "scriptmodel"
+		local.tracer.scale = 0.4
+		local.tracer notsolid
+		local.tracer.origin = local.weapon.origin
+		local.tracer.angles = self.angles
+		// local.tracer light 0.3 0.2 0.1 64
+		
+		
+		local.tracer.velocity =  local.fwd_vec * 12000
+		wait 1
+		local.tracer immediateremove
+	}
+end

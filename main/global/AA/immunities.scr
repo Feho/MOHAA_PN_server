@@ -1,0 +1,32 @@
+main:
+
+	self immune none
+	self immune suicide
+	self immune crush
+	self immune crush_every_frame
+	self immune telefrag
+	self immune lava
+	self immune slime
+	self immune falling
+	self immune last_self_inflicted
+	self immune explosion
+	self immune explodewall
+	self immune electric
+	self immune electricwater
+	self immune thrownobject
+	self immune grenade
+	self immune beam
+	self immune rocket
+	self immune impact
+	self immune bullet
+	self immune fast_bullet
+	self immune vehicle
+	self immune fire
+	self immune flashbang
+	self immune on_fire
+	self immune gib
+	self immune impale
+	self immune bash
+	self immune shotgun
+
+end

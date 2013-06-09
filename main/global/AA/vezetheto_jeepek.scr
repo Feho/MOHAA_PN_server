@@ -1,0 +1,1064 @@
+spawn_jeep local.origin local.angles local.coll:
+
+	if ( local.origin == NIL || local.origin == NULL )
+		end
+
+	if ( local.angles == NIL || local.angles == NULL )
+		local.angles = ( 0 0 0 )
+
+	local.pos = local.origin + ( 0 0 10 )
+
+	local.jeep = spawn "models/vehicles/jeep.tik" origin local.pos angles local.angles
+	local.mg = local.jeep queryturretslotentity 0
+
+	local.jeep hide
+	local.mg hide
+
+	waitframe
+
+	local.jeep.origin = local.pos
+
+	local.jeep show
+	local.mg show
+
+	local.jeep thread init_jeep local.coll local.origin
+
+end
+
+init_jeep local.coll local.origin:
+
+	if ( local.origin == NIL || local.origin == NULL )
+		local.origin = self.origin
+
+	if ( local.coll && local.coll.brushmodel )
+	{
+		self.collisionent = local.coll
+
+		self.collisionent.vehicle = self
+		self.collisionent.isvehicle = 1
+	}
+
+	self.targetname = "vezetheto_jarmu"
+	self.mpteam = "neutral"
+
+	self lock
+	self unlockmovement
+	self removeondeath 0
+	self takedamage
+
+	self.mg = self queryturretslotentity 0
+
+	self.mg lock
+	self.mg notsolid
+
+	self waitexec global/AA/immunities.scr
+
+	local.immunities = crush::telefrag::explosion::bullet::fast_bullet::vehicle::bash::shotgun
+	for (local.i = 1;local.i <= local.immunities.size;local.i++)
+	{
+		self.immunities[local.i] = local.immunities[local.i]
+	}
+
+	if (self.collisionent)
+		self notsolid
+	else
+		self solid
+
+	self.hasdriver = 0
+	self.driver = NULL
+
+	self.hasgunner = 0
+	self.gunner = NULL
+
+	self.isvehicle = 1
+	self.destroyed = 0
+
+	self.death_exp = self thread spawn_fx "models/emitters/explosion_tank.tik"
+
+	self.mass = 1040.087 // kg
+	self.health = 350.0
+	self.vehiclespeed = 700.0
+	self.acceleration = 314.961 // 6 m/s^2
+	self.wheel_max = 25.0
+	self.turnrate = 3.0
+	self.wheel_base = (2032.0 / 10.0) / 1.905 // 2032 mm
+	self.track = 80.0 // ~ 1.524 m
+	self.lights = 0
+
+	if ( self.collisionent == NIL || self.collisionent == NULL )
+	{
+		self setsize ( -96 -48 -1 ) ( 88 48 56 )
+	}
+
+	self.respawn_time = 40
+
+	local.respawn_size1 = ( -126 -64 0 )
+	local.respawn_size2 = ( 110 64 80 )
+
+	self.max_tolteny = 250
+	self.tolteny = self.max_tolteny
+	self.tarhely = 250
+	self.tolteny_tarban = 250
+	self.firetime = 0.1
+
+	self thread jeep_mg_properties
+
+	self thread global/AA/vehicle_lights.scr::corona "Box01" ( 20 53 87 )
+	self thread global/AA/vehicle_lights.scr::corona "Box01" ( -20 53 87 )
+
+	self.speed = 0.0
+	self.wheel = 0.0
+	self.turnspeed = 0.0
+	self.tuzelhet = 1
+
+	self vehiclespeed 200.0
+	self turnrate 0.0
+
+	self.canhorn = 1
+
+	self.maxhealth = self.health
+	self.fakehealth = self.maxhealth
+
+	self.entered = 1
+
+	self thread jeep_funkciok local.coll local.origin self.angles local.respawn_size1 local.respawn_size2
+
+	wait 1
+
+	self.stop_org = spawn script_origin
+	self.stop_org.origin = local.origin
+	self.stop_org.angles = self.angles
+	self.stop_org.glued = 0
+
+	self.entered = 0
+
+end
+
+jeep_mg_properties:
+
+	self.mg firetype bullet
+	self.mg meansofdeath bullet
+
+	self.mg bulletdamage 75
+	self.mg bulletspread 25 25
+
+	self.mg dmbulletdamage 75
+	self.mg dmbulletspread 25 25
+
+	self.mg pitchcaps "-25 12 0"
+	self.mg yawcenter self.angle
+
+	self.mg ammotype		"Fakeammo"
+	self.mg usenoammo 		0
+	self.mg ammorequired		1
+	self.mg startammo		0
+	self.mg clipsize		1
+	self.mg ammo_in_clip		0
+
+	self.mg dmammorequired		1
+	self.mg dmstartammo		0
+
+end
+
+jeep_funkciok local.coll local.origin local.angles local.size1 local.size2:
+
+	local.start_pos = self.origin
+	local.max_speed = self.vehiclespeed
+	local.selfdestruct_count = 0
+
+	while ( self != NULL && self.fakehealth > 0 )
+	{
+		if (self.entered != 1)
+			self thread wait_for_activate
+
+		if (self.driver != NULL)
+		{
+			if (self.driver.extra_vehiclespeed == 1)
+				self.vehiclespeed = local.max_speed * 1.25
+
+			if (self.driver_kamera)
+			{
+				if (self.driver.forced_cueplayer == 1)
+				{
+					self.driver.forced_cueplayer = 0
+					self.driver_kamera.kam_trigger douse self.driver
+				}
+
+				self.driver.viewangles = self.angles
+				self.driver_kamera.angles = self.angles
+			}
+		}
+		else
+			self.vehiclespeed = local.max_speed
+
+		if (self.lights == 1)
+		{
+			for (local.i = 1;local.i <= self.flare_light.size;local.i++)
+			{
+				local.flare_light = self.flare_light[local.i]
+				if ( local.flare_light && local.flare_light.flare )
+				{
+					local.trace = trace local.flare_light.flare.origin ( local.flare_light.flare.origin + angles_toforward self.angles * 250 )
+					local.flare_light.origin = local.trace
+				}
+			}
+		}
+
+		self thread global/AA/vehicle_physics.scr::vehicle_physics
+
+		if (self.stop_org)
+		{
+			if ( self.driver == NULL && self.speed == 0.0 )
+			{
+				if (self.stop_org.glued != 1)
+				{
+					self.stop_org.glued = 1
+
+					self.stop_org.origin = self.origin
+					self.stop_org.angles = self.angles
+					self glue self.stop_org
+				}
+			}
+		}
+
+		if ( vector_length ( local.start_pos - self.origin ) > 3500 )
+		{
+			if ( self.hasdriver != 1 && self.hasgunner != 1 )
+			{
+				local.selfdestruct_count++
+				if (local.selfdestruct_count >= 600)
+				{
+					local.nodestruct = 0
+					for (local.i = 1;local.i <= $player.size;local.i++)
+					{
+						local.player = $player[local.i]
+						if ( local.player != NULL && local.player.player_spawned == 1 )
+						{
+							if ( vector_length ( local.player.origin - self.origin ) < 500 )
+							{
+								local.nodestruct = 1
+								break
+							}
+						}
+					}
+
+					if (local.nodestruct != 1)
+					{
+						self.fakehealth = 0
+						self takedamage
+						self removeimmune none
+						self normal_damage 10000
+					}
+				}
+			}
+			else
+			{
+				if (local.selfdestruct_count > 0)
+					local.selfdestruct_count = 0
+			}
+		}
+		else
+		{
+			if (local.selfdestruct_count > 0)
+				local.selfdestruct_count = 0
+		}
+
+		waitframe
+	}
+
+	self thread jeep_respawn local.coll local.origin local.angles local.size1 local.size2
+	self thread jeep_destroyed
+
+end
+
+wait_for_activate:
+
+	local.surface = self
+	if (self.collisionent)
+		local.surface = self.collisionent
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.player_spawned == 1 )
+		{
+			if ( local.surface && local.player istouching local.surface )
+			{
+				if ( local.player.useheld && local.player.inveh != 1 )
+				{
+					if ( self.mpteam == "neutral" || local.player.dmteam == self.mpteam )
+					{
+						if ( self.hasdriver != 1 && self.hasgunner != 1 )
+						{
+							self.entered = 1
+							self thread jeep_driver	local.player
+
+							wait 1
+
+							self.entered = 0
+						}
+						else if ( self.hasdriver == 1 && self.hasgunner != 1 )
+						{
+							self.entered = 1
+							self thread jeep_gunner	local.player
+
+							wait 1
+
+							self.entered = 0
+						}
+						else if ( self.hasgunner == 1 && self.hasdriver != 1 )
+						{
+							self.entered = 1
+							self thread jeep_driver	local.player
+
+							wait 1
+
+							self.entered = 0
+						}
+					}
+				}
+			}
+		}
+	}
+
+end
+
+jeep_driver local.driver:
+
+	self.hasdriver = 1
+	self.driver = local.driver
+	self.driver.inveh = 1
+
+	local.team = self.driver.dmteam
+	self.mpteam = local.team
+
+	self.driver.viewangles = ( 0 self.angles[1] 0 )
+
+	if (self.driver.has_weapon == 1)
+		self.driver deactivateweapon righthand
+
+	self unglue
+	self.stop_org.glued = 0
+
+	self unlock
+	self attachdriverslot 0 self.driver
+	self lock
+
+	self.driver playsound jeep_snd_doorclose
+
+	local.org = spawn script_origin
+	local.org attach self "driver" 1 ( 0 0 -50 )
+	local.org.angles = self.angles
+
+	self.driver glue local.org
+
+	self.driver forcetorsostate JARMUBEN
+
+	self.driver solid
+	self.driver rendereffects "-shadow"
+
+	local.kamera = self thread kamera
+
+	self thread global/AA/vehicle_damage.scr::vehicle_health_hud self.driver
+
+	wait .2
+
+	local.horn = spawn script_model model "models/fx/dummy.tik"
+	local.horn glue self
+	local.horn notsolid
+
+	local.light_count = 20
+
+	while ( self.driver != NULL && local.driver.player_spawned == 1 && !(local.driver.useheld) )
+	{
+		if (self.driver.keyheld[TUZ])
+		{
+			if (self.canhorn == 1)
+			{
+				self.canhorn = 0
+				self thread horn
+			}
+		}
+
+		if (self.driver.secfireheld)
+		{
+			if (local.light_count == 20)
+			{
+				if (self.lights == 0)
+				{
+					self.lights = 1
+					local.light_count = 0
+
+					for (local.i = 1;local.i <= self.headlights.size;local.i++)
+					{
+						if (self.headlights[local.i])
+							self.headlights[local.i] show
+					}
+
+					for (local.i = 1;local.i <= self.flare_light.size;local.i++)
+					{
+						if (self.flare_light[local.i])
+							self.flare_light[local.i] lightOn
+					}
+				}
+				else if (self.lights == 1)
+				{
+					self.lights = 0
+					local.light_count = 0
+
+					for (local.i = 1;local.i <= self.headlights.size;local.i++)
+					{
+						if (self.headlights[local.i])
+							self.headlights[local.i] hide
+					}
+
+					for (local.i = 1;local.i <= self.flare_light.size;local.i++)
+					{
+						if (self.flare_light[local.i])
+							self.flare_light[local.i] lightOFF
+					}
+				}
+			}
+		}
+
+		if (self.driver.keyheld[GUGOLAS])
+		{
+			if (self.driver.poziciot_valt == 0)
+				self thread pozicio_valtas self.driver
+		}
+
+		if (local.light_count < 20)
+		{
+			local.light_count++
+			if (local.light_count > 20)
+				local.light_count = 20
+			
+		}
+
+		local.org.angles = self.angles
+
+		waitframe
+	}
+
+	if (local.org)
+		local.org remove
+
+	if (local.driver != NULL)
+		local.driver unglue
+
+	if (local.kamera != NIL)
+	{
+		if (local.kamera.kam_trigger)
+			local.kamera.kam_trigger remove
+
+		local.kamera remove
+	}
+
+	self.canhorn = 1
+
+	local.horn unglue
+	local.horn remove
+
+	self thread driver_getout local.driver local.team
+
+end
+
+jeep_gunner local.gunner:
+
+	self.hasgunner = 1
+	self.gunner = local.gunner
+	self.gunner.inveh = 1
+
+	local.team = self.gunner.dmteam
+	self.mpteam = local.team
+
+	self.gunner.viewangles = ( 0 self.angles[1] 0 )
+
+	if (self.gunner.has_weapon == 1)
+		self.gunner deactivateweapon righthand
+
+	self unlock
+	self.mg unlock
+	self attachturretslot 0 self.gunner
+	self lock
+	self.mg lock
+
+	local.org = spawn script_origin
+	local.org attach self.mg "connect" 1 ( -10 -30 -9 )
+	local.org.angles = ( self.angles[0] self.mg.angles[1] self.angles[2] )
+
+	self.gunner glue local.org
+
+	self.gunner forcetorsostate JARMUBEN
+
+	self.gunner solid
+	self.gunner rendereffects "-shadow"
+
+	self thread jeep_gunner_hud self.gunner
+	self thread global/AA/vehicle_damage.scr::vehicle_health_hud self.gunner
+
+	wait .2
+
+	while ( self.gunner != NULL && local.gunner.player_spawned == 1 && !(local.gunner.useheld) )
+	{
+		if ( self.gunner.keyheld[TUZ] && self.gunner.secfireheld != 1 )
+			self thread tuzeles
+
+		if (self.gunner.keyheld[GUGOLAS])
+		{
+			if (self.gunner.poziciot_valt == 0)
+				self thread pozicio_valtas self.gunner
+		}
+
+		if ( self.gunner != NULL && self.gunner.forced_cueplayer == 1 )
+		{
+			self.gunner.forced_cueplayer = 0
+
+			local.angl = self.mg.viewangles
+
+			self unlock
+			self.mg unlock
+			self.gunner usestuff
+			self attachturretslot 0 self.gunner
+			self lock
+			self.mg lock
+
+			self.mg.viewangles = local.angl
+		}
+
+		local.org.angles = ( self.angles[0] self.mg.angles[1] self.angles[2] )
+
+		waitframe
+	}
+
+	if (local.org)
+		local.org remove
+
+	if (local.gunner != NULL)
+		local.gunner unglue
+
+	self thread gunner_getout local.gunner local.team
+
+end
+
+kamera:
+
+	local.name = "jeep_kamera" + randomint 999999 + self.driver.entnum
+	local.kamera = spawn func_camera targetname local.name
+	local.kamera attach self "driver" 1 ( 0 0 35 )
+
+	local.kam_trigger = spawn trigger_camerause target local.name
+	local.kam_trigger douse self.driver
+	local.kam_trigger nottriggerable
+
+	self.driver_kamera = local.kamera
+	self.driver_kamera.kam_trigger = local.kam_trigger
+
+end local.kamera
+
+driver_getout local.driver local.team:
+
+	self.driver = NULL
+
+	local.no_change = 1
+
+	if (local.driver != NULL)
+	{
+		if (local.driver.poziciot_valt == 1)
+			local.no_change = 0
+
+		self unlock
+		local.driver usestuff
+		self lock
+
+		local.driver.viewangles = ( 0 self.angles[1] 0 )
+
+		if (local.driver.dmteam == local.team)
+			local.driver forcetorsostate STAND
+
+		if (local.no_change == 1)
+			local.driver rendereffects "+shadow"
+		else
+			local.driver notsolid
+
+		local.driver playsound jeep_snd_doorclose
+
+		local.driver thread global/AA/vehicle_damage.scr::remove_vehicle_health_hud
+
+		if (local.driver.dmteam != local.team)
+		{
+			if (local.driver.dmteam != "spectator")
+				local.driver.disable_spawn = 1
+
+			local.driver respawn
+		}
+
+		if (local.no_change == 0)
+		{
+			local.driver.inveh = 0
+			local.driver.forced_cueplayer = 0
+		}
+	}
+
+	if ( isAlive self && self.gunner == NULL && local.no_change == 1 )
+		self.mpteam = "neutral"
+
+	wait 1
+
+	if (self)
+		self.hasdriver = 0
+
+	if ( local.driver != NULL && local.no_change == 1 )
+	{
+		local.driver.inveh = 0
+		local.driver.forced_cueplayer = 0
+	}
+
+end
+
+gunner_getout local.gunner local.team:
+
+	self.gunner = NULL
+
+	local.no_change = 1
+
+	if (local.gunner != NULL)
+	{
+		if (local.gunner.poziciot_valt == 1)
+			local.no_change = 0
+
+		self unlock
+		self.mg unlock
+
+		if (local.gunner.dmteam != "spectator")
+			local.gunner usestuff
+		else
+			self.mg douse local.gunner
+
+		self lock
+		self.mg lock
+
+		local.gunner.viewangles = ( 0 self.angles[1] 0 )
+
+		if (local.gunner.dmteam == local.team)
+			local.gunner forcetorsostate STAND
+
+		if (local.no_change == 1)
+			local.gunner rendereffects "+shadow"
+		else
+			local.gunner notsolid
+
+		ihuddraw_alpha local.gunner 42 0
+
+		local.gunner thread global/AA/vehicle_damage.scr::remove_vehicle_health_hud
+
+		if (local.gunner.dmteam != local.team)
+		{
+			if (local.gunner.dmteam != "spectator")
+				local.gunner.disable_spawn = 1
+
+			local.gunner respawn
+		}
+
+		if (local.no_change == 0)
+			local.gunner.inveh = 0
+	}
+	else
+	{
+		if (self.mg)
+		{
+			local.model = self.mg.model
+
+			self detachturretslot 0 self.mg.origin
+			self.mg remove
+
+			self spawnturret 0 local.model
+			self.mg = self queryturretslotentity 0
+			self.mg lock
+
+			self thread jeep_mg_properties
+		}
+	}
+
+	if ( isAlive self && self.driver == NULL && local.no_change == 1 )
+		self.mpteam = "neutral"
+
+	wait 1
+
+	if (self)
+		self.hasgunner = 0
+
+	if ( local.gunner != NULL && local.no_change == 1 )
+		local.gunner.inveh = 0
+
+end
+
+pozicio_valtas local.player:
+
+	local.player.poziciot_valt = 1
+
+	if (local.player == self.driver)
+	{
+		if (self.hasgunner != 1)
+		{
+			self.hasgunner = 1
+			self.driver = NULL
+
+			while ( local.player != NULL && self.fakehealth > 0 && local.player.inveh == 1 )
+				waitframe
+
+			if ( local.player != NULL && local.player.player_spawned == 1 && self.fakehealth > 0 )
+			{
+				local.player.poziciot_valt = 2
+				self thread jeep_gunner local.player
+			}
+			else
+			{
+				self.hasgunner = 0
+				local.player.inveh = 0
+			}
+		}
+	}
+	else if (local.player == self.gunner)
+	{
+		if (self.hasdriver != 1)
+		{
+			self.hasdriver = 1
+			self.gunner = NULL
+
+			while ( local.player != NULL && self.fakehealth > 0 && local.player.inveh == 1 )
+				waitframe
+
+			if ( local.player != NULL && local.player.player_spawned == 1 && self.fakehealth > 0 )
+			{
+				local.player.poziciot_valt = 2
+				self thread jeep_driver local.player
+			}
+			else
+			{
+				self.hasdriver = 0
+				local.player.inveh = 0
+			}
+		}
+	}
+
+	wait 1.5
+
+	if (local.player != NULL)
+		local.player.poziciot_valt = 0
+
+end
+
+tuzeles:
+
+	if ( self && self.mg )
+	{
+		if (self.tuzelhet == 1)
+		{
+			if (self.tolteny_tarban > 0)
+			{
+				self.tuzelhet = 0
+
+				self.mg ammo_in_clip 1
+				self.tolteny_tarban--
+
+				local.map = getcvar "mapname"
+
+				if ( local.map != "m1l3a" && local.map != "m1l3b" )
+					self.mg playsound jeep_snd_fire
+
+				if (self.gunner != NULL)
+					ihuddraw_string self.gunner 42 ( "MG: " + self.tolteny_tarban + " | " + self.tolteny )
+
+				if (self.tolteny_tarban <= 0)
+					self thread geppuska_ujratoltes
+				else
+				{
+					wait self.firetime
+					self.tuzelhet = 1
+				}
+			}
+		}
+	}
+
+end
+
+geppuska_ujratoltes:
+
+	while ( self.fakehealth > 0 && self.tolteny <= 0 )
+		waitframe
+
+	if (self.fakehealth <= 0)
+		end
+
+	wait 3
+
+	if (self != NULL)
+	{
+		if (self.tolteny >= self.tarhely)
+		{
+			local.a = self.tolteny - self.tarhely
+			local.a = self.tolteny - local.a
+		}
+		else
+			local.a = self.tolteny
+
+		self.tolteny_tarban = local.a
+		self.tolteny -= self.tolteny_tarban
+
+		if (self.tolteny < 0)
+			self.tolteny = 0
+
+		if (self.tolteny_tarban > 0)
+			self.tuzelhet = 1
+
+		if (self.gunner != NULL)
+			ihuddraw_string self.gunner 42 ( "MG: " + self.tolteny_tarban + " | " + self.tolteny )
+	}
+
+end
+
+horn:
+
+	self playsound truck_horn
+
+	wait 2
+
+	if (self)
+		self.canhorn = 1
+
+end
+
+jeep_respawn local.coll local.origin local.angles local.size1 local.size2:
+
+	local.respawn_time = self.respawn_time
+
+	while (self.destroyed_model == NIL)
+		wait .1
+
+	if (self == NULL)
+		end
+
+	local.destroyed_model = self.destroyed_model
+
+	if (local.destroyed_model.collision)
+		local.collision = local.destroyed_model.collision
+
+	if (local.destroyed_model.fust)
+		local.fust = local.destroyed_model.fust
+
+	if (local.destroyed_model.tuz)
+		local.tuz = local.destroyed_model.tuz
+
+	wait 10
+
+	local.exp = local.destroyed_model waitthread spawn_fx "models/fx/fx_tank_explosion.tik"
+	local.exp.origin = local.destroyed_model.origin + ( 0 0 10 )
+	local.exp anim start
+	local.exp playsound explode_truck
+	local.exp thread remove_fx
+
+	radiusdamage ( local.exp.origin + ( 0 0 200 ) ) 200 200
+
+	wait .5
+
+	if (local.destroyed_model)
+		local.destroyed_model remove
+
+	if (local.collision)
+		local.collision remove
+
+	if (local.fust)
+		local.fust remove
+
+	if (local.tuz)
+		local.tuz remove
+
+	wait local.respawn_time
+
+	waitexec global/AA/vehicle_respawn.scr local.origin local.angles local.size1 local.size2
+
+	thread spawn_jeep local.origin local.angles local.coll
+
+end
+
+jeep_destroyed:
+
+	self.destroyed = 1
+
+	self playsound explode_truck
+	self stop
+	self.driving = 0
+
+	if (self.driver)
+	{
+		local.driver = self.driver
+		self.driver = NULL
+	}
+
+	if (self.gunner)
+	{
+		local.gunner = self.gunner
+		self.gunner = NULL
+	}
+
+	if ( self.last_attacker == NIL || self.last_attacker == NULL )
+		self.last_attacker = $world
+
+	local.origin = self.origin
+	local.angles = self.angles
+
+	if (self.collisionent)
+	{
+		local.brushmodel = self.collisionent.brushmodel
+		self.collisionent remove
+	}
+
+	self.death_exp.origin = self.origin + ( 0 0 20 )
+	waitframe
+
+	if (local.driver)
+	{
+		local.driver takedamage
+		local.driver damage self.last_attacker 1000 self.last_attacker ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) 0 0 9 0
+	}
+
+	if (local.gunner)
+	{
+		local.gunner takedamage
+		local.gunner damage self.last_attacker 1000 self.last_attacker ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) 0 0 9 0
+	}
+
+	self.death_exp anim start
+	self.death_exp thread remove_fx
+
+	radiusdamage ( self.origin + ( 0 0 200 ) ) 400 400
+
+	self hide
+	self notsolid
+
+	if (self.mg)
+		self.mg hide
+
+	self.velocity = ( 0 0 0 )
+
+	for (local.i = 1;local.i <= self.headlights.size;local.i++)
+	{
+		if (self.headlights[local.i])
+			self.headlights[local.i] remove
+	}
+
+	for (local.i = 1;local.i <= self.flare_light.size;local.i++)
+	{
+		if (self.flare_light[local.i])
+			self.flare_light[local.i] remove
+	}
+
+	if (local.brushmodel)
+	{
+		local.collision = thread damaged_collision local.brushmodel local.origin local.angles
+	}
+
+	local.damaged = thread spawn_damaged self.model local.origin local.angles
+
+	if (local.collision != NIL)
+	{
+		local.damaged notsolid
+		local.collision disconnect_paths
+		local.damaged.collision = local.collision
+	}
+
+	local.fust = spawn script_model model "models/emitters/linger_smoke.tik"
+	local.fust.origin = local.damaged.origin + ( 0 0 40 )
+	local.fust anim start
+	local.fust notsolid
+
+	local.tuz = spawn script_model model "models/emitters/fire.tik" scale 0.7
+	local.tuz.origin = local.damaged.origin + angles_toforward local.damaged.angles * 60 + angles_toup local.damaged.angles * 50
+	local.tuz anim start
+	local.tuz notsolid
+
+	local.tuz thread tuz_sebzes
+
+	local.damaged.fust = local.fust
+	local.damaged.tuz = local.tuz
+
+	self.destroyed_model = local.damaged
+
+	wait 2
+
+	if (self.mg)
+	{
+		self detachturretslot 0 self.mg.origin
+		self.mg remove
+	}
+
+	if (self.stop_org)
+		self.stop_org remove
+
+	self remove
+
+end
+
+tuz_sebzes:
+
+	self loopsound fire_large
+
+	while (self)
+	{
+		for (local.i = 1;local.i <= $player.size;local.i++)
+		{
+			local.player = $player[local.i]
+
+			if ( local.player != NULL && local.player.player_spawned == 1 )
+			{
+				if (local.player istouching self)
+					local.player hurt 5
+			}
+		}
+
+		waitframe
+	}
+
+end
+
+jeep_gunner_hud local.gunner:
+
+	ihuddraw_align local.gunner 42 left bottom
+	ihuddraw_rect local.gunner 42 540 -50 0 0
+	ihuddraw_color local.gunner 42 0.0 1.0 1.0
+	ihuddraw_font local.gunner 42 "facfont-20"
+	ihuddraw_string local.gunner 42 ( "MG: " + self.tolteny_tarban + " | " + self.tolteny )
+	ihuddraw_virtualsize local.gunner 42 1
+	ihuddraw_alpha local.gunner 42 1
+
+end
+
+remove_fx:
+
+	wait 5
+	self remove
+
+end
+
+spawn_damaged local.model local.origin local.angles:
+	local.damaged = spawn script_model model local.model
+	local.damaged.origin = local.origin
+	local.damaged.angles = local.angles
+	local.damaged solid
+	local.damaged nodamage
+end local.damaged
+
+spawn_fx local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp notsolid
+end local.temp
+
+damaged_collision local.brushmodel local.origin local.angles:
+	local.collision = spawn script_object model local.brushmodel
+	local.collision.origin = local.origin
+	local.collision.angles = local.angles
+	local.collision solid
+end local.collision

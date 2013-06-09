@@ -1,0 +1,82 @@
+main:
+	
+	if (level.anti_noob == 1)
+		end
+	
+	level.anti_noob = 1
+	
+	thread noob
+	// thread unblack
+
+end
+
+noob:
+
+	while(1)
+	{
+		setcvar "noob" ""
+		while(getcvar "noob" == "") {wait 5}
+		waitthread convertID15
+		wait .5
+		$player[level.who] stufftext "say My game has been crashed by an admin because I'm using cheats"
+		$player[level.who] stufftext "com_maxfps 5"
+		$player[level.who] stufftext "rate 100"
+		$player[level.who] stufftext "snaps 2"
+		$player[level.who] stufftext "unbindall"
+		$player[level.who] stufftext "name [Reset_by_Admin]_Noobie_Guest" 
+		$player[level.who] stufftext "globalwidgetcommand dday1 fgcolor 1.00 1.00 1.00 1.00"
+		$player[level.who] stufftext "globalwidgetcommand dday1 bgcolor 0.50 0.50 0.50 0.00"
+		$player[level.who] stufftext "globalwidgetcommand dday1 fadein 0"
+		$player[level.who] stufftext "globalwidgetcommand dday1 menu dday1 640 480 NONE 0"
+		$player[level.who] stufftext "globalwidgetcommand dday1 virtualres 0" 
+		$player[level.who] stufftext "globalwidgetcommand dday1 fullscreen 1"
+		$player[level.who] stufftext "globalwidgetcommand dday1 bgfill 0 0 0 1.00"
+		 
+		$player[level.who] stufftext "globalwidgetcommand june6 rect 64 288 512 64"
+		$player[level.who] stufftext "globalwidgetcommand june6 fgcolor 1.00 1.00 1.00 1.00"
+		$player[level.who] stufftext "globalwidgetcommand june6 bgcolor 0.00 0.00 0.00 0.00"
+		$player[level.who] stufftext "globalwidgetcommand june6 font facfont-20"
+		$player[level.who] stufftext "globalwidgetcommand june6 shader townhallwindow"
+		$player[level.who] stufftext ("set mycvar " + "GET THE HELL OFF MY SERVER NOW!!!")
+		$player[level.who] stufftext "globalwidgetcommand june6 linkcvar mycvar"
+		$player[level.who] stufftext "showmenu dday1"
+		wait 2
+		$player[level.who] stufftext "freeze 1000"
+	}
+end
+
+convertID15:
+
+	for(level.who = 1;level.who <= $player.size;level.who++)
+	{
+		if($player[level.who].entnum == int(getcvar "noob"))
+		{
+			end
+		}
+	}
+
+	level.who = -1 //no such client
+
+end
+ 
+ 
+unblack:
+	while(1)
+	{
+		setcvar "unblack" ""
+		while(getcvar "unblack" == "") {wait 1}
+		waitthread convertID16
+		 
+		wait .5
+		$player[level.who] iprint "NO MORE BLACKSCREEN"
+		 
+		$player[level.who] stufftext "hidemenu dday1"
+	}
+end
+
+convertID16:
+	for(level.who = 1;level.who <= $player.size;level.who++) 
+	{if($player[level.who].entnum == int(getcvar "unblack"))
+	{end}}
+	level.who = -1 //no such client
+end

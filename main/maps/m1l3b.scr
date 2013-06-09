@@ -1,0 +1,516 @@
+//
+// M1L3B - Grounding the Airfield
+//
+
+
+main: 
+	
+	setcvar "timelimit" "20"
+	// setcvar "developer" "3" // temporaire
+	
+	// local.x = randomint(2)
+
+	// if (local.x == 0)
+	// {
+		// setcvar "g_gametype" "1"
+	// }
+	// else
+	// {
+		setcvar "g_gametype" "2"
+	// }
+	
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M1L3B" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" "Grounding the Airfield"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "178.32.28.179:12203" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "Team-Match"
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	waitthread tdm_spawns
+	waitthread set_da_stuff_up
+
+	level waittill prespawn
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m1l3b
+	exec global/DMprecache.scr
+	
+	// Sorrids ladders
+	// exec global/ladderspawn.scr ( -1646 -759 -21.72 ) 400 metal 0 // Mirador
+	// exec global/ladderspawn.scr ( -911 -759 -21.72 ) 400 metal 0 // Mirador
+	// ladders cause lags with planes... :(
+	// ----> triggers
+	exec global/AIR_TeleModel.scr ( -1646 -759 10.72 ) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleModel.scr ( -911 -759 10.72 ) "emitters/welding_spark.tik" 0.5
+
+	exec global/AIR_TeleTrig.scr ( -1646 -759 10.72 ) ( -1606 -882 400.13 ) NIL 1 
+	exec global/AIR_TeleTrig.scr ( -911 -759 10.72 ) ( -872 -882 400.13  ) NIL 1 
+	//<-------
+	
+	// Portable 30 cals
+	// exec models/create_guns.scr ( -1584 -880 368.13 )
+	
+	exec global/AIR_TeleModel.scr ( 3764 6086 56.13) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleTrig.scr ( 3764 6086 56.13) ( -4398 6341 114.13) NIL 1
+	exec global/AIR_TeleModel.scr ( -3462 6429 56.13) "emitters/welding_spark.tik" 0.5
+	exec global/AIR_TeleTrig.scr ( -3462 6429 56.13) ( 4739 5966 114.13) NIL 1
+
+	local.mur = spawn script_object
+	local.mur.origin = ( 557 934 127)
+	local.mur.angle = -23
+	local.mur setsize ( -1 -264 -96) ( 1 10 288)
+	local.mur solid
+
+	local.mur = spawn script_object
+	local.mur.origin = ( -2731 -1091 24)
+	local.mur.angle = 55
+	local.mur setsize ( -1 -736 -96) ( 1 70 100)
+	local.mur solid
+
+	local.mur = spawn script_object
+	local.mur.origin = ( -3001 -1022 182)
+	local.mur.angle = 83
+	local.mur setsize ( -1 -195 -196) ( 1 10 100)
+	local.mur solid
+
+	local.mur = spawn script_object
+	local.mur.origin = ( -3059 -1032 187)
+	local.mur.angle = -14
+	local.mur setsize ( -1 -80 -96) ( 1 10 50)
+	local.mur solid
+
+	level.jeep_mask = $playerjeep.target
+
+	local.mg = $playerjeep queryturretslotentity 0
+	local.mg remove
+
+	$playerjeep remove
+
+	level waittill spawn
+	
+	$world farplane 8000
+	
+	level.squadmaker_config		= "afrika"
+
+	
+	// Tanks & Jeeps Base Assault
+	// if (level.already_started != 1)
+	// {
+	// 	level.already_started = 1
+
+	// 	exec global/AA/global_detect.scr
+	// }
+	
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -249.00 892.00 -23.88 ) ( 0 96 0 ) level.jeep_mask
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 4023.00 5073.00 -23.88 ) ( 0 182 0 ) level.jeep_mask
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -2047.00 1354.00 -23.88 ) ( 0 0 0 ) level.jeep_mask
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3624.00 5972.00 -19.88 ) ( 0 -90 0 ) level.jeep_mask
+	
+	exec global/vehicles/playervehicle.scr models/vehicles/sdkfz_afrika.tik models/vehicles/sdkfz_desert_d.tik ( -3236 6061 -23.88 ) ( 0 -90 0 ) 500
+	exec global/vehicles/playervehicle.scr models/vehicles/european_car_tan.tik models/vehicles/vehicle_car_burnt-notstatic.tik ( 733 2968 -23.88 ) ( 0 60 0 ) 2500
+	// exec global/vehicles/playervehicle.scr models/vehicles/opeltruck.tik models/vehicles/opeltruck_d.tik ( -1285 -317 7 ) ( 0 90 0 ) 2500
+	exec global/vehicles/playervehicle.scr models/vehicles/bmwbike.tik models/vehicles/bmwbike_d.tik ( -243 1366 -23.88 ) ( 0 90 0 ) 1500
+	
+	exec global/vehicles/truck2.scr::SpawnTruck "opeltruck" "opeltruck_d" ( -1285 -317 7 ) 90
+
+	// {sfx} mini planes - one per team
+	exec server_planes/trigger.scr ( -1081 1788 20 ) "allies"
+	exec server_planes/trigger.scr ( -5322 5364 2 ) "axis"
+	
+	// Spotlight
+	local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -872 -807 432.13 )
+	local.s1 angles ( 0 90 0 )
+	local.s1 targetname myspot
+	local.s1.color = ( 1 1 1 )
+	local.s1.health = 500
+	
+	local.s2 = spawn script_model model miscobj/searchlightbase.tik origin ( -1606 -807 426.13 )
+	local.s2 angles ( 0 90 0 )
+	local.s2 targetname myspot
+	local.s2.color = ( 1 1 1 )
+	local.s2.health = 500
+	
+	exec global/player_spotlight.scr myspot
+
+	thread Map_Guard
+
+	level.clockside = kills
+
+end
+
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M1L3B" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" "Grounding the Airfield"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	waitthread ffa_spawns
+	waitthread set_da_stuff_up
+	
+	level waittill prespawn
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m1l3b
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	$world farplane 8000
+	
+	thread Map_Guard
+
+	level.clockside = kills
+
+end
+
+
+
+
+tdm_spawns:
+
+	spawn info_player_axis "origin" "4004.98 5673.00 -19.88" "angle" "-126"
+	spawn info_player_axis "origin" "3852.45 5849.99 -19.87" "angle" "-013"
+	spawn info_player_axis "origin" "4670.45 5787.19 -19.87" "angle" "-128"
+	spawn info_player_axis "origin" "4977.83 5551.25 -23.88" "angle" "-114"
+	spawn info_player_axis "origin" "3501.60 6107.31 14.50" "angle" "-125"
+
+	spawn info_player_axis "origin" "2956.19 6412.65 43.15" "angle" "-116"
+	spawn info_player_axis "origin" "1860.31 6500.96 127.02" "angle" "-135"
+	spawn info_player_axis "origin" "-560.42 7062.40 49.18" "angle" "-116"
+	spawn info_player_axis "origin" "-2832.08 6888.65 -9.87" "angle" "-87"
+	spawn info_player_axis "origin" "-3578.22 6581.46 -23.88" "angle" "-15"
+
+	spawn info_player_axis "origin" "-5276.99 5789.28 -23.88" "angle" "-24"
+	spawn info_player_axis "origin" "-4163.51 6374.29 -19.88" "angle" "-106"
+	spawn info_player_axis "origin" "-5550.26 5921.00 -23.88" "angle" "-64"
+	spawn info_player_axis "origin" "-5880.23 5402.22 -23.88" "angle" "-17"
+	spawn info_player_axis "origin" "-6571.27 4718.70 -23.88" "angle" "-10"
+
+location: 
+
+	spawn info_player_allied "origin" "-201.44 -787.95 -23.85" "angle" "92"
+	spawn info_player_allied "origin" "-702.90 -658.58 -18.12" "angle" "86"
+	spawn info_player_allied "origin" "-1502.20 139.39 22.05" "angle" "70"
+	spawn info_player_allied "origin" "-2035.25 528.98 -23.46" "angle" "54"
+	spawn info_player_allied "origin" "-2364.33 888.25 -23.88" "angle" "36"
+
+	spawn info_player_allied "origin" "-1751.07 1559.40 -23.88" "angle" "20"
+	spawn info_player_allied "origin" "-1001.55 1751.44 -12.03" "angle" "67"
+	spawn info_player_allied "origin" "-4.37 1028.35 -29.43" "angle" "140"
+	spawn info_player_allied "origin" "219.26 908.33 7.19" "angle" "150"
+	spawn info_player_allied "origin" "180.27 505.32 -15.63" "angle" "118"
+
+	spawn info_player_allied "origin" "-44.04 226.84 -23.88" "angle" "97"
+	spawn info_player_allied "origin" "-562.98 343.19 -23.88" "angle" "84"
+	spawn info_player_allied "origin" "-1423.16 1213.66 -23.88" "angle" "58"
+	spawn info_player_allied "origin" "-896.99 1505.07 -23.88" "angle" "72"
+	spawn info_player_allied "origin" "328.05 1732.54 -23.88" "angle" "107"
+	 
+
+end
+
+
+
+ffa_spawns:
+	
+	spawn info_player_deathmatch "origin" "-44.68 162.03 -23.88" "angle" "133"
+	spawn info_player_deathmatch "origin" "-2367.68 307.80 -23.88" "angle" "42"
+	spawn info_player_deathmatch "origin" "-4506.49 832.94 -23.88" "angle" "12"
+	spawn info_player_deathmatch "origin" "-5704.24 2907.26 -23.88" "angle" "10"
+	spawn info_player_deathmatch "origin" "-2752.47 2500.90 -23.88" "angle" "60"
+
+	spawn info_player_deathmatch "origin" "-906.77 2452.46 -13.99" "angle" "-91"
+	spawn info_player_deathmatch "origin" "510.27 2306.56 -23.88" "angle" "53"
+	spawn info_player_deathmatch "origin" "4140.81 3063.94 -23.88" "angle" "110"
+	spawn info_player_deathmatch "origin" "4943.82 5754.75 -23.88" "angle" "-97"
+	spawn info_player_deathmatch "origin" "2975.57 6146.42 76.96" "angle" "-120"
+
+	spawn info_player_deathmatch "origin" "1024.64 6671.99 -10.34" "angle" "-130"
+	spawn info_player_deathmatch "origin" "-920.64 6059.73 -23.76" "angle" "-116"
+	spawn info_player_deathmatch "origin" "-2848.88 6897.84 -9.88" "angle" "-72"
+	spawn info_player_deathmatch "origin" "-3558.02 6373.46 -19.88" "angle" "-108"
+	spawn info_player_deathmatch "origin" "-5434.73 5726.56 -23.88" "angle" "-51"
+
+end
+
+
+
+set_da_stuff_up:
+	
+	// Some sounds
+	// local.master = spawn scriptmaster
+	// local.master aliascache opeltruck_snd_idle sound/vehicle/veh_truck_idle.wav soundparms 1.0 0.0 1.0 0.0 300 7000 auto loaded maps "m dm obj"
+	// local.master aliascache arty_exp_sand1 sound/weapons/explo/exp_dirt_01.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps "m dm moh obj train"
+
+	thread global/exploder.scr::main
+	thread global/barrel.scr::explosive_barrel
+
+	// Remove AI
+	removeclass actor
+	
+	$opel1 remove
+	$opel2 remove
+	$opel3 remove
+	$panzer1 remove
+	$panzer2 remove
+	
+	// Make use of some things lying around
+	// $opel1 thread selfstuff
+	// $opel2 thread selfstuff	
+	// $opel3 thread selfstuff	
+
+	// Relocate the Trucks 
+	// $opel1.origin = ( -305.18 2833.29 -23.88 ) 
+	// $opel1.angle = -108
+
+	// $opel2.origin = ( -716.95 3654.26 -23.88 ) 
+	// $opel2.angle = -65
+
+	// $opel3.origin = ( -1736.76 3748.89 -23.88 ) 
+	// $opel3.angle = -18
+
+	// $panzer1.origin = ( -2249.69 6256.13 -23.88 ) 
+	// $panzer1.angle = -37
+
+	// $panzer2.origin = ( 4221.68 4479.23 -23.88 ) 
+	// $panzer2.angle = -142
+
+
+
+	// Leave the Trucks Destroyable for fun
+	// $opel1 thread global/vehicles_thinkers.scr::enemy_truck_think 500
+	// $opel2 thread global/vehicles_thinkers.scr::enemy_truck_think 500
+	// $opel3 thread global/vehicles_thinkers.scr::enemy_truck_think 500
+
+	// $panzer1.gun = $panzer1 QueryTurretSlotEntity 0
+	// $panzer2.gun = $panzer2 QueryTurretSlotEntity 0 
+
+	// $panzer1.gun setaimtarget $opel2
+	// $panzer2.gun setaimtarget $opel3
+
+	// $panzer1 setcollisionentity $tank_mask // Feho - cause bugs ?? (players are stuck)
+	// $panzer2 setcollisionentity $tank_mask // Feho - cause bugs ?? (players are stuck)
+
+	// $panzer1 nodamage
+	// $panzer2 nodamage
+
+	//Relocate the Jeep
+	// $playerjeep.origin = ( -1324.36 101.36 1.00 ) 
+	// $playerjeep.angle = 64
+	// $playerjeep nodamage
+	// $playerjeep remove
+
+	$stuka7 remove
+	$stuka1_right_mg remove
+	$stuka1_left_mg remove
+	$stuka1_right_so remove
+	$stuka1_left_so remove
+
+	$stuka1 thread enemy_stuka_think
+	$stuka2 thread enemy_stuka_think
+	$stuka3 thread enemy_stuka_think
+	$stuka4 thread enemy_stuka_think
+	$stuka5 thread enemy_stuka_think
+	$stuka6 thread enemy_stuka_think
+	$stuka8 thread enemy_stuka_think
+	$stuka9 thread enemy_stuka_think
+	$stuka10 thread enemy_stuka_think
+	$stuka11 thread enemy_stuka_think
+	$stuka12 thread enemy_stuka_think
+	$stuka13 thread enemy_stuka_think
+
+	$bike1 thread global/vehicles_thinkers.scr::enemy_bike_think
+	$bike2 thread global/vehicles_thinkers.scr::enemy_bike_think
+
+
+
+
+// Vehicle thread
+// selfstuff:
+	
+	// self anim idlenolights
+	// self notsolid
+// end
+
+
+// End some labels
+
+start_opel3:
+end
+passing_time:
+end
+scene5:
+end
+stop_at_end:
+end
+friendly_message1:
+end
+
+
+// Under Map Protection
+Map_Guard:
+
+	level.killcount = 0
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( -906.92 2721.01 -85 ) 
+	$Killah setsize ( -9999 -9999 -30 ) ( 9999 9999 1 )
+	$Killah setthread die
+	// $Killah message "Play fair!"
+end
+
+die:
+	local.punk = parm.other
+	if ( (!isalive local.punk ) || (local.punk.needrevive == 1) )
+	{
+		end
+	}
+	iprintln "*** - Map_Guard Triggered - ***"
+	// local.punk thread spawn_fx models/animate/fx_mortar_dirt.tik 
+	local.punk kill
+	wait 1
+	if (local.punk.health == 0)
+	{
+	level.killcount ++
+	// waitthread hudprint ("Under Map Deaths:" + level.killcount ) .75 .65 .1
+	}
+end
+
+
+hudprint local.nstring local.r local.g local.b:
+
+	huddraw_rect 187 140 -84 50 50 
+	huddraw_color 187 local.r local.g local.b 
+	huddraw_font 187 "facfont-20" 
+	huddraw_string 187 local.nstring 
+	huddraw_align 187 left bottom 
+	huddraw_alpha 187 1 
+end 
+
+
+enemy_stuka_think:
+	self rendereffects "-shadow"
+	self solid
+	self.health = 500
+	self takedamage
+	self removeondeath 0 
+	if (self.target)
+	{
+	self.collisionent = self.target
+	}
+
+self waittill death
+
+thread plane_exploded
+
+	
+end
+
+stuka_fire local.i:	
+	wait 1
+	local.temp = spawn models/emitters/firegood
+	local.tag = ("fire" + local.i)
+	println "z:      local.tag " local.tag
+	local.temp.angles = (270 0 0)
+	local.temp.origin = self gettagposition local.tag
+	local.temp anim start
+	wait 10
+	local.temp delete
+end
+
+
+spawn_damaged local.model:
+	local.damaged = spawn script_model model local.model
+	local.damaged.origin = self.origin
+	local.damaged.angles = self.angles
+end local.damaged
+
+spawn_fx local.fx local.offset:
+	local.temp = spawn script_model model local.fx
+	if (local.offset)
+		local.temp.origin = (self.origin + local.offset)
+	else
+		local.temp.origin = self.origin
+	local.temp anim start
+	wait 5
+	local.temp remove
+end
+
+
+plane_exploded:
+	self show
+	self playsound explode_plane
+	exec global/earthquake.scr .2 4 0 0
+	
+	local.offset = (0 0 72)
+
+	
+	if (self.target == "fock_mask")
+	{
+		if (self.dont_explode != 1)
+		{
+			self thread spawn_fx models/fx/fx_stuka_explosion.tik local.offset
+			wait .2
+		}
+		local.damaged = thread spawn_damaged models/vehicles/fockwulf_d.tik
+	}
+	else
+	{
+		if (self.dont_explode != 1)
+		{
+			self thread spawn_fx models/fx/fx_stuka_explosion.tik local.offset
+			wait .2
+		}
+		local.damaged = thread spawn_damaged models/vehicles/stukadesrt_d.tik
+		local.damaged anim idle
+	}
+	for (local.i = 1; local.i <= 9; local.i++)
+	{
+		if ( (randomint 5) == 1)
+			local.damaged thread stuka_fire local.i
+	}
+//	if (self.crashed == 1)
+//		local.damaged thread plane_straighten
+	local.damaged notsolid
+	self remove
+end
+
+// Cobs was ere :P
+
+

@@ -1,0 +1,801 @@
+main:
+
+	local.hs = getcvar "heatseeker"
+	if (local.hs == "")
+		setcvar "heatseeker" "0"
+
+	local.hs = int ( getcvar "heatseeker" )
+	if (local.hs != 1)
+		end
+
+	local.mapname = getcvar "mapname"
+
+	switch (local.mapname)
+	{
+		case "m1l3a":
+			local.datas = makeArray
+			( -1622 -5899 368 ) ( 0 180 0 )
+			( -3584 -3360 302 ) ( 0 90 0 )
+			( -3076 -1317 343 ) ( -13 0 0 )
+			( -2095 -3182 101 ) ( 0 180 0 )
+			endArray
+		break
+		case "m1l3b":
+			local.datas = makeArray
+			( 180 397 121 ) ( 0 270 0 )
+			( -2573 -1108 70 ) ( 0 -204 0 )
+			( -3417 696 78 ) ( 0 270 0 )
+			( -5500 1616 111 ) ( 0 90 0 )
+			endArray
+		break
+		case "m4l0":
+			local.datas = makeArray
+			( 2374 -1294 209 ) ( 10 -116 0 )
+			( 2099 -3849 -9 ) ( 0 -107 0 )
+			endArray
+		break
+		case "m4l1":
+			local.datas = makeArray
+			( 2838 -3732 284 ) ( 0 270 0 )
+			( 2214 -3734 96 ) ( 0 90 0 )
+			( 5119 -638 93 ) ( 15 -100 0 )
+			( 4337 -3628 209 ) ( 0 -220 0 )
+			endArray
+		break
+		case "m4l3":
+			local.datas = makeArray
+			( -5944 350 74 ) ( 0 90 0 )
+			( -4531 1005 84 ) ( 0 0 0 )
+			( -4705 2789 107 ) ( 0 0 0 )
+			( -5823 2639 107 ) ( 0 270 0 )
+			endArray
+		break
+		case "m5l2a":
+			local.datas = makeArray
+			( 1838 4932 374 ) ( 0 0 0 )
+			( 947 2054 381 ) ( 0 0 0 )
+			( 4186 5153 395 ) ( 0 180 0 )
+			( -733 2071 367 ) ( 0 90 0 )
+			endArray
+		break
+		case "m5l3":
+			local.datas = makeArray
+			( 295 2697 514 ) ( 0 -194 0 )
+			( -658 4199 506 ) ( 0 0 0 )
+			( 266 1666 984 ) ( 0 180 0 )
+			( 992 4202 589 ) ( 0 90 0 )
+			endArray
+		break
+	}
+
+	if (local.datas == NIL)
+		end
+
+	level waittill spawn
+
+	local.hs_amount = getcvar "heatseeker_amount"
+	if (local.hs_amount == "")
+		setcvar "heatseeker_amount" "5"
+
+	local.hs_amount = int ( getcvar "heatseeker_amount" )
+
+	level.allies_heatseeker = 0
+	level.axis_heatseeker = 0
+	level.max_heatseeker_count = local.hs_amount
+
+	local.new_origin = waitthread check_datas local.datas 1
+	local.new_angles = waitthread check_datas local.datas 2
+
+	thread spawn_heatseeker local.new_origin local.new_angles 999
+
+end
+
+spawn_heatseeker local.origin local.angles local.last_num:
+
+	local.num = waitthread random_position local.origin.size local.last_num
+
+	local.weapon = spawn script_model
+	local.weapon.origin = local.origin[local.num]
+	local.weapon.angles = local.angles[local.num] + ( 0 0 90 )
+	local.weapon model "models/weapons/bazooka.tik"
+	local.weapon notsolid
+
+	local.weapon.scope = spawn script_model
+	local.weapon.scope attach local.weapon "origin" 1 ( 8 2.6 -2.1 )
+	local.weapon.scope model "models/weapons/kar98sniper.tik"
+	local.weapon.scope notsolid
+
+	local.weapon.scope surface KAR981 "+nodraw"
+	local.weapon.scope surface KAR982 "+nodraw"
+
+	local.t = spawn trigger_use
+	local.t.origin = local.weapon.origin
+	local.t setsize ( -10 -10 0 ) ( 10 10 20 )
+
+	local.weapon light 1.0 0.0 0.0 80
+
+	local.weapon thread pickup_heatseeker local.t local.origin local.angles local.num
+
+end
+
+pickup_heatseeker local.t local.origin local.angles local.last_num:
+
+	local.t waittill trigger
+
+	local.player = parm.other
+
+	if (local.player.has_heatseeker == 1)
+	{
+		local.player iprint "You already have a Heat-seeking Launcher." 1
+
+		goto pickup_heatseeker local.t local.origin local.angles local.last_num
+		end
+	}
+
+	if ( local.player.dmteam == "allies" && level.allies_heatseeker == 2 )
+	{
+		local.player iprint "Your team already has 2 Heat-seeking Launchers." 1
+
+		goto pickup_heatseeker local.t local.origin local.angles local.last_num
+		end
+	}
+	else if ( local.player.dmteam == "axis" && level.axis_heatseeker == 2 )
+	{
+		local.player iprint "Your team already has 2 Heat-seeking Launchers." 1
+
+		goto pickup_heatseeker local.t local.origin local.angles local.last_num
+		end
+	}
+
+	if ( local.player.heatseeker_count != NIL && local.player.heatseeker_count <= 0 )
+	{
+		local.player iprint "You can't get more Heat-seeking Launchers." 1
+
+		goto pickup_heatseeker local.t local.origin local.angles local.last_num
+		end
+	}
+
+	self light 0 0 0 0
+
+	local.scope = self.scope
+	local.scope detach
+
+	self remove
+	local.t remove
+
+	if (local.player.dmteam == "allies")
+		level.allies_heatseeker++
+	else if (local.player.dmteam == "axis")
+		level.axis_heatseeker++
+
+	local.player.has_heatseeker = 1
+
+	local.player iprint "You picked up a Heat-seeking Launcher."
+
+	iprintlnbold "The Heat-seeking Missile Launcher is in new position now!"
+
+	thread spawn_heatseeker local.origin local.angles local.last_num
+
+	local.player take models/weapons/bazooka.tik
+	local.player take models/weapons/panzerschreck.tik
+
+	local.player deactivateweapon righthand
+
+	waitframe
+
+	local.player give models/weapons/bazooka.tik
+	local.player use models/weapons/bazooka.tik
+
+	while ( local.player != NULL && local.player.player_spawned == 1 && local.player.current_weapon == NULL )
+		waitframe
+
+	if ( local.player == NULL || local.player.player_spawned != 1 )
+		end
+
+	if (local.player.current_weapon.model != "models/weapons/bazooka.tik")
+		end
+
+	local.player thread init_heatseeker local.player.current_weapon local.scope
+
+end
+
+init_heatseeker local.weapon local.scope:
+
+	if (self.heatseeker_help != 1)
+	{
+		self.heatseeker_help = 1
+		self thread help
+	}
+
+	local.scope attach local.weapon "origin" 1 ( 8 2.6 -2.1 )
+
+	if (self.heatseeker_count == NIL)
+		self.heatseeker_count = level.max_heatseeker_count
+
+	local.weapon noammosound		snd_step_paper
+	local.weapon ammotype			"fakeammo"
+	local.weapon dmmovementspeed		0.55
+	local.weapon ammo_in_clip		0 semiauto
+
+	local.weapon.canfire = 0
+	local.weapon.reloadtime = 5
+	local.weapon.reloading = 0
+	local.weapon.laseron = 0
+	local.weapon.can_switch_laser = 1
+	local.weapon.lockon_phase = 1
+	local.weapon.targeted_pos = NULL
+	local.weapon.targeted_vehicle = NULL
+
+	local.locking_delay = 1
+	local.lasttime = level.time
+
+	local.weapon.laser_org = spawn script_model
+	local.weapon.laser_org notsolid
+
+	local.team = self.dmteam
+
+	while ( self != NULL && self.player_spawned == 1 && self.heatseeker_count > 0 )
+	{
+		waitframe
+
+		if ( self == NULL || self.player_spawned != 1 )
+			break
+
+		if ( self.current_weapon != NULL && self.current_weapon == local.weapon )
+		{
+			if ( self.fireheld == 1 && self.secfireheld != 1 )
+			{
+				if (local.weapon.canfire == 1)
+				{
+					self viewmodelanim fire 1
+
+					self thread fire_missile local.weapon local.team
+
+					self.heatseeker_count--
+					if (self.heatseeker_count > 0)
+						self iprint ( "You have " + self.heatseeker_count + " Heat-seeking Missile(s)." ) 1
+
+					local.weapon thread reload_weapon local.weapon.reloadtime
+
+					self stoploopsound
+
+					local.weapon.canfire = 0
+					local.weapon.isreloading = 1
+					local.weapon.laseron = 0
+					local.weapon.can_switch_laser = 0
+					local.weapon.lockon_phase = 1
+					local.weapon.targeted_pos = NULL
+					local.weapon.targeted_vehicle = NULL
+				}
+			}
+			else if ( self.fireheld == 1 && self.secfireheld == 1 )
+			{
+				if (local.weapon.can_switch_laser == 1)
+				{
+					if (local.weapon.laseron != 1)
+					{
+						local.weapon.laseron = 1
+						local.weapon.can_switch_laser = 0
+
+						local.weapon thread switch_laser
+
+						local.weapon.targeted_pos = NULL
+						local.weapon.targeted_vehicle = NULL
+						local.weapon.lockon_phase = 1
+					}
+					else
+					{
+						local.weapon.laseron = 0
+						local.weapon.can_switch_laser = 0
+
+						local.weapon thread switch_laser
+
+						if (local.weapon.canfire == 1)
+							self stoploopsound
+
+						local.weapon.canfire = 0
+						local.weapon.laseron = 0
+						local.weapon.lockon_phase = 1
+						local.weapon.targeted_pos = NULL
+						local.weapon.targeted_vehicle = NULL
+					}
+				}
+			}
+		}
+		else
+		{
+			if (local.weapon != NULL)
+			{
+				if (local.weapon.canfire == 1)
+					self stoploopsound
+
+				local.weapon.canfire = 0
+				local.weapon.laseron = 0
+				local.weapon.lockon_phase = 1
+				local.weapon.targeted_pos = NULL
+				local.weapon.targeted_vehicle = NULL
+
+				if (local.weapon.angles[2] == 90.0)
+					break
+			}
+		}
+
+		if (local.weapon.isreloading == 1)
+			continue
+
+		if (local.weapon.laseron != 1)
+		{
+			if (local.weapon.canfire == 1)
+				self stoploopsound
+
+			local.weapon.canfire = 0
+			local.weapon.laseron = 0
+			local.weapon.lockon_phase = 1
+			local.weapon.targeted_pos = NULL
+			local.weapon.targeted_vehicle = NULL
+
+			continue
+		}
+
+		if (local.weapon.lockon_phase == 1)
+		{
+			self waitthread vehicletarget local.weapon
+
+			if (local.weapon.targeted_vehicle == NULL)
+				local.weapon.targeted_pos = local.weapon.laser_org.origin
+			else
+				self iprint "Locking Vehicle..."
+
+			self playsound heatseeker_lockon
+
+			local.weapon.lockon_phase = 2
+			local.lasttime = level.time
+		}
+		else if (local.weapon.lockon_phase == 2)
+		{
+			if ( level.time - local.lasttime < local.locking_delay )
+				continue
+
+			if (local.weapon.targeted_vehicle != NULL)
+			{
+				local.targeted_vehicle = local.weapon.targeted_vehicle
+				self waitthread vehicletarget local.weapon
+
+				if ( local.weapon.targeted_vehicle == NULL || local.weapon.targeted_vehicle != local.targeted_vehicle )
+				{
+					local.weapon.laseron = 0
+					local.weapon.lockon_phase = 1
+					local.weapon.targeted_pos = NULL
+					local.weapon.targeted_vehicle = NULL
+
+					continue
+				}
+				else
+					self iprint "Locking Vehicle..."
+			}
+
+			self playsound heatseeker_lockon
+
+			local.weapon.lockon_phase = 3
+			local.lasttime = level.time
+		}
+		else if (local.weapon.lockon_phase == 3)
+		{
+			if ( level.time - local.lasttime < local.locking_delay )
+				continue
+
+			if (local.weapon.targeted_vehicle != NULL)
+			{
+				local.targeted_vehicle = local.weapon.targeted_vehicle
+				self waitthread vehicletarget local.weapon
+
+				if ( local.weapon.targeted_vehicle == NULL || local.weapon.targeted_vehicle != local.targeted_vehicle )
+				{
+					if (local.weapon.canfire == 1)
+						self stoploopsound
+
+					local.weapon.canfire = 0
+					local.weapon.laseron = 0
+					local.weapon.lockon_phase = 1
+					local.weapon.targeted_pos = NULL
+					local.weapon.targeted_vehicle = NULL
+
+					continue
+				}
+			}
+
+			if (local.weapon.canfire != 1)
+			{
+				local.weapon.canfire = 1
+
+				self loopsound heatseeker_locked
+
+				if (local.weapon.targeted_vehicle != NULL)
+					self iprint "Vehicle Locked!!!"
+			}
+
+			local.lasttime = level.time + local.locking_delay
+		}
+	}
+
+	if (self != NULL)
+	{
+		self.has_heatseeker = 0
+
+		self stoploopsound
+	}
+
+	if (local.team == "allies")
+		level.allies_heatseeker--
+	else if (local.team == "axis")
+		level.axis_heatseeker--
+
+	if (local.scope)
+		local.scope remove
+
+	if (local.weapon)
+	{
+		if (local.weapon.laser_org)
+			local.weapon.laser_org remove
+
+		local.weapon remove
+	}
+
+end
+
+switch_laser:
+
+	wait .5
+
+	if (self)
+		self.can_switch_laser = 1
+
+end
+
+vehicletarget local.weapon:
+
+	local.pos = self gettagposition "eyes bone"
+	local.trace = waitexec global/AA/trace.scr local.pos ( local.pos + angles_toforward self.viewangles * 20000 ) self.entnum ( -1 -1 -1 ) ( 1 1 1 ) 1107569441
+	local.weapon.laser_org.origin = local.trace["endPos"]
+
+	local.gt = int ( getcvar "g_gametype" )
+	local.td = int ( getcvar "g_teamdamage" )
+
+	local.weapon.targeted_vehicle = NULL
+
+	for (local.i = 1;local.i <= $vezetheto_jarmu.size;local.i++)
+	{
+		local.veh = $vezetheto_jarmu[local.i]
+
+		if !(isAlive local.veh)
+			continue
+
+		local.surface = local.veh
+		if (local.surface.collisionent)
+			local.surface = local.surface.collisionent
+
+		if ( local.gt == 1 || ( local.gt > 1 && local.td == 1 ) || ( local.gt > 1 && local.td != 1 && local.veh.mpteam && local.veh.mpteam != self.dmteam ) )
+		{
+			if (local.weapon.laser_org istouching local.surface)
+			{
+				local.weapon.targeted_vehicle = local.veh
+				break
+			}
+		}
+	}
+
+end
+
+fire_missile local.weapon local.team:
+
+	local.weapon playsound bazooka_snd_fire
+
+	if ( self getposition == "standing" )
+		local.z = 90
+	else
+		local.z = 60
+
+	local.missile = spawn script_model
+	local.missile.origin = self.origin + angles_toforward self.angles * 40 + ( 0 0 local.z )
+	local.missile.angles = ( 90 self.viewangles[1] 0 )
+	local.missile model "models/static/v2.tik"
+	local.missile.scale = 0.04
+	local.missile setsize ( 0 -3 -3 ) ( 10 0 0 )
+	local.missile notsolid
+
+	local.smoke = spawn script_model
+	local.smoke model "models/projectiles/bazookashell_dm.tik"
+	local.smoke glue local.missile
+	local.smoke notsolid
+	local.smoke surface all "+nodraw"
+
+	local.missile.attacker = self
+
+	local.missile physics_on
+	local.missile gravity 1.3
+
+	local.missile.destroyed = 0
+	local.missile.following_target = 0
+	local.missile.speed = 100
+
+	local.target = NULL
+	if (local.weapon.targeted_vehicle != NULL)
+	{
+		local.target = local.weapon.targeted_vehicle
+		local.endpos = local.target.origin
+	}
+	else
+		local.endpos = local.weapon.targeted_pos
+
+	local.missile thread missile_flying local.missile.attacker local.smoke local.team local.target local.endpos
+
+	wait .3
+
+	if (local.missile == NULL)
+		end
+
+	local.missile thread up_angles
+
+	local.missile.speed = 700
+	local.missile physics_off
+
+	local.missile loopsound heatseeker_proj_loop
+
+	wait 3
+
+	if (local.missile == NULL)
+		end
+
+	if (local.target != NULL)
+		local.nextpos = ( local.target.origin[0] local.target.origin[1] (local.missile.origin[2] + 500) )
+	else
+		local.nextpos = ( local.endpos[0] local.endpos[1] (local.missile.origin[2] + 500) )
+
+	local.angles = vector_toangles ( local.missile.origin - local.nextpos )
+	local.missile.angles = local.angles - ( 90 0 0 )
+	local.dist = vector_length ( local.missile.origin - local.nextpos )
+	local.dist = local.dist * 0.75
+	local.missile.speed = local.dist / 2.0
+
+	wait 2
+
+	if (local.missile == NULL)
+		end
+
+	local.life = 300
+	local.missile.speed = 1500
+	local.missile.following_target = 1
+
+end
+
+missile_flying local.player local.smoke local.team local.target local.endpos:
+
+	local.life = 400
+
+	while ( self != NULL && local.player != NULL && local.player.dmteam == local.team && self.destroyed != 1 && local.life > 0 )
+	{
+		if (self.following_target == 1)
+		{
+			if (local.target != NULL)
+				local.nextpos = local.target.origin
+			else
+				local.nextpos = local.endpos
+
+			if (self.origin[2] > local.nextpos[2])
+			{
+				local.angles = vector_toangles ( self.origin - local.nextpos )
+				self.angles = local.angles - ( 90 0 0 )
+			}
+		}
+
+		self.velocity = angles_toforward ( (self.angles[0] - 90) self.angles[1] self.angles[2] ) * self.speed
+
+		local.sky = self waitthread check_sky_bottom self.origin
+		self waitthread check_missile_impact local.sky
+
+		self.current_pos = self.origin
+
+		waitframe
+
+		self.last_pos = self.origin
+
+		local.life--
+	}
+
+	self stoploopsound
+
+	self.velocity = ( 0 0 0 )
+
+	local.smoke remove
+	self remove
+
+end
+
+up_angles:
+
+	while ( self != NULL && self.destroyed != 1 && self.angles[0] != 0.0 )
+	{
+		self.angles -= ( 9 0 0 )
+		waitframe
+	}
+
+end
+
+reload_weapon local.time:
+
+	wait local.time
+
+	if (self)
+	{
+		self.isreloading = 0
+		self.can_switch_laser = 1
+	}
+
+end
+
+check_missile_impact local.bottom:
+
+	local.speed = self.speed * 0.05
+	local.trace = waitexec global/AA/trace.scr self.origin ( self.origin + angles_toforward ( (self.angles[0] - 90) self.angles[1] self.angles[2] ) * local.speed ) self.entnum ( -1 -1 -1 ) ( 1 1 1 ) 1107569441
+	local.traced_pos = local.trace["endPos"]
+
+	if (local.traced_pos[2] >= local.bottom)
+		end
+
+	if ( local.trace["fraction"] != 1.0 || ( self.current_pos != NIL && self.current_pos == self.last_pos ) )
+	{
+		self.destroyed = 1
+
+		self.origin = local.traced_pos
+
+		local.fx = spawn script_model model "models/animate/fx_mortar_dirt.tik" scale 2.0
+		local.fx.origin = local.traced_pos
+		local.fx notsolid
+		local.fx anim start
+
+		local.fx2 = spawn script_model model "models/animate/fx_mortar_dirt.tik"
+		local.fx2.origin = local.traced_pos
+		local.fx2 notsolid
+		local.fx2 anim start
+
+		local.weapon = spawn "models/weapons/weapon.tik" origin ( 0 0 -20000 )
+		local.weapon notsolid
+		local.weapon hide
+
+		local.weapon firetype heavy
+		local.weapon projectile "models/projectiles/heatseekershell.tik"
+		local.weapon dmprojectile "models/projectiles/heatseekershell.tik"
+
+		self.attacker bindweap local.weapon
+		local.weapon shoot
+		self.attacker bindweap local.weapon
+
+		self thread heatseeker_proj local.traced_pos self.angles
+
+		thread remove_fx local.weapon local.fx local.fx2
+	}
+
+end
+
+remove_fx local.weapon local.fx local.fx2:
+
+	wait 3
+
+	local.fx remove
+	local.fx2 remove
+	local.weapon remove
+
+end
+
+heatseeker_proj local.pos local.angles:
+
+	local.heatseekershell = NULL
+	while (local.heatseekershell == NULL)
+	{
+		waitframe
+
+		if ($heatseekershell.size > 0)
+		{
+			for (local.i = 1;local.i <= $heatseekershell.size;local.i++)
+			{
+				local.proj = $heatseekershell[local.i]
+
+				if ( local.proj != NULL && local.proj.attacker != NIL && local.proj.attacker != NULL && local.proj.attacker == self.attacker && local.proj.checked != 1 )
+				{
+					local.proj.checked = 1
+					local.heatseekershell = local.proj
+
+					break
+				}
+			}
+		}
+	}
+
+	if (local.heatseekershell != NULL)
+	{
+		local.heatseekershell.origin = local.pos
+		local.heatseekershell.angles = local.angles
+		local.heatseekershell hitdamage 1000
+		local.heatseekershell explodeontouch
+		local.heatseekershell explode
+	}
+
+end
+
+check_sky_bottom local.pos:
+
+	local.trace = waitexec global/AA/trace.scr ( local.pos[0] local.pos[1] 20000 ) ( local.pos[0] local.pos[1] -20000 ) self.entnum ( -1 -1 -1 ) ( 1 1 1 ) 1107372801
+	local.traced_pos = local.trace["endPos"]
+
+	local.z = 30
+
+	for (local.i = 1;local.i <= 40;local.i++)
+	{
+		local.trace = waitexec global/AA/trace.scr ( local.traced_pos - ( 0 0 local.z ) ) local.traced_pos self.entnum ( -1 -1 -1 ) ( 1 1 1 ) 1107372801
+		local.new_traced_pos = local.trace["endPos"]
+
+		local.z += 30
+
+		if (local.new_traced_pos[2] < local.traced_pos[2])
+			break
+	}
+
+	local.sky_bottom = local.new_traced_pos[2]
+
+end local.sky_bottom
+
+random_position local.s local.last_num:
+
+	for (local.i = 1;local.i <= 30;local.i++)
+	{
+		local.rand = randomint local.s
+		local.rand++
+
+		if (local.rand != local.last_num)
+			break
+	}
+
+end local.rand
+
+check_datas local.datas local.num:
+
+	for (local.i = 1;local.i <= local.datas.size;local.i++)
+	{
+		if (local.num == 1)
+		{
+			local.traced = waitexec global/AA/trace.scr local.datas[local.i][1] ( local.datas[local.i][1] + ( 0 0 -20000 ) ) NIL ( -1 -1 -1 ) ( 1 1 1 ) 1107569441
+
+			if (local.new_datas == NIL)
+				local.new_datas[1] = local.traced["endPos"]
+			else
+				local.new_datas[local.new_datas.size + 1] = local.traced["endPos"]
+		}
+		else if (local.num == 2)
+		{
+			if (local.new_datas == NIL)
+				local.new_datas[1] = local.datas[local.i][2]
+			else
+				local.new_datas[local.new_datas.size + 1] = local.datas[local.i][2]
+		}
+	}
+
+end local.new_datas
+
+help:
+
+	wait 3
+
+	if (self == NULL)
+		end
+
+	self iprint "Press the secondary attack button to lock on a ground or vehicle target." 1
+
+	wait 3
+
+	
+	if (self == NULL)
+		end
+
+	self iprint "If you hear the 3. looping sound you can fire at your target." 1
+
+end

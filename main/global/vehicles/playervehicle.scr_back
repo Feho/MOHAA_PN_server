@@ -1,0 +1,973 @@
+main local.model local.desmodel local.origin local.angles local.health local.start_origin local.start_angles:
+
+	if (local.model == "vehicles/sdkfz.tik" || local.model == "vehicles/sdkfz_afrika.tik" || local.model == "vehicles/m3.tik")
+	{
+		exec global/vehicles/halftrack.scr local.model local.desmodel local.origin local.angles local.health local.start_origin local.start_angles
+		end
+	}
+	
+	local.vehicle_id = "vehicle" + randomint 999999
+	local.vehicle = spawn local.model "targetname" local.vehicle_id
+	local.vehicle.origin = local.origin
+	local.vehicle.angles = local.angles
+	local.vehicle.desmodel = local.desmodel
+	local.vehicle.health = local.health
+	local.vehicle.gun = local.vehicle queryturretslotentity 0
+	local.vehicle anim idlenolights
+	local.vehicle.start_origin = local.origin
+	local.vehicle.start_angles = local.angles
+	// local.vehicle immune vehicle // Immunise contre les chocs avec d'autres véhicules
+
+	local.vehicle.nb_passengers = 0
+	
+	local.bindnode_id = "bindnode" + randomint 999999
+	local.bindnode = spawn script_origin "targetname" local.bindnode_id
+	local.bindnode.origin = local.vehicle.origin
+	local.bindnode glue local.vehicle "spawnflags" "1"
+	
+	if (local.model != "models/vehicles/bmwbike.tik" && local.model != "models/vehicles/european_car_grey.tik" && local.model != "models/vehicles/european_car_silver.tik" && local.model != "models/vehicles/european_car_tan.tik" && local.model != "models/vehicles/european_delivery_truck_green.tik" && local.model != "models/vehicles/european_delivery_truck_grey.tik" && local.model != "models/vehicles/european_delivery_truck_red3.tik")
+		level.free_seats = 4
+	else
+		level.free_seats = 3
+	
+	 ////////////////////////////////////////|
+	 /// Seats //////////////////////////////|
+	 ////////////////////////////////////////|
+	 /*#############################################################################
+	 // DriverSeat (not used)
+	 spawn script_origin "targetname" "Seat_1" origin ($bindnode.origin + ( 70 25 60 )) bind $bindnode "model" items/pulse_explosive.tik "spawnflags" "1" "dmg" "0"
+	 $Seat_1 hide
+	 // PassengerSeat (not used)
+	 spawn script_origin "targetname" "Seat_2" origin ($bindnode.origin + ( 70 -25 60 )) bind $bindnode "model" items/pulse_explosive.tik "spawnflags" "1" "dmg" "0"
+	 $Seat_2 hide
+	 ##############################################################################*/
+	 // spawn script_origin "targetname" "Seat_3" origin ($bindnode.origin + ( 0 25 60 )) bind $bindnode "model" items/pulse_explosive.tik "spawnflags" "1" "dmg" "0"
+	 // $Seat_3 setsize ( -1 -1 -1 ) ( 1 1 1 )
+	 // $Seat_3 hide
+	 // spawn script_origin "targetname" "Seat_4" origin ($bindnode.origin + ( 0 -25 60 )) bind $bindnode "model" items/pulse_explosive.tik "spawnflags" "1" "dmg" "0"
+	 // $Seat_4 setsize ( -1 -1 -1 ) ( 1 1 1 )
+	 // $Seat_4 hide
+	 local.seat5 = "seat5" + randomint 999999
+	 spawn script_origin "targetname" local.seat5 origin ($(local.bindnode_id).origin + ( -30 25 60 )) bind $(local.bindnode_id) "model" items/pulse_explosive.tik "spawnflags" "1" "dmg" "0"
+	 $(local.seat5) setsize ( -1 -1 -1 ) ( 1 1 1 )
+	 $(local.seat5) hide
+	 local.seat6 = "seat6" + randomint 999999
+	 spawn script_origin "targetname" local.seat6 origin ($(local.bindnode_id).origin + ( -30 -25 60 )) bind $(local.bindnode_id) "model" items/pulse_explosive.tik "spawnflags" "1" "dmg" "0"
+	 $(local.seat6) setsize ( -1 -1 -1 ) ( 1 1 1 )
+	 $(local.seat6) hide
+	 local.seat7 = "seat7" + randomint 999999
+	 spawn script_origin "targetname" local.seat7 origin ($(local.bindnode_id).origin + ( -90 25 60 )) bind $(local.bindnode_id) "model" items/pulse_explosive.tik "spawnflags" "1" "dmg" "0"
+	 $(local.seat7) setsize ( -1 -1 -1 ) ( 1 1 1 )
+	 $(local.seat7) hide
+	 local.seat8 = "seat8" + randomint 999999
+	 spawn script_origin "targetname" local.seat8 origin ($(local.bindnode_id).origin + ( -90 -25 60 )) bind $(local.bindnode_id) "model" items/pulse_explosive.tik "spawnflags" "1" "dmg" "0"
+	 $(local.seat8) setsize ( -1 -1 -1 ) ( 1 1 1 )
+	 $(local.seat8) hide
+
+	local.vehicle thread vehicle_loop local.seat5 local.seat6 local.seat7 local.seat8 local.bindnode_id
+	
+	if (local.start_origin) {
+		local.vehicle thread vehicledeath local.model local.desmodel local.start_origin local.start_angles local.health local.seat5 local.seat6 local.seat7 local.seat8 local.bindnode_id
+	}
+	else {
+		local.vehicle thread vehicledeath local.model local.desmodel local.origin local.angles local.health local.seat5 local.seat6 local.seat7 local.seat8 local.bindnode_id
+	}
+
+	if(local.vehicle.gun != NIL && local.vehicle.gun != NULL)
+		local.vehicle.gun remove
+
+	if(level.soundcache != 1)
+		thread cachesound
+
+end
+
+playergetin local.player local.seat5 local.seat6 local.seat7 local.seat8 local.bindnode_id:
+
+	if (self.health < 1) // Feho - empêche de monter dans le vehicule si il a bug avec les explosions de bidons
+		end
+
+	self.driver = local.player
+
+	if (self.driver.needrevive == 1 || self.driver.justneedrevive == 1) // Feho
+		end //goto resetdriver
+			
+	local.team = self.driver.dmteam
+
+	self.driver safeholster 1
+
+	wait .5
+
+	if (!self.driver)
+		end
+	
+	if (self.driver.has_weapon == 1)
+	{
+		self.driver deactivateweapon righthand
+		self.driver.has_weapon = 0
+	}
+	
+	if (self.model != "models/vehicles/opeltruck.tik" && self.model != "models/vehicles/opeltruckgreen.tik" && self.model != "models/vehicles/opeltruckgreen_canopy.tik")
+	{
+		self.driver hide
+		self.driver nodamage
+		self.driver notsolid
+	}
+	
+	self attachdriverslot 0 self.driver
+	self.hasdriver = 1
+	self.driver.invehicule = 1
+
+	self.driver iprint ("Klaxon : [ATTACK PRIMARY]") 1
+	self.driver iprint ("Slow down : [WALK]") 1
+
+	self thread driver_hud self.driver
+
+	// Feho modifs --------------------------------->
+		if (self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
+		{	
+			local.org = spawn script_origin
+			local.org attach self "driver" 1 ( 0 0 -30 )
+			local.org.angles = self.angles
+
+			self.driver glue local.org
+			// self.driver forcetorsostate JARMUBEN
+
+			self.driver rendereffects "-shadow"
+
+			local.kamera = self thread kamera self.driver
+		}
+		else
+		{
+			local.kamera = self thread kamera self.driver
+		}
+		
+		self.driver forcetorsostate JARMUBEN
+	//<----------------------------------------------
+
+	self turnrate 5
+	self.turnrate = 5
+	self.min_turnrate = self.turnrate
+	self.vehiclespeed = 0
+	self.max_speed = 3.8
+	self.min_speed = 2.2
+	self.klaxon = 1
+
+	while(self)
+	{
+		local.prevorigin = self.origin
+		
+		if(self.driver == NULL)
+		{
+			$(local.bindnode_id) remove
+			// $Seat_3 remove
+			// $Seat_4 remove
+			$(local.seat5) remove
+			$(local.seat6) remove
+			$(local.seat7) remove
+			$(local.seat8) remove
+			exec global/vehicles/playervehicle.scr self.model self.desmodel self.origin self.angles self.health self.start_origin self.start_angles
+			println "[PlayerVehicle]: Player left server while using vehicle! - Removing vehicle to prevent Server Crash!"
+			self remove
+
+			if (local.kamera)
+			{
+				if (local.kamera.kam_trigger)
+					local.kamera.kam_trigger remove
+
+				local.kamera remove
+			}
+			
+			end
+		}
+		else
+		{
+			if (self && !IsAlive self.driver)
+			{
+				self.driver unglue
+
+				if (local.org)
+					local.org remove
+					
+				if (local.kamera)
+				{
+					if (local.kamera.kam_trigger)
+						local.kamera.kam_trigger remove
+
+					local.kamera remove
+				}
+				
+				$(local.bindnode_id) remove
+				// $Seat_3 remove
+				// $Seat_4 remove
+				$(local.seat5) remove
+				$(local.seat6) remove
+				$(local.seat7) remove
+				$(local.seat8) remove
+				exec global/vehicles/playervehicle.scr self.model self.desmodel self.origin self.angles self.health self.start_origin self.start_angles
+
+				self.driver show
+				self.driver solid
+				self.driver takedamage
+				self detachdriverslot 0 self.driver
+				self.driver.invehicule = 0
+				self.driver forcetorsostate STAND
+
+				self.driver stufftext "ui_removehud dday2"
+
+				wait 1
+				
+				if (self == NULL)
+					end
+
+				self remove
+
+				end
+			}
+			
+			if(self && self.driver.dmteam != local.team)
+			{
+				self.driver unglue
+
+				if (local.org)
+					local.org remove
+					
+				if (local.kamera)
+				{
+					if (local.kamera.kam_trigger)
+						local.kamera.kam_trigger remove
+
+					local.kamera remove
+				}
+						
+				$(local.bindnode_id) remove
+				// $Seat_3 remove
+				// $Seat_4 remove
+				$(local.seat5) remove
+				$(local.seat6) remove
+				$(local.seat7) remove
+				$(local.seat8) remove
+				exec global/vehicles/playervehicle.scr self.model self.desmodel self.origin self.angles self.health self.start_origin self.start_angles
+				self.driver show
+				self.driver solid
+				self.driver takedamage
+				self detachdriverslot 0 self.driver
+				self.driver forcetorsostate STAND
+				self.driver respawn
+				wait 1			
+
+				if (self.driver)
+				{
+					self.driver.invehicule = 0
+					self.driver stufftext "ui_removehud dday2"
+				}
+
+				self remove
+				end
+			}
+			else
+			{
+				if (self.model != "models/vehicles/opeltruck.tik" && self.model != "models/vehicles/opeltruckgreen.tik" && self.model != "models/vehicles/opeltruckgreen_canopy.tik")
+				{
+					local.kamera.origin = self.origin + angles_toforward self.angles * -220 + ( 0 0 150 )
+					self.driver_kamera.kam_trigger douse self.driver
+					self.driver.viewangles = self.angles + ( 10 0 0 )
+					self.driver_kamera.angles = self.angles + ( 10 0 0 )
+				}
+				else
+				{
+					local.org.angles = self.angles
+					
+					self.driver_kamera.kam_trigger douse self.driver
+
+					self.driver.viewangles = self.angles
+					self.driver_kamera.angles = self.angles
+				}
+				
+
+				if (self.driver.keyheld[ELORE] == 1) // Forward key
+				{
+					if (self.driver.keyheld[SETA] == 1) // Feho - walk key, slower speed
+					{
+						if (self.max_speed > 2)
+							self.max_speed -= 0.08
+					}
+					else
+						self.max_speed = 4.2
+
+					self.vehiclespeed += 0.04
+
+					local.turnrate = (self.turnrate / ( self.max_speed / self.vehiclespeed )) + 1 // feho +1
+					// self turnrate local.turnrate
+
+					if (self.vehiclespeed > self.max_speed)
+						self.vehiclespeed = self.max_speed
+				}
+				else if (self.driver.keyheld[HATRA] == 1) // Backward key
+				{
+					self.vehiclespeed += 0.03
+
+					local.turnrate = (self.turnrate / ( self.min_speed / self.vehiclespeed )) + 1 // Feho + 1
+					// local.turnrate = local.turnrate * 0.5
+					// self turnrate local.turnrate
+
+					if (self.vehiclespeed > self.min_speed)
+						self.vehiclespeed = self.min_speed
+				}
+				else
+					self.vehiclespeed = 0
+
+				if (local.turnrate != NIL) // Vaut NIL au premier démarrage du vehicule
+				{
+					// Feho - Virages plus réalistes, plus souples
+					if (self.driver.keyheld[JOBBRA] || self.driver.keyheld[BALRA]) // Right & Left keys 
+					{
+						if (self.driver.keyheld[JOBBRA] && self.driver.keyheld[BALRA])
+							self.min_turnrate = local.turnrate
+						else
+						{
+							self.min_turnrate -= 0.6
+
+							if (self.min_turnrate < 0)
+								self.min_turnrate = 0
+						}
+					}
+					else
+						self.min_turnrate = local.turnrate
+
+					
+					self turnrate (local.turnrate - self.min_turnrate)
+				}
+			
+				if(self.driver.fireheld)
+				{
+					if (self.model != "models/vehicles/opeltruck.tik" && self.model != "models/vehicles/opeltruckgreen.tik" && self.model != "models/vehicles/opeltruckgreen_canopy.tik")
+					{
+						self.driver_kamera.angles = self.angles + ( 10 180 0 )
+					}
+					else
+					{
+						if (self.klaxon == 1)
+						{
+							self.klaxon = 0
+							self thread klaxon
+						}
+					}
+				}
+					
+			
+				if(self.driver.useheld)
+				{
+					if (self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
+					{
+						if (self.driver)
+							self.driver unglue
+
+						if (local.org)
+							local.org remove				
+					}
+
+					if (local.kamera)
+					{
+						if (local.kamera.kam_trigger)
+							local.kamera.kam_trigger remove
+
+						local.kamera remove
+					}
+						
+					self.driver show
+					self.driver solid
+					self.driver takedamage
+
+					self detachdriverslot 0 self.driver
+
+					if (self.model != "models/vehicles/opeltruck.tik" && self.model != "models/vehicles/opeltruckgreen.tik" && self.model != "models/vehicles/opeltruckgreen_canopy.tik")
+					{
+						self.driver.origin = self.origin + ( 0 0 150 )
+						self.driver.viewangles = (self.driver.viewangles[0] self.driver.viewangles[1] 0)
+					}
+					else
+					{
+						self.driver.origin = self gettagposition "driver" + angles_toleft self.angles * -65 + ( 0 0 32 )
+						self.driver.viewangles = ( 0 self.angles[1] 0 )
+						
+						// self.driver forcetorsostate STAND
+						
+						self.driver rendereffects "+shadow"
+					}
+					
+					self.driver forcetorsostate STAND
+
+					wait 1
+					
+					if (self.driver)
+					{
+						self.driver.invehicule = 0
+						self.driver stufftext "ui_removehud dday2"
+					}
+
+					self.driver = NIL
+					self.hasdriver = 0
+					
+					end
+				}
+			}
+		}
+			
+		self.velocity = ( (self.velocity[0] * self.vehiclespeed) (self.velocity[1] * self.vehiclespeed) self.velocity[2] )
+		
+		waitframe
+		
+		// if (self.origin[0] != local.prevorigin[0] || self.origin[1] != local.prevorigin[1])
+		// {
+			// if (self.vehiclespeed < self.max_speed)
+				// self.vehiclespeed += 0.05
+		// }
+		// else
+		// {
+			// self.vehiclespeed = 0.1
+		// }
+		
+		// local.turnrate = (self.turnrate / ( self.max_speed / self.vehiclespeed )) + 1
+		// self turnrate local.turnrate
+	}
+
+end
+
+attachpassenger local.player local.seat5 local.seat6 local.seat7 local.seat8:
+ 
+	 // iprintlnbold_noloc ("Trigger fired")
+	 local.passenger = local.player
+	 
+	 if ( (local.passenger.is_in_truck == 1) || (getcvar(trucktype) == "tank") || (level.passenger_is_in_que == 1) )
+	 {
+		end
+	 }
+	 
+	 level.passenger_is_in_que = 1
+	 local.seat = waitthread get_freeseat local.seat5 local.seat6 local.seat7 local.seat8
+	 level.passenger_is_in_que = 0
+	 
+	 if ( (local.seat == NIL) && (level.free_seats != 0) )
+	 {
+		 thread attachpassenger
+		 end
+	 }
+	 if (level.free_seats == 0)
+	 {
+		  if (local.passenger.informed != 1)
+		  {
+			  local.passenger iprint ("No free seats, better luck next time.")
+			  local.passenger.informed = 1
+			  wait 1
+			  local.passenger.informed = 0
+		  }
+		 end
+	 }
+	 
+	 //local.passenger stufftext ("say " + "Im on seat: " + local.seat)
+	 level.free_seats--
+	 self.nb_passengers++
+
+	 if (self.driver)
+	 	self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+	 // iprintln_noloc ("Free seats " + level.free_seats)
+	 // local.passenger.name = netname local.passenger
+	 // self.driver iprint (local.passenger.name+" has boarded the vehicle")
+	 
+	 if (local.seat == 1)
+	 {
+		// local.passenger glue level.seat[local.seat]
+		// local.passenger.viewangles = (20 $mg42_1.angles[1] 0)
+		// $mg42_1 douse local.passenger
+		local.passenger glue level.seat[local.seat] local.passenger.viewangles[2]
+		level.seat[local.seat].passenger = local.passenger
+		local.passenger.is_in_truck = 1
+		local.passenger notsolid
+	 }
+	 
+	 if (local.seat == 2)
+	 {
+		// local.passenger glue level.seat[local.seat]
+		// local.passenger.viewangles = (20 $mg42_2.angles[1] 0)
+		// $mg42_2 douse local.passenger
+		local.passenger glue level.seat[local.seat] local.passenger.viewangles[2]
+		level.seat[local.seat].passenger = local.passenger
+		local.passenger.is_in_truck = 1
+		local.passenger notsolid
+	 }
+	 else if ( (local.seat != 1) && (local.seat != 2) )
+	 {
+		local.passenger glue level.seat[local.seat] local.passenger.viewangles[2]
+		level.seat[local.seat].passenger = local.passenger
+		local.passenger.is_in_truck = 1
+		local.passenger notsolid
+	 }
+	 
+	 wait 1
+	 self thread monitor local.passenger local.seat
+ end
+
+  get_freeseat local.seat5 local.seat6 local.seat7 local.seat8:
+  
+	 //iprintlnbold_noloc ("Get freeseat fired")
+	 // level.seat[1] = $Seat_3
+	 // level.seat[2] = $Seat_4
+	 level.seat[1] = $(local.seat5)
+	 level.seat[2] = $(local.seat6)
+	 level.seat[3] = $(local.seat7)
+	 level.seat[4] = $(local.seat8)
+	 //level.seat[7] = $Seat_7
+	 //level.seat[8] = $Seat_8
+	 
+	 /*#############################################################################
+	 level.seat[1].taken = 1
+	 level.seat[2].taken = 1
+	 level.seat[3].taken = 1
+	 level.seat[4].taken = 1
+	 level.seat[5].taken = 1
+	 level.seat[6].taken = 1
+	 level.seat[7].taken = 1
+	 level.seat[8].taken = 1
+	 ##############################################################################*/
+	 
+	 local.seat = randomint(level.seat.size)+1
+	 local.random_seat = level.seat[local.seat]
+	 
+	 for ( local.seat = 1; local.seat <= level.seat.size; local.seat++ )
+	 {
+		 if ( (level.seat[local.seat] && level.seat[local.seat].taken != 1) && (level.seat[local.seat] == local.random_seat) )
+		 {
+		 
+		 
+		 level.seat[local.seat].taken = 1
+		 end local.seat
+		 }
+		waitframe
+	 }
+ end
+ 
+monitor local.passenger local.seat:
+	
+	if (!local.passenger)
+		end
+
+	local.team = local.passenger.dmteam
+	
+	while (self)
+	{
+		if (local.passenger == NULL)
+		{
+			level.free_seats++
+			self.nb_passengers--
+
+			if (self.driver)
+				self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+			if (level.seat[local.seat])
+				level.seat[local.seat].taken = 0
+
+			end
+		}
+		else if (local.passenger.dmteam != local.team)
+		{
+			local.passenger unglue
+			local.passenger.is_in_truck = 0
+			local.passenger solid
+			level.free_seats++
+			self.nb_passengers--
+
+			if (self.driver)
+				self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+			if (level.seat[local.seat])
+				level.seat[local.seat].taken = 0
+
+			local.passenger.is_in_truck = 0
+			end		
+		}
+		else if (local.passenger.useheld)
+		{
+			local.passenger unglue
+			local.passenger.origin = local.passenger.origin  + ( 0 0 100 )
+			local.passenger solid
+			level.free_seats++
+			self.nb_passengers--
+
+			if (self.driver)
+				self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+			level.seat[local.seat].taken = 0
+			wait 1
+			local.passenger.is_in_truck = 0
+			end
+		}
+		else if (!IsAlive local.passenger)
+		{
+			local.passenger unglue
+			local.passenger solid
+			level.free_seats++
+			self.nb_passengers--
+
+			if (self.driver)
+				self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+			if (level.seat[local.seat])
+				level.seat[local.seat].taken = 0
+
+			local.passenger.is_in_truck = 0
+			end
+		}
+
+		// if (!IsAlive self)
+		// {
+		// 	local.passenger unglue
+		// 	local.passenger solid
+		// 	level.free_seats++
+		// 	self.nb_passengers--
+
+		// 	if (self.driver)
+		// 		self.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+
+		// 	level.seat[local.seat].taken = 0
+		// 	local.passenger.is_in_truck = 0
+		// 	end
+		// }
+		
+		if (self)
+		{
+			if (self.driver)
+			{
+				if (self.driver.keyheld[ELORE] == 1 || self.driver.keyheld[HATRA] == 1)
+				{
+					local.passenger notsolid
+				}
+			}
+			else
+			{
+				local.passenger solid
+			}
+		}
+		
+		waitframe
+	}
+
+	local.passenger unglue
+	local.passenger solid
+	local.passenger.is_in_truck = 0
+
+end
+
+vehicle_loop local.seat5 local.seat6 local.seat7 local.seat8 local.bindnode_id:
+
+	self.player_press_use = 0
+	
+	while ( self && isAlive self && self.health > 0 )
+	{
+		if (self.player_press_use != 1)
+			self thread player_check local.seat5 local.seat6 local.seat7 local.seat8 local.bindnode_id
+			
+		waitframe
+	}
+
+end
+
+player_check local.seat5 local.seat6 local.seat7 local.seat8 local.bindnode_id:
+
+	// if (self.collisionent)
+		// local.felulet = self.collisionent
+	// else
+		local.felulet = self
+		
+	// self.hasdriver = 1 // test
+	
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if (local.player.needrevive != 1)
+		{
+			if (local.player.justneedrevive != 1)
+			{
+				if ( local.player && local.player.dmteam != "spectator" )
+				{
+					if ( local.felulet && local.player istouching local.felulet )
+					{
+						if ( local.player.useheld && local.player.invehicule != 1 )
+						{
+							if ( self.hasdriver != 1 )
+							{
+								self.player_press_use = 1
+								self thread playergetin local.player local.seat5 local.seat6 local.seat7 local.seat8 local.bindnode_id
+
+								wait .5
+
+								self.player_press_use = 0
+							}
+							else if ( self.hasdriver == 1 )
+							{
+								self.player_press_use = 1
+								self thread attachpassenger local.player local.seat5 local.seat6 local.seat7 local.seat8
+
+								wait .5
+
+								self.player_press_use = 0								
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+end
+
+// display number of passengers on driver's screen
+driver_hud local.driver:
+
+	local.driver stufftext "globalwidgetcommand dday2 fgcolor 1.00 1.00 1.00 1.00"
+	local.driver stufftext "globalwidgetcommand dday2 bgcolor 0.50 0.50 0.50 0.00"
+	local.driver stufftext "globalwidgetcommand dday2 fadein 0"
+	local.driver stufftext "globalwidgetcommand dday2 menu dday2 640 480 NONE 0"
+	local.driver stufftext "globalwidgetcommand dday2 virtualres 1"
+	local.driver stufftext "globalwidgetcommand dday2 fullscreen 1"
+
+	local.driver stufftext "globalwidgetcommand charliesector borderstyle NONE"
+	local.driver stufftext "globalwidgetcommand charliesector textalign left "
+	local.driver stufftext "globalwidgetcommand charliesector rect 950 900 300 20"
+	local.driver stufftext "globalwidgetcommand charliesector fgcolor 0.0 1.0 0.0 1.0"
+	local.driver stufftext "globalwidgetcommand charliesector bgcolor 0.00 0.00 0.00 0.00"
+	local.driver stufftext "globalwidgetcommand charliesector linkcvar driverhud"
+	local.driver stufftext "globalwidgetcommand charliesector font facfont-20"
+	local.driver stufftext "globalwidgetcommand charliesector shader townhallwindow"
+
+	waitframe
+
+	if (local.driver)
+	{
+		local.driver stufftext "ui_addhud dday2"
+		local.driver stufftext ( "set driverhud " + "Passengers : " + self.nb_passengers )
+	}
+
+end
+
+vehicledamage:
+
+	while(isalive self)
+	{
+		local.previoushealth = self.health
+
+		if (self.health < local.previoushealth)
+		{
+			self playsound damage_tank
+			exec global/earthquake.scr .2 4 0 0
+		}
+		waitframe
+	}
+
+end
+
+vehicledeath local.model local.desmodel local.origin local.angles local.health local.seat5 local.seat6 local.seat7 local.seat8 local.bindnode_id:
+
+	self waittill death
+	self playsound explode_tank
+
+	local.desvehicle = spawn script_model
+	local.desvehicle model self.desmodel
+	local.desvehicle.origin = self.origin
+	local.desvehicle.angles = self.angles
+
+	if(self.driver)
+	{
+		self.driver show
+		self.driver solid
+		self.driver takedamage
+		self.driver.invehicule = 0
+		self.driver stufftext "ui_removehud dday2"
+
+		self detachdriverslot 0 self.driver
+
+		self.driver volumedamage 1000
+		
+		if (self.driver_kamera)
+		{
+			if (self.driver_kamera.kam_trigger)
+				self.driver_kamera.kam_trigger remove
+
+			self.driver_kamera remove
+			self.driver forcetorsostate STAND
+			self.driver rendereffects "+shadow"
+		}
+		
+		self.driver = NIL
+	}
+
+	if ($(local.seat5) && $(local.seat5).passenger)
+	{
+		$(local.seat5).passenger volumedamage 1000
+		$(local.seat5).passenger.is_in_truck = 0
+	}
+
+	if ($(local.seat6) && $(local.seat6).passenger)
+	{
+		$(local.seat6).passenger volumedamage 1000
+		$(local.seat6).passenger.is_in_truck = 0
+	}
+
+	if ($(local.seat7) && $(local.seat7).passenger)
+	{
+		$(local.seat7).passenger volumedamage 1000
+		$(local.seat7).passenger.is_in_truck = 0
+	}
+
+	if ($(local.seat8) && $(local.seat8).passenger)
+	{
+		$(local.seat8).passenger volumedamage 1000
+		$(local.seat8).passenger.is_in_truck = 0
+	}
+
+	self remove
+
+	local.boom = spawn script_model
+	local.boom model emitters/explosion_tank.tik
+	local.boom.origin = local.desvehicle.origin
+	// local.boom.angles = local.desvehicle.angles
+	local.boom anim start
+	radiusdamage local.boom.origin 640 384
+	waitframe
+	local.boom remove
+	wait 15
+	local.desvehicle remove
+	$(local.bindnode_id) remove
+
+	if ($(local.seat5))
+	{
+		// $Seat_3 remove
+		// $Seat_4 remove
+		$(local.seat5) remove
+		$(local.seat6) remove
+		$(local.seat7) remove
+		$(local.seat8) remove
+	}
+
+	wait 45
+	exec global/vehicles/playervehicle.scr local.model local.desmodel local.origin local.angles local.health
+
+end
+
+klaxon:
+
+	self playsound truck_horn
+
+	wait 2
+
+	if (self)
+		self.klaxon = 1
+
+end
+
+kamera local.player:
+
+	local.name = "vehicle_kamera" + randomint 999999 + local.player.entnum
+	local.kamera = spawn func_camera targetname local.name
+
+	if (self.model == "models/vehicles/opeltruck.tik" || self.model == "models/vehicles/opeltruckgreen.tik" || self.model == "models/vehicles/opeltruckgreen_canopy.tik")
+		local.kamera attach self "driver" 1 ( 0 0 55 )
+	else
+	{
+		local.kamera.origin = self.origin + angles_toforward self.angles * 80 + ( 0 0 150 )
+	}
+		
+	local.kam_trigger = spawn trigger_camerause target local.name
+	local.kam_trigger douse local.player
+	local.kam_trigger nottriggerable
+
+	if (local.player == self.driver)
+	{
+		self.driver_kamera = local.kamera
+		self.driver_kamera.kam_trigger = local.kam_trigger
+	}
+	else if (local.player == self.passenger)
+	{
+		self.passenger_kamera = local.kamera
+		self.passenger_kamera.kam_trigger = local.kam_trigger
+	}
+
+end local.kamera
+
+cachesound:
+	local.master = spawn scriptmaster
+
+	local.master aliascache sdkfz_snd_idle sound/vehicle/veh_track_idle.wav soundparms 0.5 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_run sound/vehicle/veh_track_move.wav soundparms 1.5 0.0 1.0 0.0 1000 6000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_idle sound/vehicle/veh_track_on.wav soundparms 1.5 0.0 1.0 0.0 1000 5000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_revup sound/vehicle/veh_track_revup.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_revdown sound/vehicle/veh_track_revdown.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_shift1 sound/vehicle/veh_track_shiftin.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_shift2 sound/vehicle/veh_track_shiftout.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_on sound/vehicle/veh_track_on.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_start sound/vehicle/veh_track_on.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_off sound/vehicle/veh_track_off.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_snd_stop sound/vehicle/veh_track_off.wav soundparms 1.5 0.0 1.0 0.0 1000 6000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_tread_snd_stone sound/vehicle/veh_tread_metal.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_tread_snd_wood sound/vehicle/veh_tread_metal.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache sdkfz_tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	
+	// local.master aliascache jeep_snd_idle sound/vehicle/veh_jeep_idle.wav soundparms 0.5 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_run sound/vehicle/veh_jeep_move.wav soundparms 0.8 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_revup sound/vehicle/veh_jeep_start.wav soundparms 1.2 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_revdown sound/vehicle/veh_jeep_revdown.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_shift1 sound/vehicle/veh_jeep_shiftin.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_shift2 sound/vehicle/veh_jeep_shiftout.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_on sound/vehicle/veh_jeep_start.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_start sound/vehicle/veh_jeep_on.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_off sound/vehicle/veh_jeep_off.wav soundparms 1.5 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_stop sound/vehicle/veh_jeep_off.wav soundparms 1.5 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_snd_doorclose sound/mechanics/DoorJeepClose_02.wav soundparms 1.2 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms 0.28 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_tread_snd_stone sound/vehicle/veh_tread_grass.wav soundparms 0.28 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms 0.28 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_tread_snd_wood sound/vehicle/veh_tread_grass.wav soundparms 0.28 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache jeep_tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms 2.8 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_idle sound/vehicle/veh_jeep_idle.wav soundparms 0.5 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_run sound/vehicle/veh_jeep_move.wav soundparms 0.8 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_revup sound/vehicle/veh_jeep_start.wav soundparms 1.2 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_revdown sound/vehicle/veh_jeep_revdown.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_shift1 sound/vehicle/veh_jeep_shiftin.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_shift2 sound/vehicle/veh_jeep_shiftout.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_on sound/vehicle/veh_jeep_start.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_start sound/vehicle/veh_jeep_on.wav soundparms 1.0 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_off sound/vehicle/veh_jeep_off.wav soundparms 1.5 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache snd_stop sound/vehicle/veh_jeep_off.wav soundparms 1.5 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache snd_doorclose sound/mechanics/DoorJeepClose_02.wav soundparms 1.2 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms 0.28 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache tread_snd_stone sound/vehicle/veh_tread_grass.wav soundparms 0.28 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms 0.28 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache tread_snd_wood sound/vehicle/veh_tread_grass.wav soundparms 0.28 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms 2.8 0.0 1.0 0.0 800 4000 auto loaded maps "dm obj lib tow m t e"
+	
+	local.master aliascache opeltruck_snd_idle sound/vehicle/veh_truck_idle.wav soundparms 0.7 0.0 1.0 0.0 300 7000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_run sound/vehicle/veh_truck_move.wav soundparms 1.2 0.0 1.0 0.0 600 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_revup sound/vehicle/veh_truck_revup.wav soundparms 1.0 0.0 1.0 0.0 100 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_revdown sound/vehicle/veh_truck_revdown.wav soundparms 1.0 0.0 1.0 0.0 100 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_shift1 sound/vehicle/veh_truck_shiftin.wav soundparms 1.0 0.0 1.0 0.0 200 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_shift2 sound/vehicle/veh_truck_shiftout.wav soundparms 1.0 0.0 1.0 0.0 200 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_on sound/vehicle/veh_truck_on.wav soundparms 1.0 0.0 1.0 0.0 100 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_start sound/vehicle/veh_truck_on.wav soundparms 1.0 0.0 1.0 0.0 100 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_off sound/vehicle/veh_truck_off.wav soundparms 1.0 0.0 1.0 0.0 100 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_stop sound/vehicle/veh_truck_off.wav soundparms 1.0 0.0 1.0 0.0 100 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_tread_snd_dirt sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 600 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_tread_snd_stone sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 600 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_tread_snd_grass sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 600 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_tread_snd_wood sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 600 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_tread_snd_mud sound/vehicle/veh_tread_grass.wav soundparms 0.25 0.0 1.0 0.0 600 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_doorclose sound/mechanics/DoorJeepClose_02.wav soundparms 1.0 0.0 1.0 0.0 400 4000 auto loaded maps "dm obj lib tow m t e"
+	local.master aliascache opeltruck_snd_dooropen sound/mechanics/DoorJeepOpen_01.wav soundparms 1.0 0.0 1.0 0.0 400 4000 auto loaded maps "dm obj lib tow m t e"
+	// local.master aliascache explode_truck1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps "dm obj lib tow m t e"
+	// local.master aliascache explode_truck2 sound/weapons/explo/Explo_MetalMed2.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps "dm obj lib tow m t e"
+	// local.master aliascache explode_truck3 sound/weapons/explo/Explo_MetalMed3.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps "dm obj lib tow m t e"
+	// local.master aliascache explode_truck4 sound/weapons/explo/Explo_MetalMed4.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps "dm obj lib tow m t e"
+	// local.master aliascache explode_truck5 sound/weapons/explo/Explo_MetalMed5.wav soundparms 1.2 0.2 0.8 0.2 1500 8000 weapon loaded maps "dm obj lib tow m t e"
+end

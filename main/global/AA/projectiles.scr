@@ -1,0 +1,71 @@
+main local.tname:
+
+	if (self.already_started != 1)
+	{
+		self.already_started = 1
+
+		if (self.classname != "Projectile")
+			end
+
+		if ( local.tname != NIL && local.tname != NULL )
+			self.targetname = local.tname
+
+		local.t = spawn trigger_multipleall spawnflags "20" origin self.origin angles self.angles
+		local.t.targetname = ( "projectile_attacker_trigger" + randomint 999999 + self.entnum )
+		local.t setsize ( -5 -5 -5 ) ( 5 5 5 )
+		local.t glue self
+
+		local.t waittill trigger
+
+		if (self == NULL)
+			end
+
+		self.attacker = parm.owner
+
+		if (local.t)
+			local.t remove
+
+		self thread projectile_teamkill_fix self.attacker self.attacker.dmteam
+
+		if (self.targetname == "tankproj")
+			self thread tank_proj
+	}
+
+end
+
+projectile_teamkill_fix local.attacker local.team:
+
+	while ( self != NULL && local.attacker != NULL && local.attacker.isplayer == 1 && local.attacker.dmteam == local.team )
+		waitframe
+
+	if (self == NULL)
+		end
+
+	if ( local.attacker == NULL || ( local.attacker != NULL && local.attacker.isplayer == 1 && local.attacker.dmteam != local.team ) )
+		self immediateremove
+
+end
+
+tank_proj:
+
+	if (self.attacker.isplayer == 1)
+	{
+		if ($vezetheto_jarmu.size > 0)
+		{
+			for (local.i = 1;local.i <= $vezetheto_jarmu.size;local.i++)
+			{
+				local.jarmu = $vezetheto_jarmu[local.i]
+
+				if ( local.jarmu.driver != NIL && local.jarmu.driver != NULL && local.jarmu.driver == self.attacker )
+				{
+					self speed 0
+
+					self.origin = local.jarmu.torony gettagposition "tag_barrel"
+					self.angles = local.jarmu.torony gettagangles "tag_barrel"
+					self.velocity = self.forwardvector * 6000
+				}
+			}
+		}
+	}
+
+end

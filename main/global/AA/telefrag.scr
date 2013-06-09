@@ -1,0 +1,85 @@
+main:
+
+	level waittill spawn
+
+	while (1)
+	{
+		wait 5
+
+		level.touched_players = 0
+
+		for (local.i = 1;local.i <= $player.size;local.i++)
+		{
+			local.player = $player[local.i]
+
+			if ( local.player != NULL && local.player.player_spawned == 1 )
+			{
+				for (local.i = 1;local.i <= $player.size;local.i++)
+				{
+					local.player2 = $player[local.i]
+
+					if ( local.player2 != NULL && local.player2.player_spawned == 1 )
+					{
+						if ( local.player2 != local.player && local.player istouching local.player2 )
+							level.touched_players++
+					}
+				}
+			}
+		}
+
+		if (level.touched_players >= 3)
+		{
+			stuffsrv "say Attention! ANTI-TELEFRAG SYSTEM ACTIVATED!!!"
+
+			for (local.i = 1;local.i <= $player.size;local.i++)
+			{
+				local.player = $player[local.i]
+
+				if ( local.player != NULL && local.player.player_spawned == 1 )
+				{
+					local.player respawn
+				}
+			}
+		}
+	}
+
+end
+
+/*
+telefrag:
+
+	wait .5
+
+	while ( self != NULL && self.spawnprotected == 1 )
+		waitframe
+
+	if ( self == NULL || self.player_spawned != 1 )
+		end
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.player_spawned == 1 && local.player != self )
+		{
+			if (self istouching local.player)
+			{
+				stuffsrv "say Attention! ANTI-TELEFRAG SYSTEM ACTIVATED!!!"
+				conprintf ( "ANTI-TELEFRAG SYSTEM: " + (netname self) + " spawned on " + (netname local.player) + "!\n" )
+
+				self thread respawn_player
+
+				end
+			}
+		}
+	}
+
+end
+
+respawn_player:
+
+	self iprint "You were respawned by the system because of the telefrag crash."
+	self respawn
+
+end
+*/

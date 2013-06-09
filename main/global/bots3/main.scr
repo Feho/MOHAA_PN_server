@@ -1,0 +1,305 @@
+// bots3
+// by jv_map
+
+main:
+	// init-ok flag
+	local.ok = 1
+
+	// gametype selector
+	local.skipit = 0
+	switch(int (getcvar g_gametype))
+	{
+		case 0:
+			println "[BOTS3] Gametype " getcvar g_gametypestring " not supported."
+			local.ok = 0
+			break
+		case 1:
+		case 2:
+			// all good
+			break
+		case 3:
+		case 4:
+		default:
+			println "[BOTS3] Gametype " getcvar g_gametypestring " not fully supported."
+	}
+
+	waitthread init
+	
+	local.ok = local.ok && (waitthread load_skinlist)
+	local.ok = local.ok && (waitthread load_weaplist)
+	local.ok = local.ok && (waitthread load_namelist)
+	
+	if (!local.ok)
+	{
+		println "[BOTS3] A fatal error occured during initialization. Bots3 will not run (mutiny)."
+		end
+	}
+	
+	// tell the user we're alive
+	if(getcvar bots3 != "1")
+	{
+		println "[BOTS3] Bots have been disabled; '[rcon] set bots3 1' to enable."
+	}
+	else
+	{
+		println "[BOTS3] Bots active! Number of bots: " (int (getcvar bots3_numbots)) "; '[rcon] set bots3_numbots [#]' to change"
+	}
+
+	thread loop
+end
+
+loop:
+	level.bots_in_game = 0
+
+	while(1)
+	{
+		if(getcvar bots3 != "1")
+		{
+			// extinguish
+			for(local.i = 1; local.i <= level.bots_in_game; local.i++)
+			{
+				level.botlist[local.i].extinguish = 1
+			}
+			
+			level.bots_in_game = 0
+			
+			// remove bots
+			local.length = $bot3.size
+			for(local.i = 1; local.i <= local.length; local.i++)
+			{
+				$bot3[local.i] remove
+			}
+		}
+		else
+		{
+			local.desired_number_of_bots = int(getcvar bots3_numbots)
+			
+			// add bots
+			for(local.i = level.bots_in_game + 1; local.i <= local.desired_number_of_bots; local.i++)
+			{
+				thread level.bots.bot::main
+				waitframe // some timespread so we can telefrag better
+			}
+			
+			// remove bots
+			for(local.i = level.bots_in_game; local.i >= local.desired_number_of_bots + 1; local.i--)
+			{
+				level.botlist[local.i].extinguish = 1
+				level.bots_in_game--
+			}
+		}
+		
+		// update bot skill on-the-fly
+		local.newskill = float(getcvar(bots3_skill))
+		if(local.newskill != level.bots.skill)
+		{
+			if(local.newskill >= 0.0 && local.newskill <= 1.0)
+			{
+				println "[BOTS3] Set new skill level: " local.newskill
+				level.bots.skill = local.newskill
+			}
+			else
+			{
+				println "[BOTS3] Skill level must be between 0.0 and 1.0. You entered: " (getcvar bots3_skill)
+				setcvar bots3_skill level.bots.skill
+			}
+		}
+		
+		waitframe
+	}
+end
+
+init:
+	level.bots = spawn listener
+	level.bots.path = "global/bots3/"
+	
+	level.bots.common 		= level.bots.path + "common.scr"
+	level.bots.bot 			= level.bots.path + "bot.scr"
+	level.bots.anim			= level.bots.path + "anim.scr"
+	level.bots.weapon		= level.bots.path + "weapon.scr"
+	level.bots.move			= level.bots.path + "move.scr"
+	level.bots.pain			= level.bots.path + "pain.scr"
+	level.bots.killed		= level.bots.path + "killed.scr"
+	level.bots.fight		= level.bots.path + "fight.scr"
+	level.bots.unarmed_scr	= level.bots.path + "weapons/unarmed.scr"
+	level.bots.skinlist_txt = level.bots.path + "skinlist.txt"
+	level.bots.weaplist_txt = level.bots.path + "weaplist.txt"
+	level.bots.namelist_txt = level.bots.path + "namelist.txt"
+	
+	level.dmteam[0] = allies
+	level.dmteam[1] = axis
+	
+	level.teamid[allies] 	= 0
+	level.teamid[axis] 		= 1
+	
+	// need this to spawn a bot, then can change model later :)
+	level.bots.dummymodel = "human/allied_pilot.tik"
+	
+	waitthread level.bots.common::initcvar bots3 1
+	waitthread level.bots.common::initcvar bots3_numbots 6
+	waitthread level.bots.common::initcvar bots3_respawn_delay 4.0
+	waitthread level.bots.common::initcvar bots3_skill 0.5
+	waitthread level.bots.common::initcvar bots3_prefix "<BoT-3>"
+	
+	// moved this to a script constant since
+	// this is a very good value
+	level.bots.teamswitch_delay = 20.0
+	
+	level.bots.skill = 0.5
+	
+	level.bots.lean_angle = 35.0 // degrees
+	level.bots.lean_speed = 8.0 // fraction of lean_angle per second
+	
+	level.bots.POSE_STAND  = 1
+	level.bots.POSE_CROUCH = 2
+	
+	level.bots.JUMP_HEIGHT = 56.0
+	level.bots.JUMP_DISTANCE = 20.0
+	level.bots.AIRSPEED = 80.0 // units/s
+	
+	level.bots.CRATER_SPEED = -800.0
+	level.bots.STEPSIZE = 16.0
+	level.bots.BLOCKED_MOVE_DELTA = 0.0001 // units
+	
+	// bot vision distance
+	if($world.farplane && $world.farplane > 0)
+	{
+		level.bots.farplane = $world.farplane
+	}
+	else
+	{
+		level.bots.farplane = 16000.0 // units
+	}
+	
+	level.bots.fovdot = 0.707 // 0.5 * sqrt(2) -> 90 deg fov
+	
+	level.bots.jump_interval = 0.5 //0.15 // secs between landing and next jump
+	
+	level.bots.viewkick_shoot = 1.0
+	level.bots.viewkick_pain = 1.0
+	level.bots.viewkickspreadmult = 0.25
+	level.bots.viewkickfalloff = 0.95 // multiplier per frame
+	
+	level.bots.MAX_PREFERED_VIEWKICK = 3.0
+	
+	// bbox which determines if I can fall down
+	level.bots.bbox_mins = ( -16 -16 0)
+	level.bots.bbox_maxs = (16 16 92)
+	
+	// a slightly larger bbox determines if I can move somewhere
+	// this keeps some distance to walls and other bots so we don't 
+	// get stuck so easily
+	level.bots.movebbox_mins = ( -15 -15 level.bots.STEPSIZE)
+	level.bots.movebbox_maxs = ( 15 15 92)
+	level.bots.movebb_checklength = 3.0
+	
+	// bounding box used to determine if jump is possible
+	// this is somewhat smaller so that we can jump over an obstacle
+	// simply by running into it (and jumping)
+	level.bots.jumpbbox_mins = ( -16 -16 level.bots.STEPSIZE)
+	level.bots.jumpbbox_maxs = ( 16 16 92)
+	
+	// partial move boxes
+	level.bots.partmovebbox_mins[1] = (level.bots.movebbox_mins[0] 	level.bots.movebbox_mins[1] level.bots.movebbox_mins[2])
+	level.bots.partmovebbox_maxs[1] = (0 							0 							level.bots.movebbox_maxs[2])
+	level.bots.partmovebbox_mins[2] = (0 							level.bots.movebbox_mins[1] level.bots.movebbox_mins[2])
+	level.bots.partmovebbox_maxs[2] = (level.bots.movebbox_maxs[0] 	0 							level.bots.movebbox_maxs[2])
+	level.bots.partmovebbox_mins[3] = (0 							0 							level.bots.movebbox_mins[2])
+	level.bots.partmovebbox_maxs[3] = (level.bots.movebbox_maxs[0] 	level.bots.movebbox_maxs[1] level.bots.movebbox_maxs[2])
+	level.bots.partmovebbox_mins[4] = (level.bots.movebbox_mins[0] 	0 							level.bots.movebbox_mins[2])
+	level.bots.partmovebbox_maxs[4] = (0 							level.bots.movebbox_maxs[1] level.bots.movebbox_maxs[2])
+	
+	level.bots.partmovesep = 16.0 // part center seperation
+end
+
+load_skinlist:
+
+	// load the skinlist
+	waitexec level.bots.skinlist_txt
+
+	// check if skins are ok
+	local.ok = level.bots.skinlist[allies].size >= 1 && level.bots.skinlist[axis].size >= 1
+
+	if (!local.ok)
+	{
+		println "[BOTS3] No skins defined or syntax error in file: " level.bots.skinlist_txt
+	}
+end local.ok
+
+load_weaplist:
+
+	// load the weaplist
+	waitexec level.bots.weaplist_txt
+	
+	// check if weaplist ok
+	local.ok = level.bots.weaplist[allies].size >= 1 && level.bots.weaplist[axis].size >= 1
+
+	for(local.teamid = 0; local.teamid <= 1; local.teamid++)
+	{
+		// init primary weapons
+		for(local.i = 1; local.ok && local.i <= level.bots.weaplist[level.dmteam[local.teamid]].size; local.i++)
+		{
+			local.ok = local.ok && (waitthread initweap level.bots.weaplist[level.dmteam[local.teamid]][local.i][1])
+		}
+		
+		// init sidearms
+		local.ok = local.ok && (waitthread initweap level.bots.sidearm[level.dmteam[local.teamid]])
+		
+		// init grenades
+		local.ok = local.ok && (waitthread initweap level.bots.grenade[level.dmteam[local.teamid]])
+	}
+	
+	if(!local.ok)
+	{
+		println "[BOTS3] There were errors in file: " level.bots.weaplist_txt " . Please fix."
+	}
+	
+end local.ok
+
+load_namelist:
+
+	// load the namelist
+	waitexec level.bots.namelist_txt
+	
+	// check if list is ok
+	local.ok = level.bots.namelist.size >= 1
+	
+	if(!local.ok)
+	{
+		println "[BOTS3] No valid bot names found in file: " level.bots.namelist_txt
+	}
+end local.ok
+
+// inits and checks if weap script is compiled.
+initweap local.weap:
+	
+	local.scr = level.bots.path + "weapons/" + local.weap + ".scr"
+	level.bots.weap[local.weap] = local.scr
+	
+	local.ok = waitthread local.scr::acte_de_presence
+	
+	if (!local.ok)
+	{
+		println "[BOTS3] " local.scr " failed acte de presence, please fix."
+	}
+end local.ok
+
+// add deathmatch spawn (ffa, tdm, roundbased)
+info_bot_deathmatch local.pos local.angle:
+	waitthread spawnspawn info_bot_deathmatch local.pos local.angle
+end
+
+// add objective allied spawn
+info_bot_allied local.pos local.angle:
+	waitthread spawnspawn info_bot_allies local.pos local.angle
+end
+
+// add object axis spawn
+info_bot_axis local.pos local.angle:
+	waitthread spawnspawn info_bot_axis local.pos local.angle
+end
+
+// spawns a spawnpoint
+spawnspawn local.type local.pos local.angle:
+	local.s = spawn SimpleEntity origin local.pos angle local.angle targetname local.type
+end

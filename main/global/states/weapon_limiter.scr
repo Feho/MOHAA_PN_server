@@ -1,0 +1,169 @@
+/*
+======================================================
+*** AIRborne; Weapon Limiter Script for MoH:AA
+======================================================
+by Sor
+Version: v1.2
+-----------------------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+
+//----------------------------------------------
+check local.model:
+//----------------------------------------------
+
+	if (level.AIR["banned_weapons"] == NIL)
+	{
+		waitthread global/limits.txt::banned
+		//waitframe
+	}
+
+	if (level.AIR["limited_weapons"] == NIL)
+	{
+		waitthread global/limits.txt::limited
+		//waitframe
+	}
+
+	if (level.AIR["bonus_weapons"] == NIL)
+	{
+		waitthread global/limits.txt::bonuses
+		//waitframe
+	}
+
+	// Is it banned?
+	for (local.i = 1; local.i <= level.AIR["banned_weapons"].size; local.i++)
+	{
+		if (local.model == level.AIR["banned_weapons"][local.i][1])
+		{
+			self thread invalid local.model
+			//self take local.model
+			end
+		}
+	}
+
+	// Limited?
+	for (local.i = 1; local.i <= level.AIR["limited_weapons"].size; local.i++)
+	{
+		if (local.model == level.AIR["limited_weapons"][local.i][1])
+		{
+			local.var = int (level.AIR["limited_weapons"][local.i][3])
+			local.limitation = (level.AIR["limited_weapons"][local.i][2]::local.var)
+			self waitthread apply_limit local.limitation local.model
+			end 
+		}
+	}
+
+	// Or does it gain a bonus?
+	for (local.i = 1; local.i <= level.AIR["bonus_weapons"].size; local.i++)
+	{
+		if (local.model == level.AIR["bonus_weapons"][local.i][1])
+		{
+			local.bonus = (level.AIR["bonus_weapons"][local.i][2]::level.AIR["bonus_weapons"][local.i][3])
+			self waitthread apply_bonus local.bonus local.model
+			end 
+		}
+	}
+
+end
+
+
+//----------------------------------------------
+invalid local.model:
+//----------------------------------------------
+
+	self take local.model
+
+end 
+
+//----------------------------------------------
+apply_limit local.limited_weapon local.model:
+//----------------------------------------------
+
+	if (local.limited_weapon != NIL && self.already_limited[local.model] != 1)
+	{
+		switch(local.limited_weapon[1])
+		{
+			case "ammo":
+				local.ammo = local.limited_weapon[2]
+				self ammo self.current_weaponclass local.ammo
+			break
+			case "nade":
+				local.nades = local.limited_weapon[2] 
+				self ammo grenade	local.nades
+			break
+			case "speed":
+				local.newspeed = local.limited_weapon[2]
+				self weaponcommand dual dmmovementspeed local.newspeed
+			break
+			case "zoom":
+				local.newzoom = local.limited_weapon[2]
+				self weaponcommand dual zoom local.newzoom
+				//self weaponcommand dual dmzoom local.newzoom
+			break
+			case "take":
+				local.take_weapon = local.limited_weapon[2]
+				self take local.take_weapon 
+			break
+		}
+
+		self.already_limited[local.model] = 1
+	}
+
+end
+
+//----------------------------------------------
+apply_bonus local.bonus local.model:
+//----------------------------------------------
+
+	if (local.bonus != NIL && self.already_bonus[local.model] != 1)
+	{
+		switch(local.bonus[1])
+		{
+			case "ammo":
+				local.class = self.current_weaponclass
+				local.ammo = local.bonus[2]
+				self ammo local.class local.ammo
+			break
+			case "nade":
+				local.nades = local.bonus[2]
+				self ammo grenade	local.nades
+			break
+			case "speed":
+				local.newspeed = local.bonus[2]
+				self weaponcommand dual dmmovementspeed local.newspeed
+			break
+			case "zoom":
+				local.newzoom = local.bonus[2]
+				self weaponcommand dual zoom local.newzoom
+				//self weaponcommand dual dmzoom local.newzoom
+			break
+		}
+		
+		self.already_bonus[local.model] = 1
+	}
+
+end

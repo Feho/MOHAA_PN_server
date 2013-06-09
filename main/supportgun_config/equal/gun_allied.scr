@@ -1,0 +1,40 @@
+// .30cal (taktaktak) properties
+// by jv_map
+
+main:
+	self.name 			= "M1919"
+	self.normalteam		= allies
+	self.model 			= "models/vehicles/jeep_30cal.tik"
+	
+	self.firedelay		= 0.10 // 600 rpm
+	self.bulletdamage	= 30.0
+	
+	self.ammotype		= "Support"
+	self.movementspeed	= 0.4
+	
+	self.holstertag		= "Bip01 Spine2"
+	self.holsteroffset 	= ( -30 -2 0)
+	self.holsterangles 	= ( -10 -10 89)
+
+	self.showgunoffset 	= (18 0 62)
+	self.showgunangles  = (180 180 0)
+	self.showgunscale	= 0.8
+	
+	self.podmodel 		= "models/statweapons/mg42_bipod_nonstatic.tik"
+	self.podtag 		= "pitch"
+	self.podoffset 		= (1 0 0)
+	self.podangles		= (0 90 0)
+	
+	self.bulletspread	= 45.0
+	
+	self.viewkick_min	= ( -1.2 -0.25 -1.0)
+	self.viewkick_max	= ( -0.8 0.25  1.0)
+	
+	self.viewkick_lean_mult = 1.0
+	
+	self.temperature_per_shot = 0.009 // in fraction of max temperature
+	
+	// lil hack
+	self.hidesurface	= "mount"
+	self.firing_sound 	= "m1919_snd_fire"
+end 1 // MUST return 1

@@ -1,0 +1,506 @@
+spawn_flak local.origin local.angles local.alap local.coll:
+
+	if ( local.origin == NIL || local.origin == NULL )
+		end
+
+	if ( local.angles == NIL || local.angles == NULL )
+		local.angles = ( 0 0 0 )
+
+	local.origin = trace ( local.origin + ( 0 0 10 ) ) ( ( local.origin[0] local.origin[1] -17123 ) )
+
+	if (local.alap == 1)
+	{
+		local.flak_alap = spawn script_model model "models/statweapons/flak88base.tik"
+		local.flak_alap.origin = local.origin
+		local.flak_alap.angles = local.angles
+	}
+
+	local.pos = local.origin + angles_toup local.angles * 56
+	local.flak_torony = spawn "models/statweapons/flak88turret.tik" origin local.pos angles local.angles
+
+	waitframe
+
+	local.flak_torony thread init_flak local.coll local.origin
+
+end
+
+init_flak local.coll local.origin:
+
+	if ( local.origin == NIL || local.origin == NULL )
+		local.origin = self.origin
+
+	if ( local.coll && local.coll.brushmodel )
+	{
+		self.collisionent = local.coll
+
+		self.collisionent.vehicle = self
+		self.collisionent.isvehicle = 1
+	}
+
+	self.targetname = "vezetheto_jarmu"
+	self.mpteam = "neutral"
+	self.last_angles = self.viewangles
+
+	self removeondeath 0
+	self takedamage
+
+	self waitexec global/AA/immunities.scr
+
+	local.immunities = crush::telefrag::explosion::bullet::fast_bullet::vehicle::bash::shotgun
+	for (local.i = 1;local.i <= local.immunities.size;local.i++)
+	{
+		self.immunities[local.i] = local.immunities[local.i]
+	}
+
+	if (self.collisionent)
+	{
+		self lock
+		self notsolid
+	}
+	else
+	{
+		self unlock
+		self solid
+	}
+
+	self.hasgunner = 0
+	self.gunner = NULL
+
+	self.isvehicle = 1
+	self.isturret = 1
+	self.destroyed = 0
+
+	self.death_exp = self thread spawn_fx "models/fx/fx_tank_explosion.tik"
+
+	self.health = 400
+
+	self.respawn_time = 40
+
+	if !(self.collisionent)
+	{
+		self setsize ( -48 -34 0 ) ( 48 34 56 )
+		self solid
+	}
+
+	local.respawn_size1 = ( -60 -40 0 )
+	local.respawn_size2 = ( 60 40 70 )
+
+	self.firetime = 4.0
+	self.max_lovedek_szama = 50
+	self.lovedek_szama = self.max_lovedek_szama
+	self.tuzelhet = 1
+
+	self weapontype			cannon
+	self name 			"88mm AT Gun"
+
+	self projectile 		"models/projectiles/tigercannonshell.tik"
+	self dmprojectile 		"models/projectiles/tigercannonshell.tik"
+	self ammotype			"Fakeammo"
+	self usenoammo 			0
+	self ammorequired		1
+	self startammo			0
+	self clipsize			1
+	self ammo_in_clip		0
+	self turnspeed 			30
+	self pitchcaps 			"-20 15 0"
+	self yawcenter 			self.angle
+
+	self dmammorequired		1
+	self dmstartammo		0
+
+	self.maxhealth = self.health
+	self.fakehealth = self.maxhealth
+
+	self thread flak_funkciok local.coll local.origin self.angles local.respawn_size1 local.respawn_size2
+
+end
+
+flak_funkciok local.coll local.origin local.angles local.size1 local.size2:
+
+	while ( self != NULL && self.fakehealth > 0 )
+	{
+		if (self.hasgunner != 1)
+			self thread wait_for_activate
+
+		if ( self.gunner != NULL && self.gunner_kamera )
+		{
+			if (self.gunner.forced_cueplayer == 1)
+			{
+				self.gunner.forced_cueplayer = 0
+				self.gunner_kamera.kam_trigger douse self.gunner
+			}
+
+			self.gunner_kamera.angles = ( self.gunner.viewangles[0] self.gunner.viewangles[1] self.angles[2] )
+		}
+
+		waitframe
+	}
+
+	self thread flak_respawn local.coll local.origin local.angles local.size1 local.size2
+	self thread flak_destroyed
+
+end
+
+wait_for_activate:
+
+	local.surface = self
+	if (self.collisionent)
+		local.surface = self.collisionent
+
+	for (local.i = 1;local.i <= $player.size;local.i++)
+	{
+		local.player = $player[local.i]
+
+		if ( local.player != NULL && local.player.player_spawned == 1 )
+		{
+			if ( local.surface && local.player istouching local.surface )
+			{
+				if ( local.player.useheld && local.player.inveh != 1 && local.player.inturret != 1 )
+				{
+					self thread flak_gunner local.player
+				}
+			}
+		}
+	}
+
+end
+
+flak_gunner local.gunner:
+
+	self.hasgunner = 1
+	self.gunner = local.gunner
+	self.gunner.inveh = 1
+
+	local.team = self.gunner.dmteam
+	self.mpteam = local.team
+
+	local.angles = vector_toangles ( self.origin - self.gunner.origin )
+	self.gunner.viewangles = ( 0 (local.angles[1] + 180) 0 )
+
+	if (self.gunner.has_weapon == 1)
+		self.gunner deactivateweapon righthand
+
+	if (self.collisionent)
+	{
+		self unlock
+		self douse self.gunner
+	}
+
+	self lock
+
+	self.viewangles = self.last_angles
+
+	local.org = spawn script_origin
+	self.gunner glue local.org
+
+	self thread flak_gunner_hud self.gunner
+	self thread global/AA/vehicle_damage.scr::vehicle_health_hud self.gunner
+
+	local.kamera = self thread kamera
+
+	waitframe
+
+	self unlock
+
+	while ( self.gunner != NULL && local.gunner.player_spawned == 1 && local.gunner.inturret == 1 )
+	{
+		if ( self.gunner.fireheld == 1 && self.gunner.secfireheld != 1 && self.tuzelhet == 1 )
+			self thread tuzeles
+
+		local.org.origin = self.origin + angles_toforward self.angles * -130 + ( 0 0 -40 ) + angles_toleft self.angles * -30
+		local.org.angles = self.angles
+
+		waitframe
+	}
+
+	if (local.org)
+		local.org remove
+
+	if (local.gunner != NULL)
+		local.gunner unglue
+
+	if (local.kamera != NIL)
+	{
+		if (local.kamera.kam_trigger)
+			local.kamera.kam_trigger remove
+
+		local.kamera remove
+	}
+
+	self lock
+
+	self thread gunner_getout local.gunner local.team
+
+end
+
+kamera:
+
+	local.name = "flak_kamera" + randomint 999999 + self.gunner.entnum
+	local.kamera = spawn func_camera targetname local.name
+	local.kamera attach self "origin" 1 ( 0 100 0 )
+
+	cueplayer
+
+	self.gunner waitthread global/AA/vehicle_fixes.scr::vehicle_camera
+
+	local.kam_trigger = spawn trigger_camerause target local.name
+	local.kam_trigger douse self.gunner
+	local.kam_trigger nottriggerable
+
+	self.gunner_kamera = local.kamera
+	self.gunner_kamera.kam_trigger = local.kam_trigger
+
+end local.kamera
+
+gunner_getout local.gunner local.team:
+
+	self.gunner = NULL
+
+	if (local.gunner != NULL)
+	{
+		local.gunner.origin = self.origin + angles_toleft self.angles * -100 + ( 0 0 24 )
+		local.gunner.viewangles = ( 0 self.angles[1] 0 )
+
+		local.gunner surface all "-nodraw"
+
+		ihuddraw_alpha local.gunner 42 0
+
+		local.gunner thread global/AA/vehicle_damage.scr::remove_vehicle_health_hud
+
+		if (local.gunner.dmteam != local.team)
+		{
+			local.gunner usestuff
+
+			if (local.gunner.dmteam != "spectator")
+				local.gunner.disable_spawn = 1
+
+			local.gunner respawn
+		}
+
+		local.gunner.inturret = 0
+	}
+
+	self.mpteam = "neutral"
+	self.last_angles = self.viewangles
+
+	waitframe
+
+	if (self.fakehealth > 0)
+	{
+		local.target = spawn script_origin origin ( self gettagposition "tag_barrel" + angles_toforward (self gettagangles "tag_barrel") * 10000 )
+		self setaimtarget local.target
+	}
+
+	wait .5
+
+	if (local.target)
+		local.target remove
+
+	wait .5
+
+	if (self)
+	{
+		self.hasgunner = 0
+
+		if ( self.collisionent == NIL || self.collisionent == NULL )
+			self unlock
+	}
+
+	if (local.gunner != NULL)
+	{
+		local.gunner.inveh = 0
+		local.gunner.forced_cueplayer = 0
+	}
+
+end
+
+tuzeles:
+
+	if (self.lovedek_szama > 0)
+	{
+		self.tuzelhet = 0
+
+		self ammo_in_clip 1
+		self.lovedek_szama--
+
+		local.map = getcvar "mapname"
+		if ( local.map != "m3l2" && local.map != "m5l2" && local.map != "m5l3" )
+			self playsound flak_snd_fire
+
+		if (self.gunner != NULL)
+			ihuddraw_string self.gunner 42 ( "Shell: " + self.lovedek_szama )
+
+		if (self.lovedek_szama > 0)
+			self thread flak_ujratoltes self.firetime
+		else
+			self thread flak_add_ammo
+	}
+
+end
+
+flak_add_ammo:
+
+	wait 60
+
+	if (self == NULL)
+		end
+
+	self.lovedek_szama = self.max_lovedek_szama
+
+	if (self.gunner != NULL)
+		ihuddraw_string self.gunner 42 ( "Shell: " + self.lovedek_szama )
+
+	if (self)
+		self.tuzelhet = 1
+
+end
+
+flak_ujratoltes local.firetime:
+
+	wait local.firetime
+
+	if (self)
+		self.tuzelhet = 1
+
+end
+
+flak_respawn local.coll local.origin local.angles local.size1 local.size2:
+
+	local.respawn_time = self.respawn_time
+
+	while (self.destroyed_model == NIL)
+		wait .1
+
+	if (self == NULL)
+		end
+
+	local.destroyed_model = self.destroyed_model
+
+	if (local.destroyed_model.collision)
+		local.collision = local.destroyed_model.collision
+
+	wait 10
+
+	local.exp = local.destroyed_model waitthread spawn_fx "models/fx/fx_tank_explosion.tik"
+	local.exp.origin = local.destroyed_model.origin + ( 0 0 10 )
+	local.exp anim start
+	local.exp playsound explode_flak
+	local.exp thread remove_fx
+
+	wait .5
+
+	local.destroyed_model remove
+
+	if (local.collision)
+		local.collision remove
+
+	wait local.respawn_time
+
+	waitexec global/AA/vehicle_respawn.scr local.origin local.angles local.size1 local.size2
+
+	thread spawn_flak local.origin local.angles 0 local.coll
+
+end
+
+flak_destroyed:
+
+	self playsound explode_flak88
+	self setaimtarget NULL
+	self show
+
+	if (self.gunner)
+	{
+		local.gunner = self.gunner
+		self.gunner = NULL
+	}
+
+	if ( self.last_attacker == NIL || self.last_attacker == NULL )
+		self.last_attacker = $world
+
+	local.origin = self.origin
+	local.angles = self.angles
+
+	if (self.collisionent)
+	{
+		local.brushmodel = self.collisionent.brushmodel
+		self.collisionent remove
+	}
+
+	self.death_exp.origin = self.origin
+	waitframe
+
+	if (local.gunner)
+	{
+		local.gunner takedamage
+		local.gunner damage self.last_attacker 1000 self.last_attacker ( 0 0 0 ) ( 0 0 0 ) ( 0 0 0 ) 0 0 9 0
+	}
+
+	self.death_exp anim start
+	self.death_exp thread remove_fx
+
+	radiusdamage ( self.origin + ( 0 0 200 ) ) 400 400
+
+	self hide
+	self notsolid
+
+	if (local.brushmodel)
+	{
+		local.collision = thread damaged_collision local.brushmodel local.origin local.angles
+	}
+
+	local.damaged = thread spawn_damaged "models/statweapons/flak88_d.tik" local.origin local.angles
+
+	if (local.collision != NIL)
+	{
+		local.damaged notsolid
+		local.collision disconnect_paths
+		local.damaged.collision = local.collision
+	}
+
+	self.destroyed_model = local.damaged
+
+	wait 2
+
+	self remove
+
+end
+
+flak_gunner_hud local.gunner:
+
+	ihuddraw_align local.gunner 42 left bottom
+	ihuddraw_rect local.gunner 42 540 -50 0 0
+	ihuddraw_color local.gunner 42 0.0 1.0 1.0
+	ihuddraw_font local.gunner 42 "facfont-20"
+	ihuddraw_string local.gunner 42 ( "Shell: " + self.lovedek_szama )
+	ihuddraw_virtualsize local.gunner 42 1
+	ihuddraw_alpha local.gunner 42 1
+
+end
+
+remove_fx:
+
+	wait 5
+	self remove
+
+end
+
+spawn_damaged local.model local.origin local.angles:
+	local.damaged = spawn script_model model local.model
+	local.damaged.origin = local.origin
+	local.damaged.angles = local.angles
+	local.damaged solid
+	local.damaged nodamage
+end local.damaged
+
+spawn_fx local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp notsolid
+end local.temp
+
+damaged_collision local.brushmodel local.origin local.angles:
+	local.collision = spawn script_object model local.brushmodel
+	local.collision.origin = local.origin
+	local.collision.angles = local.angles
+	local.collision solid
+end local.collision

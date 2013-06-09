@@ -1,0 +1,3 @@
+main:
+self.cadence = 1
+end

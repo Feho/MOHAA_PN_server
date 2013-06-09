@@ -1,0 +1,68 @@
+/*
+======================================================
+*** AIRborne; Joined-Axis StateScript for MoH:AA
+======================================================
+by Sor
+Version: v1.2
+-----------------------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+joined_axis:
+
+	println "Client ID " self.entnum " has joined the axis!"
+
+	// Reset state-info records
+	self.usingScope = NIL
+	self.usingTurret = NIL
+	self.secondary_Fireheld = NIL
+
+	// Weapon Limiter
+	self.already_limited = NIL 
+	self.already_bonus = NIL
+
+	// Speed Bonus
+	if (level.running_ranking == 1 && level.ranking["bonus"] == 1)
+	{
+		self.speed_bonus = NIL
+	}
+	
+	// Damage Bonus
+	if (level.running_ranking == 1 && level.ranking["bonus"] == 1)
+	{
+		self.damage_bonus = NIL
+	}
+
+	wait 1
+
+	if (self.status != "alive")
+	{
+		println "bugged"
+		self exec global/states/player_spawn.scr "spawned"
+	}
+
+
+end
