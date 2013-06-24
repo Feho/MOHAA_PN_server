@@ -1,0 +1,18 @@
+/*
+PHIL {SFX} FISHER - 2005
+
+E-MAIL: MOHAA.MODS@NTLWORLD.COM
+
+WEBSITE: WWW.MODS-R-US.NET
+*/
+
+main:
+
+local.MASTER = spawn scriptmaster
+
+local.MASTER aliascache plantbomb1 sound/items/Item_BangaloreAssemble_01.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m dm moh obj train"
+local.MASTER aliascache radiobomb sound/items/RadioBomb.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m dm moh obj train"
+local.MASTER aliascache plunger sound/items/Item_DetonatorPlunger_01.wav soundparms 1.5 0.0 1.0 0.0 320 2200 item loaded maps "m dm moh obj train"
+local.MASTER aliascache activate sound/mechanics/shortwave4.wav soundparms 0.7 0.0 1.0 0.0 100 900 auto streamed maps "m dm moh obj train"
+local.MASTER aliascache boom sound/weapons/explo/Explo_Mine1.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps "m dm moh obj train "
+end
