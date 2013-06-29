@@ -9,6 +9,13 @@
    ! Important
 ====================================================
 
+24/06/2013
+~Feho
+* global/TNT_DETONATORS.scr : - Explosif appartient maintenant au détonateur et non au joueur
+							  - Détonateur utilisable par n'importe quel joueur, allié ou ennemi
+							  - Rayon de dégâts augmenté (150 --> 200)
+* global/RB_DETONATORS.scr : Explosion de la bombe à la première pression de 0,5 sec de la touche utiliser (utilisation 3 fois plus rapide)
+
 30/05/2013
 ~Feho
 - root.scr : correction bug (on n'entendait plus les explosions d'obus suite à la dernière màj)

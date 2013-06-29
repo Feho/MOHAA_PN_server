@@ -1,0 +1,178 @@
+/*
+PHIL {SFX} FISHER - 2005
+
+E-MAIL: MOHAA.MODS@NTLWORLD.COM
+
+WEBSITE: WWW.MODS-R-US.NET
+*/
+
+
+/*
+
+Usage: exec global/RB_DETONATORS.scr::DETONATOR <plunger origin> <plunger angles> before level waittill spawn. 
+
+
+IE: map dm/mohdm1: exec global/RB_DETONATORS.scr::DETONATOR ( 298.64 475.75 384.13 ) ( 0 0 0 )
+
+*/
+
+
+DETONATOR local.D_ORIGIN local.D_ANGLES:
+
+             local.FAKE_WALKIETALKIE = spawn script_object
+             local.FAKE_WALKIETALKIE model "models/items/walkietalkie.tik"
+             local.FAKE_WALKIETALKIE.origin = local.D_ORIGIN
+             local.FAKE_WALKIETALKIE.angles = local.D_ANGLES
+             local.FAKE_WALKIETALKIE rotatey 55
+             local.FAKE_WALKIETALKIE notsolid
+
+             local.WALKIETALKIE_TRIGGER = spawn trigger_use
+             local.WALKIETALKIE_TRIGGER.origin = local.D_ORIGIN
+             local.WALKIETALKIE_TRIGGER.angles = local.D_ANGLES
+             local.WALKIETALKIE_TRIGGER setsize "-20 -20 0" "20 20 20"
+             local.WALKIETALKIE_TRIGGER setthread GIVE_WALKIETALKIE
+             local.WALKIETALKIE_TRIGGER message "REMOTE DETONATOR & RADIO-BOMB OBTAINED!"
+             end
+
+GIVE_WALKIETALKIE:
+             
+             local.PLAYER = parm.other
+
+             if (local.PLAYER.OWNS==1)
+             {
+               local.PLAYER iprint "YOU ARE A DOG!, YOU CANT USE EXPLOSIVES!" 1   // PHIL {SFX} SMART HOUND PROTECTION
+               end
+             }
+
+             if ((local.PLAYER.ARMED==1) || (local.PLAYER.WALKIETALKIED==1))
+             {
+               local.PLAYER iprint "YOU HAVE A REMOTE DETONATOR & RADIO-BOMB ALREADY!" 1
+               end
+             }
+
+             if ((local.PLAYER.NF==1) && (local.PLAYER.ARMED==0) && (local.PLAYER.DETONATORED==0))
+             {
+               local.PLAYER iprint "YOU HAVE NOT DETONATED THE BOMB YOU HAVE PLACED ALREADY!" 1
+               end
+             }
+
+             local.PLAYER iprint "HOLD USE TO PLANT RADIO-BOMB!" 1
+
+             local.PLAYER.DEATH_SPEC = 0
+             local.PLAYER.ARMED = 1
+             local.PLAYER.WALKIETALKIED = 1
+             local.PLAYER.NF = 1
+
+             thread MONITOR_WALKIETALKIED local.PLAYER
+             thread DEAD_OR_ALIVE local.PLAYER
+             end
+
+MONITOR_WALKIETALKIED local.PLAYER:
+
+             while ((isalive local.PLAYER) && (local.PLAYER.ARMED==1) && (local.PLAYER.WALKIETALKIED==1))
+             {
+               if (local.PLAYER.useheld==1)
+               {
+                wait 1
+                if (local.PLAYER.useheld==1)
+                {
+                 local.RB_NUMBER = randomint 5000
+                 local.RB = spawn script_model
+                 local.RB.targetname = ("RB" + local.RB_NUMBER) 
+                 $("RB" + local.RB_NUMBER) model "models/animate/radiobomb.tik"
+                 $("RB" + local.RB_NUMBER) physics_on
+                 $("RB" + local.RB_NUMBER) scale 1
+                 $("RB" + local.RB_NUMBER).origin = local.PLAYER.origin - local.PLAYER.forwardvector * -40 + ( 0 0 2 )
+                 $("RB" + local.RB_NUMBER).angles = ( 0 0 0 )
+                 $("RB" + local.RB_NUMBER) notsolid
+                 local.PLAYER.RB = $("RB" + local.RB_NUMBER)
+
+                 local.PLAYER.RB playsound plantbomb1
+                 wait 0.1
+                 local.PLAYER.RB playsound radiobomb
+
+                 thread MONITOR_RB local.PLAYER
+
+                 local.PLAYER iprint "RADIO-BOMB PLANTED!" 1
+                 local.PLAYER iprint "HOLD USE TO DETONATE BOMB!" 1
+                 local.PLAYER.ARMED = 0
+               }
+             }
+               wait 0.1
+             }
+             end
+
+MONITOR_RB local.PLAYER:
+
+              while ((isalive local.PLAYER) && (local.PLAYER.WALKIETALKIED==1))
+              {
+                 if (local.PLAYER.useheld==1)
+                 {
+                   wait 0.5
+                   if (local.PLAYER.useheld==1)
+                   {
+                   local.PLAYER safeholster 1 putaway
+                   wait 1
+
+                   local.WALKIETALKIE_NUMBER = randomint 5000
+                   local.WALKIETALKIE = spawn Animate model models/items/walkietalkie.tik
+                   local.WALKIETALKIE.targetname = ("WALKIETALKIE" + local.WALKIETALKIE_NUMBER)
+                   $("WALKIETALKIE" + local.WALKIETALKIE_NUMBER).origin = (local.PLAYER gettagposition "tag_weapon_right")
+                   $("WALKIETALKIE" + local.WALKIETALKIE_NUMBER) attach local.PLAYER  "tag_weapon_right"
+                   $("WALKIETALKIE" + local.WALKIETALKIE_NUMBER).angles = ( 0 180 180 )
+                   $("WALKIETALKIE" + local.WALKIETALKIE_NUMBER) scale 0.8
+                   $("WALKIETALKIE" + local.WALKIETALKIE_NUMBER) notsolid
+
+                   local.PLAYER.WALKIETALKIE = $("WALKIETALKIE" + local.WALKIETALKIE_NUMBER)
+                   local.PLAYER.WALKIETALKIE playsound plantbomb1                   
+
+                   thread RB_TRIGGER_CHECK local.PLAYER
+                   local.PLAYER.WALKIETALKIED = 0
+                 } 
+               }  
+                 wait 0.1  
+               }
+
+               end
+
+RB_TRIGGER_CHECK local.PLAYER:
+
+    local.PLAYER playsound activate
+    local.PLAYER.RB playsound activate
+    wait 0.5
+    local.PLAYER.RB hide
+
+    for (local.PNM=1;local.PNM <= $player.size;local.PNM++)
+    {
+      if ((vector_within $player[local.PNM].origin local.PLAYER.RB.origin 200) && ($player[local.PNM].dmteam != local.PLAYER.dmteam))
+      {
+        $player[local.PNM] damage local.PLAYER 100 local.PLAYER.RB (0 0 0) (0 0 0) (0 0 0) 0 1 rocket -1
+      }
+    }
+
+    exec global/model.scr local.PLAYER.RB.origin "models/emitters/explosion_bombdirt.tik" 
+
+    local.PLAYER.RB playsound boom
+    local.PLAYER.RB delete
+    wait 3
+    local.PLAYER.WALKIETALKIE delete
+    local.PLAYER.DEATH_SPEC = 1
+    local.PLAYER.NF = 0
+
+end  
+                  
+DEAD_OR_ALIVE local.PLAYER:
+
+    while ((isalive local.PLAYER) && (local.PLAYER.dmteam!="spectator"))
+    waitframe
+
+    if (local.PLAYER.DEATH_SPEC!=1)
+   {
+      local.PLAYER.NF = 0
+      local.PLAYER.ARMED = 0
+      local.PLAYER.WALKIETALKIED = 0
+      local.PLAYER.WALKIETALKIE delete                                     
+      local.PLAYER.RB delete
+    }
+
+end
