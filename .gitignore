@@ -2,14 +2,6 @@
 ## MOHAA server
 ################
 
-snddrivers/
-*.exe
-*.dll
-*.json
-*.csv
-*.sys
-00000000.016
-00000000.256
 Pak0.pk3
 Pak1.pk3
 Pak2.pk3
@@ -20,11 +12,7 @@ Pak6Fr.pk3
 Pak7Fr.pk3
 update_reborn.txt
 reborn.map
-
-################
-## GitHub
-################
-
+*.json
 
 #################
 ## Eclipse
