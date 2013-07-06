@@ -1,0 +1,220 @@
+main:
+
+	if (level.medicMod == 1)
+		end
+
+	level.medicMod = 1
+
+	exec $logger.LogInfo "[medic.scr::main] Initialisation du MedicMod"
+
+	while (1)
+	{
+		for (local.i = 1; local.i <= $player.size; local.i++)
+		{
+			local.player = $player[local.i]
+
+			// Utilise la variable de Squadmaker pour récupérer le type d'arme du joueur
+			if (local.player.sqdmk_last_raised_prim_weapon_type == "smg")
+			{
+				// Si le joueur porte une SMG et n'est pas encore assigné en tant que médecin
+				if (local.player.isMedic != 1 && IsAlive local.player)
+				{
+					local.player thread AddMedicEquipment
+					local.player thread MonitorMedic
+				}
+			}
+			else
+			{
+				if (local.player.isMedic == 1)
+				{
+					local.player thread RemoveMedicEquipment
+				}
+			}
+		}
+
+		wait 1
+	}
+
+end
+
+/**
+ * Ajoute l'équipement de médecin au joueur
+ */
+AddMedicEquipment:
+
+	exec $logger.LogInfo ("[medic.scr::AddMedicEquipment]" + netname self + " AddMedicEquipment")
+
+	// Casque de médecin
+	local.helmetname1 = "medic_helmet" + randomint 999999 + self.entnum
+	self attachmodel "models/equipment/ushelmet_medic.tik" "Bip01 Head" 1.0 local.helmetname1 1 -1 -1 -1 -1 ( -84 -1.5 0 )
+	self.medicHelmet = $(local.helmetname1)
+	self.medicHelmet.angles = ( -180 -90 -90 )
+	self.medicHelmet scale 1.0
+
+	// Potion de soin attachée à la ceinture
+	local.healthboxname1 = "medic_healthbox" + randomint 999999 + self.entnum
+	self attachmodel "models/items/item_25_healthbox.tik" "Bip01 Pelvis" 0.7 local.healthboxname1 1 -1 -1 -1 -1 ( -3 9 -8 )
+	self.healthBox = $(local.healthboxname1)
+	self.healthBox.angles = ( -35 -125 -60 )
+	self.healthBox scale 0.7
+
+	// Nombre de potions de soin
+	self.HealthBoxNumber = 5
+
+	self.isMedic = 1
+
+	if (self.medicInfo != 1)
+	{
+		self iprint "INFO : You have selected SMG as primary weapon, you are now a medic."
+		self iprint "- Put away your weapon and clic to throw health boxes."
+		self iprint "- Revive your teammates by standing near them."
+		self.medicInfo = 1
+	}
+
+end
+
+/**
+ * Retire l'équipement de médecin du joueur
+ */
+RemoveMedicEquipment:
+	
+	exec $logger.LogInfo ("[medic.scr::RemoveMedicEquipment]" + netname self + " RemoveMedicEquipment")
+
+	self.medicHelmet remove
+	self.healthBox remove
+	self.isMedic = 0
+
+end
+
+/**
+ * Surveille l'état du médecin
+ */
+MonitorMedic:
+
+	local.team = self.dmteam
+
+	while (self && self.isMedic && self.dmteam == local.team && IsAlive self)
+	{
+		if (self.has_weapon == 0 && self.fireheld && self.HealthBoxNumber > 0)
+		{
+			// Jette une potion de soin
+			self thread SpawnHealthBox
+			self.HealthBoxNumber--
+			self iprint ("Health boxes left : " + self.HealthBoxNumber)
+			wait 2
+		}
+
+		self thread DetectDeadTeammate
+
+		waitframe
+	}
+
+	if (self)
+	{
+		// Le médecin est mort, a changé d'équipe ou d'arme principale, on retire son équipement
+		self thread RemoveMedicEquipment
+	}
+
+end
+
+/**
+ * Spawn une potion de soin
+ */
+SpawnHealthBox:
+
+	local.origin = self gettagposition "Bip01 Head"
+	local.angles = ( self.viewangles[0] self.viewangles[1] 0 )
+
+	local.org = spawn script_origin
+	local.org.origin = local.origin + angles_toforward local.angles * 50
+	local.org.angles = ( 0 local.angles[1] 0 )
+
+	local.healthBox = spawn Health model "models/items/item_25_healthbox.tik" origin local.org.origin angles local.org.angles amount "50" dmamount "50"
+	local.healthBox glue local.org
+
+	local.vel = 420
+
+	local.org physics_on
+	local.org gravity 1.0
+	local.org.velocity = angles_toforward local.angles * local.vel
+
+	local.healthBox thread HealthBoxPickedUp local.org
+
+end
+
+/**
+ * Supprime local.org dès que la potion est utilisée
+ */
+HealthBoxPickedUp local.org:
+
+	self waittill trigger
+
+	local.player = parm.other
+
+	if (local.player == NULL)
+		end
+
+	local.prevHealth = local.player.health
+	waitframe
+	local.currentHealth = local.player.health
+
+	if (local.prevHealth != local.currentHealth)
+	{
+		if (self)
+		{
+			self unglue
+			self remove
+		}
+
+		if (local.org)
+			local.org remove
+
+		end
+	}
+
+	if (self)
+		goto HealthBoxPickedUp local.org
+
+end
+
+/**
+ * Détecte un coéquipier mort devant le médecin
+ */
+DetectDeadTeammate:
+
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.player = $player[local.i]
+
+		// Si le médecin a un coéquipier mort dans son champ de vision et près de lui
+		if (local.player != self && !IsAlive local.player && local.player.dmteam == self.dmteam && self cansee local.player 180 200)
+		{
+			self waitthread ReviveTeammate local.player
+		}
+	}
+
+end
+
+/**
+ * Réanime un coéquipier.
+ */
+ReviveTeammate local.teammate:
+
+	// Affiche la minuterie pendant 1 seconde
+	self stopwatch 1.5
+	local.teammate stopwatch 1.5
+	wait 2
+
+	if (self && IsAlive self && local.teammate && !IsAlive local.teammate)
+	{
+		// Respawn puis téléporte le joueur à l'endroit de sa mort
+		local.teammate.deathOrigin = local.teammate.origin
+		local.teammate respawn
+		// waitframe
+		local.teammate.origin = (local.teammate.deathOrigin + ( 0 0 10 ))
+
+		self iprint ("You revived " + netname local.teammate)
+		local.teammate iprint ("You have been revived by " + netname self)
+	}
+
+end
