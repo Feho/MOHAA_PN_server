@@ -3,9 +3,21 @@ main:
 	if (level.medicMod == 1)
 		end
 
-	level.medicMod = 1
-
 	exec $logger.LogInfo "[medic.scr::main] Initialisation du MedicMod"
+
+	level.medicMod = 1
+	level.medicIndexMessages1 = 45
+	level.medicIndexMessages2 = 46
+	level.patientWaitMessage = "Waiting for a medic..."
+	level.patientReviveMessage = "A medic is trying to revive you !"
+	level.medicInstructionsMessage = "You have selected SMG as primary weapon, you are a medic :\n"
+	level.medicInstructionsMessage += "- Put away your weapon and clic to throw health boxes ;\n"
+	level.medicInstructionsMessage += "- Revive your teammates by standing near them."
+	level.medicReviveMessage = "You are trying to revive "
+	level.medicClassMessage = "You are a medic"
+
+	// Force le respawn 30 secondes après avoir été tué
+	setcvar "g_forcerespawn" "30"
 
 	while (1)
 	{
@@ -14,7 +26,7 @@ main:
 			local.player = $player[local.i]
 
 			// Utilise la variable de Squadmaker pour récupérer le type d'arme du joueur
-			if (local.player.sqdmk_last_raised_prim_weapon_type == "smg")
+			if (local.player.sqdmk_last_raised_prim_weapon_type == "smg" && local.player.dmteam != "spectator")
 			{
 				// Si le joueur porte une SMG et n'est pas encore assigné en tant que médecin
 				if (local.player.isMedic != 1 && IsAlive local.player)
@@ -29,6 +41,11 @@ main:
 				{
 					local.player thread RemoveMedicEquipment
 				}
+			}
+
+			if (!IsAlive local.player)
+			{
+				local.player thread DeadPlayer
 			}
 		}
 
@@ -59,17 +76,19 @@ AddMedicEquipment:
 	self.healthBox scale 0.7
 
 	// Nombre de potions de soin
-	self.HealthBoxNumber = 5
+	self.HealthBoxNumber = 10
+
+	// Affiche les instructions 1 seule fois
+	if (self.medicInstructionsDisplayed != 1)
+	{
+		self.medicInstructionsDisplayed = 1
+		self thread DisplayMedicInstructions
+	}
 
 	self.isMedic = 1
 
-	if (self.medicInfo != 1)
-	{
-		self iprint "INFO : You have selected SMG as primary weapon, you are now a medic."
-		self iprint "- Put away your weapon and clic to throw health boxes."
-		self iprint "- Revive your teammates by standing near them."
-		self.medicInfo = 1
-	}
+	wait 16
+	self thread DisplayMedicClass
 
 end
 
@@ -82,12 +101,13 @@ RemoveMedicEquipment:
 
 	self.medicHelmet remove
 	self.healthBox remove
+	self thread ClearMessage
 	self.isMedic = 0
 
 end
 
 /**
- * Surveille l'état du médecin
+ * Surveille l'état et les actions du médecin
  */
 MonitorMedic:
 
@@ -95,7 +115,7 @@ MonitorMedic:
 
 	while (self && self.isMedic && self.dmteam == local.team && IsAlive self)
 	{
-		if (self.has_weapon == 0 && self.fireheld && self.HealthBoxNumber > 0)
+		if (self.has_weapon == 0 && self.fireheld && self.HealthBoxNumber > 0 && !self.inveh && !self.invehicule)
 		{
 			// Jette une potion de soin
 			self thread SpawnHealthBox
@@ -139,6 +159,7 @@ SpawnHealthBox:
 	local.org.velocity = angles_toforward local.angles * local.vel
 
 	local.healthBox thread HealthBoxPickedUp local.org
+	local.healthBox thread healthBoxLifeTime local.org
 
 end
 
@@ -178,6 +199,30 @@ HealthBoxPickedUp local.org:
 end
 
 /**
+ * Durée de vie d'une potion de soin
+ */
+healthBoxLifeTime local.org:
+
+	local.time = 400 // 20s
+
+	while (self && local.org && local.time > 0)
+	{
+		waitframe
+		local.time--
+	}
+
+	if (self)
+	{
+		self unglue
+		self remove
+	}
+
+	if (local.org)
+		local.org remove
+
+end
+
+/**
  * Détecte un coéquipier mort devant le médecin
  */
 DetectDeadTeammate:
@@ -187,7 +232,7 @@ DetectDeadTeammate:
 		local.player = $player[local.i]
 
 		// Si le médecin a un coéquipier mort dans son champ de vision et près de lui
-		if (local.player != self && !IsAlive local.player && local.player.dmteam == self.dmteam && self cansee local.player 180 200)
+		if (local.player != self && !IsAlive local.player && local.player.dmteam == self.dmteam && self cansee local.player 160 180)
 		{
 			self waitthread ReviveTeammate local.player
 		}
@@ -200,21 +245,257 @@ end
  */
 ReviveTeammate local.teammate:
 
-	// Affiche la minuterie pendant 1 seconde
-	self stopwatch 1.5
-	local.teammate stopwatch 1.5
-	wait 2
+	local.reviveTime = 2.0
 
-	if (self && IsAlive self && local.teammate && !IsAlive local.teammate)
+	// Affiche la minuterie pendant local.reviveTime secondes
+	self stopwatch local.reviveTime
+	local.teammate stopwatch local.reviveTime
+
+	// Indique au joueur qu'il est en train d'être réanimé
+	ihuddraw_color local.teammate level.medicIndexMessages1 0 1 0
+	local.teammate.patientMessage = level.patientReviveMessage
+
+	self thread DisplayMedicReviveMessage local.teammate
+	
+	// Phase de réanimation
+	while (self && IsAlive self && local.teammate && !IsAlive local.teammate && self cansee local.teammate 160 180 && local.reviveTime > 0)
 	{
-		// Respawn puis téléporte le joueur à l'endroit de sa mort
-		local.teammate.deathOrigin = local.teammate.origin
-		local.teammate respawn
-		// waitframe
-		local.teammate.origin = (local.teammate.deathOrigin + ( 0 0 10 ))
+		wait 0.1
+		local.reviveTime -= 0.1
+	}
 
-		self iprint ("You revived " + netname local.teammate)
-		local.teammate iprint ("You have been revived by " + netname self)
+	// La phase de réanimation a été interrompue, arrêt de la minuterie et du message de réanimation.
+	if (local.reviveTime > 0)
+	{
+		if (self)
+			self stopwatch 0
+
+		if (local.teammate)
+			local.teammate stopwatch 0
+
+		ihuddraw_color local.teammate level.medicIndexMessages1 1 1 1
+		local.teammate.patientMessage = level.patientWaitMessage
+	}
+	else
+	{
+		// Réanimation du joueur
+		if (self && IsAlive self && local.teammate && !IsAlive local.teammate)
+		{
+			exec $logger.LogInfo ("[medic.scr::ReviveTeammate]" + netname self + " revived " + netname local.teammate)
+
+			self stopwatch 0
+			local.teammate stopwatch 0
+
+			// Respawn puis téléporte le joueur à l'endroit de sa mort
+			local.teammate.deathOrigin = local.teammate.origin
+			local.teammate respawn
+			local.teammate.origin = (local.teammate.deathOrigin + ( 0 0 10 ))
+			local.teammate playsound med_kit
+
+			self iprint ("You revived " + netname local.teammate)
+			local.teammate iprint ("You have been revived by " + netname self)
+		}
+	}
+
+	wait 1
+
+	self thread ClearMessage
+
+end
+
+/**
+ * Indique qu'un joueur est en attente de réanimation
+ */
+DeadPlayer:
+
+	if (self.needMedic == 1)
+		end
+
+	self.needMedic = 1
+	self thread DisplayPatientMessage
+
+	wait 1
+
+	// Spawn une potion de soin au dessus du joueur
+	local.rotatingHealthBox = spawn script_model model "models/items/item_25_healthbox.tik"
+	local.rotatingHealthBox.scale = 0.7
+	local.rotatingHealthBox notsolid
+	local.rotatingHealthBox rotatey 70
+
+	// Spawn un avatar au dessus du joueur
+	local.icon = spawn func_beam
+	local.icon shader ("textures/hud/" + self.dmteam + ".tga") 
+	local.icon.origin = self.origin
+	local.icon color ( 1.0 1.0 1.0 )
+	local.icon scale 6
+	local.icon numsegments 1
+	local.icon life 0
+	local.icon activate
+
+	thread Switch local.icon
+
+	// Spawn une caméra pour contrôler la vision du joueur mort
+	local.cameraName = "death_camera" + randomint 999999 + self.entnum
+	local.camera = spawn func_camera targetname local.cameraName
+	local.camera.angles = ( 0 self.viewangles[1] 0 )
+
+	local.camera.cam_trigger = spawn trigger_camerause target local.cameraName
+
+	while (self && !IsAlive self)
+	{
+		// Met à jour l'origine de la caméra, de l'avatar et de la potion
+		local.rotatingHealthBox.origin = self gettagposition "Bip01 Head" + ( 0 0 30 )
+		local.icon.origin = self gettagposition "Bip01 Head" + ( 0 0 16 )
+		local.icon endpoint ( self gettagposition "Bip01 Head" + ( 0 0 29 ) )
+		local.camera.origin = self gettagposition "Bip01 Head" + ( 0 0 30 )
+
+		self thread LookMedic local.camera
+		waitframe
+	}
+
+	self.needMedic = 0
+
+	// Suppression des spawn d'objets
+	local.rotatingHealthBox remove
+	local.icon remove
+	local.camera.cam_trigger remove
+	local.camera remove
+
+end
+
+/**
+ * Affiche un message à l'écran d'un joueur mort
+ */
+DisplayPatientMessage:
+	
+	ihuddraw_align self level.medicIndexMessages1 center center
+	ihuddraw_font self level.medicIndexMessages1 handle-23
+	ihuddraw_rect self level.medicIndexMessages1 -105 0 0 0
+	ihuddraw_color self level.medicIndexMessages1 1 1 1
+	ihuddraw_alpha self level.medicIndexMessages1 1.0
+
+	// Cette variable est modifiée si un médecin réanime le joueur
+	self.patientMessage = level.patientWaitMessage
+
+	local.time = int(getcvar "g_forcerespawn")
+
+	while (self && !IsAlive self && local.time >= 0)
+	{
+		ihuddraw_string self level.medicIndexMessages1 (self.patientMessage + " " + local.time)
+
+		local.time--
+		wait 1
+	}
+
+	self thread ClearMessage
+
+end
+
+/**
+ * Informe le médecin qu'il est en train de réanimer un coéquipier
+ */
+DisplayMedicReviveMessage local.teammate:
+
+	ihuddraw_align self level.medicIndexMessages1 center center
+	ihuddraw_font self level.medicIndexMessages1 handle-23
+	ihuddraw_rect self level.medicIndexMessages1 -160 20 0 0
+	ihuddraw_color self level.medicIndexMessages1 1 1 1
+	ihuddraw_alpha self level.medicIndexMessages1 1.0
+	ihuddraw_string self level.medicIndexMessages1 (level.medicReviveMessage + netname local.teammate)
+
+end
+
+/**
+ * Affiche les instructions au médecin
+ */
+DisplayMedicInstructions:
+
+	ihuddraw_align self level.medicIndexMessages1 left center
+	ihuddraw_font self level.medicIndexMessages1 facfont-20
+	ihuddraw_rect self level.medicIndexMessages1 20 100 0 0
+	ihuddraw_color self level.medicIndexMessages1 1 1 1
+	ihuddraw_alpha self level.medicIndexMessages1 1.0
+	ihuddraw_string self level.medicIndexMessages1 level.medicInstructionsMessage
+
+	local.time = 15 // Secondes
+
+	while (self && local.time > 0)
+	{
+		local.time--
+		wait 1
+	}
+
+	if (self)
+		self thread ClearMessage
+
+end
+
+/**
+ * Affiche un message permanent au joueur lui indiquant qu'il est médecin
+ */
+DisplayMedicClass:
+
+	ihuddraw_align self level.medicIndexMessages2 left bottom
+	ihuddraw_font self level.medicIndexMessages2 facfont-20
+	ihuddraw_rect self level.medicIndexMessages2 20 -130 0 0
+	ihuddraw_color self level.medicIndexMessages2 1 1 1
+	ihuddraw_alpha self level.medicIndexMessages2 1.0
+	ihuddraw_string self level.medicIndexMessages2 level.medicClassMessage
+
+end
+
+ClearMessage:
+
+	ihuddraw_alpha self level.medicIndexMessages1 0.0
+	ihuddraw_alpha self level.medicIndexMessages2 0.0
+
+end
+
+/**
+ * Tourne la caméra d'un joueur mort vers un médecin
+ */
+LookMedic local.camera:
+
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.player = $player[local.i]
+
+		// Si un médecin est à 2000 unités de distance du joueur mort
+		if (local.player != self && local.player.isMedic == 1 && IsAlive local.player && self.dmteam == local.player.dmteam && local.camera cansee local.player 360 2000)
+		{
+			// La vision du joueur devient celle de la caméra, qui se tourne vers le médecin.
+			local.camera.cam_trigger douse self
+
+			local.origin = local.player.origin + ( 0 0 50 )
+			local.angles = vector_toangles ( local.origin - local.camera.origin )
+			local.camera.angles = local.angles
+
+			// Stoppe la boucle for
+			break
+		}
+	}
+
+end
+
+// Fait clignoter l'avatar
+Switch local.icon:
+
+	local.x = 0
+	wait 1
+
+	while (local.icon)
+	{
+		if (local.x % 2 == 0)
+		{
+			local.icon deactivate
+		}
+		else
+		{
+			local.icon activate
+		}
+
+		local.x++
+		wait 1
 	}
 
 end
