@@ -16,7 +16,14 @@ main:
 	local.hit_nade glue self
 	local.hit_nade setsize ( -4 -4 -4 ) ( 4 4 4 )
 	local.hit_nade.nade = self
-	local.hit_nade setthread shot
+	local.hit_nade setthread Shot
+
+	local.detect_nade = spawn trigger_multipleall
+	local.detect_nade glue self
+	local.detect_nade setsize ( -100 -100 -100 ) ( 100 100 100 )
+	local.detect_nade.nade = self
+	local.detect_nade setthread DetectEnemy
+	// <-------------
 
 	wait 3.8
 
@@ -30,6 +37,7 @@ main:
 	if(local.id != NULL) {
 		local.id remove
 		local.hit_nade remove //feho
+		local.detect_nade remove // feho
 	}
 
 end
@@ -53,8 +61,9 @@ KickNade:
 		// self remove
 		
 end
-	
-shot:
+
+// Déplace la grenade lorsqu'elle reçoit une balle
+Shot:
 	local.player = parm.other
 	
 	self nottriggerable
@@ -63,4 +72,82 @@ shot:
 
 	if (self)
 		self triggerable
+end
+
+// Détecte si un ennemi a déclenché le trigger de la grenade
+DetectEnemy:
+
+	local.player = parm.other
+
+	// Termine le thread si le joueur est déjà averti qu'une grenade ennemie est proche de lui
+	if (local.player.isGrenadeWarned)
+	{
+		end
+	}
+
+	local.isAlliedGrenade = self.nade.model == "models/projectiles/m2fgrenade_primary.tik" || self.nade.model == "models/projectiles/m2fgrenade.tik"
+	local.isAxisGrenade = self.nade.model == "models/projectiles/steilhandgranate_primary.tik" || self.nade.model == "models/projectiles/steilhandgranate.tik"
+
+	if (local.player.dmteam == "axis" && local.isAlliedGrenade)
+	{
+		self thread DisplayKickGrenadeMessage local.player
+	}
+	else if (local.player.dmteam == "allies" && local.isAxisGrenade)
+	{
+		self thread DisplayKickGrenadeMessage local.player
+	}
+
+end
+
+// Indique au joueur qu'une grenade ennemie est proche de lui et qu'il peut appuyer
+// sur utiliser pour la kicker.
+DisplayKickGrenadeMessage local.player:
+
+	local.player.isGrenadeWarned = 1
+
+	ihuddraw_align local.player 20 center center
+	ihuddraw_font local.player 20 handle-23
+	ihuddraw_rect local.player 20 -145 100 0 0
+	ihuddraw_color local.player 20 1 1 1
+	ihuddraw_string local.player 20 "Press [USE] to kick the grenade"
+
+	local.alpha = 0.2
+	local.fadeIn = 1
+
+	// Affiche le message avec un effet de clignotement tant que le joueur est proche
+	// de la grenade
+	while (self && local.player && local.player cansee self 180 250)
+	{
+		if (local.alpha == 1.0)
+		{
+			local.fadeIn = 0
+		}
+		else if (local.alpha == 0)
+		{
+			local.fadeIn = 1
+		}
+
+		if (local.fadeIn == 1)
+		{
+			local.alpha += 0.2
+		}
+		else
+		{
+			local.alpha -= 0.2
+		}
+
+		ihuddraw_alpha local.player 20 local.alpha
+		waitframe
+	}
+
+	// Masque le message
+	while (local.player && local.alpha > 0)
+	{
+		local.alpha -= 0.2
+		ihuddraw_alpha local.player 20 local.alpha
+		waitframe
+	}
+
+	local.player.isGrenadeWarned = 0
+
 end
