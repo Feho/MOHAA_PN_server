@@ -1,0 +1,4 @@
+Liste des index utilisés pour afficher des messages à un joueur :
+
+20 : KickNade
+50, 51 : Medic mod
