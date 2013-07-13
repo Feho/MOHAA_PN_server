@@ -1,13 +1,14 @@
 main:
 
-	if (level.medicMod == 1)
+	// exec $logger.LogDebug "[medic.scr::main]"
+	if (level.medicMod == 1 || getcvar "medic" != "1")
 		end
 
 	exec $logger.LogInfo "[medic.scr::main] Initialisation du MedicMod"
 
 	level.medicMod = 1
-	level.medicIndexMessages1 = 45
-	level.medicIndexMessages2 = 46
+	level.medicIndexMessages1 = 50
+	level.medicIndexMessages2 = 51
 	level.patientWaitMessage = "Waiting for a medic..."
 	level.patientReviveMessage = "A medic is trying to revive you !"
 	level.medicInstructionsMessage = "You have selected SMG as primary weapon, you are a medic :\n"
@@ -21,6 +22,7 @@ main:
 
 	while (1)
 	{
+		// exec $logger.LogDebug "[medic.scr::main========================================]"
 		for (local.i = 1; local.i <= $player.size; local.i++)
 		{
 			local.player = $player[local.i]
@@ -59,6 +61,9 @@ end
  */
 AddMedicEquipment:
 
+	self.isMedic = 1
+
+	// exec $logger.LogDebug "[medic.scr::AddMedicEquipment]"
 	exec $logger.LogInfo ("[medic.scr::AddMedicEquipment]" + netname self + " AddMedicEquipment")
 
 	// Casque de médecin
@@ -85,9 +90,6 @@ AddMedicEquipment:
 		self thread DisplayMedicInstructions
 	}
 
-	self.isMedic = 1
-
-	wait 16
 	self thread DisplayMedicClass
 
 end
@@ -97,11 +99,13 @@ end
  */
 RemoveMedicEquipment:
 	
+	// exec $logger.LogDebug "[medic.scr::RemoveMedicEquipment]"
 	exec $logger.LogInfo ("[medic.scr::RemoveMedicEquipment]" + netname self + " RemoveMedicEquipment")
 
 	self.medicHelmet remove
 	self.healthBox remove
-	self thread ClearMessage
+	self thread ClearMessage level.medicIndexMessages1
+	self thread ClearMessage level.medicIndexMessages2
 	self.isMedic = 0
 
 end
@@ -111,10 +115,15 @@ end
  */
 MonitorMedic:
 
+	// exec $logger.LogDebug "[medic.scr::MonitorMedic]"
+	wait 2
+	
 	local.team = self.dmteam
 
 	while (self && self.isMedic && self.dmteam == local.team && IsAlive self)
 	{
+		self waitthread DetectDeadTeammate
+
 		if (self.has_weapon == 0 && self.fireheld && self.HealthBoxNumber > 0 && !self.inveh && !self.invehicule)
 		{
 			// Jette une potion de soin
@@ -123,8 +132,6 @@ MonitorMedic:
 			self iprint ("Health boxes left : " + self.HealthBoxNumber)
 			wait 2
 		}
-
-		self thread DetectDeadTeammate
 
 		waitframe
 	}
@@ -142,6 +149,7 @@ end
  */
 SpawnHealthBox:
 
+	// exec $logger.LogDebug "[medic.scr::SpawnHealthBox]"
 	local.origin = self gettagposition "Bip01 Head"
 	local.angles = ( self.viewangles[0] self.viewangles[1] 0 )
 
@@ -168,6 +176,7 @@ end
  */
 HealthBoxPickedUp local.org:
 
+	// exec $logger.LogDebug "[medic.scr::HealthBoxPickedUp]"
 	self waittill trigger
 
 	local.player = parm.other
@@ -203,6 +212,7 @@ end
  */
 healthBoxLifeTime local.org:
 
+	// exec $logger.LogDebug "[medic.scr::healthBoxLifeTime]"
 	local.time = 400 // 20s
 
 	while (self && local.org && local.time > 0)
@@ -227,6 +237,7 @@ end
  */
 DetectDeadTeammate:
 
+	// exec $logger.LogDebug "[medic.scr::DetectDeadTeammate]"
 	for (local.i = 1; local.i <= $player.size; local.i++)
 	{
 		local.player = $player[local.i]
@@ -245,6 +256,7 @@ end
  */
 ReviveTeammate local.teammate:
 
+	// exec $logger.LogDebug "[medic.scr::ReviveTeammate]"
 	local.reviveTime = 2.0
 
 	// Affiche la minuterie pendant local.reviveTime secondes
@@ -297,9 +309,7 @@ ReviveTeammate local.teammate:
 		}
 	}
 
-	wait 1
-
-	self thread ClearMessage
+	self thread ClearMessage level.medicIndexMessages1
 
 end
 
@@ -308,6 +318,7 @@ end
  */
 DeadPlayer:
 
+	// exec $logger.LogDebug "[medic.scr::DeadPlayer]"
 	if (self.needMedic == 1)
 		end
 
@@ -332,7 +343,7 @@ DeadPlayer:
 	local.icon life 0
 	local.icon activate
 
-	thread Switch local.icon
+	thread Blink local.icon
 
 	// Spawn une caméra pour contrôler la vision du joueur mort
 	local.cameraName = "death_camera" + randomint 999999 + self.entnum
@@ -344,12 +355,13 @@ DeadPlayer:
 	while (self && !IsAlive self)
 	{
 		// Met à jour l'origine de la caméra, de l'avatar et de la potion
-		local.rotatingHealthBox.origin = self gettagposition "Bip01 Head" + ( 0 0 30 )
-		local.icon.origin = self gettagposition "Bip01 Head" + ( 0 0 16 )
-		local.icon endpoint ( self gettagposition "Bip01 Head" + ( 0 0 29 ) )
-		local.camera.origin = self gettagposition "Bip01 Head" + ( 0 0 30 )
+		local.headOrigin = self gettagposition "Bip01 Head"
+		local.rotatingHealthBox.origin = local.headOrigin + ( 0 0 30 )
+		local.icon.origin = local.headOrigin + ( 0 0 16 )
+		local.icon endpoint ( local.headOrigin + ( 0 0 29 ) )
+		local.camera.origin = local.headOrigin + ( 0 0 30 )
 
-		self thread LookMedic local.camera
+		self waitthread LookMedic local.camera
 		waitframe
 	}
 
@@ -368,6 +380,7 @@ end
  */
 DisplayPatientMessage:
 	
+	// exec $logger.LogDebug "[medic.scr::DisplayPatientMessage]"
 	ihuddraw_align self level.medicIndexMessages1 center center
 	ihuddraw_font self level.medicIndexMessages1 handle-23
 	ihuddraw_rect self level.medicIndexMessages1 -105 0 0 0
@@ -387,7 +400,7 @@ DisplayPatientMessage:
 		wait 1
 	}
 
-	self thread ClearMessage
+	self thread ClearMessage level.medicIndexMessages1
 
 end
 
@@ -396,6 +409,7 @@ end
  */
 DisplayMedicReviveMessage local.teammate:
 
+	// exec $logger.LogDebug "[medic.scr::DisplayMedicReviveMessage]"
 	ihuddraw_align self level.medicIndexMessages1 center center
 	ihuddraw_font self level.medicIndexMessages1 handle-23
 	ihuddraw_rect self level.medicIndexMessages1 -160 20 0 0
@@ -410,9 +424,10 @@ end
  */
 DisplayMedicInstructions:
 
+	// exec $logger.LogDebug "[medic.scr::DisplayMedicInstructions]"
 	ihuddraw_align self level.medicIndexMessages1 left center
 	ihuddraw_font self level.medicIndexMessages1 facfont-20
-	ihuddraw_rect self level.medicIndexMessages1 20 100 0 0
+	ihuddraw_rect self level.medicIndexMessages1 20 300 0 0
 	ihuddraw_color self level.medicIndexMessages1 1 1 1
 	ihuddraw_alpha self level.medicIndexMessages1 1.0
 	ihuddraw_string self level.medicIndexMessages1 level.medicInstructionsMessage
@@ -426,7 +441,7 @@ DisplayMedicInstructions:
 	}
 
 	if (self)
-		self thread ClearMessage
+		self thread ClearMessage level.medicIndexMessages1
 
 end
 
@@ -435,6 +450,7 @@ end
  */
 DisplayMedicClass:
 
+	// exec $logger.LogDebug "[medic.scr::DisplayMedicClass]"
 	ihuddraw_align self level.medicIndexMessages2 left bottom
 	ihuddraw_font self level.medicIndexMessages2 facfont-20
 	ihuddraw_rect self level.medicIndexMessages2 20 -130 0 0
@@ -444,10 +460,10 @@ DisplayMedicClass:
 
 end
 
-ClearMessage:
+ClearMessage local.index:
 
-	ihuddraw_alpha self level.medicIndexMessages1 0.0
-	ihuddraw_alpha self level.medicIndexMessages2 0.0
+	// exec $logger.LogDebug "[medic.scr::ClearMessage]"
+	ihuddraw_alpha self local.index 0.0
 
 end
 
@@ -456,6 +472,7 @@ end
  */
 LookMedic local.camera:
 
+	// exec $logger.LogDebug "[medic.scr::LookMedic]"
 	for (local.i = 1; local.i <= $player.size; local.i++)
 	{
 		local.player = $player[local.i]
@@ -478,10 +495,11 @@ LookMedic local.camera:
 end
 
 // Fait clignoter l'avatar
-Switch local.icon:
+Blink local.icon:
 
+	// exec $logger.LogDebug "[medic.scr::Blink]"
 	local.x = 0
-	wait 1
+	wait 0.5
 
 	while (local.icon)
 	{
@@ -495,7 +513,7 @@ Switch local.icon:
 		}
 
 		local.x++
-		wait 1
+		wait 0.5
 	}
 
 end
