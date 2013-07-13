@@ -23,6 +23,9 @@ main:
 	while (1)
 	{
 		// exec $logger.LogDebug "[medic.scr::main========================================]"
+		if (getcvar "medic" != "1")
+			end
+
 		for (local.i = 1; local.i <= $player.size; local.i++)
 		{
 			local.player = $player[local.i]
@@ -302,7 +305,7 @@ ReviveTeammate local.teammate:
 			local.teammate.deathOrigin = local.teammate.origin
 			local.teammate respawn
 			local.teammate.origin = (local.teammate.deathOrigin + ( 0 0 10 ))
-			local.teammate playsound med_kit
+			local.teammate playsound med_canteen
 
 			self iprint ("You revived " + netname local.teammate)
 			local.teammate iprint ("You have been revived by " + netname self)
