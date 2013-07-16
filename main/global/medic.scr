@@ -16,6 +16,7 @@ main:
 	level.medicInstructionsMessage += "- Revive your teammates by standing near them."
 	level.medicReviveMessage = "You are trying to revive "
 	level.medicClassMessage = "You are a medic"
+	level.HealthBoxNumber = 10
 
 	// Force le respawn 30 secondes après avoir été tué
 	setcvar "g_forcerespawn" "30"
@@ -69,7 +70,7 @@ AddMedicEquipment:
 	// exec $logger.LogDebug "[medic.scr::AddMedicEquipment]"
 	exec $logger.LogInfo ("[medic.scr::AddMedicEquipment]" + netname self + " AddMedicEquipment")
 
-	// Casque de médecin
+	// Ajoute un casque de médecin
 	local.helmetname1 = "medic_helmet" + randomint 999999 + self.entnum
 	self attachmodel "models/equipment/ushelmet_medic.tik" "Bip01 Head" 1.0 local.helmetname1 1 -1 -1 -1 -1 ( -84 -1.5 0 )
 	self.medicHelmet = $(local.helmetname1)
@@ -84,7 +85,7 @@ AddMedicEquipment:
 	self.healthBox scale 0.7
 
 	// Nombre de potions de soin
-	self.HealthBoxNumber = 10
+	self.HealthBoxNumber = level.HealthBoxNumber
 
 	// Affiche les instructions 1 seule fois
 	if (self.medicInstructionsDisplayed != 1)
@@ -120,29 +121,37 @@ MonitorMedic:
 
 	// exec $logger.LogDebug "[medic.scr::MonitorMedic]"
 	wait 2
-	
-	local.team = self.dmteam
 
-	while (self && self.isMedic && self.dmteam == local.team && IsAlive self)
+	while (self && self.isMedic)
 	{
-		self waitthread DetectDeadTeammate
-
-		if (self.has_weapon == 0 && self.fireheld && self.HealthBoxNumber > 0 && !self.inveh && !self.invehicule)
+		if (IsAlive self)
 		{
-			// Jette une potion de soin
-			self thread SpawnHealthBox
-			self.HealthBoxNumber--
-			self iprint ("Health boxes left : " + self.HealthBoxNumber)
+			self waitthread DetectDeadTeammate
+
+			if (self && self.has_weapon == 0 && self.fireheld && self.HealthBoxNumber > 0 && !self.inveh && !self.invehicule && !self.usingTurret)
+			{
+				// Jette une potion de soin
+				self thread SpawnHealthBox
+				self.HealthBoxNumber--
+				self iprint ("Health boxes left : " + self.HealthBoxNumber)
+				wait 2
+			}
+		}
+		else
+		{
+			// Attend 2 sec après le respawn du médecin pour éviter de lancer une potion de soin lors du respawn
+			while (!IsAlive self)
+			{
+				waitframe
+			}
+
 			wait 2
+
+			// Réinitialise le nombre de potions de soin du médecin
+			self.HealthBoxNumber = level.HealthBoxNumber
 		}
 
 		waitframe
-	}
-
-	if (self)
-	{
-		// Le médecin est mort, a changé d'équipe ou d'arme principale, on retire son équipement
-		self thread RemoveMedicEquipment
 	}
 
 end
