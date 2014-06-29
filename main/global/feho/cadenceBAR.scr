@@ -40,7 +40,7 @@ main:
 	}
 	else 
 	{
-		self weaponcommand dual dmfiredelay 0.12
-		self iprint "Rate of fire : fast (400 rpm)"
+		self weaponcommand dual dmfiredelay 0.08
+		self iprint "Rate of fire : fast (600 rpm)"
 	}
 end

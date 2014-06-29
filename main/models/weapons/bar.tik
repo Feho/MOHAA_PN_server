@@ -66,7 +66,7 @@ init
 		dmbulletcount		1
 		dmstartammo			200
 		dmammorequired		1
-		dmfiredelay			0.12 // 0.08 (rapide 600 rpm) //0.16 (lent 325 rpm) //0.12 original
+		dmfiredelay			0.08 (rapide 600 rpm) //0.16 (lent 325 rpm) //0.12 original
 		dmbulletrange		4000
 		dmbulletspread		12 12 52 52		//10 10 54 54	//10 10 62 62	//fourth run 10 10 99 99	//third run 8 8 90 90 	//second run 12 12 60 60	//original 14 14 75 75 
 
