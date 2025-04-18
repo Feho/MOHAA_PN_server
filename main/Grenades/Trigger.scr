@@ -12,11 +12,11 @@ main:
 	local.id setthread KickNade
 	
 	// Feho -------->
-	local.hit_nade = spawn trigger_multiple "spawnflags" 128 "targetname" "hit_nade"
-	local.hit_nade glue self
-	local.hit_nade setsize ( -4 -4 -4 ) ( 4 4 4 )
-	local.hit_nade.nade = self
-	local.hit_nade setthread Shot
+	// local.hit_nade = spawn trigger_multiple "spawnflags" 128 "targetname" "hit_nade"
+	// local.hit_nade glue self
+	// local.hit_nade setsize ( -4 -4 -4 ) ( 4 4 4 )
+	// local.hit_nade.nade = self
+	// local.hit_nade setthread Shot
 
 	local.detect_nade = spawn trigger_multipleall
 	local.detect_nade glue self
