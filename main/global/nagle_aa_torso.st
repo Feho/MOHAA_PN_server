@@ -287,7 +287,7 @@ state ATTACK_SMG_PRIMARY
 		viewmodelanim fire 1
 		// Feho
 		// Tracer bullets ------------>
-		exec global/feho/tracerbullet.scr
+		// exec global/feho/tracerbullet.scr
 		//<----------------------------
 	}
 
@@ -329,7 +329,7 @@ state ATTACK_MG_PRIMARY
 		viewmodelanim fire 1
 		// Feho
 		// Tracer bullets ------------>
-		exec global/feho/tracerbullet.scr
+		// exec global/feho/tracerbullet.scr
 		//<----------------------------
 		
 		//semiauto MP44 ---->
@@ -422,7 +422,7 @@ state ATTACK_RIFLE_PRIMARY
 		
 		// Feho
 		// Tracer bullets ------------>
-		exec global/feho/tracerbullet.scr
+		// exec global/feho/tracerbullet.scr
 		//<----------------------------
 		viewmodelanim fire 1
 	}
@@ -2766,7 +2766,7 @@ state KILLED_HEAD
 {
 	entrycommands
 	{
-		//// exec global/revive.scr death_collapse // Tué à la tête => pas de revive
+		//// exec global/revive.scr death_collapse // Tuï¿½ ï¿½ la tï¿½te => pas de revive
 	}
 	action
 	{
