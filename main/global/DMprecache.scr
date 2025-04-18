@@ -162,13 +162,13 @@ cache models/fx/bazookaexplosion_dm.tik
 
 // Feho - mise en cache des mods et autres
 cache models/player/allied_sas.tik
-// Grenades fumigènes
+// Grenades fumigï¿½nes
 cache models/fx/m2fgrenadeexplosion2.tik
 cache models/emitters/linger_smoke.tik
 cache models/emitters/higgins_mushroom.tik
 // Bipied BAR
 cache models/statweapons/mg42_bipod_nonstatic.tik
-// Balles traçantes
+// Balles traï¿½antes
 cache models/fx/muzflash.tik
 // Bots
 cache models/items/cigarette.tik
@@ -182,10 +182,10 @@ if (getcvar "modematch" != "1")
 
 level waittill spawn
 
-// Système de logs
+// Systï¿½me de logs
 exec global/logger.scr
 
-// Medecin aléatoire
+// Medecin alï¿½atoire
 //exec global/randommedic.scr
 
 //Medic feho
@@ -194,7 +194,7 @@ exec global/logger.scr
 // exec global/snowcontest.scr
 // exec global/weapon_give_take.crp
 
-// Exécute le mode tremblement de la visée
+// Exï¿½cute le mode tremblement de la visï¿½e
 // exec global/view.scr
 
 // Radar server-side
@@ -218,12 +218,12 @@ exec custom/anticham2.scr
 if (getcvar "modematch" != "1")
 {
 	exec global/feho/voices.scr //feho sighted voices
-	exec global/feho/messages.scr // messages serveur
+	// exec global/feho/messages.scr // messages serveur
 	exec global/support/support.scr // start support gunner scripts
 	exec global/squadmaker/squadmaker.scr // start squadmaker
 	exec global/feho/nadesfix.scr // Nades crash fix
 	// exec global/sv_intial.scr // Revive mod
-	exec global/medic.scr // Médecin
+	exec global/medic.scr // Mï¿½decin
 
 	// === Base Assault ===
 	// Event Callback Handler
