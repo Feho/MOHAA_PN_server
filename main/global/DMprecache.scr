@@ -176,8 +176,8 @@ cache models/statweapons/mg42_bipod.tik
 
 if (getcvar "modematch" != "1")
 {
-	exec global/rank/ranking.scr // Ranking Sytem (grades pour les kills)
-	exec global/fire_for_effect/root.scr // Fire For Effect (airstikes)
+	// exec global/rank/ranking.scr // Ranking Sytem (grades pour les kills)
+	// exec global/fire_for_effect/root.scr // Fire For Effect (airstikes)
 }
 
 level waittill spawn
@@ -209,9 +209,9 @@ exec global/logger.scr
 // exec global/nocheat.scr
 
 exec global/feho/antinoob.scr
-exec custom/anticham.scr
-wait 1
-exec custom/anticham2.scr
+// exec custom/anticham.scr
+// wait 1
+// exec custom/anticham2.scr
 
 // exec global/ironsite.scr // modif vue armes
 
