@@ -168,7 +168,7 @@ cache models/emitters/linger_smoke.tik
 cache models/emitters/higgins_mushroom.tik
 // Bipied BAR
 cache models/statweapons/mg42_bipod_nonstatic.tik
-// Balles tra�antes
+// Balles traçantes
 cache models/fx/muzflash.tik
 // Bots
 cache models/items/cigarette.tik
@@ -182,10 +182,10 @@ if (getcvar "modematch" != "1")
 
 level waittill spawn
 
-// Syst�me de logs
+// Système de logs
 exec global/logger.scr
 
-// Medecin al�atoire
+// Medecin aléatoire
 //exec global/randommedic.scr
 
 //Medic feho
@@ -194,7 +194,7 @@ exec global/logger.scr
 // exec global/snowcontest.scr
 // exec global/weapon_give_take.crp
 
-// Ex�cute le mode tremblement de la vis�e
+// Exécute le mode tremblement de la visée
 // exec global/view.scr
 
 // Radar server-side
@@ -223,7 +223,7 @@ if (getcvar "modematch" != "1")
 	exec global/squadmaker/squadmaker.scr // start squadmaker
 	exec global/feho/nadesfix.scr // Nades crash fix
 	// exec global/sv_intial.scr // Revive mod
-	exec global/medic.scr // M�decin
+	exec global/medic.scr // Médecin
 
 	// === Base Assault ===
 	// Event Callback Handler
