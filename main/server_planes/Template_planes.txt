@@ -1,1 +1,0 @@
-exec server_planes/trigger.scr ( ORIGIN_TEMPLATE ) "allies" .2

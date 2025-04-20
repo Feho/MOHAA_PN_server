@@ -183,7 +183,7 @@ if (getcvar "modematch" != "1")
 level waittill spawn
 
 // Système de logs
-exec global/logger.scr
+// exec global/logger.scr
 
 // Medecin aléatoire
 //exec global/randommedic.scr
@@ -208,7 +208,7 @@ exec global/logger.scr
 
 // exec global/nocheat.scr
 
-exec global/feho/antinoob.scr
+// exec global/feho/antinoob.scr
 // exec custom/anticham.scr
 // wait 1
 // exec custom/anticham2.scr
