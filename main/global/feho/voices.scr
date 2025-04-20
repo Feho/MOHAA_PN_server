@@ -1,9 +1,9 @@
 /**
  * -=[PN]=- Feho - 2011
  *
- * Joue un son aléatoire toutes les X secondes ou quand le joueur appuie sur utiliser + clic
+ * Joue un son alï¿½atoire toutes les X secondes ou quand le joueur appuie sur utiliser + clic
  *
- * Exécuté par DMprecache.scr
+ * Exï¿½cutï¿½ par DMprecache.scr
  */
 
 main:
@@ -47,7 +47,7 @@ main:
 		dfr_directive_215a_2
 		dfr_directive_215a_3
 		dfr_directive_218c_1
-		// dfr_directive_218c_2 // Déployez-vous !
+		// dfr_directive_218c_2 // Dï¿½ployez-vous !
 		dfr_directive_217h_1
 		dfr_directive_276m_2
 		dfr_directive_187j_2
@@ -123,7 +123,7 @@ main:
 
 	//====================================================================================
 	//====================================================================================
-	// NE RIEN DÉCOMMENTER, LES VOIX ON ÉTÉ TRANSFÉRÉES DANS LE FICHIER UBERDIALOG.SCR
+	// NE RIEN Dï¿½COMMENTER, LES VOIX ON ï¿½Tï¿½ TRANSFï¿½Rï¿½ES DANS LE FICHIER UBERDIALOG.SCR
 	//====================================================================================
 	//====================================================================================
 
@@ -148,16 +148,16 @@ main:
 	// local.master alias allied_sighted3 sound/dialogue/Generic/A/cover/dfr_cover_01h_1.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //A couvert !
 	// local.master alias allied_sighted16 sound/dialogue/M1L2/A/dfr_generic_add05z2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Faites gaffe !
 	// local.master alias allied_sighted6 sound/dialogue/M3L2/A/dfr_generic_add04j4.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Attention !
-	// local.master alias allied_sighted9 sound/dialogue/M4L1/A/dfr_generic_add13h2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Là-bas !
+	// local.master alias allied_sighted9 sound/dialogue/M4L1/A/dfr_generic_add13h2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Lï¿½-bas !
 
-	// local.master alias allied_sighted1 sound/dialogue/M3L1/A/dfr_scripted_M3L1_008a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Par les côtés, par les côtés, allez allez !
-	// local.master alias allied_sighted2 sound/dialogue/M3L1/A/dfr_scripted_M3L1_011f.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Déployez-vous !
-	// local.master alias allied_sighted3 sound/dialogue/M3L1/A/dfr_scripted_M3L1_039g.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Baisse la tête !
+	// local.master alias allied_sighted1 sound/dialogue/M3L1/A/dfr_scripted_M3L1_008a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Par les cï¿½tï¿½s, par les cï¿½tï¿½s, allez allez !
+	// local.master alias allied_sighted2 sound/dialogue/M3L1/A/dfr_scripted_M3L1_011f.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Dï¿½ployez-vous !
+	// local.master alias allied_sighted3 sound/dialogue/M3L1/A/dfr_scripted_M3L1_039g.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Baisse la tï¿½te !
 	// local.master alias allied_sighted4 sound/dialogue/Generic/A/target/dfr_target_046j_2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Point d'appui ennemi
 	// local.master aliascache allied_sighted5 sound/dialogue/Multiplayer/a/AMdfr_m_10h.wav soundparms 1.2 0.1 1.0 0.1 160 1200 dialog loaded maps "m dm obj" //Run for it !
 	// local.master alias allied_sighted6 sound/dialogue/M3L1/A/dfr_scripted_M3L1_094a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //A plat ventre !
 	// local.master alias allied_sighted7 sound/dialogue/M3L1/A/dfr_scripted_M3L1_097d.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Ouvrez l'oeil les gars !
-	// local.master alias allied_sighted8 sound/dialogue/M3L1/A/dfr_scripted_M3L1_098a_2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Attendez là, restez à couvert
+	// local.master alias allied_sighted8 sound/dialogue/M3L1/A/dfr_scripted_M3L1_098a_2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Attendez lï¿½, restez ï¿½ couvert
 	// local.master alias allied_sighted9 sound/dialogue/M3L1/A/dfr_scripted_M3L1_102a_2.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog streamed maps "m dm obj" //Allez on se magne, allez allez !
 	// local.master aliascache allied_sighted10 sound/dialogue/Multiplayer/a/AMdfr_m_08a.wav soundparms 1.2 0.1 1.0 0.1 300 1500 dialog loaded maps "m dm obj" //Incoming !
 	// // Get ready to move in on my signal !
@@ -320,7 +320,7 @@ sighted:
 	
 end
 
-// Pioche un joueur aléatoirement et joue un son aléatoire s'il a un joueur en vue
+// Pioche un joueur alï¿½atoirement et joue un son alï¿½atoire s'il a un joueur en vue
 random_player local.team:
 
 	while (1)
@@ -341,7 +341,7 @@ random_player local.team:
 			// Parcourt tous les joueurs
 			for (local.i = 1 ; local.i <= local.nbPlayers ; local.i++) 
 			{
-				// Si randomPlayer peut voir le joueur et que les 2 sont vivants, le son est joué
+				// Si randomPlayer peut voir le joueur et que les 2 sont vivants, le son est jouï¿½
 				if (isAlive $player[local.i] && local.randomPlayer && isAlive local.randomPlayer && local.randomPlayer cansee $player[local.i] 140 4000 && local.randomPlayer.can_speak != 0)
 				{
 					local.randomPlayer thread play_a_sound
@@ -364,7 +364,7 @@ random_player local.team:
 
 end
 
-// Joue un son aléatoire différent selon la team et le skin du joueur
+// Joue un son alï¿½atoire diffï¿½rent selon la team et le skin du joueur
 play_a_sound:
 
 	// exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound")
@@ -374,29 +374,29 @@ play_a_sound:
 		switch (self.model)
 		{
 			case "models/player/american_army.tik":
-				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_army_sighted")
+				// exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_army_sighted")
 				self playsound allied_army_sighted
 				break
 
 			case "models/player/allied_manon.tik":
-				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_manon_sighted")
+				// exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_manon_sighted")
 				self playsound allied_manon_sighted
 				break
 
 			case "models/player/allied_airborne.tik":
-				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_airborne_sighted")
+				// exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_airborne_sighted")
 				self playsound allied_airborne_sighted
 				break
 
 			case "models/player/allied_pilot.tik":
 			case "models/player/american_ranger.tik":
-				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_pilot_sighted")
+				// exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound allied_pilot_sighted")
 				self playsound allied_pilot_sighted
 				break
 
 			default:
 				local.rand = randomint(level.alliedVoices.size) + 1
-				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound " + level.alliedVoices[local.rand][1])
+				// exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound " + level.alliedVoices[local.rand][1])
 				self playsound level.alliedVoices[local.rand][1]
 		}
 	}
@@ -405,7 +405,7 @@ play_a_sound:
 		switch (self.model)
 		{
 			case "models/player/german_worker.tik":
-				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound german_worker")
+				// exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound german_worker")
 				local.rand = randomint(7)
 
 				if (local.rand == 0 || local.rand == 1)
@@ -428,7 +428,7 @@ play_a_sound:
 
 			default:
 				local.rand = randomint(level.axisVoices.size) + 1
-				exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound " + level.axisVoices[local.rand][1])
+				// exec $logger.LogInfo ("[voices.scr::play_a_sound]: Player " + netname self + " playsound " + level.axisVoices[local.rand][1])
 				self playsound level.axisVoices[local.rand][1]
 		}
 	}

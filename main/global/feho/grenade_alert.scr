@@ -20,23 +20,23 @@ main:
 		switch (self.model)
 		{
 			case "models/player/american_army.tik":
-				exec $logger.LogInfo ("[grenade_alert.scr]: Player " + netname self + " playsound allied_army_grenade")
+				// exec $logger.LogInfo ("[grenade_alert.scr]: Player " + netname self + " playsound allied_army_grenade")
 				self playsound allied_army_grenade
 				break
 
 			case "models/player/allied_manon.tik":
-				exec $logger.LogInfo ("[grenade_alert.scr]: Player " + netname self + " playsound allied_manon_sighted9")
+				// exec $logger.LogInfo ("[grenade_alert.scr]: Player " + netname self + " playsound allied_manon_sighted9")
 				self playsound allied_manon_sighted9
 				break
 
 			default:
-				exec $logger.LogInfo ("[grenade_alert.scr]: Player " + netname self + " playsound dfr_attack_13a_2")
+				// exec $logger.LogInfo ("[grenade_alert.scr]: Player " + netname self + " playsound dfr_attack_13a_2")
 				self playsound dfr_attack_13a_2
 		}
 	}
 	else
 	{
-		exec $logger.LogInfo ("[grenade_alert.scr]: Player " + netname self + " playsound den_suicide_03c")
+		// exec $logger.LogInfo ("[grenade_alert.scr]: Player " + netname self + " playsound den_suicide_03c")
 		self playsound den_suicide_03c
 	}
 end

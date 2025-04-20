@@ -329,12 +329,12 @@ setup_kill:
 					wait 0.7
 					if (local.murderer.dmteam == "allies")
 					{
-						exec $logger.LogInfo ("[player_spawn.scr::setup_kill]: Player " + netname local.murderer + " playsound allied_gotone")
+						// exec $logger.LogInfo ("[player_spawn.scr::setup_kill]: Player " + netname local.murderer + " playsound allied_gotone")
 						local.murderer playsound allied_gotone
 					}
 					else if (local.murderer.dmteam == "axis")
 					{
-						exec $logger.LogInfo ("[player_spawn.scr::setup_kill]: Player " + netname local.murderer + " playsound den_attack_074b")
+						// exec $logger.LogInfo ("[player_spawn.scr::setup_kill]: Player " + netname local.murderer + " playsound den_attack_074b")
 						local.murderer playsound den_attack_074b //axis_gotone
 					}
 				}
