@@ -136,7 +136,7 @@ tdmtype:
 	// exec global/vehicles/playervehicle.scr models/vehicles/opeltruck.tik models/vehicles/opeltruck_d.tik ( -1285 -317 7 ) ( 0 90 0 ) 2500
 	exec global/vehicles/playervehicle.scr models/vehicles/bmwbike.tik models/vehicles/bmwbike_d.tik ( -243 1366 -23.88 ) ( 0 90 0 ) 1500
 	
-	exec global/vehicles/truck2.scr::SpawnTruck "opeltruck" "opeltruck_d" ( -1285 -317 7 ) 90
+	//exec global/vehicles/truck2.scr::SpawnTruck "opeltruck" "opeltruck_d" ( -1285 -317 7 ) 90
 
 	// {sfx} mini planes - one per team
 	exec server_planes/trigger.scr ( -1081 1788 20 ) "allies"

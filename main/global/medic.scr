@@ -4,7 +4,7 @@ main:
 	if (level.medicMod == 1 || getcvar "medic" != "1")
 		end
 
-	exec $logger.LogInfo "[medic.scr::main] Initialisation du MedicMod"
+	// exec $logger.LogInfo "[medic.scr::main] Initialisation du MedicMod"
 
 	level.medicMod = 1
 	level.medicIndexMessages1 = 50
@@ -68,7 +68,7 @@ AddMedicEquipment:
 	self.isMedic = 1
 
 	// exec $logger.LogDebug "[medic.scr::AddMedicEquipment]"
-	exec $logger.LogInfo ("[medic.scr::AddMedicEquipment]" + netname self + " AddMedicEquipment")
+	// exec $logger.LogInfo ("[medic.scr::AddMedicEquipment]" + netname self + " AddMedicEquipment")
 
 	// Ajoute un casque de médecin
 	local.helmetname1 = "medic_helmet" + randomint 999999 + self.entnum
@@ -104,7 +104,7 @@ end
 RemoveMedicEquipment:
 	
 	// exec $logger.LogDebug "[medic.scr::RemoveMedicEquipment]"
-	exec $logger.LogInfo ("[medic.scr::RemoveMedicEquipment]" + netname self + " RemoveMedicEquipment")
+	// exec $logger.LogInfo ("[medic.scr::RemoveMedicEquipment]" + netname self + " RemoveMedicEquipment")
 
 	self.medicHelmet remove
 	self.healthBox remove
@@ -305,7 +305,7 @@ ReviveTeammate local.teammate:
 		// Réanimation du joueur
 		if (self && IsAlive self && local.teammate && !IsAlive local.teammate)
 		{
-			exec $logger.LogInfo ("[medic.scr::ReviveTeammate]" + netname self + " revived " + netname local.teammate)
+			// exec $logger.LogInfo ("[medic.scr::ReviveTeammate]" + netname self + " revived " + netname local.teammate)
 
 			self stopwatch 0
 			local.teammate stopwatch 0
