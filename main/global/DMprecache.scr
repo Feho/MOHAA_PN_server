@@ -162,7 +162,7 @@ cache models/fx/bazookaexplosion_dm.tik
 
 // Feho - mise en cache des mods et autres
 cache models/player/allied_sas.tik
-// Grenades fumig�nes
+// Grenades fumigènes
 cache models/fx/m2fgrenadeexplosion2.tik
 cache models/emitters/linger_smoke.tik
 cache models/emitters/higgins_mushroom.tik
@@ -227,14 +227,14 @@ if (getcvar "modematch" != "1")
 
 	// === Base Assault ===
 	// Event Callback Handler
-	local.connected_event = registerev "connected" global/AA/callbacksetup.scr::connected
-	local.disconnected_event = registerev "disconnected" global/AA/callbacksetup.scr::disconnected
-	local.spawn_event = registerev "spawn" global/AA/callbacksetup.scr::spawn
-	local.damage_event = registerev "damage" global/AA/callbacksetup.scr::damage
-	local.kill_event = registerev "kill" global/AA/callbacksetup.scr::kill
-	local.keypress_event = registerev "keypress" global/AA/callbacksetup.scr::keypress
-	local.intermission_event = registerev "intermission" global/AA/callbacksetup.scr::intermission
-	local.servercommand_event = registerev "servercommand" global/AA/callbacksetup.scr::servercommand
+	// local.connected_event = registerev "connected" global/AA/callbacksetup.scr::connected
+	// local.disconnected_event = registerev "disconnected" global/AA/callbacksetup.scr::disconnected
+	// local.spawn_event = registerev "spawn" global/AA/callbacksetup.scr::spawn
+	// local.damage_event = registerev "damage" global/AA/callbacksetup.scr::damage
+	// local.kill_event = registerev "kill" global/AA/callbacksetup.scr::kill
+	// local.keypress_event = registerev "keypress" global/AA/callbacksetup.scr::keypress
+	// local.intermission_event = registerev "intermission" global/AA/callbacksetup.scr::intermission
+	// local.servercommand_event = registerev "servercommand" global/AA/callbacksetup.scr::servercommand
 
 	thread global/AA/vehicle_fixes.scr::vehicle_spawnkill
 	// === Base Assault ===
