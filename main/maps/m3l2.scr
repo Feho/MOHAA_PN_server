@@ -155,9 +155,9 @@ setcvar "g_gametypestring" "Team-Match"
 	
 	// {sfx} mini planes - one per team
 	// exec server_planes/trigger.scr ( -5853 -4574 -139 ) "allies"
-	exec server_planes/trigger.scr ( 2777 -1062 -330 ) "allies"
+	// exec server_planes/trigger.scr ( 2777 -1062 -330 ) "allies"
 	// exec server_planes/trigger.scr ( -3635 -7251 -346 ) "axis"
-	exec server_planes/trigger.scr ( 4276 -4676 -160 ) "axis"
+	// exec server_planes/trigger.scr ( 4276 -4676 -160 ) "axis"
 
 	$exploder remove 
 	$exploderchunk remove 

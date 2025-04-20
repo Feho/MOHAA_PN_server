@@ -66,8 +66,8 @@ setcvar "g_gametypestring" "Team-Match"
 	waitthread blokkok
 
 	// {sfx} mini planes - one per team
-	exec server_planes/trigger.scr ( -4367 -2555 90 ) "allies"
-	exec server_planes/trigger.scr ( 2103 -3451 -72 ) "axis"
+	// exec server_planes/trigger.scr ( -4367 -2555 90 ) "allies"
+	// exec server_planes/trigger.scr ( 2103 -3451 -72 ) "axis"
 
 	// Tanks & Jeeps Base Assault
 	if (level.already_started != 1)

@@ -139,8 +139,8 @@ tdmtype:
 	//exec global/vehicles/truck2.scr::SpawnTruck "opeltruck" "opeltruck_d" ( -1285 -317 7 ) 90
 
 	// {sfx} mini planes - one per team
-	exec server_planes/trigger.scr ( -1081 1788 20 ) "allies"
-	exec server_planes/trigger.scr ( -5322 5364 2 ) "axis"
+	// exec server_planes/trigger.scr ( -1081 1788 20 ) "allies"
+	// exec server_planes/trigger.scr ( -5322 5364 2 ) "axis"
 	
 	// Spotlight
 	local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -872 -807 432.13 )
