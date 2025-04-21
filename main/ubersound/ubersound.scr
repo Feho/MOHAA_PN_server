@@ -1550,4 +1550,10 @@ alias credits2 sound/music/mus_aircraftfacility.mp3 soundparms 1.5 0.0 1.0 0.0 1
 
 aliascache mountG sound/mechanics/lockpick2.wav soundparms 1.5 0.2 0.8 0.2 160 1000 weapon loaded maps "dm obj t m"
 
+//============================================================
+// Missing aliases fixes
+//============================================================
+aliascache snd_move sound/null.wav soundparms 0.0 0.0 0.0 0.0 160 1600 auto loaded maps "m dm moh obj train "
+aliascache liquid_leak sound/null.wav soundparms 0.0 0.0 0.0 0.0 160 1600 auto loaded maps "m dm moh obj train "
+
 end
