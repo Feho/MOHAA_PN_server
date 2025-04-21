@@ -58,14 +58,14 @@ setcvar "g_scoreboardpic" "mohdm2"
 	// thread global/AA/vezetheto_tankok.scr::spawn_tank ( -3158.00 -1803.00 -64.54 ) ( 0 110 0 ) "panzer_brown" "allies"
 	
 	// Tanks & Jeeps Base Assault
-	if (level.already_started != 1)
-	{
-		level.already_started = 1
+	// if (level.already_started != 1)
+	// {
+	// 	level.already_started = 1
 
-		exec global/AA/global_detect.scr
-	}
+	// 	exec global/AA/global_detect.scr
+	// }
 	
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 542.00 -1461.00 -63.88 ) ( 0 180 0 ) level.jeep_mask
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 542.00 -1461.00 -63.88 ) ( 0 180 0 ) level.jeep_mask
 	
 	// exec global/AA/panceltorok.scr ( -1624.69 -3170.43 -15.75 ) ( 0 180 0 ) "bazooka"
 	// exec global/AA/panceltorok.scr ( 716.00 -449.00 -53.33 ) ( 0 180 0 ) "panzerschreck"
