@@ -321,45 +321,64 @@ sighted:
 end
 
 // Pioche un joueur aléatoirement et joue un son aléatoire s'il a un joueur en vue
+// Optimisation: Only check 'cansee' against players on the opposing team.
 random_player local.team:
+	local.opposingTeam = "axis"
+	if (local.team == "axis")
+		local.opposingTeam = "allies"
 
 	while (1)
 	{
 		local.nbPlayers = $player.size
 
-		if (local.nbPlayers > 0)
+		if (local.nbPlayers > 1) // Need at least one player per team potentially
 		{
 			local.randomPlayer = $player[randomint(local.nbPlayers) + 1]
 
 			// La boucle se termine seulement une fois qu'un joueur pris au hasard est dans la team local.team
-			while ($player.size > 0 && local.randomPlayer && local.randomPlayer.dmteam != local.team)
+			// Ensure the selected player is still valid and on the correct team
+			while ($player.size > 0 && (!isDefined local.randomPlayer || local.randomPlayer.dmteam != local.team))
 			{
 				local.randomPlayer = $player[randomint(local.nbPlayers) + 1]
 				waitframe
 			}
 
-			// Parcourt tous les joueurs
-			for (local.i = 1 ; local.i <= local.nbPlayers ; local.i++) 
+			// Ensure the selected player is valid and alive before checking visibility
+			if (isDefined local.randomPlayer && isAlive local.randomPlayer && local.randomPlayer.can_speak != 0)
 			{
-				// Si randomPlayer peut voir le joueur et que les 2 sont vivants, le son est joué
-				if (isAlive $player[local.i] && local.randomPlayer && isAlive local.randomPlayer && local.randomPlayer cansee $player[local.i] 140 4000 && local.randomPlayer.can_speak != 0)
+				// Parcourt seulement les joueurs de l'équipe adverse
+				for (local.i = 1 ; local.i <= local.nbPlayers ; local.i++)
 				{
-					local.randomPlayer thread play_a_sound
-					break
+					local.targetPlayer = $player[local.i]
+					// Check if target is valid, alive, and on the opposing team
+					if (isDefined local.targetPlayer && isAlive local.targetPlayer && local.targetPlayer.dmteam == local.opposingTeam)
+					{
+						// Si randomPlayer peut voir le joueur adverse, le son est joué
+						if (local.randomPlayer cansee local.targetPlayer 140 4000) // FOV 140, Distance 4000
+						{
+							local.randomPlayer thread play_a_sound
+							break // Found a target, break inner loop
+						}
+					}
 				}
 			}
 		}
 
 		// Plus il y a de joueurs, plus le wait est court
+		local.baseWait = 20
+		local.randomAddWait = 6
+
 		if (local.nbPlayers < 3) {
-			wait (randomint(21) + 200)
+			local.baseWait = 200
+			local.randomAddWait = 21
 		} else if (local.nbPlayers < 5) {
-			wait (randomint(11) + 50)
+			local.baseWait = 50
+			local.randomAddWait = 11
 		} else if (local.nbPlayers < 7) {
-			wait (randomint(6) + 30)
-		} else {
-			wait (randomint(6) + 20)
+			local.baseWait = 30
+			local.randomAddWait = 6
 		}
+		wait (randomint(local.randomAddWait) + local.baseWait)
 	}
 
 end
