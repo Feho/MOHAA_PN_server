@@ -6,7 +6,7 @@
 main: 
 
 	setcvar "g_gametype" "2"
-	setcvar "developer" "0" // temporaire
+	//setcvar "developer" "0" // temporaire
 	
 	if((getcvar("g_gametype") == "1")) 
 	{
