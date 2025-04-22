@@ -119,12 +119,12 @@ tdmtype:
 
 	
 	// Tanks & Jeeps Base Assault
-	// if (level.already_started != 1)
-	// {
-	// 	level.already_started = 1
+	if (level.already_started != 1)
+	{
+		level.already_started = 1
 
-	// 	exec global/AA/global_detect.scr
-	// }
+		exec global/AA/global_detect.scr
+	}
 	
 	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -249.00 892.00 -23.88 ) ( 0 96 0 ) level.jeep_mask
 	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 4023.00 5073.00 -23.88 ) ( 0 182 0 ) level.jeep_mask
@@ -133,7 +133,7 @@ tdmtype:
 	
 	exec global/vehicles/playervehicle.scr models/vehicles/sdkfz_afrika.tik models/vehicles/sdkfz_desert_d.tik ( -3236 6061 -23.88 ) ( 0 -90 0 ) 500
 	exec global/vehicles/playervehicle.scr models/vehicles/european_car_tan.tik models/vehicles/vehicle_car_burnt-notstatic.tik ( 733 2968 -23.88 ) ( 0 60 0 ) 2500
-	// exec global/vehicles/playervehicle.scr models/vehicles/opeltruck.tik models/vehicles/opeltruck_d.tik ( -1285 -317 7 ) ( 0 90 0 ) 2500
+	exec global/vehicles/playervehicle.scr models/vehicles/opeltruck.tik models/vehicles/opeltruck_d.tik ( -1285 -317 7 ) ( 0 90 0 ) 2500
 	exec global/vehicles/playervehicle.scr models/vehicles/bmwbike.tik models/vehicles/bmwbike_d.tik ( -243 1366 -23.88 ) ( 0 90 0 ) 1500
 	
 	//exec global/vehicles/truck2.scr::SpawnTruck "opeltruck" "opeltruck_d" ( -1285 -317 7 ) 90
