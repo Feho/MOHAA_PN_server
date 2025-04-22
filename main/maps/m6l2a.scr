@@ -230,13 +230,13 @@ tdmtype:
 	local.mur solid
 	
 	// Portable 30 cals
-	exec models/create_guns.scr ( -1335 -2895 -55.88 )
+	// exec models/create_guns.scr ( -1335 -2895 -55.88 )
 	
-	exec global/DETONATOR_SOUND.scr
-	exec global/RB_DETONATORS.scr::DETONATOR ( -1326 -862 89 ) ( 0 0 0 )
-	exec global/RB_DETONATORS.scr::DETONATOR ( -1094 -1329 -127.88 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( -974 -1329 -127.88 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( -2578.76 -3448.59 8.13 ) ( 0 0 0 )
+	// exec global/DETONATOR_SOUND.scr
+	// exec global/RB_DETONATORS.scr::DETONATOR ( -1326 -862 89 ) ( 0 0 0 )
+	// exec global/RB_DETONATORS.scr::DETONATOR ( -1094 -1329 -127.88 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( -974 -1329 -127.88 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( -2578.76 -3448.59 8.13 ) ( 0 0 0 )
 
 	// exec global/feho/SHIELDS.scr::SHIELD ( -1319.10 -1652.07 -111.88 ) ( 0 0 0 )
 	
@@ -254,19 +254,19 @@ tdmtype:
 	exec global/squadmaker/squadmaker.scr
 
 	// Spotlight
-	local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -3545 -1007 453)
-	local.s1 angles ( 0 180 0 )
-	local.s1 targetname myspot
-	local.s1.color = ( 1 1 1 )
-	local.s1.health = 500
+	// local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -3545 -1007 453)
+	// local.s1 angles ( 0 180 0 )
+	// local.s1 targetname myspot
+	// local.s1.color = ( 1 1 1 )
+	// local.s1.health = 500
 	
-	local.s2 = spawn script_model model miscobj/searchlightbase.tik origin ( -2440 503 453)
-	local.s2 angles ( 0 -90 0 )
-	local.s2 targetname myspot
-	local.s2.color = ( 1 1 1 )
-	local.s2.health = 500
+	// local.s2 = spawn script_model model miscobj/searchlightbase.tik origin ( -2440 503 453)
+	// local.s2 angles ( 0 -90 0 )
+	// local.s2 targetname myspot
+	// local.s2.color = ( 1 1 1 )
+	// local.s2.health = 500
 	
-	exec global/player_spotlight.scr myspot
+	// exec global/player_spotlight.scr myspot
 	
 	// unlock some doors with triggers - Feho
 	exec global/fake_door.scr ( -2295 -2495 28 ) ( -1906 -2526 -54 )
@@ -333,13 +333,13 @@ ffatype:
 	exec global/ladderspawn.scr ( -829 -2450 -288 ) 324 wood 90
 	
 	// Portable 30 cals
-	exec models/create_guns.scr ( -1684 -2339 -65 )
+	// exec models/create_guns.scr ( -1684 -2339 -65 )
 	
-	exec global/DETONATOR_SOUND.scr
-	exec global/RB_DETONATORS.scr::DETONATOR ( -1326 -862 89 ) ( 0 0 0 )
-	exec global/RB_DETONATORS.scr::DETONATOR ( -1094 -1329 -127.88 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( -974 -1329 -127.88 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( -2578.76 -3448.59 8.13 ) ( 0 0 0 )
+	// exec global/DETONATOR_SOUND.scr
+	// exec global/RB_DETONATORS.scr::DETONATOR ( -1326 -862 89 ) ( 0 0 0 )
+	// exec global/RB_DETONATORS.scr::DETONATOR ( -1094 -1329 -127.88 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( -974 -1329 -127.88 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( -2578.76 -3448.59 8.13 ) ( 0 0 0 )
 	
 	level waittill spawn
 

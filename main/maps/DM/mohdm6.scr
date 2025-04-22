@@ -31,7 +31,7 @@ setcvar "g_gametypestring" "Stalingrad Battle TDM" // Feho
 	// exec global/ladderspawn.scr ( 1078 590 304 ) 296 wood 90
 	
 	// Portable 30 cals
-	exec models/create_guns.scr ( 1079 320 304.13 )
+	// exec models/create_guns.scr ( 1079 320 304.13 )
 	
 	//*** Precache Dm Stuff
 	exec global/DMprecache.scr
@@ -40,10 +40,10 @@ setcvar "g_gametypestring" "Stalingrad Battle TDM" // Feho
 	level.script = maps/dm/mohdm6.scr
 	exec global/ambient.scr mohdm6
 	
-	exec global/DETONATOR_SOUND.scr
-	exec global/RB_DETONATORS.scr::DETONATOR ( -711.11 -867.74 322.13 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( 273.65 147.96 87.13 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( -48.10 902.07 512.13 ) ( 0 0 0 )
+	// exec global/DETONATOR_SOUND.scr
+	// exec global/RB_DETONATORS.scr::DETONATOR ( -711.11 -867.74 322.13 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( 273.65 147.96 87.13 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( -48.10 902.07 512.13 ) ( 0 0 0 )
 
 	
 	level waittill spawn

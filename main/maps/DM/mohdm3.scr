@@ -31,13 +31,13 @@ if(level.roundbased)
 level waittill prespawn
 
 	// Portable 30 cals
-	exec models/create_guns.scr ( 1393 -3129 1.47 )
+	// exec models/create_guns.scr ( 1393 -3129 1.47 )
 	
-	exec global/DETONATOR_SOUND.scr
-	exec global/RB_DETONATORS.scr::DETONATOR ( 497.71 169.49 -47.88 ) ( 0 0 0 )
-	exec global/RB_DETONATORS.scr::DETONATOR ( 4516.75 -2132.46 8.13 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( 1996 -1426.64 -55.88 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( 3374.76 -1421.59 65.13 ) ( 0 0 0 )
+	// exec global/DETONATOR_SOUND.scr
+	// exec global/RB_DETONATORS.scr::DETONATOR ( 497.71 169.49 -47.88 ) ( 0 0 0 )
+	// exec global/RB_DETONATORS.scr::DETONATOR ( 4516.75 -2132.46 8.13 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( 1996 -1426.64 -55.88 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( 3374.76 -1421.59 65.13 ) ( 0 0 0 )
 		
 	// no fog
 	$world farplane_color 0 0.0.5 0.092

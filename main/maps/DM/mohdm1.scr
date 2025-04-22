@@ -76,14 +76,14 @@ setcvar "g_scoreboardpic" "mohdm1"
 	//$world farplane 5000
 	//$world farplane_color (.333 .333 .329)
 
-			// Portable 30 cals
-	exec models/create_guns.scr ( -806 -353 48.12 )
+	// Portable 30 cals
+	// exec models/create_guns.scr ( -806 -353 48.12 )
 	
-	exec global/DETONATOR_SOUND.scr
-	exec global/RB_DETONATORS.scr::DETONATOR ( 1361.71 339.49 304.12 ) ( 0 0 0 )
-	exec global/RB_DETONATORS.scr::DETONATOR ( -838.75 760.46 216.18 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( 1313 403 256.12 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( -435.76 166 434.12 ) ( 0 0 0 )
+	// exec global/DETONATOR_SOUND.scr
+	// exec global/RB_DETONATORS.scr::DETONATOR ( 1361.71 339.49 304.12 ) ( 0 0 0 )
+	// exec global/RB_DETONATORS.scr::DETONATOR ( -838.75 760.46 216.18 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( 1313 403 256.12 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( -435.76 166 434.12 ) ( 0 0 0 )
 		
 	
 	level waittill spawn

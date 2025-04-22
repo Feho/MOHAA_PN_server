@@ -241,13 +241,13 @@ tdmtype:
 	exec global/vehicles/playervehicle.scr models/vehicles/european_delivery_truck_green.tik models/vehicles/vehicle_car_burnt-notstatic.tik ( -4565.00 2618.00 10.88 ) ( 0 -90 0 ) 2500
 	
 	// Spotlight
-	local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -5811 1442 424)
-	local.s1 angles ( 0 180 0 )
-	local.s1 targetname myspot
-	local.s1.color = ( 1 1 1 )
-	local.s1.health = 500
+	// local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -5811 1442 424)
+	// local.s1 angles ( 0 180 0 )
+	// local.s1 targetname myspot
+	// local.s1.color = ( 1 1 1 )
+	// local.s1.health = 500
 	
-	exec global/player_spotlight.scr myspot
+	// exec global/player_spotlight.scr myspot
 
 	thread Map_Guard
 	

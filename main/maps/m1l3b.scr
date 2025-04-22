@@ -143,19 +143,19 @@ tdmtype:
 	// exec server_planes/trigger.scr ( -5322 5364 2 ) "axis"
 	
 	// Spotlight
-	local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -872 -807 432.13 )
-	local.s1 angles ( 0 90 0 )
-	local.s1 targetname myspot
-	local.s1.color = ( 1 1 1 )
-	local.s1.health = 500
+	// local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -872 -807 432.13 )
+	// local.s1 angles ( 0 90 0 )
+	// local.s1 targetname myspot
+	// local.s1.color = ( 1 1 1 )
+	// local.s1.health = 500
 	
-	local.s2 = spawn script_model model miscobj/searchlightbase.tik origin ( -1606 -807 426.13 )
-	local.s2 angles ( 0 90 0 )
-	local.s2 targetname myspot
-	local.s2.color = ( 1 1 1 )
-	local.s2.health = 500
+	// local.s2 = spawn script_model model miscobj/searchlightbase.tik origin ( -1606 -807 426.13 )
+	// local.s2 angles ( 0 90 0 )
+	// local.s2 targetname myspot
+	// local.s2.color = ( 1 1 1 )
+	// local.s2.health = 500
 	
-	exec global/player_spotlight.scr myspot
+	// exec global/player_spotlight.scr myspot
 
 	thread Map_Guard
 

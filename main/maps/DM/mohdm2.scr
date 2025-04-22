@@ -33,11 +33,11 @@ setcvar "g_scoreboardpic" "mohdm2"
 	level.script = maps/dm/mohdm2.scr
 	exec global/ambient.scr mohdm2
 	
-	exec global/DETONATOR_SOUND.scr
-	exec global/RB_DETONATORS.scr::DETONATOR ( -2201.07 -2135.78 8.13 ) ( 0 0 0 )
-	exec global/RB_DETONATORS.scr::DETONATOR ( -901.99 751.52 40.12 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( -1616.41 -3051.05 -15.88 ) ( 0 0 0 )
-	exec global/TNT_DETONATORS.scr::DETONATOR ( -1010.99 -727.24 40.13 ) ( 0 0 0 )
+	// exec global/DETONATOR_SOUND.scr
+	// exec global/RB_DETONATORS.scr::DETONATOR ( -2201.07 -2135.78 8.13 ) ( 0 0 0 )
+	// exec global/RB_DETONATORS.scr::DETONATOR ( -901.99 751.52 40.12 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( -1616.41 -3051.05 -15.88 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( -1010.99 -727.24 40.13 ) ( 0 0 0 )
 	
 		// no fog
 	$world farplane_color 0 0.0.5 0.092
