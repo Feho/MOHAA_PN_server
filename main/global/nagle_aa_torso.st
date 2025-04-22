@@ -852,7 +852,7 @@ state ATTACK_MP44_SECONDARY
 		// exec global/weapbash.scr
 		
 		//Feho - MP44 semi-auto ---->
-		exec global/feho/semiauto.scr
+		// exec global/feho/semiauto.scr
 		//<--------------------------
 	}
 	action
@@ -899,7 +899,7 @@ state ATTACK_SHOTGUN_SECONDARY
 
 	entrycommands
 	{
-		exec global/bot_spawn.scr
+		// exec global/bot_spawn.scr
 	}
 
 	action
