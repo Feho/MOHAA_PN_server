@@ -221,9 +221,9 @@ if (getcvar "modematch" != "1")
 	// exec global/feho/messages.scr // messages serveur
 	exec global/support/support.scr // start support gunner scripts
 	exec global/squadmaker/squadmaker.scr // start squadmaker
-	exec global/feho/nadesfix.scr // Nades crash fix
+	// exec global/feho/nadesfix.scr // Nades crash fix
 	// exec global/sv_intial.scr // Revive mod
-	//exec global/medic.scr // Médecin
+	// exec global/medic.scr // Médecin
 
 	// === Base Assault ===
 	// Event Callback Handler
