@@ -303,7 +303,7 @@ main:
 			$player[local.i] thread sighted
 		}
 
-		wait 0.04
+		wait 0.5
 	}
 	
 end
