@@ -159,8 +159,8 @@ tdmtype:
 		exec global/AA/global_detect.scr
 	}
 	
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 3980.00 6370.00 -63.88 ) ( 0 180 0 ) level.jeep_mask
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 3980.00 6155.00 -63.88 ) ( 0 180 0 ) level.jeep_mask
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 3980.00 6370.00 -63.88 ) ( 0 180 0 ) level.jeep_mask
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 3980.00 6155.00 -63.88 ) ( 0 180 0 ) level.jeep_mask
 
 	// exec global/vehicles/playervehicle.scr models/vehicles/opeltruckgreen_canopy.tik models/vehicles/opeltruckgreen_d.tik ( 733 2968 -23.88 ) ( 0 60 0 ) 2500
 	

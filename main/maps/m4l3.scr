@@ -234,11 +234,11 @@ tdmtype:
 		exec global/AA/global_detect.scr
 	}
 	
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -5825.00 -182.00 -0.88 ) ( 0 10 0 ) level.jeep_mask
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -5825.00 -182.00 -0.88 ) ( 0 10 0 ) level.jeep_mask
 	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -4565.00 2618.00 10.88 ) ( 0 -90 0 ) level.jeep_mask
 	
-	exec global/vehicles/playervehicle.scr models/vehicles/opeltruckgreen.tik models/vehicles/opeltruckgreen_d.tik ( 2133.00 434.00 -46.03) ( 0 176 0 ) 2500
-	exec global/vehicles/playervehicle.scr models/vehicles/european_delivery_truck_green.tik models/vehicles/vehicle_car_burnt-notstatic.tik ( -4565.00 2618.00 10.88 ) ( 0 -90 0 ) 2500
+	// exec global/vehicles/playervehicle.scr models/vehicles/opeltruckgreen.tik models/vehicles/opeltruckgreen_d.tik ( 2133.00 434.00 -46.03) ( 0 176 0 ) 2500
+	// exec global/vehicles/playervehicle.scr models/vehicles/european_delivery_truck_green.tik models/vehicles/vehicle_car_burnt-notstatic.tik ( -4565.00 2618.00 10.88 ) ( 0 -90 0 ) 2500
 	
 	// Spotlight
 	// local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -5811 1442 424)
