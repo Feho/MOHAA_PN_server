@@ -25,6 +25,8 @@ cache models/player/allied_oss.tik
 cache models/player/allied_oss_fps.tik
 cache models/player/allied_pilot.tik
 cache models/player/allied_pilot_fps.tik
+cache models/player/allied_sas.tik
+cache models/player/allied_sas_fps.tik
 cache models/player/american_army.tik
 cache models/player/american_army_fps.tik
 cache models/player/american_ranger.tik
@@ -35,6 +37,8 @@ cache models/player/german_afrika_private.tik
 cache models/player/german_afrika_private_fps.tik
 cache models/player/german_elite_gestapo.tik
 cache models/player/german_elite_gestapo_fps.tik
+cache models/player/german_elite_officer.tik
+cache models/player/german_elite_officer_fps.tik
 cache models/player/german_elite_sentry.tik
 cache models/player/german_elite_sentry_fps.tik
 cache models/player/german_elite_sentry_fps.tik
@@ -62,6 +66,8 @@ cache models/player/german_winter1.tik
 cache models/player/german_winter1_fps.tik
 cache models/player/german_winter_1.tik
 cache models/player/german_winter_1_fps.tik
+cache models/player/german_winter_2.tik
+cache models/player/german_winter_2_fps.tik
 cache models/player/german_winter2.tik
 cache models/player/german_winter2_fps.tik
 cache models/player/german_worker.tik
@@ -158,7 +164,6 @@ cache models/animate/fx_mortar_dirt.tik
 cache models/fx/bazookaexplosion_dm.tik
 
 // Feho - mise en cache des mods et autres
-cache models/player/allied_sas.tik
 // Grenades fumigènes
 cache models/fx/m2fgrenadeexplosion2.tik
 cache models/emitters/linger_smoke.tik
