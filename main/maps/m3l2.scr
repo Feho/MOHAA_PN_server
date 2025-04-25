@@ -85,7 +85,7 @@ tdmtype:
 	
 
 	thread global/door_locked.scr::lock
-	// exec global/ambient.scr obj_team5 // Commented out due to conflicting waittill spawn
+	exec global/ambient.scr obj_team5
 	exec global/DMprecache.scr
 	
 	//Sorrids ladders
