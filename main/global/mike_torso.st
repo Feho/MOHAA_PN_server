@@ -495,6 +495,16 @@ state CHECK_SECONDARY_ATTACK
 		ATTACK_RIFLE_SECONDARY	: IS_WEAPONCLASS_READY_TO_FIRE "mainhand" "rifle" "secondary"
 		//<-------------
 		
+		//feho
+		// cadence BAR + SMG/STG44 bash
+		//-------------->
+		ATTACK_BAR_SECONDARY		: IS_WEAPON_ACTIVE "mainhand" "BAR" "secondary"
+		// ATTACK_MP44_SECONDARY		: IS_WEAPON_ACTIVE "mainhand" "StG 44" "secondary"
+		// ATTACK_MP40_SECONDARY		: IS_WEAPON_ACTIVE "mainhand" "MP40" "secondary"
+		// ATTACK_THOMPSON_SECONDARY		: IS_WEAPON_ACTIVE "mainhand" "Thompson" "secondary"
+		// ATTACK_SHOTGUN_SECONDARY		: IS_WEAPON_ACTIVE "mainhand" "Shotgun" "secondary"
+		//<-------------
+		
 //		ATTACK_RIFLE_2NDARY		: IS_WEAPON_ACTIVE "mainhand" "M1_Garand"
 //		ATTACK_GRENADE_2NDARY	: IS_WEAPON_ACTIVE "mainhand" "FragGrenade"
 //		ATTACK_RIFLE_2NDARY		: IS_WEAPON_ACTIVE "mainhand" "MP40"
@@ -561,6 +571,32 @@ state ATTACK_RIFLE_SECONDARY
 	}
 }
 //<-------------------
+
+//feho
+// cadence BAR
+//---------------------->
+state ATTACK_BAR_SECONDARY
+{
+	movetype legs
+
+	entrycommands
+	{
+		exec global/feho/cadenceBAR.scr
+	}
+
+	action
+	{
+
+	}
+	
+	states
+	{
+		STAND	 	: KILLED
+		
+		STAND	 	: ANIMDONE_TORSO
+	}
+}
+
 
 // put away the item and pull out the last active weapon
 state PUT_AWAY_ITEM
@@ -1050,6 +1086,20 @@ state RAISE_SMG
 state RAISE_MG
 {
 	movetype legs
+	
+	// jv_map
+	//----------------->
+	entrycommands
+	{
+		// exec global/squadmaker/shell.scr weapon_raise mg
+		exec global/feho/cadenceBARactive.scr // feho cadence BAR
+		
+		//feho
+		//----->
+		// exec global/AA/check_weapons.scr "1" "mg"
+		//<----
+	}
+	//<-----------------
 	
 	action
 	{
