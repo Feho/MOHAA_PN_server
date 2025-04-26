@@ -84,7 +84,6 @@ cache models/vehicles/tigercannon.tik
 cache models/vehicles/jeep_30cal_viewmodel.tik
 cache models/vehicles/jeep_30cal.tik
 
-
 //Caching all FX **Experimental**
 //Okay, first test positive
 cache models/fx/bh_paper_lite.tik
@@ -150,13 +149,10 @@ cache models/fx/fs_puddle.tik
 cache models/fx/fs_sand.tik
 cache models/fx/fs_snow.tik
 
-
-
 //Global - Missing caches
 cache models/fx/dummy.tik
 cache models/items/binoculars.tik
 cache models/items/dm_50_healthbox.tik
-
 
 //Other missing caches
 //cache models/fx/scriptbazookaexplosion.tik
@@ -170,11 +166,6 @@ cache models/emitters/linger_smoke.tik
 cache models/emitters/higgins_mushroom.tik
 // Bipied BAR
 cache models/statweapons/mg42_bipod_nonstatic.tik
-// Balles traçantes
-cache models/fx/muzflash.tik
-// Bots
-cache models/items/cigarette.tik
-cache models/statweapons/mg42_bipod.tik
 
 level waittill spawn
 
