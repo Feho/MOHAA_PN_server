@@ -7,28 +7,29 @@
 
 main:
 	
-// set scoreboard messages
-setcvar "g_obj_alliedtext1" "Remagen"
-setcvar "g_obj_alliedtext2" ""
-setcvar "g_obj_alliedtext3" "Server IP"
-setcvar "g_obj_axistext1" "178.32.28.179:12203 "
-setcvar "g_obj_axistext2" ""
-setcvar "g_obj_axistext3" ""
-setcvar "g_scoreboardpic" "mohdm3"
+	// set scoreboard messages
+	setcvar "g_obj_alliedtext1" "Remagen"
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" ""
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" ""
+
+	setcvar "g_scoreboardpic" "mohdm3"
+	setcvar "g_gametypestring" "Search and Destroy"
 
 	// load support gun sounds
-	waitthread global/support/support.scr::soundcache
+	// waitthread global/support/support.scr::soundcache
 	
 	setcvar "g_gametype" "3"
 	setcvar "fraglimit" "3"
 	setcvar "timelimit" "10"
 
-// call additional stuff for playing this map round based is needed
-if(level.roundbased)
-	thread objectivethread
-	
+	// call additional stuff for playing this map round based is needed
+	if(level.roundbased)
+		thread objectivethread
 
-level waittill prespawn
+	level waittill prespawn
 
 	// Portable 30 cals
 	// exec models/create_guns.scr ( 1393 -3129 1.47 )
@@ -43,20 +44,19 @@ level waittill prespawn
 	$world farplane_color 0 0.0.5 0.092
 	$world farplane 18000
 
-//*** Precache Dm Stuff
-exec global/DMprecache.scr
+	//*** Precache Dm Stuff
+	exec global/DMprecache.scr
 
-level.script = maps/dm/mohdm3.scr
-exec global/ambient.scr mohdm3
+	level.script = maps/dm/mohdm3.scr
+	exec global/ambient.scr mohdm3
 
-thread global/door_locked.scr::lock
+	thread global/door_locked.scr::lock
 
+	thread setupobj
 
-thread setupobj
-
-//////////////////////
-level waittill spawn
-////////////////////
+	//////////////////////
+	level waittill spawn
+	////////////////////
 
 	// Bots 3
 	// waitthread global/bots3/main.scr::info_bot_deathmatch (3151.23 -2943.19 1.65) 0.0
@@ -101,21 +101,21 @@ level waittill spawn
 	// exec server_planes/trigger.scr ( -11 -454 -11 ) "allies"
 	// exec server_planes/trigger.scr ( 4893 -3862 22 ) "axis"
 
-self.defusing_team = "allies"
-self.planting_team = "axis"
-level.targets_to_destroy = 1 
-level.bomb_damage = 200
-level.bomb_explosion_radius = 1054
+	self.defusing_team = "allies"
+	self.planting_team = "axis"
+	level.targets_to_destroy = 1 
+	level.bomb_damage = 200
+	level.bomb_explosion_radius = 1054
 
-// set the parameters for this round/wave based match
-level.dmrespawning = 1 // 1 **wave based** or 0 **round based**
-level.dmroundlimit = 7 // round time limit in minutes
+	// set the parameters for this round/wave based match
+	level.dmrespawning = 1 // 1 **wave based** or 0 **round based**
+	level.dmroundlimit = 7 // round time limit in minutes
 
-//level waittill roundstart
+	//level waittill roundstart
 
-$bomb1 thread global/obj_dm1.scr::bomb_thinker
-thread axis_win_bomb $bomb1
-thread allied_win_timer $bomb1
+	$bomb1 thread global/obj_dm1.scr::bomb_thinker
+	thread axis_win_bomb $bomb1
+	thread allied_win_timer $bomb1
 	
 end
 
@@ -123,45 +123,42 @@ end
 
 axis_win_bomb local.bomb:
 
-while(local.bomb.exploded != 1)
-waitframe
+	while(local.bomb.exploded != 1)
+	waitframe
 
-iprintlnbold "Axis have destroyed the enemys Radio!"
+	iprintlnbold "Axis have destroyed the enemys Radio!"
 
-teamwin axis
+	teamwin axis
 end
 
 
 
 allied_win_timer:
-level waittill allieswin
 
-
+	level waittill allieswin
 
 end
 
 setupobj:
 
-spawn trigger_use "targetname" "radio1"
-$radio1.origin = ( 769.52 405.36 213 ) 
-$radio1 setsize ( -100 -100 -100 ) ( 100 100 100 ) 
+	spawn trigger_use "targetname" "radio1"
+	$radio1.origin = ( 769.52 405.36 213 ) 
+	$radio1 setsize ( -100 -100 -100 ) ( 100 100 100 ) 
 
-spawn miscobj/radio_military.tik "targetname" "radio" 
-$radio.origin = ( 769.52 405.36 213 ) 
-$radio.angles = ( 0 -87.23 0.00 )
+	spawn miscobj/radio_military.tik "targetname" "radio" 
+	$radio.origin = ( 769.52 405.36 213 ) 
+	$radio.angles = ( 0 -87.23 0.00 )
 
-spawn script_model "model" animate/pulse_explosive.tik "targetname" "bomb1" 
-$bomb1.origin = ( 769.52 405.36 213 )// same as trigger
-$bomb1.angles = ( 0 -87.23 0.00 )
-$bomb1.trigger_name = radio1 
-$bomb1.target = $radio 
-$bomb1.explosion_fx = animate/inferno.tik  
-$bomb1.explosion_sound = grenade_explode
-end
-
-
+	spawn script_model "model" animate/pulse_explosive.tik "targetname" "bomb1" 
+	$bomb1.origin = ( 769.52 405.36 213 )// same as trigger
+	$bomb1.angles = ( 0 -87.23 0.00 )
+	$bomb1.trigger_name = radio1 
+	$bomb1.target = $radio 
+	$bomb1.explosion_fx = animate/inferno.tik  
+	$bomb1.explosion_sound = grenade_explode
 
 end
+
 //-----------------------------------------------------------------------------
 
 roundbasedthread:
@@ -184,55 +181,53 @@ end
 
 objectivethread:
 
+	setcvar "g_gametype" "4"
+	setcvar "g_gametypestring" "Sabotage"
 
+	setcvar "g_obj_alliedtext1" "* Find the bomb" 
+	setcvar "g_obj_alliedtext2" "  and destroy"
+	setcvar "g_obj_alliedtext3" "  the axis Radio"
 
- setcvar "g_gametype" "4"
- setcvar "g_gametypestring" "Sabotage"
+	setcvar "g_obj_axistext1" "* Find the bomb"
+	setcvar "g_obj_axistext2" "  and destroy"
+	setcvar "g_obj_axistext3" "  the allies radio"
+	setcvar "g_obj_axistext4" ""
 
- setcvar "g_obj_alliedtext1" "* Find the bomb" 
- setcvar "g_obj_alliedtext2" "  and destroy"
- setcvar "g_obj_alliedtext3" "  the axis Radio"
+	////////////////////////
+	level waittill prespawn
+	///////////////////////
 
- setcvar "g_obj_axistext1" "* Find the bomb"
- setcvar "g_obj_axistext2" "  and destroy"
- setcvar "g_obj_axistext3" "  the allies radio"
- setcvar "g_obj_axistext4" ""
+	local.master = spawn scriptmaster
+	local.master alias stay sound/dialogue/m3l1/A/dfr_scripted_M3L1_020e.wav soundparms 2.0 4.0 1.0 0.0 0.0 6000 dialog streamed subtitle "Stay down!" maps "m dm obj"
+	local.master alias ole sound/dialogue/m2l2/g/den_m2l2_241a.wav soundparms 1.0 0.0 1.0 0.0 160 500 dialog streamed subtitle "Bomb!" maps "m dm obj" 
+	 
+	thread setupobj1
 
-////////////////////////
-level waittill prespawn
-///////////////////////
+	/////////////////////
+	level waittill spawn
+	////////////////////
 
-local.master = spawn scriptmaster
-local.master alias stay sound/dialogue/m3l1/A/dfr_scripted_M3L1_020e.wav soundparms 2.0 4.0 1.0 0.0 0.0 6000 dialog streamed subtitle "Stay down!" maps "m dm obj"
-local.master alias ole sound/dialogue/m2l2/g/den_m2l2_241a.wav soundparms 1.0 0.0 1.0 0.0 160 500 dialog streamed subtitle "Bomb!" maps "m dm obj" 
- 
-thread setupobj1
-
-/////////////////////
-level waittill spawn
-////////////////////
-
-self.defusing_team = "axis"
-self.planting_team = "allies"
-level.targets_to_destroy = 1 
-level.bomb_damage = 200
-level.bomb_explosion_radius = 1054
+	self.defusing_team = "axis"
+	self.planting_team = "allies"
+	level.targets_to_destroy = 1 
+	level.bomb_damage = 200
+	level.bomb_explosion_radius = 1054
 
 
 
-// set the parameters for this round/wave based match
-level.dmrespawning = 1 // 1 **wave based** or 0 **round based**
-level.dmroundlimit = 7 // round time limit in minutes
+	// set the parameters for this round/wave based match
+	level.dmrespawning = 1 // 1 **wave based** or 0 **round based**
+	level.dmroundlimit = 7 // round time limit in minutes
 
 
-//level waittill roundstart
+	//level waittill roundstart
 
 
-//waitthread setupobj1
+	//waitthread setupobj1
 
-$bomb2 thread global/obj_dm1.scr::bomb_thinker
-thread allies_win_bomb $bomb2
-thread axis_win_timer $bomb2
+	$bomb2 thread global/obj_dm1.scr::bomb_thinker
+	thread allies_win_bomb $bomb2
+	thread axis_win_timer $bomb2
 end
 
 //------------------------------------------------------------------------
