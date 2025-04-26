@@ -555,6 +555,7 @@ state CHARGE_ATTACK_GRENADE
 	entrycommands
 	{
 		viewmodelanim charge
+		exec global/feho/grenade_alert.scr
 	}
 	
 	action
