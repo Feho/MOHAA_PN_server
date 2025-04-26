@@ -24,15 +24,15 @@ setcvar "timelimit" "15"
 // set scoreboard messages
 setcvar "g_obj_alliedtext1" "Southern France"
 setcvar "g_obj_alliedtext2" ""
-setcvar "g_obj_alliedtext3" "Server IP"
-setcvar "g_obj_axistext1" "178.32.28.179:12203"
+setcvar "g_obj_alliedtext3" ""
+setcvar "g_obj_axistext1" ""
 setcvar "g_obj_axistext2" ""
 setcvar "g_obj_axistext3" ""
 
 setcvar "g_scoreboardpic" "mohdm1"
 
 	// load support gun sounds
-	waitthread global/support/support.scr::soundcache
+	// waitthread global/support/support.scr::soundcache
 	
 	// call additional stuff for playing this map round based is needed
 	if(level.roundbased)
