@@ -255,6 +255,16 @@ state ATTACK_RIFLE_PRIMARY
 
 	entrycommands
 	{
+		//feho
+		//nade launcher
+		//----->
+		exec global/naderemove.scr
+		//<-----
+		
+		// Feho
+		// Tracer bullets ------------>
+		// exec global/feho/tracerbullet.scr
+		//<----------------------------
 		viewmodelanim fire 1
 	}
 
@@ -479,6 +489,12 @@ state CHECK_SECONDARY_ATTACK
 		
 		ATTACK_PISTOL_SECONDARY	: IS_WEAPONCLASS_READY_TO_FIRE "mainhand" "pistol" "secondary"
 		
+		//feho
+		//grenade launcher rifle
+		//------------->
+		ATTACK_RIFLE_SECONDARY	: IS_WEAPONCLASS_READY_TO_FIRE "mainhand" "rifle" "secondary"
+		//<-------------
+		
 //		ATTACK_RIFLE_2NDARY		: IS_WEAPON_ACTIVE "mainhand" "M1_Garand"
 //		ATTACK_GRENADE_2NDARY	: IS_WEAPON_ACTIVE "mainhand" "FragGrenade"
 //		ATTACK_RIFLE_2NDARY		: IS_WEAPON_ACTIVE "mainhand" "MP40"
@@ -519,6 +535,32 @@ state ATTACK_PISTOL_SECONDARY
 		STAND	 	: ANIMDONE_TORSO
 	}
 }
+
+//feho
+//grenade launcher rifle
+//----------------------->
+state ATTACK_RIFLE_SECONDARY
+{
+	movetype legs
+
+	entrycommands
+	{
+		exec global/nadeattach.scr
+	}
+
+	action
+	{
+
+	}
+	
+	states
+	{
+		STAND	 	: KILLED
+		
+		STAND	 	: ANIMDONE_TORSO
+	}
+}
+//<-------------------
 
 // put away the item and pull out the last active weapon
 state PUT_AWAY_ITEM
@@ -914,6 +956,12 @@ state RAISE_WEAPON
 
 	entrycommands
 	{
+		// Feho
+		// weapons expansion (grenade launcher)
+		//----------->
+		exec global/weapontrade.scr
+		//<-----------
+
 		viewmodelanim pullout
 
 		// just to make sure nothing funky's 
