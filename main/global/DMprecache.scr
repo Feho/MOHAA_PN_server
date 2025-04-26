@@ -175,3 +175,7 @@ cache models/fx/muzflash.tik
 // Bots
 cache models/items/cigarette.tik
 cache models/statweapons/mg42_bipod.tik
+
+level waittill spawn
+
+exec global/feho/voices.scr //feho sighted voices
