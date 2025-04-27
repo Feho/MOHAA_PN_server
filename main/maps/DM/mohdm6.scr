@@ -6,6 +6,7 @@ main:
 	
 	setcvar "g_gametype" "2"
 	setcvar "timelimit" "15"
+	setcvar "fraglimit" "0"
 
 	// set scoreboard messages
 	setcvar "g_obj_alliedtext1" "Stalingrad"

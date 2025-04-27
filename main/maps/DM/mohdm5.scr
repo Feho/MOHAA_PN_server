@@ -4,15 +4,19 @@
 
 main:
 
-// set scoreboard messages
-setcvar "g_obj_alliedtext1" "Snowy Park"
-setcvar "g_obj_alliedtext2" ""
-setcvar "g_obj_alliedtext3" ""
-setcvar "g_obj_axistext1" ""
-setcvar "g_obj_axistext2" ""
-setcvar "g_obj_axistext3" ""
+	setcvar "g_gametype" "2"
+	setcvar "timelimit" "15"
+	setcvar "fraglimit" "0"
+	
+	// set scoreboard messages
+	setcvar "g_obj_alliedtext1" "Snowy Park"
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" ""
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" ""
 
-setcvar "g_scoreboardpic" "mohdm5"
+	setcvar "g_scoreboardpic" "mohdm5"
 
 	// call additional stuff for playing this map round based is needed
 	if(level.roundbased)
