@@ -76,7 +76,7 @@ tdmtype:
 
 
 	// load support gun sounds
-	waitthread global/support/support.scr::soundcache
+	// waitthread global/support/support.scr::soundcache
 	
 	waitthread tdm_spawns
 	waitthread set_da_stuff_up
@@ -90,7 +90,7 @@ tdmtype:
 	
 	//Sorrids ladders
 	// exec global/ladderspawn.scr ( -2716 2047 14 ) 150 wood 90
-	exec global/ladderspawn.scr ( -4595 -7181 -296 ) 245 wood 66
+	// exec global/ladderspawn.scr ( -4595 -7181 -296 ) 245 wood 66
 	
 	local.fix1 = spawn script_model
 	local.fix1 model static/indycrate.tik
