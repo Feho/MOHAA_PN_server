@@ -4,32 +4,33 @@
 
 main:
 
-// Stop self closing doors
-removeclass rotatingdoor
+	// Stop self closing doors
+	removeclass rotatingdoor
 
-local.clone = spawn func_rotatingdoor model "*2" targetname "door2" wait "-1" origin ( -264 534 456 ) angle ( 180 ) alwaysaway "1"
-local.clone = spawn func_rotatingdoor model "*3" targetname "door3" wait "-1" origin ( -264 426 456 ) angle ( 180 ) alwaysaway "1"
-local.clone = spawn func_rotatingdoor model "*4" targetname "door4" wait "-1" origin ( 712 534 456 ) angle ( 0 ) alwaysaway "1"
-local.clone = spawn func_rotatingdoor model "*5" targetname "door5" wait "-1" origin ( 712 426 456 ) angle ( 0 ) alwaysaway "1"
-$door2 linkdoor $door3
-$door4 linkdoor $door5
-// Stop self closing doors
+	local.clone = spawn func_rotatingdoor model "*2" targetname "door2" wait "-1" origin ( -264 534 456 ) angle ( 180 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*3" targetname "door3" wait "-1" origin ( -264 426 456 ) angle ( 180 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*4" targetname "door4" wait "-1" origin ( 712 534 456 ) angle ( 0 ) alwaysaway "1"
+	local.clone = spawn func_rotatingdoor model "*5" targetname "door5" wait "-1" origin ( 712 426 456 ) angle ( 0 ) alwaysaway "1"
+	$door2 linkdoor $door3
+	$door4 linkdoor $door5
+	// Stop self closing doors
 
-// Random client crash fix
-removeclass PlayerIntermission
+	// Random client crash fix
+	removeclass PlayerIntermission
 
-setcvar "g_gametype" "2"
-setcvar "timelimit" "15"
+	setcvar "g_gametype" "2"
+	setcvar "timelimit" "15"
+	setcvar "fraglimit" "0"
 
-// set scoreboard messages
-setcvar "g_obj_alliedtext1" "Southern France"
-setcvar "g_obj_alliedtext2" ""
-setcvar "g_obj_alliedtext3" ""
-setcvar "g_obj_axistext1" ""
-setcvar "g_obj_axistext2" ""
-setcvar "g_obj_axistext3" ""
+	// set scoreboard messages
+	setcvar "g_obj_alliedtext1" "Southern France"
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" ""
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" ""
 
-setcvar "g_scoreboardpic" "mohdm1"
+	setcvar "g_scoreboardpic" "mohdm1"
 
 	// load support gun sounds
 	// waitthread global/support/support.scr::soundcache
