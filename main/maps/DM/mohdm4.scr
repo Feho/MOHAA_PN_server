@@ -38,6 +38,9 @@ main:
 	exec global/ambient.scr mohdm4
 	
 	thread global/minefield.scr::minefield_setup
+	
+	$world farplane 4000
+	thread fog
 
 	level waittill spawn
 
@@ -49,6 +52,35 @@ main:
 	// start squadmaker
 	// exec global/squadmaker/squadmaker.scr
 
+end
+
+fog:
+
+	// Decrease gradually the fog during 5 minute
+	local.start_dist = 4000
+	local.end_dist = 13000
+	local.duration = 300 // 5 minutes * 60 seconds/minute
+	local.start_time = level.time
+
+	local.current_dist = local.start_dist
+	
+	while (level.time < (local.start_time + local.duration))
+	{
+		local.elapsed_time = level.time - local.start_time
+		// Ensure elapsed_time doesn't exceed duration due to potential timing issues
+		if (local.elapsed_time > local.duration)
+			local.elapsed_time = local.duration
+
+		local.fraction = local.elapsed_time / local.duration
+		local.current_dist = local.start_dist + ((local.end_dist - local.start_dist) * local.fraction)
+		
+		$world farplane local.current_dist
+
+		wait 1 // Update every frame for smoothness
+	}
+	
+	// Ensure the final value is set precisely at the end
+	$world farplane local.end_dist
 end
 
 //-----------------------------------------------------------------------------
