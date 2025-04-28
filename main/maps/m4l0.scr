@@ -33,14 +33,14 @@ tdmtype:
 	
 	setcvar "g_obj_axistext1" ""
 	setcvar "g_obj_axistext2" ""
-	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+	setcvar "g_obj_axistext3" "" 
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing4a.tga" 
 
 	setcvar "g_gametype" "2"
-setcvar "g_gametypestring" "Team-Match"
+	setcvar "g_gametypestring" "Team-Match"
 	// load support gun sounds
-	waitthread global/support/support.scr::soundcache
+	// waitthread global/support/support.scr::soundcache
 	
 	thread global/bomber.scr::main
 
@@ -49,7 +49,7 @@ setcvar "g_gametypestring" "Team-Match"
 
 	level waittill prespawn
 
-	exec global/ladderspawn.scr ( -4957 -2669 70 ) 220 wood 0
+	// exec global/ladderspawn.scr ( -4957 -2669 70 ) 220 wood 0
 	
 	$world farplane color "0.25 0.15 0.1"
 	$world farplane 24000 //7200
@@ -70,15 +70,15 @@ setcvar "g_gametypestring" "Team-Match"
 	// exec server_planes/trigger.scr ( 2103 -3451 -72 ) "axis"
 
 	// Tanks & Jeeps Base Assault
-	if (level.already_started != 1)
-	{
-		level.already_started = 1
+	// if (level.already_started != 1)
+	// {
+	// 	level.already_started = 1
 
-		exec global/AA/global_detect.scr
-	}
+	// 	exec global/AA/global_detect.scr
+	// }
 	
 	// Jeep côté Alliés
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3174.00 -2926.00 150 ) ( 0 -76 0 ) level.jeep_mask
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3174.00 -2926.00 150 ) ( 0 -76 0 ) level.jeep_mask
 	// Jeep côté Axe
 	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -2047.00 1354.00 -23.88 ) ( 0 0 0 ) level.jeep_mask
 	
@@ -118,7 +118,7 @@ ffatype:
 	
 	level waittill prespawn
 
-	exec global/ladderspawn.scr ( -4957 -2669 70 ) 220 wood 0
+	// exec global/ladderspawn.scr ( -4957 -2669 70 ) 220 wood 0
 	
 	$world farplane color "0.25 0.15 0.1"
 	$world farplane 24000 //7200

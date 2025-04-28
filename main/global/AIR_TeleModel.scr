@@ -1,0 +1,60 @@
+/*
+======================================================
+*** AIRborne; Global TeleportModel Script for MoH:AA
+======================================================
+by Sor
+Version: v1.0
+-----------------------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Rindog.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+
+telemodel local.origin local.model local.scale local.targetname:
+
+	if (local.origin == NIL)
+	{
+		println "[AIR TeleModel::Spawn]: Invalid origin!"
+		end
+	}
+	if (local.model == NIL || local.model == "")
+	{
+		println "[AIR TeleModel::Spawn]: Invalid model!"
+		end
+	}
+	if (local.targetname == NIL || local.targetname == "")
+	{
+		local.targetname = ""
+	}
+
+	if (local.scale == NIL)
+		local.scale = 1
+
+	local.portlight = spawn script_model "targetname" local.targetname
+	local.portlight model local.model
+	local.portlight.origin = local.origin
+	local.portlight.scale = local.scale
+
+end local.portlight

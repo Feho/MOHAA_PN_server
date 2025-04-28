@@ -1,23 +1,24 @@
 //
-// M4l1
+// M1L2B - Sabotage the Motorpool
 //
 
 
-main: 
+main:
 
-	setcvar "g_gametype" "2"
 	setcvar "timelimit" "15"
 	setcvar "push" "1"
 	
-	if((getcvar("g_gametype") == "1")) 
+	setcvar "g_gametype" "2"
+	
+	if ((getcvar("g_gametype") == "1")) 
 	{
-	waitthread ffatype
-	end
+		waitthread ffatype
+		end
 	}
 	else
 	{
-	waitthread tdmtype  
-	end
+		waitthread tdmtype  
+		end
 	}
 end
 
@@ -25,76 +26,55 @@ end
 
 tdmtype:
 
-	setcvar "g_obj_alliedtext1"   "Map Name: M4L1" 
-	setcvar "g_obj_alliedtext2"   "Rendezvous with"
-	setcvar "g_obj_alliedtext3"  "the Resistance"
+	setcvar "g_obj_alliedtext1" "Map Name: M1L2B" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" "Sabotage the Motorpool"
 	
 	setcvar "g_obj_axistext1" ""
 	setcvar "g_obj_axistext2" ""
-	setcvar "g_obj_axistext3" "178.32.28.179:12203" 
+	setcvar "g_obj_axistext3" "" 
 
-	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing4a.tga" 
-
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
 
 	setcvar "g_gametype" "2"
 	setcvar "g_gametypestring" "Team-Match"
-	waitthread tdm_spawns
 	
 	// load support gun sounds
-	waitthread global/support/support.scr::soundcache
+	// waitthread global/support/support.scr::soundcache
 	
-	fadeout .1 0 0 0 1 // black screen on start
-	
-	$world farplane 5000
+	waitthread tdm_spawns
+	waitthread set_da_stuff_up
 
 	level waittill prespawn
 
 	exec global/door_locked.scr
-	exec global/ambient.scr m4l2
+	exec global/ambient.scr m1l2b
 	exec global/DMprecache.scr
 	
-	// exec server_planes/trigger.scr ( -2569 -4844 -345 ) "allies"
-	// exec server_planes/trigger.scr ( 2778 4445 623 ) "axis"
-
-	local.mur = spawn script_object
-	local.mur.origin = ( 2401 -491 -105)
-	local.mur.angle = -113
-	local.mur setsize ( -1 -518 -96) ( 1 80 125)
-	local.mur solid
+	thread global/barrel.scr::explosive_barrel
 	
-	level waittill spawn
-
+	// Portable 30 cals
+	// exec models/create_guns.scr ( 960 670 -252.88 )
+	
 	thread music
-	thread music_end
-	thread fadescreen // looks like Omaha start
 	
+	local.mur = spawn script_object
+	local.mur.origin = ( 2408 -2489 -125)
+	local.mur.angle = 180
+	local.mur setsize ( -1 -10 -96) ( 1 200 96)
+	local.mur solid
+	level waittill spawn
+		
 	thread setup
 	thread hudstuff
 	thread triggers
 	thread messages
 	thread eventeams
 	thread spawnswitch
-	
 
-	
-	// exec global/flakfire.scr ( 1289.99 -2290.77 58 ) ( 0 -36 0 ) 5 1 50
-	
-	// Tanks & Jeeps Base Assault
-	if (level.already_started != 1)
-	{
-		level.already_started = 1
+	// level.squadmaker_config		= "afrika"
 
-		exec global/AA/global_detect.scr
-	}
-	
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 3181.00 4633.00 585 ) ( 0 -90 0 ) level.jeep_mask
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( 3181.00 4890.00 585 ) ( 0 -90 0 ) level.jeep_mask
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3146.00 -5319.00 -441.88 ) ( 0 29 0 ) level.jeep_mask
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -2908.00 -5406.00 -420.00 ) ( 0 24 0 ) level.jeep_mask
-	
-	exec global/vehicles/playervehicle.scr vehicles/opeltruck.tik vehicles/opeltruck_d.tik ( 1351.00 -1330.00 -11.63 ) ( 0 -52 0 ) 2500
-	
-	thread Map_Guard
+
 	level.clockside = kills
 
 end
@@ -104,29 +84,28 @@ end
 
 ffatype:
 
-	setcvar "g_obj_alliedtext1"   "Map Name: M4L1" 
-	setcvar "g_obj_alliedtext2"   "Rendezvous with"
-	setcvar "g_obj_alliedtext3"  "the Resistance"
+	setcvar "g_obj_alliedtext1" "Map Name: M1L2B" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3" "Sabotage the Motorpool"
 	
 	setcvar "g_obj_axistext1" ""
 	setcvar "g_obj_axistext2" ""
 	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
 
-	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing4a.tga" 
-
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
 
 	setcvar "g_gametype" "1"
 	setcvar "g_gametypestring" "Free-For-All"
 	waitthread ffa_spawns
-	
+	waitthread set_da_stuff_up
+
 	
 	level waittill prespawn
 
 	exec global/door_locked.scr
-	exec global/ambient.scr m4l2
+	exec global/ambient.scr m1l2b
 	exec global/DMprecache.scr
 	
-
 	level waittill spawn
 
 	level.clockside = kills
@@ -135,473 +114,507 @@ end
 
 
 
+
 tdm_spawns:
 
+	local.allies1 = spawn info_player_allied targetname alh
+	local.allies1.angle = -22
+	local.allies1.origin = ( -4016 4046 -173 )
+
+	local.allies2 = spawn info_player_allied targetname alh
+	local.allies2.angle = -22
+	local.allies2.origin = ( -4055 3950 -173 )
+
+	local.allies3 = spawn info_player_allied targetname alh
+	local.allies3.angle = -152
+	local.allies3.origin = ( -3215 3739 -173 )
+
+	local.allies4 = spawn info_player_allied targetname al2
+	local.allies4.origin = ( -2223 3258 -173 )
+	local.allies4.angle = 90
+
+	local.allies5 = spawn info_player_allied targetname al2
+	local.allies5.origin = ( -2211 4021 -173 )
+	local.allies5.angle = -114
+
+	local.allies6 = spawn info_player_allied targetname al3
+	local.allies6.origin = ( -1346 2534 -173 )
+	local.allies6.angle = 174
+
+	local.allies7 = spawn info_player_allied targetname al3
+	local.allies7.origin = ( -1409 2858 -173 )
+	local.allies7.angle = 104
+
+	local.allies8 = spawn info_player_allied targetname al4
+	local.allies8.origin = ( 127 2690 -173 )
+	local.allies8.angle = -101
+
+	local.allies9 = spawn info_player_allied targetname al4
+	local.allies9.origin = ( 414 1748 -173 )
+	local.allies9.angle = 97
+
+	local.allies10 = spawn info_player_allied targetname al5
+	local.allies10.origin = ( 2420 2186 -174 )
+	local.allies10.angle = 180
+
+	local.allies11 = spawn info_player_allied targetname al5
+	local.allies11.origin = ( 1047 1619 -173 )
+	local.allies11.angle = 70
+
+	local.allies12 = spawn info_player_allied targetname al6
+	local.allies12.origin = ( 1677 151 -173 )
+	local.allies12.angle = 150
+
+	local.allies13 = spawn info_player_allied targetname al6
+	local.allies13.origin = ( 1403 171 -173 )
+	local.allies13.angle = 170
+
+	local.allies14 = spawn info_player_allied targetname al7
+	local.allies14.origin = ( 898 -149 -173 )
+	local.allies14.angle = 0
+
+	local.allies15 = spawn info_player_allied targetname al7
+	local.allies15.origin = ( 2002 -281 -173 )
+	local.allies15.angle = 180
+
+	local.allies16 = spawn info_player_allied targetname al8
+	local.allies16.origin = ( 1946 -2803 -140 )
+	local.allies16.angle = -180
+
+	local.allies17 = spawn info_player_allied targetname al8
+	local.allies17.origin = ( 1828 -2817 -140 )
+	local.allies17.angle = -180
+
+	local.allies18 = spawn info_player_allied targetname al9
+	local.allies18.origin = ( 1444 -3224 -140 )
+	local.allies18.angle = -100
+
+	local.allies19 = spawn info_player_allied targetname al9
+	local.allies19.origin = ( 1167 -3213 -140 )
+	local.allies19.angle = -30
+
+	local.allies19 = spawn info_player_allied targetname al9
+	local.allies19.origin = ( 1430 -2623 -123 )
+	local.allies19.angle = -10
+
+	///////////////////////////////////////////////////////////axis
+
+	local.axis1 = spawn info_player_axis targetname axh
+	local.axis1.angle = -179
+	local.axis1.origin = ( 3123 -4126 -245 )
+
+	local.axis2 = spawn info_player_axis targetname axh
+	local.axis2.origin = ( 2225 -4494 -207 )
+	local.axis2.angle = 90
+
+	local.axis3 = spawn info_player_axis targetname axh
+	local.axis3.origin = ( 2726 -4394 -207 )
+	local.axis3.angle = 130
+
+	local.axis4 = spawn info_player_axis targetname ax2
+	local.axis4.origin = ( 1834 -3651 -143 )
+	local.axis4.angle = 140
+
+	local.axis5 = spawn info_player_axis targetname ax2
+	local.axis5.origin = ( 1734 -3348 -43 )
+	local.axis5.angle = -150
+
+	local.axis6 = spawn info_player_axis targetname ax3
+	local.axis6.origin = ( 1262 -3071 -143 )
+	local.axis6.angle = 90
+
+	local.axis7 = spawn info_player_axis targetname ax3
+	local.axis7.origin = ( 1768 -3029 -143 )
+	local.axis7.angle = 90
+
+	local.axis8 = spawn info_player_axis targetname ax4
+	local.axis8.origin = ( 2169 -192 -173 )
+	local.axis8.angle = -98
+
+	local.axis9 = spawn info_player_axis targetname ax4
+	local.axis9.origin = ( 792 -222 -207 )
+	local.axis9.angle = -90
+
+	local.axis10 = spawn info_player_axis targetname ax5
+	local.axis10.origin = ( 921 -30 -173 )
+	local.axis10.angle = 90
+
+	local.axis11 = spawn info_player_axis targetname ax5
+	local.axis11.origin = ( 887 815 -173 )
+	local.axis11.angle = -40
+
+	local.axis12 = spawn info_player_axis targetname ax6
+	local.axis12.origin = ( 1372 1384 -173 )
+	local.axis12.angle = -6
+
+	local.axis13 = spawn info_player_axis targetname ax6
+	local.axis13.origin = ( 1361 1265 -173 )
+	local.axis13.angle = -6
+
+	local.axis14 = spawn info_player_axis targetname ax7
+	local.axis14.origin = ( -91 1571 -173 )
+	local.axis14.angle = 88
+
+	local.axis15 = spawn info_player_axis targetname ax7
+	local.axis15.origin = ( -246 2921 -173 )
+	local.axis15.angle = -90
+
+	local.axis16 = spawn info_player_axis targetname ax8
+	local.axis16.origin = ( -1075 2588 -173 )
+	local.axis16.angle = 125
+
+	local.axis17 = spawn info_player_axis targetname ax8
+	local.axis17.origin = ( -1068 2884 -173 )
+	local.axis17.angle = 150
+
+	local.axis18 = spawn info_player_axis targetname ax9
+	local.axis18.origin = ( -2113 3849 -174 )
+	local.axis18.angle = -95
+
+	local.axis19 = spawn info_player_axis targetname ax9
+	local.axis19.origin = ( -2094 3404 -173 )
+	local.axis19.angle = 80
+
+end
+
+
+ffa_spawns:
+
+	spawn info_player_deathmatch "origin" "-3136.82 4743.65 -255.88" "angle" "-65"
+	spawn info_player_deathmatch "origin" "-4272.87 3655.13 -255.88" "angle" "20"
+	spawn info_player_deathmatch "origin" "-3652.74 2465.17 -255.88" "angle" "43"
+	spawn info_player_deathmatch "origin" "-3495.53 2311.75 -255.88" "angle" "-4"
+	spawn info_player_deathmatch "origin" "-1108.63 3865.90 -255.88" "angle" "-154"
+
+	spawn info_player_deathmatch "origin" "-979.43 3129.17 -255.88" "angle" "-91"
+	spawn info_player_deathmatch "origin" "112.16 2916.67 -255.88" "angle" "-131"
+	spawn info_player_deathmatch "origin" "1053.43 1553.56 -255.88" "angle" "80"
+	spawn info_player_deathmatch "origin" "1370.53 1408.87 -255.88" "angle" "-29"
+	spawn info_player_deathmatch "origin" "1174.53 -24.10 -255.88" "angle" "32"
+
+	spawn info_player_deathmatch "origin" "1673.07 -95.13 -255.88" "angle" "178"
+	spawn info_player_deathmatch "origin" "616.45 -293.81 -255.88" "angle" "-46"
+	spawn info_player_deathmatch "origin" "294.79 -1917.40 -255.88" "angle" "47"
+	spawn info_player_deathmatch "origin" "2224.87 1896.34 -255.88" "angle" "153"
+	spawn info_player_deathmatch "origin" "-1905.67 1871.13 -255.88" "angle" "27"
+
+end
+
+
+
+set_da_stuff_up:
+	
+	// Some sounds
+	local.master = spawn scriptmaster
+	local.master aliascache opeltruck_snd_idle sound/vehicle/veh_truck_idle.wav soundparms 1.0 0.0 1.0 0.0 300 7000 auto loaded maps "m dm obj"
+	local.master aliascache tank_snd_move sound/vehicle/veh_tank_turret1.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps "m dm obj"
+	local.master aliascache m1l2b_radio1 sound/mechanics/shortwave2.wav soundparms 0.7 0.0 1.0 0.0 100 900 auto streamed maps "m dm moh obj"
+	local.master aliascache m1l2b_radio2 sound/mechanics/static1.wav soundparms 0.5 0.0 1.0 0.0 70 700 auto streamed maps "m dm moh obj train"
+	
 	// Remove AI
 	removeclass actor
 
 	// Remove ammo
 	removeclass AmmoEntity
-
-	//level.springfield = 1								
-	//level.bar = 1								
-	//level.bazooka = 1
-	//level.panzer = 1 
-	//level.mp44 = 1		
-	//level.shotgun = 1
-	//level.rifle = 1
 	
 	
-
-	local.allies1 = spawn info_player_allied targetname alh
-	local.allies1.angle = 38
-	local.allies1.origin = ( -3874 -6052 -540 ) //ok
-
-	local.allies2 = spawn info_player_allied targetname alh
-	local.allies2.angle = 19
-	local.allies2.origin = ( -3978 -5659 -460 ) //ok
-
-	local.allies3 = spawn info_player_allied targetname alh
-	local.allies3.angle = 28
-	local.allies3.origin = ( -3616 -5752 -467 ) //ok
-
-	local.allies4 = spawn info_player_allied targetname al2
-	local.allies4.origin = ( -900 -5916 -180 )
-	local.allies4.angle = 56 // ok 
-
-	local.allies5 = spawn info_player_allied targetname al2
-	local.allies5.origin = ( -1342 -3659 -140 )
-	local.allies5.angle = -21 //ok
-
-	local.allies6 = spawn info_player_allied targetname al3
-	local.allies6.origin = ( 1552 -5638 -60 )
-	local.allies6.angle = -14 //ok
-
-	local.allies7 = spawn info_player_allied targetname al3
-	local.allies7.origin = ( -52 -1323 20 )
-	local.allies7.angle = -49 //ok
-
-	local.allies8 = spawn info_player_allied targetname al4
-	local.allies8.origin = ( 2428 -3557 20 )
-	local.allies8.angle = 0 //ok
-
-	local.allies9 = spawn info_player_allied targetname al4
-	local.allies9.origin = ( 2166 -3791 220 )
-	local.allies9.angle = 0 //ok
-
-	local.allies10 = spawn info_player_allied targetname al5
-	local.allies10.origin = ( 5105 -2313 30 )
-	local.allies10.angle = 118 //ok 
-
-	local.allies11 = spawn info_player_allied targetname al5
-	local.allies11.origin = ( 4289 -3560 150 )
-	local.allies11.angle = 68 //ok
-
-	local.allies12 = spawn info_player_allied targetname al6
-	local.allies12.origin = ( 4713 -217 -30 )
-	local.allies12.angle = 176 //ok
-
-	local.allies13 = spawn info_player_allied targetname al6
-	local.allies13.origin = ( 3483 -610 -110 )
-	local.allies13.angle = 152 //ok
-
-	local.allies14 = spawn info_player_allied targetname al7
-	local.allies14.origin = ( 639 1209 -30 )
-	local.allies14.angle = 48 //ok
-
-	local.allies15 = spawn info_player_allied targetname al7
-	local.allies15.origin = ( 1680 1268 -120 )
-	local.allies15.angle = 88 //ok 
-
-	local.allies16 = spawn info_player_allied targetname al8
-	local.allies16.origin = ( 1596 3472 170)
-	local.allies16.angle = 0 //ok
-
-	local.allies17 = spawn info_player_allied targetname al8
-	local.allies17.origin = ( 1054 3010 130 )
-	local.allies17.angle = 0 //ok 
-
-	local.allies18 = spawn info_player_allied targetname al9
-	local.allies18.origin = ( 3317 2796 530 )
-	local.allies18.angle = 90 //ok 
-
-	local.allies19 = spawn info_player_allied targetname al9
-	local.allies19.origin = ( 2771 5037 680 )
-	local.allies19.angle = -50 //ok 
-
-	local.allies20 = spawn info_player_allied targetname al9
-	local.allies20.origin = ( 2346 4410 630 )
-	local.allies20.angle = -17 //ok 
-
-	///////////////////////////////////////////////////////////axis
-
-	local.axis1 = spawn info_player_axis targetname axh
-	local.axis1.angle = -124
-	local.axis1.origin = ( 3526 5049 610 ) //ok
-
-	local.axis2 = spawn info_player_axis targetname axh
-	local.axis2.origin = ( 4082 5455 600 )
-	local.axis2.angle = -90 //ok
-
-	local.axis3 = spawn info_player_axis targetname axh
-	local.axis3.origin = ( 4292 5455 600 )
-	local.axis3.angle = -90 //ok 
-
-	local.axis4 = spawn info_player_axis targetname ax2
-	local.axis4.origin = ( 1586 3516 170 )
-	local.axis4.angle = -22 //ok 
-
-	local.axis5 = spawn info_player_axis targetname ax2
-	local.axis5.origin = ( 1063 3077 140 )
-	local.axis5.angle = -51 //ok 
-
-	local.axis6 = spawn info_player_axis targetname ax3
-	local.axis6.origin = ( 1663 1286 -130 )
-	local.axis6.angle = -74 //ok 
-
-	local.axis7 = spawn info_player_axis targetname ax3
-	local.axis7.origin = ( 706 1063 -84 )
-	local.axis7.angle = -30 //ok 
-
-	local.axis8 = spawn info_player_axis targetname ax4
-	local.axis8.origin = ( 2364 -375 -169 )
-	local.axis8.angle = -4 //ok 
-
-	local.axis9 = spawn info_player_axis targetname ax4
-	local.axis9.origin = ( 2798 -77 -160 )
-	local.axis9.angle = -16 //ok 
-
-	local.axis10 = spawn info_player_axis targetname ax5
-	local.axis10.origin = ( 4840 -691 -84 )
-	local.axis10.angle = -113 //ok 
-
-	local.axis11 = spawn info_player_axis targetname ax5
-	local.axis11.origin = ( 4590 -1463 -90 )
-	local.axis11.angle = -79 //ok
-
-	local.axis12 = spawn info_player_axis targetname ax6
-	local.axis12.origin = ( 4387 -3347 75 )
-	local.axis12.angle = 124 //ok
-
-	local.axis13 = spawn info_player_axis targetname ax6
-	local.axis13.origin = ( 4030 -2562 80 )
-	local.axis13.angle = -158 //ok
-
-	local.axis14 = spawn info_player_axis targetname ax7
-	local.axis14.origin = ( 2776 -3580 214 )
-	local.axis14.angle = 180 //ok
-
-	local.axis15 = spawn info_player_axis targetname ax7
-	local.axis15.origin = ( 163 -1673 6 )
-	local.axis15.angle = -49 //ok
-
-	local.axis16 = spawn info_player_axis targetname ax8
-	local.axis16.origin = ( -803 -3377 -140 )
-	local.axis16.angle = -73 //ok
-
-	local.axis17 = spawn info_player_axis targetname ax8
-	local.axis17.origin = ( 1739 -5571 -66 )
-	local.axis17.angle = 171 //ok
-
-	local.axis18 = spawn info_player_axis targetname ax9
-	local.axis18.origin = ( -847 -5979 -179 )
-	local.axis18.angle = 90 //ok
-
-	local.axis19 = spawn info_player_axis targetname ax9
-	local.axis19.origin = ( -1178 -5354 -177 )
-	local.axis19.angle = 144 //ok	
+	// Make use of some things lying around
+	$truckclip notsolid
+	$tankclip notsolid
+	$truck01 setcollisionentity $opelmap
+	$truck01 thread selfstuff
+	$tank01 thread setup_tank empty_tiger
+	$tank02 thread setup_tank empty_tiger
+	$tank03 thread setup_tank empty_panzer_desert
+	$tank04 thread setup_tank empty_turretless_tiger
 	
-	local.axis20 = spawn info_player_axis targetname ax9
-	local.axis20.origin = ( -1553 -4664 -200 )
-	local.axis20.angle = -152 //ok
+	// relocate the Truck for cover
+	$truck01.origin = ( -1056 2136 -224 ) 
+	$truck01.angle = 40
+
+	//relocate the Jeep for cover
+	$jeep.origin = ( -2540.83 2297.01 -255.88 ) 
+	$jeep.angle = 40
+
+	$tank02 thread drive_pathtank $tank02_path 152 $tank02_drive_trigger	
 	
-	$altar solid
-	$altar_button solid
-	$altar_think_trigger remove
-	$altar_buttonpulse remove
-	//$altar_button playsound temp
-	$altar_button show
-	$altar_button time 1
-	$altar_button moveWest 2
-	$altar_button waitmove
-	$altar playsound m4l1_altar_slide
-	$altar thread slide $altar
-	$altar_button thread slide $altar_button
+	$radio1 loopsound m1l2b_radio1				
+	$radio2 loopsound m1l2b_radio2
+
+	// Unlock some doors
+	$door01 unlock
+	$door02 unlock
+
+	// Remove some things not needed
+	$cutwire01 remove						
+	$cutwire02 remove
+	$cutwire03 remove
+	$spotlight remove
+	$exploder remove
+	$bomb01 remove
+	$bomb02 remove
+	$bomb03 remove
+	$bomb04 remove
+	$bomb05 remove
+	//$munitionscache remove
+	$explosion05_damage remove
+	$exploder remove
+
 
 end
 
 
-ffa_spawns: 
-
-	removeclass actor
-
-	//level.springfield = 1								
-	//level.bar = 1								
-	//level.bazooka = 1
-	//level.panzer = 1 
-	//level.mp44 = 1		
-	//level.shotgun = 1
-	//level.rifle = 1
-
-	spawn info_player_deathmatch "origin" "-5616.88 -2167.78 68.13" "angle" "6"
-	spawn info_player_deathmatch "origin" "-3353.43 -1609.72 219.66" "angle" "-28"
-	spawn info_player_deathmatch "origin" "-84.92 -2593.50 482.35" "angle" "-91"
-	spawn info_player_deathmatch "origin" "-3448.01 -6301.84 -22.90" "angle" "83"
-	spawn info_player_deathmatch "origin" "1509.62 -4944.87 -95.39" "angle" "85"
-
-	spawn info_player_deathmatch "origin" "1129.72 -904.86 337.46" "angle" "72"
-	spawn info_player_deathmatch "origin" "4724.54 2649.63 472.59" "angle" "-133"
-	spawn info_player_deathmatch "origin" "5876.39 564.04 692.25" "angle" "92"
-	spawn info_player_deathmatch "origin" "4703.13 1783.13 536.13" "angle" "5"
-	spawn info_player_deathmatch "origin" "709.42 1970.59 390.49" "angle" "-151"
-
-	spawn info_player_deathmatch "origin" "382.02 5031.92 68.13" "angle" "-57"
-	spawn info_player_deathmatch "origin" "-632.02 6897.30 112.85" "angle" "-174"
-	spawn info_player_deathmatch "origin" "-3267.78 6579.50 -41.95" "angle" "-99"
-	spawn info_player_deathmatch "origin" "-4865.88 6042.86 -135.25" "angle" "-44"
-	spawn info_player_deathmatch "origin" "-5200.03 1874.27 68.13" "angle" "29"
-
-	$altar solid
-	$altar_button solid
-	$altar_think_trigger remove
-	$altar_buttonpulse remove
-	//$altar_button playsound temp
-	$altar_button show
-	$altar_button time 1
-	$altar_button moveWest 2
-	$altar_button waitmove
-	$altar playsound m4l1_altar_slide
-	$altar thread slide $altar
-	$altar_button thread slide $altar_button
+// Vehicle thread
+selfstuff:
+	
+	self loopsound opeltruck_snd_idle
+	self anim idlenolights
+	self notsolid
+	self nodamage
 end
 
 
-slide local.object:
-	local.object time 4
-	local.object moveWest 88
-	local.object waitmove
+
+
+
+setup_tank local.tanktype:
+	if (self.target)
+		self.collisionent = self.target
+
+	switch (local.tanktype)
+	{
+	case empty_panzer_desert:
+		self.type = "empty_panzer_desert"
+		break
+	case empty_tiger:
+		self.type = "empty_tiger"
+		break
+	case empty_turretless_tiger:
+		self.type = "empty_turretless_tiger"
+		spawn models/vehicles/tigercannon.tik "targetname" "t4gun" "origin" "1580.61 -1344.80 -70" "angle" "71"	
+		$t4gun scale 1.1
+		$tank04.gun = $tank04 QueryTurretSlotEntity 0
+		$tank04.gun hide
+		break
+	}
+	
+	self nodamage
 end
 
+// Tanks drive bit
+drive_pathtank local.path local.speed local.trigger:
+	
+	local.trigger waittill trigger
+	wait 45 // timed event :P
+	self drive local.path local.speed 5 200 256
+	self waittill drive
+	self stop
+	$tank02.gun = $tank02 QueryTurretSlotEntity 0
+	$tank02.gun setaimtarget $jeep
+end
 
 
 // End some labels
-plane_sequence:
+tank01_bombed:
+end
+tank02_bombed:
+end
+tank03_bombed:
+end
+tank04_bombed:
+end
+crateguy3_thread:
+end
+jeepsequence:
+end
+wrenchguy2_thread:
+end
+wrenchguy1_thread:
+end
+wrenchguy3_thread:
+end
+crateguy2_thread:
+end
+crateguy1_thread:
+end
+room1:
+end
+chase:
+end
+opentruck01_disabled:
+end
+opentruck02_disabled:
+end
+munitionscache_bombed:
+end
+opentruck03_disabled:
+end
+incomplete:
+end
+activate_smoker_sequence:
+end
+gatecrash:
 end
 endlevel:
 end
-friendly_think1:
+grillosay:
 end
-truck01_drive:
-end
-lower_friendlydistance:
-end
-save2:
-end
-altar_think:
-end
+
+
+
+// Cobs was ere :P
 
 
 setup:
-	$axh enablespawn
-	$alh enablespawn
+$axh enablespawn
+$alh enablespawn
 
-	$ax9 disablespawn
-	$al2 disablespawn
-	$ax8 disablespawn
-	$al3 disablespawn
-	$ax7 disablespawn
-	$al4 disablespawn
-	$ax6 disablespawn
-	$al5 disablespawn
-	$ax5 disablespawn
-	$al6 disablespawn
-	$ax4 disablespawn
-	$al7 disablespawn
-	$ax3 disablespawn
-	$al8 disablespawn
-	$ax2 disablespawn
-	$al9 disablespawn
-	level.alliesscore = 0
-	level.axisscore = 0
-	level.sflag = 1
-	level.sflagx = 1
+$ax9 disablespawn
+$al2 disablespawn
+$ax8 disablespawn
+$al3 disablespawn
+$ax7 disablespawn
+$al4 disablespawn
+$ax6 disablespawn
+$al5 disablespawn
+$ax5 disablespawn
+$al6 disablespawn
+$ax4 disablespawn
+$al7 disablespawn
+$ax3 disablespawn
+$al8 disablespawn
+$ax2 disablespawn
+$al9 disablespawn
+level.alliesscore = 0
+level.axisscore = 0
+level.sflag = 1
+level.sflagx = 1
 end
 
 triggers:
 
-// Not needed ?
-// local.sptrg = spawn trigger_multipleall
-// local.sptrg.origin = ( -4023 2216 -165 )
-// local.sptrg setsize ( -200 -100 -100 ) ( 200 100 100 )
-// local.sptrg targetname sptrgstart
-
-//not needed ?
-// local.sptrg = spawn trigger_multipleall
-// local.sptrg.origin = ( -3887 2945 -173 )
-// local.sptrg setsize ( -704 -2055 -100 ) ( 704 2055 500 )
-// local.sptrg targetname sptrg1
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( -4023 2216 -165 )
+local.sptrg setsize ( -200 -100 -100 ) ( 200 100 100 )
+local.sptrg targetname sptrgstart
 
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -1186 -5068 -173 )
-local.sptrg setsize ( -20 -600 -100 ) ( 20 600 500 )
+local.sptrg.origin = ( -3887 2945 -173 )
+local.sptrg setsize ( -704 -2055 -100 ) ( 704 2055 500 )
+local.sptrg targetname sptrg1
+
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( -2520 2945 -173 )
+local.sptrg setsize ( -583 -2055 -100 ) ( 583 2055 500 )
 local.sptrg targetname sptrg2
 
-
-local.sptrg = spawn trigger_multipleall 
-local.sptrg.origin = ( 603 -5534 -40 )
-local.sptrg setsize ( -20 -20 -100 ) ( 20 2200 500 )
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( -1478 2945 -173 )
+local.sptrg setsize ( -460 -2055 -100 ) ( 460 2055 500 )
 local.sptrg targetname sptrg3
 
-
-local.sptrg = spawn trigger_multipleall 
-local.sptrg.origin = ( 2539 -2042 220 )
-local.sptrg setsize ( -20 -4200 -300 ) ( 20 40 500 )
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 1 2945 -173 )
+local.sptrg setsize ( -1019 -2055 -100 ) ( 1019 2055 500 )
 local.sptrg targetname sptrg4
 
-
-local.sptrg = spawn trigger_multipleall 
-local.sptrg.origin = ( 4549 -2945 0 )
-local.sptrg setsize ( -20 -750 -100 ) ( 20 500 500 )
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 2033 2945 -173 )
+local.sptrg setsize ( -1013 -2055 -100 ) ( 1013 2055 500 )
 local.sptrg targetname sptrg5
 
-
-local.sptrg = spawn trigger_multipleall 
-local.sptrg.origin = ( 4190 -365 -160 )
-local.sptrg setsize ( -20 -520 -100 ) ( 20 450 500 )
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 1158 409 -173 )
+local.sptrg setsize ( -1308 -481 -100 ) ( 1308 481 500 )
 local.sptrg targetname sptrg6
 
-
-local.sptrg = spawn trigger_multipleall 
-local.sptrg.origin = ( 1892 669 -160 )
-local.sptrg setsize ( -950 -20 -100 ) ( 40 20 500 )
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 998 -1423 -173 )
+local.sptrg setsize ( -1128 -1351 -100 ) ( 1128 1351 500 )
 local.sptrg targetname sptrg7
 
-
-local.sptrg = spawn trigger_multipleall 
-local.sptrg.origin = ( 1040 2424 50 )
-local.sptrg setsize ( -50 -20 -100 ) ( 800 20 500 )
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 998 -2978 -173 )
+local.sptrg setsize ( -1128 -205 -100 ) ( 1128 205 500 )
 local.sptrg targetname sptrg8
 
-
-local.sptrg = spawn trigger_multipleall 
-local.sptrg.origin = ( 2772 2768 340 )
-local.sptrg setsize ( -20 -50 -100 ) ( 20 2450 500 )
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 998 -3977 -173 )
+local.sptrg setsize ( -1128 -794 -100 ) ( 1128 794 500 )
 local.sptrg targetname sptrg9
 
-
-// Allies score
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 4272 4090 740 )
-local.sptrg setsize ( -150 -2 -250 ) ( 0 2 0 )
+local.sptrg.origin = ( 2196 -3489 -113 )
+local.sptrg setsize ( -40 -80 -40 ) ( 40 80 40 )
 //local.sptrg.origin = ( 2848 -3977 -173 )
 //local.sptrg setsize ( -722 -794 -100 ) ( 722 794 500 )
 local.sptrg targetname sptrg10
 
-level.avatarallies = spawn func_beam
-level.avatarallies.origin = ( -1362 -5540 -40 )
-level.avatarallies.angles = ( 0 0 0 )
-level.avatarallies endpoint ( -1352 -4533 -40 )
-level.avatarallies minoffset 1.0
-level.avatarallies maxoffset 1.0
-level.avatarallies color ( 1 0 0 )
-level.avatarallies scale 25
-level.avatarallies tileshader ("textures/hud/allies.tga")
-level.avatarallies numsegments 1
-level.avatarallies activate
-
-// Trigger to prevent axis to score with planes and jeeps
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -1186 -5068 -173 )
-local.sptrg setsize ( -500 -600 -100 ) ( 20 600 4000 )
-local.sptrg setthread axis_detected
-
 ////////////////////////////////////////////
 
-// Trigger to prevent allies to score with planes and jeeps
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 2772 2768 340 )
-local.sptrg setsize ( -20 -50 -100 ) ( 500 2450 4000 )
-local.sptrg setthread allied_detected
-
-
-level.avataraxis = spawn func_beam
-level.avataraxis.origin = ( 4272 4060 740 )
-level.avataraxis.angles = ( 0 0 0 )
-level.avataraxis endpoint ( 4113 4060 740  )
-level.avataraxis minoffset 1.0
-level.avataraxis maxoffset 1.0
-level.avataraxis color ( 1 0 0 )
-level.avataraxis scale 25
-level.avataraxis tileshader ("textures/hud/axis.tga")
-level.avataraxis numsegments 1
-level.avataraxis activate
-
-// Axis score
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -1362 -5540 -40 )
-local.sptrg setsize ( -20 -200 -250 ) ( 20 1000 0 )
+local.sptrg.origin = ( -3220 3366 -173 )
+local.sptrg setsize ( -40 -1000 -40 ) ( 40 1000 40 )
 //local.sptrg.origin = ( -3887 2945 -173 )
 //local.sptrg setsize ( -704 -2055 -100 ) ( 704 2055 500 )
 local.sptrg targetname sptrg10x
 
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -1186 -5068 -173 )
-local.sptrg setsize ( -20 -600 -100 ) ( 20 600 500 )
+local.sptrg.origin = ( -2520 2945 -173 )
+local.sptrg setsize ( -583 -2055 -100 ) ( 583 2055 500 )
 local.sptrg targetname sptrg9x
 
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 603 -5534 -40 )
-local.sptrg setsize ( -20 -20 -100 ) ( 20 2200 500 )
+local.sptrg.origin = ( -1478 2945 -173 )
+local.sptrg setsize ( -460 -2055 -100 ) ( 460 2055 500 )
 local.sptrg targetname sptrg8x
 
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 2539 -2042 220 )
-local.sptrg setsize ( -20 -4200 -300 ) ( 20 40 500 )
+local.sptrg.origin = ( 1 2945 -173 )
+local.sptrg setsize ( -1019 -2055 -100 ) ( 1019 2055 500 )
 local.sptrg targetname sptrg7x
 
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 4549 -2945 0 )
-local.sptrg setsize ( -20 -750 -100 ) ( 20 500 500 )
+local.sptrg.origin = ( 2033 2945 -173 )
+local.sptrg setsize ( -1013 -2055 -100 ) ( 1013 2055 500 )
 local.sptrg targetname sptrg6x
 
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 4190 -365 -160 )
-local.sptrg setsize ( -20 -520 -100 ) ( 20 450 500 )
+local.sptrg.origin = ( 1158 409 -173 )
+local.sptrg setsize ( -1308 -481 -100 ) ( 1308 481 500 )
 local.sptrg targetname sptrg5x
 
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 1892 669 -160 )
-local.sptrg setsize ( -950 -20 -100 ) ( 40 20 500 )
+local.sptrg.origin = ( 998 -1423 -173 )
+local.sptrg setsize ( -1128 -1351 -100 ) ( 1128 1351 500 )
 local.sptrg targetname sptrg4x
 
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 1040 2424 50 )
-local.sptrg setsize ( -50 -20 -100 ) ( 800 20 500 )
+local.sptrg.origin = ( 998 -2978 -173 )
+local.sptrg setsize ( -1128 -205 -100 ) ( 1128 205 500 )
 local.sptrg targetname sptrg3x
 
 local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 2772 2768 340 )
-local.sptrg setsize ( -20 -50 -100 ) ( 20 2450 500 )
+local.sptrg.origin = ( 998 -3977 -173 )
+local.sptrg setsize ( -1128 -794 -100 ) ( 1128 794 500 )
 local.sptrg targetname sptrg2x
 
-// Not needed ?
-// local.sptrg = spawn trigger_multipleall
-// local.sptrg.origin = ( 2848 -3977 -173 )
-// local.sptrg setsize ( -722 -794 -100 ) ( 722 794 500 )
-// local.sptrg targetname sptrg1x
+local.sptrg = spawn trigger_multipleall
+local.sptrg.origin = ( 2848 -3977 -173 )
+local.sptrg setsize ( -722 -794 -100 ) ( 722 794 500 )
+local.sptrg targetname sptrg1x
 
-// Allies score
+
 local.edatrg = spawn trigger_multipleall
-local.edatrg.origin = ( 4272 4090 740 )
-local.edatrg setsize ( -150 -2 -250 ) ( 0 2 0 )
+local.edatrg.origin = ( 2196 -3489 -113 )
+local.edatrg setsize ( -40 -80 -40 ) ( 40 80 40 )
 local.edatrg targetname endtrgal
 
 // exec global/showbox.scr::show ( 2196 -3489 -113 ) 80 160 80 ( 0 0 1)
 
-// Axis score
 local.edxtrg = spawn trigger_multipleall
-local.edxtrg.origin = ( -1362 -5540 -40 )
-local.edxtrg setsize ( -20 -200 -250 ) ( 20 1000 0 )
+local.edxtrg.origin = ( -3220 3366 -173 )
+local.edxtrg setsize ( -40 -1000 -40 ) ( 40 1000 40 )
 local.edxtrg targetname endtrgax
 
 // exec global/showbox.scr::show ( -3220 3366 -173 ) 80 4000 80 ( 1 0 0)
@@ -621,7 +634,7 @@ if(getcvar "push" == "1")
 
 thread endtriggeral
 thread endtriggerax
-// thread triggerstart
+thread triggerstart
 
 end
 
@@ -633,8 +646,7 @@ $endtrgal waittill trigger
 if(parm.other.dmteam == allies) 
   { 
    local.player = parm.other 
-   local.player tele ( -2160 -5064 -340 ) 
-   local.player.angle = -2
+   local.player tele ( -4016 4046 -173 ) 
    // local.player.killcount = ((local.player.killcount)+5)
    local.player addkills 5
    local.player iprint "You've won 5 points for scoring !" 1
@@ -657,8 +669,7 @@ $endtrgax waittill trigger
 if(parm.other.dmteam == axis) 
   { 
    local.player = parm.other 
-   local.player tele ( 4340 3850 600 )
-   local.player.angle = -173
+   local.player tele ( 2726 -4394 -207 )
    // local.player.killcount = ((local.player.killcount)+5)
    local.player addkills 5
    local.player iprint "You've won 5 points for scoring !" 1
@@ -1984,29 +1995,29 @@ messages:
 
 while(1)
 {
-wait 45
+wait 90
 	iprintlnbold "Push forward to your enemies base to score !"
-wait 30
+wait 60
 	iprintlnbold "Push forward to your opponents base! Gain Ground and score for your team !"
-wait 30
+wait 60
 	iprintlnbold "Push your teams Battleline forward !"
-wait 30
+wait 60
 	iprintlnbold "Push forward to your opponents base to score for your team !"
-wait 5
+wait 10
 	iprintlnbold "Battline Mod moves the spawns forward with your team !"
-wait 15
+wait 30
 }
 end
 
 messagepush:
-wait 30
+wait 60
 	iprintlnbold "Push mode is on !"
 wait 1
 	iprintlnbold "Push back your opponents spawn !"
 end
 
 messagepass:
-wait 30
+wait 60
 	iprintlnbold "Pass mode is on !"
 wait 1
 	iprintlnbold "Push forward to gain ground and score !"
@@ -2082,64 +2093,18 @@ while(1)
    } 
 end
 
-allied_detected:
-
-	local.player = parm.other
-	
-	if ( (local.player.dmteam == "allies") && (local.player.inveh == 1) )
-	{
-		local.player stufftext ("+use; wait 200; -use")
-	}
-	else if ( (local.player.dmteam == "allies") && (local.player.flying == 1) )
-	{
-		local.player stufftext ("+moveup; wait 200; -moveup")
-	}
-	
-end
-
-axis_detected:
-
-	local.player = parm.other
-
-	if ( (local.player.dmteam == "axis") && (local.player.inveh == 1) )
-	{
-		local.player stufftext ("+use; wait 200; -use")
-	}
-	else if ( (local.player.dmteam == "axis") && (local.player.flying == 1) )
-	{
-		local.player stufftext ("+moveup; wait 200; -moveup")
-	}
-	
-end
-
-fadescreen:
-
-	// wait 6
-	for (local.t = 0; local.t <= 6; local.t++)
-	{
-		for(local.i = 1; local.i <= $player.size; local.i++)
-		{
-			local.p = $player[local.i]
-			local.p stufftext "ui_hud 0"
-		}
-		wait 1
-	}
-	
-	fadein 4 0 0 0 1
-	
-	wait 2
-	
-	for(local.i = 1; local.i <= $player.size; local.i++)
-	{
-		local.p = $player[local.i]
-		local.p stufftext "ui_hud 1"
-	}
-
+playmusic:
+	waitframe
+	$endtrgal stufftext "tmstartloop sound/music/mus_NorthAfrica_01a.mp3"	// Looping music
+	$endtrgax stufftext "tmstartloop sound/music/mus_NorthAfrica_01a.mp3"	// Looping music
+//	$endtrgal loopsound mus_NorthAfrica_01a
+//	$endtrgax loopsound mus_NorthAfrica_01d
 end
 
 music:
 
-	local.STUFFSTRING = "tmstart sound/music/mus_03c_suspense.mp3; seta s_musicvolume 0.4" // One shot music
+	wait 700
+	local.STUFFSTRING = "tmstart sound/music/mus_NorthAfrica_01a.mp3; seta s_musicvolume 0.3"
 
 	while(1)
 	{
@@ -2156,66 +2121,3 @@ music:
 	}
 
 end
-
-music_end:
-
-	wait 872
-	local.STUFFSTRING = "tmstart sound/music/mus_03b_success.mp3; seta s_musicvolume 0.4" // One shot music
-	local.STUFFSTRING2 = "tmstart sound/music/mus_17d_failure.mp3; seta s_musicvolume 0.4" // One shot music
-
-	while(1)
-	{
-		for(local.i = 1; local.i <= $player.size; local.i++)
-		{
-			local.p = $player[local.i]
-			if(local.p.music2_handled != 1)
-			{
-				if (local.p.dmteam == "allies")
-				{
-					if (level.alliesscore > level.axisscore)
-					{
-						local.p stufftext local.STUFFSTRING
-					}
-					else
-					{
-						local.p stufftext local.STUFFSTRING2
-					}
-				}
-				else if (local.p.dmteam == "axis")
-				{
-					if (level.axisscore > level.alliesscore)
-					{
-						local.p stufftext local.STUFFSTRING
-					}
-					else
-					{
-						local.p stufftext local.STUFFSTRING2
-					}
-				}
-				local.p.music2_handled = 1
-			}
-		}
-		waitframe
-	}
-
-end
-
-Map_Guard:
-
-	spawn trigger_multipleall "targetname" "Killah"
-	$Killah.origin = ( 1760.22 -1134.05 -511.88 ) 
-	$Killah setsize ( -9999 -9999 -32 ) ( 9999 9999 10 )
-	$Killah setthread die
-	// $Killah message "Play fair!"
-end
-
-die:
-	self waittill trigger
-	local.punk = parm.other
-
-	if( !(isalive local.punk) || (local.punk.needrevive == 1) )
-	{
-		end
-	}
-	local.punk kill
-end	

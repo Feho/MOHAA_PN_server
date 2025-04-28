@@ -43,20 +43,20 @@ tdmtype:
 	
 	setcvar "g_obj_axistext1" ""
 	setcvar "g_obj_axistext2" ""
-	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+	setcvar "g_obj_axistext3" "" 
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing4a.tga" 
 
 	setcvar "g_gametype" "2"
 	setcvar "g_gametypestring" "Team-Match"
-		// load support gun sounds
-	waitthread global/support/support.scr::soundcache
+	// load support gun sounds
+	// waitthread global/support/support.scr::soundcache
 
 	waitthread tdm_spawns
 	
 	level waittill prespawn
 	
-		// no fog
+	// no fog
 	$world farplane_color ( 0.3 0.3 0.3 )
 	$world farplane 12000
 	// $world farplane_cull 1
@@ -217,22 +217,22 @@ tdmtype:
 	level.squadmaker_areaname = "in the Command Post"
 	
 	// start support gunner scripts
-	exec global/support/support.scr
+	// exec global/support/support.scr
 	
 	// start squadmaker
-	exec global/squadmaker/squadmaker.scr
+	// exec global/squadmaker/squadmaker.scr
 	
 	// {sfx} mini planes - one per team
 	// exec server_planes/trigger.scr ( -4694 1090 10 ) "allies"
 	// exec server_planes/trigger.scr ( 1006 64 -25 ) "axis"
 	
 	// Tanks & Jeeps Base Assault
-	if (level.already_started != 1)
-	{
-		level.already_started = 1
+	// if (level.already_started != 1)
+	// {
+	// 	level.already_started = 1
 
-		exec global/AA/global_detect.scr
-	}
+	// 	exec global/AA/global_detect.scr
+	// }
 	
 	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -5825.00 -182.00 -0.88 ) ( 0 10 0 ) level.jeep_mask
 	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -4565.00 2618.00 10.88 ) ( 0 -90 0 ) level.jeep_mask

@@ -1,0 +1,118 @@
+/*
+======================================================
+*** AIRborne; Global TeleportTrigger Script for MoH:AA
+======================================================
+by Sor
+Version: v1.1
+-----------------------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Rindog.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+
+// --------------------------------------------------------------------------------------	//
+teleport local.origin local.dest local.team local.kind local.tag local.neg local.pos:
+// --------------------------------------------------------------------------------------	//
+
+	// Checking stuff....
+	if (local.origin == NIL)
+		{println "[AIR TeleGen::Spawn]: Invalid Origin!"
+		end}
+
+	if (local.dest == NIL)
+		{println "[AIR TeleGen::Spawn]: Invalid destination!"
+		end}
+
+	if (local.neg == NIL)
+		local.neg = ( -40 -40 -20)
+
+	if (local.pos == NIL)
+		local.pos = ( 40 40 20 )
+
+	if (local.tag == NIL)
+		local.tag = ""
+
+	if (level.AIR_teletrig == NIL)
+		local.i = 1
+	else
+		local.i = level.AIR_teletrig.size + 1
+
+	if (local.kind == 1 || local.kind == NIL)
+	{
+		level.AIR_teletrig[local.i] = spawn trigger_use "targetname" local.tag
+	}
+	else if (local.kind == 2)
+	{
+		level.AIR_teletrig[local.i] = spawn trigger_multiple "targetname" local.tag
+	}
+	level.AIR_teletrig[local.i].origin = local.origin
+	level.AIR_teletrig[local.i].team = local.team
+	level.AIR_teletrig[local.i].destination = local.dest
+	level.AIR_teletrig[local.i] setsize local.neg local.pos
+	level.AIR_teletrig[local.i] setthread tele_man
+	level.AIR_teletrig[local.i] wait 1
+
+	if (self != NULL)
+	{
+		level.AIR_teletrig[local.i].telemodel = self
+	}
+
+end
+
+tele_man:
+
+	local.player = parm.other
+
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if ( (vector_within self.destination $player[local.i].origin 20) == 1)
+		{
+			local.player iprint "There's someone at the exit point of the trigger!" 1
+			end
+		}
+	}
+
+
+	if (self.team != NIL)
+	{
+		if (local.player.dmteam == self.team)
+		{
+			self nottriggerable
+			local.player tele self.destination
+		}
+		if (local.player.dmteam != self.team)
+		{
+			end
+		}
+	}
+	if (self.team == NIL)
+	{
+		self nottriggerable
+		local.player tele self.destination
+	}
+
+	self triggerable
+
+end

@@ -58,8 +58,8 @@ tdmtype:
 
 	setcvar "g_gametype" "2"
 	setcvar "g_gametypestring" "Team-Match"
-		// load support gun sounds
-	waitthread global/support/support.scr::soundcache
+	// load support gun sounds
+	// waitthread global/support/support.scr::soundcache
 
 	waitthread tdm_spawns
 	
@@ -244,14 +244,14 @@ tdmtype:
 	level waittill spawn
 ////////////////////////	
 	
-	level.squadmaker_areaname 	= "in the village"
-	level.squadmaker_config		= "winterwar"
+	// level.squadmaker_areaname 	= "in the village"
+	// level.squadmaker_config		= "winterwar"
 
 	// start support gunner scripts
-	exec global/support/support.scr
+	// exec global/support/support.scr
 
 	// start squadmaker
-	exec global/squadmaker/squadmaker.scr
+	// exec global/squadmaker/squadmaker.scr
 
 	// Spotlight
 	// local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -3545 -1007 453)
