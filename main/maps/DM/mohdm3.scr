@@ -53,7 +53,11 @@ main:
 	thread global/door_locked.scr::lock
 
 	thread setupobj
-
+	
+	// unlock some doors with triggers - Feho
+	exec global/fake_door.scr ( 4503 -3455 50 ) ( 3897 -2781 50 ) 180
+	exec global/fake_door.scr ( 3897 -2781 50 ) ( 4525 -3465 50 )
+	
 	//////////////////////
 	level waittill spawn
 	////////////////////
@@ -182,7 +186,7 @@ end
 objectivethread:
 
 	setcvar "g_gametype" "4"
-	setcvar "g_gametypestring" "Sabotage"
+	setcvar "g_gametypestring" "Search and Destroy"
 
 	setcvar "g_obj_alliedtext1" "* Find the bomb" 
 	setcvar "g_obj_alliedtext2" "  and destroy"
