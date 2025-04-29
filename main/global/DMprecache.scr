@@ -1,3 +1,8 @@
+if(level.loaded != 1)
+{
+	exec soundfix/mapswitch.scr
+}
+
 cache models/weapons/colt45.tik
 cache models/weapons/p38.tik
 cache models/weapons/silencedpistol.tik
