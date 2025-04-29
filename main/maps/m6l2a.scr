@@ -271,8 +271,8 @@ tdmtype:
 	// unlock some doors with triggers - Feho
 	exec global/fake_door.scr ( -2295 -2495 28 ) ( -1906 -2526 -54 )
 	exec global/fake_door.scr ( -1935 -2526 -35 ) ( -2310 -2495 10 )
-	exec global/fake_door.scr ( 1365 -3280 142 ) ( 1264 -3320 137 ) 1
-	exec global/fake_door.scr ( 1264 -3296 158 ) ( 1365 -3260 122 ) 1
+	exec global/fake_door.scr ( 1365 -3280 142 ) ( 1264 -3320 137 )
+	exec global/fake_door.scr ( 1264 -3296 158 ) ( 1365 -3260 122 )
 	
 	/////////////////////////DOOR
 
@@ -719,7 +719,7 @@ music:
 				local.p stufftext local.STUFFSTRING
 			}
 		}
-		waitframe
+		wait 1
 	}
 
 end
