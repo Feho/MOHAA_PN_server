@@ -1,0 +1,389 @@
+/*
+======================================================
+*** AIRborne; Gold Perks for MoH:AA
+======================================================
+by Sor
+Version: v1.1
+-----------------------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Sor.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+
+
+//*********************************************************************
+// Spawn Treasure mode Gold
+// --------------------------
+// local.info is an array and you can make 
+// as many entries as you want.:
+// 
+// 	local.info = makeArray
+// 	( origin1 ) ( angles1 ) "bonus1" //1 row for 1 goldbox
+//
+//  	endArray
+//
+// Then exec this thread with the local.info
+// array:
+//
+//	thread global/AIR_gold.scr::treasure_spawn local.info
+//
+//*********************************************************************
+treasure_spawn local.info:
+
+	if (local.info == NIL)
+		end
+
+	if (level.AIR_goldcache != 1)
+		thread soundcache
+
+	//first check/parse some things...
+	for (local.i = 1; local.i <= local.info.size; local.i++)
+	{
+		if (local.info[local.i][1] == NIL)
+		{
+			local.terminate = 1
+			break
+		}
+
+		if (local.info[local.i][2] == NIL)
+			local.info[local.i][2] = ( 0 0 0 )
+
+		if (local.info[local.i][3] == NIL)
+			local.info[local.i][3] = "health"
+	}
+	
+	if (local.terminate == 1)
+	{
+		println "[AIR Gold::ERROR]: An error occurred when parsing the origin values of your array!!"
+		end
+	}
+
+	// okay, now start spawning:
+	for (local.a = 1; local.a <= local.info.size; local.a++)
+	{
+		if (level.AIR_goldboxs == NIL)
+			local.f = 1
+		else	
+			local.f = ( level.AIR_goldboxs.size + 1 )
+
+		level.AIR_goldboxs[local.f] = spawn trigger_multiple
+		level.AIR_goldboxs[local.f].origin = local.info[local.a][1]
+		level.AIR_goldboxs[local.f].bonus = local.info[local.a][3]
+		level.AIR_goldboxs[local.f] setsize ( -35 -35 -20 ) ( 35 35 40 )
+		level.AIR_goldboxs[local.f] setthread global/AIR_gold.scr::treasure_tr
+
+		level.AIR_goldboxs[local.f].gold = spawn script_model model "static/indycrate.tik" 
+		level.AIR_goldboxs[local.f].gold.origin = local.info[local.a][1]
+		level.AIR_goldboxs[local.f].gold.angles = local.info[local.a][2]
+		// level.AIR_goldboxs[local.f].gold rendereffects "+viewlensflare"
+		// level.AIR_goldboxs[local.f].gold light 0.9 0.7 0.0 0
+		level.AIR_goldboxs[local.f].gold notsolid
+		level.AIR_goldboxs[local.f].gold scale 0.4
+
+		level.AIR_goldboxs[local.f].gold thread spin
+		
+	}
+
+	level.AIR_maxgold = local.f
+
+end
+
+spin:
+    local.angle = 0
+    while(1)
+    {
+		if (!self) end
+
+        local.angle += 5               // Adjust speed here (degrees per loop)
+        if(local.angle >= 360)
+            local.angle = 0
+        self.angles = (0 local.angle 0) // Rotate around Z-axis
+        waitframe                        // Wait one frame before next rotation
+    }
+end
+
+//*********************************************************************
+// Treasure Gold - Setthread
+// -------------------------
+// This is the setthread of the trigger spawned in Treasure mode.
+// Available bonusses are:
+//
+//	"health"	-	Gives 100 Health to the Finder
+//	"ammo"	- 	Gives an amount of ammo to the weapon the
+//				Finder is currently holding
+//	"armor"	-	Gives 80 armor to the Finder
+//	"grenade"	-	Gives 6 grenades to the Finder
+//	"weapon"	-	Gives a random weapon to the player (no
+//				noob-weapons will be given ;) )
+// 	"allweapon" - 	Gives player all weapons (except the noobies)
+// 	"zooka"	- 	Gives player the bazooka
+// 	"shotgun"	- 	Gives player the shotgun
+//  "random"    -   Gives a random bonus from the list above
+//
+//*********************************************************************
+treasure_tr:
+
+	local.p = parm.other
+
+	local.p playsound pickup_explosives
+	// self.gold rendereffects "-viewlensflare"
+	self.gold hide
+
+	self nottriggerable
+
+	local.selected_bonus = self.bonus
+
+	if (local.selected_bonus == "random")
+	{
+		local.bonus_options = makeArray
+			"health"
+			"ammo"
+			"armor"
+			"grenade"
+			"weapon"
+			"allweapon"
+			"zooka"
+			"shotgun"
+		endArray
+
+		// randomint returns 0 to (size - 1). Add 1 for 1-based array index.
+		local.rand_index = randomint(local.bonus_options.size) + 1
+		local.selected_bonus = local.bonus_options[local.rand_index][1]
+		// println ("Random bonus selected: " + local.selected_bonus)
+	}
+
+	switch (local.selected_bonus)
+	{
+		case "health":
+			local.health_added = 100
+			local.current_health = local.p.health
+			local.health = local.current_health + local.health_added
+
+			wait 0.1
+			local.p healthonly local.health
+			local.p playsound med_canteen
+			local.p iprint "You've received 100 Health!" 1
+		break
+		case "ammo":
+			// if my states aren't recording anything (meaning someone else is using my script)
+			// then get the weapon the old fashion way ;)
+			if (local.p.current_weapon == NIL && local.p.current_weaponclass == NIL && local.p.current_weapon_model == NIL)
+			{
+				local.p weaponcommand dual targetname ("w" + local.p.entnum)
+				local.weapon = $("w" + local.p.entnum )
+
+				if(local.weapon != NULL)
+				{
+					local.p.wpn = local.weapon.model
+					local.weapon targetname ""
+				}
+				else
+				{
+					local.p.wpn = "models/weapons/unarmed.tik"
+				}
+				waitframe
+				local.class = waitthread get_wpnclass local.p.wpn
+			}
+			else
+			{
+				local.class = local.p.current_weaponclass
+			}
+			// aren't statefiles easy? :P
+			if (local.class != none && local.class == grenade)
+			{
+				local.p ammo local.class 6
+				local.p iprint "You got 6 more grenades!" 1
+			}
+			else if (local.class != none && local.class == heavy)
+			{
+				local.p ammo local.class 6
+				local.p iprint "You received 6 heavy rounds" 1
+			}
+			else if (local.class != none && local.class == shotgun)
+			{
+				local.p ammo local.class 30
+				local.p iprint "You received 30 shotgun rounds" 1
+			}
+			else if (local.class != none)
+			{
+				local.p ammo local.class 100
+				local.p iprint "Your current weapon received 100 bullets!" 1
+			}
+		break
+		case "armor":
+			local.armor_added = 80
+			local.current_health = local.p.health
+			local.armor = local.current_health + local.armor_added
+
+			wait 0.5
+			local.p health local.armor
+			local.p iprint "You've received 80 extra Armor!" 1
+		break
+		case "grenade":
+			local.p ammo grenade 6
+			local.p iprint "You got 6 more grenades!" 1
+		break
+		case "weapon":
+			local.weapon = waitthread global/AIR_gold.scr::random_weapon
+			local.picky = randomint(local.weapon.size)
+			if (local.picky == 0)
+				local.picky++
+
+			local.p item local.weapon[local.picky][1]
+			local.p iprint ("You have received the " + local.weapon[local.picky][2]) 1
+		break
+		case "allweapon":
+			local.p item "models/weapons/m1_garand.tik"
+			local.p item "models/weapons/kar98.tik"
+			local.p item "models/weapons/kar98sniper.tik"
+			local.p item "models/weapons/springfield.tik"
+			local.p item "models/weapons/bar.tik"
+			local.p item "models/weapons/mp44.tik"
+			local.p item "models/weapons/thompsonsmg.tik"
+			local.p item "models/weapons/mp40.tik"
+			if (local.p.dmteam == "axis")
+			{
+				local.p item "models/weapons/colt45.tik"
+			}
+			local.p item "models/weapons/silencedpistol.tik"
+			if (local.p.dmteam == "allies")
+			{
+				local.p item "models/weapons/p38.tik"
+			}
+
+			local.p iprint ("You have received All Weapons!!") 1
+		break
+		case "zooka":
+			if (local.p.dmteam == "allies")
+			{
+				local.p item "models/weapons/bazooka.tik"
+			}
+			else
+			{
+				local.p item "models/weapons/panzerschreck.tik"
+			}
+			local.p ammo heavy 6
+			local.p iprint ("You have received a Bazooka!!") 1
+		break
+		case "shotgun":
+			local.p item "models/weapons/shotgun.tik"
+			local.p ammo shotgun 30
+			local.p iprint ("You have received a Shotgun!!") 1
+		break
+	}
+
+	// self remove
+	// thread global/AIR_gold.scr::treasure_changes
+	
+	wait 120
+	self triggerable
+	self.gold show
+
+end
+
+get_wpnclass local.wpn_model:
+
+	switch(local.wpn_model)
+	{
+		case "models/weapons/m1_garand.tik":
+		case "models/weapons/kar98.tik":
+		case "models/weapons/kar98sniper.tik":
+		case "models/weapons/springfield.tik":
+			local.result = rifle
+		break
+		case "models/weapons/bar.tik":
+		case "models/weapons/mp44.tik":
+			local.result = mg
+		break
+		case "models/weapons/thompsonsmg.tik":
+		case "models/weapons/mp40.tik":
+			local.result = smg
+		break
+		case "models/weapons/bazooka.tik":
+		case "models/weapons/panzerschreck.tik":
+			local.result = heavy
+		break
+		case "models/weapons/shotgun.tik":
+			local.result = shotgun
+		break
+		case "models/weapons/m2frag_grenade.tik":
+		case "models/weapons/steilhandgranate.tik":
+			local.result = grenade
+		break
+		case "models/weapons/colt45.tik":
+		case "models/weapons/silencedpistol.tik":
+		case "models/weapons/p38.tik":
+			local.result = pistol
+		break
+		default:
+			local.result = none
+		break
+	}
+
+end local.result
+
+treasure_changes:
+
+	level.AIR_maxgold--
+
+	if (level.AIR_maxgold == 0)
+	{
+		println "SECRET: All secret Gold Treasures have been found!!"
+		iprintlnbold_noloc "SECRET: All secret Gold Treasures have been found!!"
+	}
+
+end
+
+random_weapon:
+
+	local.random_weapon = makeArray
+
+		//model						//weapon name
+		"models/weapons/m1_garand.tik"		"M1 Garand"
+		"models/weapons/kar98.tik"			"Mauser KAR98 Rifle"
+		"models/weapons/kar98sniper.tik"		"KAR98 Sniper Rifle"
+		"models/weapons/springfield.tik"		"Springfield '03 Sniper Rifle"
+		"models/weapons/bar.tik"			"BAR"
+		"models/weapons/mp44.tik"			"StG44"
+		"models/weapons/thompsonsmg.tik"		"Thompson SMG"
+		"models/weapons/mp40.tik"			"MP40"
+		"models/weapons/colt45.tik"			"Colt 45"
+		"models/weapons/silencedpistol.tik"		"Silenced Pistol"
+		"models/weapons/p38.tik"			"P38"
+
+	endArray
+
+end local.random_weapon
+
+soundcache:
+
+	local.master = spawn ScriptMaster
+	local.master aliascache pickup_explosives1 sound/items/Item_BangaloreAssemble_01.wav soundparms 1.2 0.0 1.0 0.0 100 2000 item loaded maps "m dm obj train "
+	local.master aliascache pickup_explosives2 sound/items/Item_BangaloreAssemble_02.wav soundparms 1.2 0.0 1.0 0.0 100 2000 item loaded maps "m dm obj train "
+	local.master aliascache pickup_explosives3 sound/items/Item_BangaloreAssemble_03.wav soundparms 1.2 0.0 1.0 0.0 100 2000 item loaded maps "m dm obj train "
+
+	level.AIR_goldcache = 1
+
+end

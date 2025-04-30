@@ -30,6 +30,11 @@ main:
 	level.script = maps/dm/mohdm5.scr
 	exec global/ambient.scr mohdm5
 
+	local.info = makeArray
+		( 2124 -4836 168 ) ( 0 0 0 ) "random"
+ 	endArray
+
+	thread global/AIR_gold.scr::treasure_spawn local.info
 
 	// no fog
 	$world farplane_color ( 0 0.0.5 0.092 )

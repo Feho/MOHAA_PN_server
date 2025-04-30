@@ -52,11 +52,17 @@ tdmtype:
 	exec global/DMprecache.scr
 	
 	thread global/barrel.scr::explosive_barrel
+
+	local.info = makeArray
+		( -21 2197 -253 ) ( 0 0 0 ) "random"
+ 	endArray
+
+	thread global/AIR_gold.scr::treasure_spawn local.info
 	
 	// Portable 30 cals
 	// exec models/create_guns.scr ( 960 670 -252.88 )
 	
-	thread music
+	// thread music
 	
 	local.mur = spawn script_object
 	local.mur.origin = ( 2408 -2489 -125)
@@ -2095,8 +2101,8 @@ end
 
 playmusic:
 	waitframe
-	$endtrgal stufftext "tmstartloop sound/music/mus_NorthAfrica_01a.mp3"	// Looping music
-	$endtrgax stufftext "tmstartloop sound/music/mus_NorthAfrica_01a.mp3"	// Looping music
+	// $endtrgal stufftext "tmstartloop sound/music/mus_NorthAfrica_01a.mp3"	// Looping music
+	// $endtrgax stufftext "tmstartloop sound/music/mus_NorthAfrica_01a.mp3"	// Looping music
 //	$endtrgal loopsound mus_NorthAfrica_01a
 //	$endtrgax loopsound mus_NorthAfrica_01d
 end

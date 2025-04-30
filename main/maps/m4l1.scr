@@ -61,6 +61,12 @@ tdmtype:
     local.mur.angle = -113
     local.mur setsize ( -1 -518 -96) ( 1 80 125)
     local.mur solid
+
+    local.info = makeArray
+      ( 4861 -3178 18 ) ( 0 0 0 ) "random"
+    endArray
+
+    thread global/AIR_gold.scr::treasure_spawn local.info
     
     level waittill spawn
 

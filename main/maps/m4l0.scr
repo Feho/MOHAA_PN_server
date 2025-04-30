@@ -59,6 +59,11 @@ tdmtype:
 	exec global/door_locked.scr
 	exec global/DMprecache.scr
 	
+	local.info = makeArray
+		( -1789 -4865 -96 ) ( 0 0 0 ) "random"
+ 	endArray
+
+	thread global/AIR_gold.scr::treasure_spawn local.info
 	
 	level waittill spawn
 

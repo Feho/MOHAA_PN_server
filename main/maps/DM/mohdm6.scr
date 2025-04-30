@@ -46,6 +46,11 @@ main:
 	// exec global/TNT_DETONATORS.scr::DETONATOR ( 273.65 147.96 87.13 ) ( 0 0 0 )
 	// exec global/TNT_DETONATORS.scr::DETONATOR ( -48.10 902.07 512.13 ) ( 0 0 0 )
 
+	local.info = makeArray
+		( -644 -96 -146 ) ( 0 0 0 ) "random"
+ 	endArray
+
+	thread global/AIR_gold.scr::treasure_spawn local.info
 	
 	level waittill spawn
 	

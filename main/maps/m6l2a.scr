@@ -103,6 +103,13 @@ tdmtype:
 	// Au ca soù un joueur tombe dans la rivère
 	exec global/AIR_TeleModel.scr ( -829 -2450 -268 ) "emitters/welding_spark.tik" 0.5
 	exec global/AIR_TeleTrig.scr ( -829 -2450 -268 ) ( -578 -2458 -60 ) NIL 1
+	
+	// Treasure
+	local.info = makeArray
+		( -873 -1305 -120 ) ( 0 0 0 ) "random"
+ 	endArray
+
+	thread global/AIR_gold.scr::treasure_spawn local.info
 
 	// Caisses pour passer au dessus de la grille
 	local.fix1 = spawn script_model "targetname" "caisse1"
