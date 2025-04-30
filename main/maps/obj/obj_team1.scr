@@ -1,0 +1,1620 @@
+// THE HUNT
+// ARCHITECTURE: NED/STEVE
+// SCRIPTING: NED and lots of help from ZIED
+//exec global/Botsmapper.scr
+main:
+
+	// waitexec maps/obj/stuff1.txt //Airborne stuff
+	
+	setcvar "g_obj_alliedtext1" "- Find the explosives" 
+	setcvar "g_obj_alliedtext2" "and destroy"
+	setcvar "g_obj_alliedtext3" "the Flak 88 cannon"
+
+	setcvar "g_obj_axistext1" "- Defend the Flak 88"
+	setcvar "g_obj_axistext2" "cannon"
+	setcvar "g_obj_axistext3" ""
+
+	setcvar "g_scoreboardpic" "objdm1"
+
+	setcvar "g_gametype" "4"
+	
+	setcvar "timelimit" "15"
+	setcvar "fraglimit" "3"
+	
+	setcvar "g_gametypestring" "**Airborne** Search & Destroy"
+	
+		// load support gun sounds
+	// waitthread global/support/support.scr::soundcache
+
+//------------------------------------------------ 
+//   Axis Spawn Points 
+//------------------------------------------------ 
+ 
+
+local.axis1 = spawn info_player_axis 
+local.axis1.origin = ( 5248 3337 -97 ) 
+local.axis1.angle = 10 
+
+local.axis2 = spawn info_player_axis 
+local.axis2.origin = ( 4236 1753 -335 ) 
+local.axis2.angle = 10
+ 
+local.axis3 = spawn info_player_allied 
+local.axis3.origin = ( -2029 3931 -181 ) 
+local.axis3.angle = 14
+
+local.axis4 = spawn info_player_allied 
+local.axis4.origin = ( -3190 3759 -172 ) 
+local.axis4.angle = 10 
+
+local.axis5 = spawn info_player_allied 
+local.axis5.origin = ( -1013 3769 -24 ) 
+local.axis5.angle = 180
+
+local.axis6 = spawn info_player_allied 
+local.axis6.origin = ( -3551 2300 -104 ) 
+local.axis6.angle = 10 
+
+local.axis7 = spawn info_player_allied 
+local.axis7.origin = ( -2824 2339 -97 ) 
+local.axis7.angle = 90 
+
+local.axis8 = spawn info_player_allied 
+local.axis8.origin = ( -2869 2778 -134 ) 
+local.axis8.angle = 70 
+
+	//////////////////////////
+	level waittill prespawn
+	//////////////////////////
+
+	//*** Precache Dm Stuff
+	exec global/DMprecache.scr
+
+	level.script = maps/obj/obj_team1.scr
+	exec global/ambient.scr obj_team1
+
+	$world farplane 9000
+
+	// exec global/DETONATOR_SOUND.scr
+	// exec global/RB_DETONATORS.scr::DETONATOR ( 2312.07 -430.78 -200 ) ( 0 0 0 )
+	// exec global/TNT_DETONATORS.scr::DETONATOR ( 2245.41 -370.05 -200 ) ( 0 0 0 )
+
+	local.info = makeArray
+		( 3318 1846 -284 ) ( 0 0 0 ) "random"
+ 	endArray
+
+	thread global/AIR_gold.scr::treasure_spawn local.info
+	
+	local.master = spawn ScriptMaster
+	local.master aliascache omaha_background sound/amb_stereo/Amb_M6_BattleExt.mp3 soundparms 2.2 0.0 1.0 0.0 2500 8000 auto loaded maps "m dm moh obj train "
+	local.master = spawn scriptmaster
+	local.master aliascache fly_snd sound/vehicle/M1_StukaIdle.wav soundparms 2.2 0.5 2.0 0.5 2000 1000 item loaded maps "m dm moh obj train"
+	local.master = spawn scriptmaster
+
+//*****************************************
+//------- START KRUGERS FIREWORKS---------
+//*****************************************
+
+
+//**************************ALLIES**********************************************
+spawn script_origin "origin" ( 4500.57 4400.84 1900.98) "targetname" random_explode1
+spawn script_origin "origin" ( 1900.57 3400.84 1900.98) "targetname" random_explode2
+spawn script_origin "origin" ( 2900.57 1400.84 1900.98) "targetname" random_explode3
+spawn script_origin "origin" ( 3100.57 400.84 1900.98) "targetname" random_explode4
+spawn script_origin "origin" ( 3900.57 1400.84 1900.98) "targetname" random_explode5
+spawn script_origin "origin" ( 4400.57 -500.84 1900.98) "targetname" random_explode6
+spawn script_origin "origin" ( 2400.57 -900.84 1900.98) "targetname" random_explode7
+spawn script_origin "origin" ( 1700.57 4000.84 1900.98) "targetname" random_explode8
+spawn script_origin "origin" ( 1500.57 2000.84 1900.98) "targetname" random_explode9
+
+
+
+//==========================
+
+thread krugers_fireworks
+
+ 	thread MULTI_PARA_A
+        thread MULTI_PARA_B
+        thread MULTI_PARA_C
+        thread MULTI_C47_PATH
+        thread MULTI_C47_DROP
+
+	
+	thread set_shark
+        // thread Allies_drop
+        // thread Allies_drop1
+        // thread Allies_drop2
+        thread Allies_drop3
+        // thread AXis_drop4
+        thread Allies_drop5
+        thread Allies_drop6
+        thread Allies_drop7
+        // thread AXis_drop8
+        // thread Allies_drop9
+      	// thread Allies_drop10
+        // thread AXis_drop11
+        // thread Allies_drop12
+	thread port1
+	thread port2
+	thread port3
+	thread port4
+	thread port5
+
+	//////////////////////////
+	level waittill spawn
+	//////////////////////////
+	
+	//S&D feho
+	local.x = randomint(3)
+	
+	if (local.x == 0) {
+		exec global/feho/create_bomb.scr ( 3658 3055 -260.09 )
+	}
+	else if (local.x == 1) {
+		exec global/feho/create_bomb.scr ( 3857 4009 -251.28 )
+	}
+	else {
+		exec global/feho/create_bomb.scr ( 4928 3715 -314.14 )
+	}
+	//<-----------
+	
+	
+	// {sfx} mini planes - one per team
+	// exec server_planes/trigger.scr ( 1400 4563 -205 ) "allies"
+	// exec server_planes/trigger.scr ( 3090 -703 -329 ) "axis"
+	
+	
+// using tele for higher altitude for parachutes :) - Feho
+	spawn trigger_multiple "targetname" "tele_para"
+	$tele_para.origin = ( 2641 1898 2113 ) 
+	$tele_para setsize ( -9999 -9999 -20 ) ( 9999 9999 20 ) 
+	$tele_para setthread teleporting
+
+	level.defusing_team = "axis"
+	level.planting_team = "allies"
+	level.targets_to_destroy = 1
+
+	// set the parameters for this round based match
+	level.dmrespawning = 1 // 1 or 0
+	level.dmroundlimit = 8 // round time limit in minutes
+	level.clockside = axis // set to axis, allies, kills, or draw
+
+	//////////////////////////
+	level waittill roundstart
+	//////////////////////////
+
+
+
+//***********************************************
+// bomb planting setup
+//***********************************************
+
+	$flak88_weapon1_trigger thread flak88_random_setup $flak88_weapon1_explosive $flak88_weapon1 $flak88_target1 $flak88_base1 4
+	$flak88_weapon1_explosive thread global/obj_dmsd.scr::bomb_thinker
+	
+	thread allies_win_thread $flak88_weapon1_explosive
+	$flak88_weapon1_explosive thread axis_win_timer
+
+/////////////////////////////////////
+///// objectives 
+
+//	waitthread global/objectives.scr::reset_objectives 
+//	waitthread global/objectives.scr::blank_objectives
+
+//	waitthread global/objectives.scr::add_objectives 1 2 "Find and destroy the Flak88" //$flak88_weapon1_trigger.origin
+//	wait 2
+//	waitthread global/objectives.scr::current_objectives 1
+
+
+
+
+end
+
+//*** --------------------------------------------
+
+almost_there1:
+	//called by BSP
+	 local.player = parm.other
+	 if ( (local.player.dmteam != "allies") || (level.perimeter_breached == 1) )
+		end
+		
+	 iprintlnbold "The Allies have breached the perimeter!"
+	 level.perimeter_breached = 1 
+end
+
+
+//*** --------------------------------------------
+
+allies_win_thread local.bomb1:
+	while (local.bomb1.exploded != 1)
+		wait .1
+	
+	teamwin allies
+end
+
+//*** --------------------------------------------
+//*** "Axis Victory"
+//*** --------------------------------------------
+
+axis_win_timer:
+
+	level waittill axiswin
+
+end
+
+
+//*** --------------------------------------------
+
+flak88_random_setup local.explosive local.weapon local.point_at local.base local.number_of_locations:
+
+	local.location = ((randomint (local.number_of_locations)) + 1)
+
+	local.trigger_offset = self.origin - local.base.origin 
+	local.weapon_offset = local.weapon.origin - local.base.origin 
+	local.explosive_offset = local.explosive.origin - local.base.origin 
+	local.point_at_offset = local.point_at.origin - local.base.origin 
+
+	local.location = $("flak88_location" + local.location)
+	local.base.origin = local.location.origin
+
+
+	self.origin 		= local.trigger_offset 		+ local.base.origin 
+	local.weapon.origin 	= local.weapon_offset 		+ local.base.origin 
+	local.explosive.origin 	= local.explosive_offset 	+ local.base.origin 
+	local.point_at.origin 	= local.point_at_offset 	+ local.base.origin 
+
+	local.weapon setaimtarget local.point_at
+end
+
+
+//***********************************************
+// first thread... controls allies using the trigger
+//***********************************************
+
+flak88_set_explosive_thinker local.bomb local.weapon:
+
+	local.bomb model items/pulse_explosive.tik
+
+while (1)
+{
+println "waittill trigger " self
+self waittill trigger
+
+	local.player = parm.other
+	//"local.player.dmteam", can be 'spectator', 'freeforall', 'allies' or 'axis'
+        if (local.player.dmteam !="allies") 
+	{
+		goto flak88_set_explosive_thinker local.bomb local.weapon
+	println "failed dmteam check" local.player.dmteam
+		
+	}
+	local.counter = 0
+
+	//add check for allies vs nazi
+	while ( (Isalive local.player) && (local.player cansee local.bomb level.bombusefov level.bomb_use_distance) && (local.player.useheld == 1) )
+	{
+		local.counter++
+if ((local.counter % 5) == 0)
+{
+level.subtitleX = 100
+level.subtitleY = 50
+locprint level.subtitleX level.subtitleY("set "+ local.counter)
+}
+		wait .1
+		if (local.counter >= level.bomb_set_time)
+		{
+			thread wait_for_axis local.bomb local.weapon
+			thread waittill_explode local.bomb local.weapon
+			local.bomb.live = 1
+			end
+		}
+	}
+	println "usetrigger but failed check" 
+	if ! (local.bomb cansee local.player level.bombusefov  level.bomb_use_distance) 
+		println "failed cansee check"	
+	if ! (local.player.useheld == 1)
+		println "failed useheld check" local.player.useheld
+		
+}
+end
+
+
+//***********************************************
+// second thread... controls axis using the trigger
+//***********************************************
+wait_for_axis local.bomb local.weapon:
+while (1)
+{
+self waittill trigger
+
+	local.player = parm.other
+	//"local.player.dmteam", can be 'spectator', 'freeforall', 'allies' or 'axis'
+	//add check for nazi 
+       if (local.player.dmteam !="axis") 
+
+	{      println "failed dmteam check" local.player.dmteam
+		goto wait_for_axis local.bomb local.weapon
+			
+	}
+	local.counter = 0
+
+
+	while ( (Isalive local.player) && (local.player cansee local.bomb level.bombusefov  level.bomb_use_distance) && (local.player.useheld == 1) )
+	{
+		local.counter++
+if ((local.counter % 5) == 0)
+{
+level.subtitleX = 100
+level.subtitleY = 70
+locprint level.subtitleX level.subtitleY ("defuse "+local.counter)
+}
+		wait .1
+		if (local.counter >= level.bomb_defuse_time)
+		{
+			thread flak88_set_explosive_thinker local.bomb local.weapon //start first thread again
+			local.bomb.live = 0
+			end
+		}
+	}
+}
+end
+
+
+//***********************************************
+// third thread... times the bomb and makes it explode at the right time
+//***********************************************
+waittill_explode local.bomb local.weapon:
+
+	local.bomb model items/explosive.tik
+	local.bomb playsound plantbomb
+
+
+	self loopsound bombtick
+	
+	local.start_time = level.time
+	while (level.time < (local.start_time + level.bomb_tick_time))
+	{
+		wait .1
+		if (local.bomb.live != 1)
+		{
+			self stoploopsound
+			end
+		}
+ 	}
+ 	self stoploopsound
+	thread explode local.bomb local.weapon
+	self remove
+end
+
+
+//***********************************************
+// fourth thread... controls the explosion 
+//***********************************************
+explode local.bomb local.weapon:
+
+ 
+///// shake the players view
+thread jitter_large 0
+ local.temp = spawn script_model
+ local.temp.origin = self.origin
+ local.temp model "fx/fx_flak88_explosion.tik"
+ local.temp anim start
+ local.temp playsound explode_aagun
+ 
+ local.weapon model models/statweapons/flak88_d.tik
+ //origin   damage   radius    constant damage or not
+ radiusdamage local.bomb.origin  level.bomb_damage level.bomb_explosion_radius
+    local.bomb hide
+
+	teamwin allies
+end
+
+
+
+
+//******************************
+// jitter large effect
+// jitter_large [delay]
+//******************************
+jitter_large local.time:
+
+if (local.time)
+	wait local.time
+
+waitexec global/earthquake.scr .35 10 0 0
+
+waitexec global/earthquake.scr .23 6 0 0
+
+waitexec global/earthquake.scr 1 1 0 0
+
+waitexec global/earthquake.scr 1.25 .3 0 1
+
+end
+
+
+
+MULTI_PARA_A:
+
+
+        local.MULTI_TRIG_A = spawn trigger_multiple "targetname" "MULTI_TRIG_A"
+        $MULTI_TRIG_A.origin = ( 3888 1744 -420) 
+        $MULTI_TRIG_A setsize ( -100 -100 -10 ) ( 100 100 40 )
+        $MULTI_TRIG_A setthread MULTI_BAIL_A
+        $MULTI_TRIG_A message "Drop Zone Approaching-Stand By Paratrooper !!"
+        end
+
+
+MULTI_PARA_B:
+
+
+        local.MULTI_TRIG_B = spawn trigger_multiple "targetname" "MULTI_TRIG_B"
+        $MULTI_TRIG_B.origin = ( 3888 1744 -420 )
+        $MULTI_TRIG_B setsize ( -90 -90 -20 ) ( 90 90 20 )
+        $MULTI_TRIG_B setthread MULTI_BAIL_B
+        $MULTI_TRIG_B message "Drop Zone Approaching-Stand By Paratrooper !!"
+        end
+
+
+MULTI_PARA_C:
+
+
+        local.MULTI_TRIG_C = spawn trigger_multiple "targetname" "MULTI_TRIG_C"
+        $MULTI_TRIG_C.origin = ( 3888 1744 -420 )
+        $MULTI_TRIG_C setsize ( -90 -90 -20 ) ( 90 90 20 )
+        $MULTI_TRIG_C setthread MULTI_BAIL_C
+        $MULTI_TRIG_C message "Drop Zone Approaching-Stand By Paratrooper !!"
+        end
+
+
+MULTI_C47_PATH:
+
+        spawn script_object "targetname" "pl20" "classname" "info_splinepath"
+        $pl20.origin = ( 2122 -2053 1900 )
+        $pl20.angles = ( 0 71 0 )
+
+        spawn script_object "targetname" "pl21" "classname" "info_splinepath"
+        $pl21.origin = ( 3256 1007 1900 )
+        $pl21.angles = ( 0 71 0 )
+        
+        spawn script_object "targetname" "pl22" "classname" "info_splinepath"
+        $pl22.origin = ( 4337 4492 1900 )
+        $pl22.angles = ( 0 71 0 )
+        
+        spawn script_object "targetname" "pl35" "classname" "info_splinepath"
+        $pl35.origin = ( 1083 5425 1900 )
+        $pl35.angles = ( 0 305 0 )
+
+        spawn script_object "targetname" "pl36" "classname" "info_splinepath"
+        $pl36.origin = ( 3402 3012 1900 )
+        $pl36.angles = ( 0 305 0 )
+        
+        spawn script_object "targetname" "pl37" "classname" "info_splinepath"
+        $pl37.origin = ( 5629 198 1900 )
+        $pl37.angles = ( 0 305 0 )
+
+        spawn script_object "targetname" "pl50" "classname" "info_splinepath"
+        $pl50.origin = ( 5647 1799 1900 )
+        $pl50.angles = ( 0 220 0 )
+
+        spawn script_object "targetname" "pl51" "classname" "info_splinepath"
+        $pl51.origin = ( 2749 520 1900 )
+        $pl51.angles = ( 0 220 0 )
+        
+        spawn script_object "targetname" "pl52" "classname" "info_splinepath"
+        $pl52.origin = ( -300 -1224 1900 )
+        $pl52.angles = ( 0 220 0 )
+
+        $pl20.target = $pl21
+        $pl21.target = $pl22
+        $pl35.target = $pl36
+        $pl36.target = $pl37
+
+        $pl50.target = $pl51
+        $pl51.target = $pl52
+        end
+
+
+MULTI_C47_DROP:
+         
+            while(1)
+            {
+
+              switch ((randomint 3)+1)
+              {
+                case 1:
+                local.MULTI_P = spawn script_model "targetname" "MULTI_P"
+                $MULTI_P model "models/vehicles/c47fly.tik"                                  
+                $MULTI_P.origin = $pl50.origin                 
+                $MULTI_P.angles = ( 0 168 0 )                     
+                $MULTI_P notsolid
+                $MULTI_P loopsound fly_snd
+                local.MULTI_SPOT_A = spawn script_origin "targetname" "MULTI_SPOT_A"
+                $MULTI_SPOT_A.origin = $MULTI_P.origin + ( -150 70 25 ) 
+                $MULTI_SPOT_A bind $MULTI_P
+                local.MULTI_SPOT_B = spawn script_origin "targetname" "MULTI_SPOT_B"
+                $MULTI_SPOT_B.origin = $MULTI_P.origin + ( -150 -70 25 ) 
+                $MULTI_SPOT_B bind $MULTI_P
+                local.MULTI_SPOT_C = spawn script_origin "targetname" "MULTI_SPOT_C"
+                $MULTI_SPOT_C.origin = $MULTI_P.origin + ( -100 70 25 ) 
+                $MULTI_SPOT_C bind $MULTI_P
+                local.RIDE = 1
+                break
+
+                case 2:
+                local.MULTI_P = spawn script_model "targetname" "MULTI_P"
+                $MULTI_P model "models/vehicles/c47fly.tik"                                  
+                $MULTI_P.origin = $pl20.origin                 
+                $MULTI_P.angles = ( 0 180 0 )                     
+                $MULTI_P notsolid
+                $MULTI_P loopsound fly_snd
+                local.MULTI_SPOT_A = spawn script_origin "targetname" "MULTI_SPOT_A"
+                $MULTI_SPOT_A.origin = $MULTI_P.origin + ( -150 70 25 ) 
+                $MULTI_SPOT_A bind $MULTI_P
+                local.MULTI_SPOT_B = spawn script_origin "targetname" "MULTI_SPOT_B"
+                $MULTI_SPOT_B.origin = $MULTI_P.origin + ( -150 -70 25 ) 
+                $MULTI_SPOT_B bind $MULTI_P
+                local.MULTI_SPOT_C = spawn script_origin "targetname" "MULTI_SPOT_C"
+                $MULTI_SPOT_C.origin = $MULTI_P.origin + ( -100 70 25 ) 
+                $MULTI_SPOT_C bind $MULTI_P
+                local.RIDE = 2
+                break
+
+                case 3:
+                local.MULTI_P = spawn script_model "targetname" "MULTI_P"
+                $MULTI_P model "models/vehicles/c47fly.tik"                                  
+                $MULTI_P.origin = $pl35.origin                 
+                $MULTI_P.angles = ( 0 0 0 )                     
+                $MULTI_P notsolid
+                $MULTI_P loopsound fly_snd
+                local.MULTI_SPOT_A = spawn script_origin "targetname" "MULTI_SPOT_A"
+                $MULTI_SPOT_A.origin = $MULTI_P.origin + ( -150 70 25 ) 
+                $MULTI_SPOT_A bind $MULTI_P
+                local.MULTI_SPOT_B = spawn script_origin "targetname" "MULTI_SPOT_B"
+                $MULTI_SPOT_B.origin = $MULTI_P.origin + ( -150 -70 25 ) 
+                $MULTI_SPOT_B bind $MULTI_P
+                local.MULTI_SPOT_C = spawn script_origin "targetname" "MULTI_SPOT_C"
+                $MULTI_SPOT_C.origin = $MULTI_P.origin + ( -100 70 25 ) 
+                $MULTI_SPOT_C bind $MULTI_P
+                local.RIDE = 3
+                break
+              }
+
+              $MULTI_TRIG_A triggerable
+              $MULTI_TRIG_B triggerable
+              $MULTI_TRIG_C triggerable
+              wait 2
+              $MULTI_TRIG_A nottriggerable
+              $MULTI_TRIG_B nottriggerable
+              $MULTI_TRIG_C nottriggerable
+
+              if (local.RIDE==1)
+              {
+                $MULTI_P flypath $pl50 950 200
+              }
+              else if (local.RIDE==2)
+              {
+                $MULTI_P flypath $pl20 950 200
+              }
+              else if (local.RIDE==3)
+              {
+                $MULTI_P flypath $pl35 950 200
+              }
+
+              $MULTI_P waitmove
+              local.RIDE = 0
+              $MULTI_SPOT_A remove
+              $MULTI_SPOT_B remove
+              $MULTI_SPOT_C remove
+              $MULTI_P remove
+              wait 15
+            }
+            end
+
+
+MULTI_BAIL_A:
+
+        $MULTI_TRIG_A nottriggerable
+        local.PLAYER = parm.other
+        local.PLAYER glue $MULTI_SPOT_A
+        wait 8.5
+        local.PLAYER unglue $MULTI_SPOT_A
+        local.PLAYER physics_on
+        local.PLAYER gravity 0.2
+        wait 10
+        local.PLAYER gravity 1
+        end
+
+
+MULTI_BAIL_B:
+
+        $MULTI_TRIG_B nottriggerable
+        local.PLAYER = parm.other
+        local.PLAYER glue $MULTI_SPOT_B
+        wait 10.5
+        local.PLAYER unglue $MULTI_SPOT_B
+        local.PLAYER physics_on
+        local.PLAYER gravity 0.2
+        wait 10
+        local.PLAYER gravity 1
+        end
+
+
+MULTI_BAIL_C:
+
+        $MULTI_TRIG_C nottriggerable
+        local.PLAYER = parm.other
+        local.PLAYER glue $MULTI_SPOT_C
+        wait 11
+        local.PLAYER unglue $MULTI_SPOT_C
+        local.PLAYER physics_on
+        local.PLAYER gravity 0.2
+        wait 10
+        local.PLAYER gravity 1
+	end
+
+Allies_drop:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -2993 4285 17 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -2993 4285 -13 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -2993 4285 -43 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -2993 4285 -43 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop
+local.trig wait 0 
+local.trig delay 0
+
+dropPara:
+	
+	// Thread created by Feho
+	local.para = self
+	local.para gravity 0.2
+	local.para.isdrop = 1
+	local.para physics_on
+	local.para show
+
+	local.para solid
+	local.vec = local.para.velocity
+	local.velocity_get = -250
+
+	local.para forcelegsstate STAND
+	local.para forcetorsostate STAND
+
+	local.chute = spawn script_model
+
+	if(local.para.dmteam!="axis")
+	{
+		local.chute model "static/parachute_white_canvas.tik"
+	}
+	else
+	{
+		local.chute model "static/parachute.tik"
+	}
+
+	local.chute.origin = ( local.para gettagposition "Bip01 Spine1" )
+	local.chute notsolid
+	local.chute scale 1
+	local.chute.angles = local.para.angles
+	//local.chute.angles[1] = local.chute.angles[1]
+
+	local.chute1 = spawn script_origin
+	local.chute1.origin = ( local.para gettagposition "Bip01 Spine1" ) + ( 0 0 100)
+
+	local.chute1 attach local.para "Bip01 Spine1"
+	local.chute glue local.chute1
+	// local.chute attach local.player "Bip01 Spine1"
+
+	local.vec[0] = local.para.velocity[0]
+	local.vec[1] = local.para.velocity[1]
+	local.vec[2] = local.velocity_get
+
+	local.para.velocity = local.vec
+
+	wait 0.2
+
+	while (local.para && local.para.dmteam != "spectator" && local.para.velocity[2] < 0)
+	{
+		if(local.para.health>2)
+		{
+			local.vec[0] = local.para.velocity[0]
+			local.vec[1] = local.para.velocity[1]
+			local.vec[2] = local.velocity_get
+
+			local.para.velocity = local.vec
+		}
+
+		waitframe
+	}
+
+	if (!local.para)
+		end
+
+	// local.para gravity .2 //the players low gravity drop - beware how high you drop player from as they speed up as they drop 
+	// local.para solid
+	//local.para stufftext "say My Parachute Opened :-) "
+	// local.chute = spawn script_model
+	// local.chute model "models/static/parachute_white_canvas.tik" "targetname" "chute" 
+	// local.chute.origin = local.para.origin
+	// local.chute attach local.para "Bip01 Spine1" 0 (0 0 0)
+	// local.chute scale 1
+	// wait 9 //the time until player lands and gravity is returned to normal
+	// local.para solid
+	local.para gravity 1
+	local.chute1 detach local.para
+	local.chute1 speed 50
+	local.chute1 movedown 200
+	local.chute1 waitmove
+	local.chute1 remove
+	local.chute remove
+	local.para.isdrop=0
+	local.para.isdrop1=0
+	local.para.isdrop2=0
+	local.para.isdrop3=0
+	local.para.isdrop4=0
+	local.para.isdrop5=0
+	local.para.isdrop6=0
+	local.para.isdrop7=0
+	local.para.isdrop8=0
+	local.para.isdrop9=0
+	local.para.isdrop10=0
+	local.para.isdrop11=0
+	local.para.isdrop12=0
+
+end
+
+drop:
+self waittill trigger
+local.para=parm.other
+if (local.para.isdrop==1)
+end
+local.para.isdrop=1
+local.para tele ( 3462 2331 1700  )
+local.para thread dropPara
+end
+
+Allies_drop1:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -2613 3879 6 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -2613 3879 -24 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -2613 3879 -54 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -2613 3879 -54 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop1
+local.trig wait 0 
+local.trig delay 0
+
+drop1:
+self waittill trigger
+local.para1=parm.other
+if (local.para1.isdrop1==1)
+end
+local.para1.isdrop1=1
+local.para1 tele ( 3067 810 1700  )
+local.para1 thread dropPara
+end
+
+Allies_drop2:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -1128 5200 -76 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -1128 5200 -106 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -1128 5200 -136 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -1128 5200 -136 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop2
+local.trig wait 0 
+local.trig delay 0
+
+drop2:
+self waittill trigger
+local.para2=parm.other
+if (local.para2.isdrop2==1)
+end
+local.para2.isdrop2=1
+local.para2 tele ( 3862 2831 1700  )
+local.para2 thread dropPara
+end
+
+Allies_drop3:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -1373 4083 0 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -1373 4083 -30 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -1373 4083 -60 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -1373 4083 -60 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop3
+local.trig wait 0 
+local.trig delay 0
+
+drop3:
+self waittill trigger
+local.para3=parm.other
+if (local.para3.isdrop3==1)
+end
+local.para3.isdrop3=1
+local.para3 tele ( 4062 2331 1700 )
+local.para3 thread dropPara
+end
+
+
+AXis_drop4:
+
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/fockwulf.tik" //allies drop
+local.orb.origin = ( 1219 -97 -189 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .1
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute.tik" //allies drop
+local.orb.origin = ( 1219 -97 -219 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/german_waffenss_shutze.tik" //allies drop
+local.orb.origin = ( 1219 -97 -249 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( 1219 -97 -249 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop4
+local.trig wait 0 
+local.trig delay 0
+
+drop4:
+self waittill trigger
+local.para4=parm.other
+if (local.para4.isdrop4==1)
+end
+local.para4.isdrop4=1
+local.para4 tele ( 4262 2531 1700 )
+local.para4 thread dropPara
+end
+
+Allies_drop5:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -2506 4464 -3 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -2506 4464 -33 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -2506 4464 -63 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -2506 4464 -63 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop5
+local.trig wait 0 
+local.trig delay 0
+
+drop5:
+self waittill trigger
+local.para5=parm.other
+if (local.para5.isdrop5==1)
+end
+local.para5.isdrop5=1
+local.para5 tele ( 4692 721 1700 )
+local.para5 thread dropPara
+end
+
+Allies_drop6:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -2229 3455 -74 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -2229 3455 -104 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -2229 3455 -134 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -2229 3455 -134 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop6
+local.trig wait 0 
+local.trig delay 0
+
+drop6:
+self waittill trigger
+local.para6=parm.other
+if (local.para6.isdrop6==1)
+end
+local.para6.isdrop6=1
+local.para6 tele ( 3114 3715 1700 )
+local.para6 thread dropPara
+end
+
+Allies_drop7:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -1600 3679 -10 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -1600 3679 -40 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -1600 3679 -70 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -1600 3679 -70 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop7
+local.trig wait 0 
+local.trig delay 0
+
+drop7:
+self waittill trigger
+local.para7=parm.other
+if (local.para7.isdrop7==1)
+end
+local.para7.isdrop7=1
+local.para7 tele ( 3114 3315 1700 )
+local.para7 thread dropPara
+end
+
+AXis_drop8:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/fockwulf.tik" //allies drop
+local.orb.origin = ( 336 214 -243 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .1
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute.tik" //allies drop
+local.orb.origin = ( 336 214 -273  ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/german_waffenss_shutze.tik" //allies drop
+local.orb.origin = ( 336 214 -303 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( 336 214 -303 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop8
+local.trig wait 0 
+local.trig delay 0
+
+drop8:
+self waittill trigger
+local.para8=parm.other
+if (local.para8.isdrop8==1)
+end
+local.para8.isdrop8=1
+local.para8 tele ( 3214 3815 1700 )
+local.para8 thread dropPara
+end
+
+
+Allies_drop9:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -230 5780 -84 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -230 5780 -114 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -230 5780 -144 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -230 5780 -144 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop9
+local.trig wait 0 
+local.trig delay 0
+
+drop9:
+self waittill trigger
+local.para9=parm.other
+if (local.para9.isdrop9==1)
+end
+local.para9.isdrop9=1
+local.para9 tele ( 3414 3715 1700  )
+local.para9 thread dropPara
+end
+
+Allies_drop10:
+
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -628 5287 -70 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -628 5287 -100 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -628 5287 -130 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -628 5287 -130 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop10
+local.trig wait 0 
+local.trig delay 0
+
+drop10:
+self waittill trigger
+local.para10=parm.other
+if (local.para10.isdrop10==1)
+end
+local.para10.isdrop10=1
+local.para10 tele ( 3614 3515 1700  )
+local.para10 thread dropPara
+end
+
+AXis_drop11:
+
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/fockwulf.tik" //allies drop
+local.orb.origin = ( 227 -374 -245  ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .1
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute.tik" //allies drop
+local.orb.origin = ( 227 -374 -275 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/german_waffenss_shutze.tik" //allies drop
+local.orb.origin = ( 227 -374 -305 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( 227 -374 -305 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop11
+local.trig wait 0 
+local.trig delay 0
+
+drop11:
+self waittill trigger
+local.para11=parm.other
+if (local.para11.isdrop11==1)
+end
+local.para11.isdrop11=1
+local.para11 tele ( 3082 3016 1700  )
+local.para11 thread dropPara
+end
+
+Allies_drop12:
+
+local.orb = spawn script_model
+local.orb model "models/vehicles/c47fly.tik" //allies drop
+local.orb.origin = ( -1255 3280 90 ) 
+local.orb.angles = ( 0 90 0 )
+local.orb.scale = .06
+local.orb notsolid
+local.orb ghost
+
+local.orb = spawn script_model
+local.orb model "models/static/parachute_white_canvas.tik" //allies drop
+local.orb.origin = ( -1255 3280 60 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .2
+local.orb notsolid
+local.orb ghost
+
+
+local.orb = spawn script_model
+local.orb model "models/player/allied_airborne.tik" //allies drop
+local.orb.origin = ( -1255 3280 30 ) 
+local.orb.angles = ( 0 0 0 )
+local.orb.scale = .3
+local.orb notsolid
+local.orb ghost
+//local.orb rotatex 360
+local.orb rotatey 360
+//local.orb rotatez 360
+
+local.trig = spawn trigger_multiple
+local.trig.origin = ( -1255 3280 30 ) 
+local.trig setsize ( -40 -40 -10 ) ( 40 40 10 ) 
+local.trig setthread drop12
+local.trig wait 0 
+local.trig delay 0
+
+drop12:
+self waittill trigger
+local.para12=parm.other
+if (local.para12.isdrop12==1)
+end
+local.para12.isdrop12=1
+local.para12 tele ( 2614 3915 1700  )
+local.para12 thread dropPara
+end
+
+port1:
+
+local.portlight = spawn script_model
+local.portlight model "emitters/welding_spark.tik"
+local.portlight.origin = ( 1449 -72 -200 ) // starting point
+local.portlight.scale = .5
+
+local.trig = spawn trigger_use
+local.trig targetname port1
+local.trig.origin = ( 1449 -72 -200 ) // starting point
+local.trig setsize ( -60 -60 0 ) ( 60 60 90 )
+$port1 waittill trigger
+local.player = parm.other
+local.player tele ( 1460 -394 515 ) // destination
+thread port1
+
+end
+
+port2:
+
+local.portlight = spawn script_model
+local.portlight model "emitters/welding_spark.tik"
+local.portlight.origin = ( 3304 1448 40 ) // starting point
+local.portlight.scale = .5
+
+local.trig = spawn trigger_use
+local.trig targetname port2
+local.trig.origin = ( 3304 1448 40 ) // starting point
+local.trig setsize ( -60 -60 0 ) ( 60 60 90 )
+$port2 waittill trigger
+local.player = parm.other
+local.player tele ( 3370 1300 304 ) // destination
+thread port2
+
+end
+
+port3: 
+
+local.portlight = spawn script_model
+local.portlight model "emitters/welding_spark.tik" 
+local.portlight.origin = ( 4323 1786 -90 ) // starting point
+local.portlight.scale = .5
+
+local.trig = spawn trigger_use
+local.trig targetname port3 
+local.trig.origin = ( 4323 1786 -90 ) // starting point
+local.trig setsize ( -60 -60 0 ) ( 60 60 90 )
+$port3 waittill trigger
+local.player = parm.other
+local.player tele ( 4162 1535 460 ) // destination
+local.portlight remove
+$port3 remove
+wait 1
+thread port3
+end
+
+port4: 
+
+local.portlight = spawn script_model
+local.portlight model "emitters/welding_spark.tik" 
+local.portlight.origin = ( -1100 5021 -81 ) // starting point
+local.portlight.scale = .5
+
+local.trig = spawn trigger_use
+local.trig targetname port4 
+local.trig.origin = ( -1100 5021 -81 ) // starting point
+local.trig setsize ( -40 -40 0 ) ( 40 40 10 )
+$port4 waittill trigger
+local.player = parm.other
+local.player tele ( -1742 4348 -160 ) // destination
+local.portlight remove
+$port4 remove
+wait 1
+thread port4
+end
+
+port5: 
+
+local.portlight = spawn script_model
+local.portlight model "emitters/welding_spark.tik" 
+local.portlight.origin = ( -1744 4390 -90 ) // starting point
+local.portlight.scale = .5
+
+local.trig = spawn trigger_use
+local.trig targetname port5 
+local.trig.origin = ( -1744 4390 -90 ) // starting point
+local.trig setsize ( -50 -50 0 ) ( 50 50 10 )
+$port5 waittill trigger
+local.player = parm.other
+local.player tele ( -786 5394 -158 ) // destination
+local.portlight remove
+$port5 remove
+wait 1
+thread port5
+end
+
+set_shark:
+
+local.trig1 = spawn trigger_multiple
+local.trig1.origin = ( 1 1 -513 ) 
+local.trig1 setsize ( -9999 -9999 0 ) ( 9999 9999 10 )
+local.trig1 waittill trigger
+local.trig1 setthread die
+local.trig1 message "No You Dont!!!"
+local.trig1 delay 0
+end
+
+die:
+local.punk = parm.other
+//local.punk stufftext "say IM A LOSER AND A COWARD BECAUSE IM UNDER THE MAP"
+wait .1
+local.punk kill
+//"say IM UNDER THE MAP, THUS I MUST BE THE BIGGEST GAY IN GAY TOWN!"
+
+end
+
+//*************************************
+//-------------FIREWORKS START--------
+//*************************************
+
+krugers_fireworks:
+wait 10
+thread random_exploder1
+thread random_exploder2
+thread random_exploder3
+thread random_exploder4
+thread random_exploder5
+thread random_exploder6
+thread random_exploder7
+thread random_exploder8
+thread random_exploder9
+
+end
+
+random_exploder1:
+
+wait (randomfloat(13) + 16)
+$random_explode1 playsound drop_bomb
+wait 2
+$random_explode1 playsound bazooka_exp01
+wait 1
+exec global/model.scr $random_explode1.origin "models/animate/fx_explosion_flak88.tik" 3
+radiusdamage ($random_explode1.origin + (0 0 64)) 250 400
+goto random_exploder1
+end
+
+random_exploder2:
+wait (randomfloat(13) + 16)
+$random_explode2 playsound drop_bomb
+wait 2
+$random_explode2 playsound bazooka_exp01
+wait 1
+exec global/model.scr $random_explode2.origin "models/animate/fx_explosion_flak88.tik" 3
+radiusdamage ($random_explode2.origin + (0 0 64)) 250 400
+goto random_exploder2
+end
+
+random_exploder3:
+wait (randomfloat(13) + 16)
+$random_explode3 playsound drop_bomb
+wait 2
+$random_explode3 playsound bazooka_exp02
+wait 1
+exec global/model.scr $random_explode3.origin "models/animate/fx_explosion_flak88.tik" 3
+radiusdamage ($random_explode3.origin + (0 0 64)) 250 400
+goto random_exploder3
+end 
+
+random_exploder4:
+wait (randomfloat(13) + 16)
+$random_explode4 playsound drop_bomb
+wait 2
+$random_explode4 playsound bazooka_exp01
+wait 1
+exec global/model.scr $random_explode4.origin "models/animate/fx_explosion_flak88.tik" 3
+radiusdamage ($random_explode4.origin + (0 0 64)) 250 400
+goto random_exploder4
+end
+
+random_exploder5:
+wait (randomfloat(13) + 16)
+$random_explode5 playsound arty_leadin01
+wait 2
+$random_explode5 playsound bazooka_exp01
+wait 1
+exec global/model.scr $random_explode5.origin "models/animate/fx_explosion_flak88.tik" 3
+radiusdamage ($random_explode5.origin + (0 0 64)) 250 400
+goto random_exploder5
+end
+
+random_exploder6:
+wait (randomfloat(13) + 16)
+$random_explode6 playsound drop_bomb
+wait 2
+$random_explode6 playsound bazooka_exp03
+wait 1
+exec global/model.scr $random_explode6.origin "models/animate/fx_explosion_flak88.tik" 3
+radiusdamage ($random_explode6.origin + (0 0 64)) 250 400
+goto random_exploder6
+end
+
+random_exploder7:
+wait (randomfloat(13) + 16)
+$random_explode7 playsound drop_bomb
+wait 2
+$random_explode7 playsound bazooka_exp01 
+wait 1
+exec global/model.scr $random_explode7.origin "models/animate/fx_mortar_higgins.tik" 3
+radiusdamage ($random_explode7.origin + (0 0 64)) 250 400
+goto random_exploder7
+end
+
+random_exploder8:
+wait (randomfloat(13) + 16)
+$random_explode8 playsound arty_leadin01
+wait 2
+$random_explode8 playsound bazooka_exp01
+wait 1
+exec global/model.scr $random_explode8.origin "models/animate/fx_explosion_flak88.tik" 3
+radiusdamage ($random_explode8.origin + (0 0 64)) 250 400
+goto random_exploder8
+end
+
+random_exploder9:
+wait (randomfloat(13) + 16)
+$random_explode9 playsound drop_bomb
+wait 2
+$random_explode9 playsound bazooka_exp01
+wait 1
+exec global/model.scr $random_explode9.origin "models/animate/fx_explosion_flak88.tik" 3
+radiusdamage ($random_explode9.origin + (0 0 64)) 250 400
+goto random_exploder9
+end  
+
+
+
+//----------------
+//END OF FIREWORKS
+//----------------
+
+
+teleporting:
+
+	local.player = parm.other
+	
+	local.para_origin = local.player.origin + ( 0 0 -180 )
+	local.player tele local.para_origin
+	
+end

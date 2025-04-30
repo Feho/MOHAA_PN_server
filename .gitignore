@@ -65,6 +65,7 @@ x64/
 build/
 [Bb]in/
 [Oo]bj/
+!main/maps/obj/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
