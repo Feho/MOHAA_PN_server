@@ -344,14 +344,14 @@ random_player local.team:
 			}
 
 			// Ensure the selected player is valid and alive before checking visibility
-			if (isDefined local.randomPlayer && isAlive local.randomPlayer && local.randomPlayer.can_speak != 0)
+			if (local.randomPlayer && isAlive local.randomPlayer && local.randomPlayer.can_speak != 0)
 			{
 				// Parcourt seulement les joueurs de l'équipe adverse
 				for (local.i = 1 ; local.i <= local.nbPlayers ; local.i++)
 				{
 					local.targetPlayer = $player[local.i]
 					// Check if target is valid, alive, and on the opposing team
-					if (isDefined local.targetPlayer && isAlive local.targetPlayer && local.targetPlayer.dmteam == local.opposingTeam)
+					if (local.targetPlayer && isAlive local.targetPlayer && local.targetPlayer.dmteam == local.opposingTeam)
 					{
 						// Si randomPlayer peut voir le joueur adverse, le son est joué
 						if (local.randomPlayer cansee local.targetPlayer 140 4000) // FOV 140, Distance 4000
