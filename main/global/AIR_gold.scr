@@ -107,6 +107,8 @@ treasure_spawn local.info:
 	}
 
 	level.AIR_maxgold = local.f
+	
+	thread spawn_random_treasure
 
 end
 
@@ -122,6 +124,35 @@ spin:
         self.angles = (0 local.angle 0) // Rotate around Z-axis
         waitframe                        // Wait one frame before next rotation
     }
+end
+
+spawn_random_treasure:
+
+	if (level.random_treasure_spawn == 1) end
+
+	level.random_treasure_spawn = 1
+	wait 60
+
+	while ($player.size == 0) wait 1
+	
+	// Select a random alive player origin
+	local.players = NIL
+
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.p = $player[local.i]
+		if (isalive local.p && local.p.dmteam != "spectator")
+			local.players[local.i] = local.p
+	}
+
+	local.origin = local.players[randomint(local.players.size) + 1].origin
+	wait 60 // So the player doesn't get the treasure right away
+
+	local.info = makeArray
+		( local.origin ) ( 0 0 0 ) "random"
+ 	endArray
+
+	thread treasure_spawn local.info
 end
 
 //*********************************************************************
