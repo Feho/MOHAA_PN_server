@@ -162,10 +162,14 @@ treasure_tr:
 			"ammo"
 			"armor"
 			"grenade"
+			"grenadeXXL"
 			"weapon"
 			"allweapon"
 			"zooka"
 			"shotgun"
+			"speed"
+			"regenerate"
+			"damage"
 		endArray
 
 		// randomint returns 0 to (size - 1). Add 1 for 1-based array index.
@@ -245,6 +249,10 @@ treasure_tr:
 			local.p ammo grenade 6
 			local.p iprint "You got 6 more grenades!" 1
 		break
+		case "grenadeXXL":
+			local.p.rankbonus["explosion"] = 1
+			local.p iprint "Your grenades are now more powerful!" 1
+		break
 		case "weapon":
 			local.weapon = waitthread global/AIR_gold.scr::random_weapon
 			local.picky = randomint(local.weapon.size)
@@ -292,6 +300,18 @@ treasure_tr:
 			local.p ammo shotgun 30
 			local.p iprint ("You have received a Shotgun!!") 1
 		break
+		case "speed":
+			local.p weaponcommand dual dmmovementspeed 1.20
+			local.p iprint ("You have received a Speed Bonus!!") 1
+		break
+		case "regenerate":
+			local.p thread regenerate
+			local.p iprint ("You have received a Regeneration Bonus!!") 1
+		break
+		case "damage":
+			local.p weaponcommand dual dmbulletdamage 140
+			local.p iprint ("You have received a Damage Bonus!!") 1
+		break
 	}
 
 	// self remove
@@ -301,6 +321,34 @@ treasure_tr:
 	self triggerable
 	self.gold show
 
+end
+
+regenerate:
+
+	local.origin = self.origin
+
+	while (self && isalive self)
+	{
+		if ( (vector_within local.origin self.origin 10) == 1 && self.health < 100)
+		{
+			self healthonly (self.health + 5)
+		}
+	
+		local.origin = self.origin
+		
+		local.time = 1.0
+		while(local.time > 0)
+		{
+			if (!self || !isalive self)
+			{
+				end
+			}
+			local.time -= 0.1
+			wait 0.1
+		}
+		wait 0.1
+	}
+	
 end
 
 get_wpnclass local.wpn_model:
