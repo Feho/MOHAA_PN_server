@@ -642,42 +642,38 @@ endtriggeral:
             local.player tele ( -2160 -5064 -340 ) 
             local.player.angle = -2
             // local.player.killcount = ((local.player.killcount)+5)
-            local.player addkills 5
-            local.player iprint "You've won 5 points for scoring !" 1
+            // local.player addkills 5
+            // local.player iprint "You've won 5 points for scoring !" 1
             level.alliesscore++
             thread Scorethread
             iprintlnbold "Allies Score !"
-            if(level.resetals == 1)
-            {
-                level.resetals = 0
-            }
+            wait 1
+            goto pushtrgcheck2
         }
         wait .5
     }
 end
 
 endtriggerax:
-while(1)
-{
-$endtrgax waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-   local.player = parm.other 
-   local.player tele ( 4340 3850 600 )
-   local.player.angle = -173
-   // local.player.killcount = ((local.player.killcount)+5)
-   local.player addkills 5
-   local.player iprint "You've won 5 points for scoring !" 1
-   level.axisscore++
-   thread Scorethread
-   iprintlnbold "Axis Score !"
-   if(level.resetaxs == 1)
-    {
-       level.resetaxs = 0
+  while(1)
+  {
+    $endtrgax waittill trigger
+    if(parm.other.dmteam == axis) 
+    { 
+      local.player = parm.other 
+      local.player tele ( 4340 3850 600 )
+      local.player.angle = -173
+      // local.player.killcount = ((local.player.killcount)+5)
+      // local.player addkills 5
+      // local.player iprint "You've won 5 points for scoring !" 1
+      level.axisscore++
+      thread Scorethread
+      iprintlnbold "Axis Score !"
+      wait 1
+      goto pushtrgcheck2x
     }
+    wait .5
   }
-wait .5
-}
 end
 
 triggerstart:

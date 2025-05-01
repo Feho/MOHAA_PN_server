@@ -657,12 +657,11 @@ if(parm.other.dmteam == allies)
    local.player addkills 5
    local.player iprint "You've won 5 points for scoring !" 1
    level.alliesscore++
+   level.sflag = 1 // Reset Allied spawn progression
    thread Scorethread
    iprintlnbold "Allies Score !"
-   if(level.resetals == 1)
-	{
-   	level.resetals = 0
-	}
+   wait 1
+   goto pushtrgcheck2
   }
 wait .5
 }
@@ -680,12 +679,12 @@ if(parm.other.dmteam == axis)
    local.player addkills 5
    local.player iprint "You've won 5 points for scoring !" 1
    level.axisscore++
+   level.sflagx = 1 // Reset Axis spawn progression
    thread Scorethread
    iprintlnbold "Axis Score !"
-   if(level.resetaxs == 1)
-	{
-   	level.resetaxs = 0
-	}
+   wait 1
+   goto pushtrgcheck2x
+
   }
 wait .5
 }
