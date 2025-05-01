@@ -193,6 +193,15 @@ tdmtype:
 	// exec server_planes/trigger.scr ( -3635 -7251 -346 ) "axis"
 	// exec server_planes/trigger.scr ( 4276 -4676 -160 ) "axis"
 
+	local.info = makeArray
+		( -3621 1957 1 ) ( 0 0 0 ) "random"
+		( -5941 -7074 -230 ) ( 0 0 0 ) "random"
+		( 3539 -2917 -231 ) ( 0 0 0 ) "random"
+ 	endArray
+
+	thread global/AIR_gold.scr::treasure_spawn local.info
+
+
 	$exploder remove 
 	$exploderchunk remove 
 	level.clockside = kills
