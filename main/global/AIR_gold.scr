@@ -132,20 +132,10 @@ spawn_random_treasure:
 
 	level.random_treasure_spawn = 1
 	wait 60
-
-	while ($player.size == 0) wait 1
 	
-	// Select a random alive player origin
-	local.players = NIL
-
-	for (local.i = 1; local.i <= $player.size; local.i++)
-	{
-		local.p = $player[local.i]
-		if (isalive local.p && local.p.dmteam != "spectator")
-			local.players[local.i] = local.p
-	}
-
-	local.origin = local.players[randomint(local.players.size) + 1].origin
+	local.randomPlayer = waitthread global/feho/utils.scr::get_random_alive_player
+	println ("Random player: " + netname local.randomPlayer)
+	local.origin = local.randomPlayer.origin
 	wait 60 // So the player doesn't get the treasure right away
 
 	local.info = makeArray
@@ -341,7 +331,7 @@ treasure_tr:
 		break
 		case "damage":
 			local.p weaponcommand dual dmbulletdamage 140
-			local.p iprint ("You have received a Damage Bonus!!") 1
+			local.p iprint ("Your weapon damage has been increased!") 1
 		break
 	}
 

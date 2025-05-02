@@ -1,0 +1,30 @@
+get_random_alive_player:
+
+    local.players = waitthread get_alive_players
+	local.p = local.players[randomint(local.players.size) + 1]
+
+end local.p
+
+get_alive_players:
+
+	local.alive_players = NIL
+
+    while (local.alive_players == NIL || local.alive_players.size == 0)
+    {
+        local.count = 0
+
+        for (local.i = 1; local.i <= $player.size; local.i++)
+        {
+            local.p = $player[local.i]
+
+            if (isalive local.p && local.p.dmteam != "spectator")
+            {
+                local.count++
+                local.alive_players[local.count] = local.p
+            }
+        }
+
+        if (local.alive_players.size <= 0) wait 5
+    }
+
+end local.alive_players // Return the dense array
