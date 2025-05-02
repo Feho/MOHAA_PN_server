@@ -1,0 +1,49 @@
+main:
+
+    event_subscribe "player_spawned" event_player_spawned
+    event_subscribe "player_killed" event_player_killed
+
+end
+
+event_player_spawned:
+
+    if (isBot self)
+    {
+        wait 2
+        local.wpn = waitthread global/feho/utils.scr::get_weapon self
+        local.wpnclass = waitthread global/feho/utils.scr::get_wpnclass local.wpn
+        
+        if (local.wpnclass == "heavy")
+        {
+            // Give the bot a Thompson or MP40 to replace the Bazooka.
+            self takeall
+
+            if (self.dmteam == "axis")
+                self giveweapon "models/weapons/mp40.tik"
+            else
+                self giveweapon "models/weapons/thompsonsmg.tik"
+        }
+
+        wait 1
+        // Set the spread to be the same as the Thompson regardless of the weapon,
+        // so that the bots are not too accurate.
+        self weaponcommand dual dmbulletspread	40 40 50 50
+    }
+
+end
+
+event_player_killed:
+    
+    // Spawn a treasure with a 5% probability
+    // local.origin = self.origin
+
+    // if (randomint(100) < 5)
+    // {
+    //     local.info = makeArray
+    //         local.origin ( 0 0 0 ) "random"
+    //     endArray
+
+    //     thread global/AIR_gold.scr::treasure_spawn local.info
+    // }
+
+end

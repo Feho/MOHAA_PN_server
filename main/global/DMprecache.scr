@@ -172,6 +172,8 @@ cache models/emitters/higgins_mushroom.tik
 // Bipied BAR
 cache models/statweapons/mg42_bipod_nonstatic.tik
 
+exec global/events.scr
+
 level waittill spawn
 
 exec global/feho/voices.scr //feho sighted voices

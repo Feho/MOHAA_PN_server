@@ -27,4 +27,70 @@ get_alive_players:
         if (local.alive_players.size <= 0) wait 5
     }
 
-end local.alive_players // Return the dense array
+end local.alive_players
+
+get_weapon local.p:
+
+    local.p weaponcommand dual targetname ("w" + local.p.entnum)
+    local.weapon = $("w" + local.p.entnum )
+
+    if(local.weapon != NULL)
+    {
+        local.model = local.weapon.model
+        local.weapon targetname ""
+    }
+    else
+    {
+        local.model = "models/weapons/unarmed.tik"
+    }
+				
+end local.model
+
+get_weapon_class local.p:
+
+    local.wpn_model = waitthread get_weapon local.p
+    waitframe
+    local.result = waitthread get_wpnclass local.wpn_model
+
+end local.result
+
+get_wpnclass local.wpn_model:
+
+	switch(local.wpn_model)
+	{
+		case "models/weapons/m1_garand.tik":
+		case "models/weapons/kar98.tik":
+		case "models/weapons/kar98sniper.tik":
+		case "models/weapons/springfield.tik":
+			local.result = rifle
+		break
+		case "models/weapons/bar.tik":
+		case "models/weapons/mp44.tik":
+			local.result = mg
+		break
+		case "models/weapons/thompsonsmg.tik":
+		case "models/weapons/mp40.tik":
+			local.result = smg
+		break
+		case "models/weapons/bazooka.tik":
+		case "models/weapons/panzerschreck.tik":
+			local.result = heavy
+		break
+		case "models/weapons/shotgun.tik":
+			local.result = shotgun
+		break
+		case "models/weapons/m2frag_grenade.tik":
+		case "models/weapons/steilhandgranate.tik":
+			local.result = grenade
+		break
+		case "models/weapons/colt45.tik":
+		case "models/weapons/silencedpistol.tik":
+		case "models/weapons/p38.tik":
+			local.result = pistol
+		break
+		default:
+			local.result = none
+		break
+	}
+
+end local.result
