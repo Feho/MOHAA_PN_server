@@ -338,7 +338,7 @@ treasure_tr:
 	// self remove
 	// thread global/AIR_gold.scr::treasure_changes
 	
-	wait 120
+	wait 240 // 4 minutes before respawning the gold
 	self triggerable
 	self.gold show
 
