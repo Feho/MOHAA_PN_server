@@ -158,6 +158,7 @@ cache models/fx/fs_snow.tik
 cache models/fx/dummy.tik
 cache models/items/binoculars.tik
 cache models/items/dm_50_healthbox.tik
+cache models/static/indycrate.tik
 
 //Other missing caches
 //cache models/fx/scriptbazookaexplosion.tik
