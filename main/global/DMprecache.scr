@@ -176,4 +176,5 @@ exec global/events.scr
 
 level waittill spawn
 
-exec global/feho/voices.scr //feho sighted voices
+exec global/feho/voices.scr
+exec global/feho/messages.scr

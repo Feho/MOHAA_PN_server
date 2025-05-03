@@ -1,0 +1,17 @@
+main:
+	if (level.messagesMaps == 1)
+		end
+
+	level.messagesMaps = 1
+	local.bold = 0
+
+	while(1) {
+		wait 600
+
+		stuffsrv "say Press [USE] near enemy grenades to kick them!"
+		wait 10
+		stuffsrv "say Right-click with grenade = smoke grenade"
+		wait 10
+		stuffsrv "say Right-click with rifle = grenade launcher"
+	}
+end
