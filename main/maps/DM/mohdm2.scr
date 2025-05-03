@@ -40,7 +40,7 @@ main:
 	// exec global/TNT_DETONATORS.scr::DETONATOR ( -1010.99 -727.24 40.13 ) ( 0 0 0 )
 
 	local.info = makeArray
-		( -253 -3251 -39 ) ( 0 0 0 ) "random"
+		( -253 -3251 -39 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info

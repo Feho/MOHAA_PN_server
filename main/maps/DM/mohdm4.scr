@@ -40,7 +40,7 @@ main:
 	thread global/minefield.scr::minefield_setup
 	
 	local.info = makeArray
-		( 0 519 279 ) ( 0 0 0 ) "random"
+		( 0 519 279 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info

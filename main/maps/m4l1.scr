@@ -63,7 +63,7 @@ tdmtype:
     local.mur solid
 
     local.info = makeArray
-      ( 4861 -3178 18 ) ( 0 0 0 ) "random"
+      ( 4861 -3178 18 ) ( 0 0 0 ) "random" 1
     endArray
 
     thread global/AIR_gold.scr::treasure_spawn local.info

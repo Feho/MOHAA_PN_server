@@ -54,7 +54,7 @@ tdmtype:
 	thread global/barrel.scr::explosive_barrel
 
 	local.info = makeArray
-		( -21 2197 -253 ) ( 0 0 0 ) "random"
+		( -21 2197 -253 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info

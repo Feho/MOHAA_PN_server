@@ -194,9 +194,9 @@ tdmtype:
 	// exec server_planes/trigger.scr ( 4276 -4676 -160 ) "axis"
 
 	local.info = makeArray
-		( -3621 1957 1 ) ( 0 0 0 ) "random"
-		( -5941 -7074 -230 ) ( 0 0 0 ) "random"
-		( 3539 -2917 -231 ) ( 0 0 0 ) "random"
+		( -3621 1957 1 ) ( 0 0 0 ) "random" 1
+		( -5941 -7074 -230 ) ( 0 0 0 ) "random" 1
+		( 3539 -2917 -231 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info

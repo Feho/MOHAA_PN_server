@@ -60,7 +60,7 @@ tdmtype:
 	exec global/DMprecache.scr
 	
 	local.info = makeArray
-		( -1789 -4865 -96 ) ( 0 0 0 ) "random"
+		( -1789 -4865 -96 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info

@@ -35,15 +35,15 @@ end
 event_player_killed:
     
     // Spawn a treasure with a 5% probability
-    // local.origin = self.origin
+    local.origin = self.origin
 
-    // if (randomint(100) < 5)
-    // {
-    //     local.info = makeArray
-    //         local.origin ( 0 0 0 ) "random"
-    //     endArray
+    if (randomint(100) < 5)
+    {
+        local.info = makeArray
+            local.origin ( 0 0 0 ) "random" 0
+        endArray
 
-    //     thread global/AIR_gold.scr::treasure_spawn local.info
-    // }
+        thread global/AIR_gold.scr::treasure_spawn local.info
+    }
 
 end

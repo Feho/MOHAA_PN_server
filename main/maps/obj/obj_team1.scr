@@ -80,7 +80,7 @@ local.axis8.angle = 70
 	// exec global/TNT_DETONATORS.scr::DETONATOR ( 2245.41 -370.05 -200 ) ( 0 0 0 )
 
 	local.info = makeArray
-		( 3318 1846 -284 ) ( 0 0 0 ) "random"
+		( 3318 1846 -284 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info

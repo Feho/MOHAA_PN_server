@@ -59,7 +59,7 @@ main:
 	exec global/fake_door.scr ( 3897 -2781 50 ) ( 4525 -3465 50 )
 
 	local.info = makeArray
-		( 3061 -1524 8 ) ( 0 0 0 ) "random"
+		( 3061 -1524 8 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info

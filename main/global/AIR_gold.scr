@@ -40,7 +40,7 @@ Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
 // as many entries as you want.:
 // 
 // 	local.info = makeArray
-// 	( origin1 ) ( angles1 ) "bonus1" //1 row for 1 goldbox
+// 	( origin1 ) ( angles1 ) "bonus1" (0 or 1) // 1 row for 1 goldbox
 //
 //  	endArray
 //
@@ -72,6 +72,9 @@ treasure_spawn local.info:
 
 		if (local.info[local.i][3] == NIL)
 			local.info[local.i][3] = "health"
+
+		if (local.info[local.i][4] == NIL)
+			local.info[local.i][4] = 1
 	}
 	
 	if (local.terminate == 1)
@@ -91,6 +94,7 @@ treasure_spawn local.info:
 		level.AIR_goldboxs[local.f] = spawn trigger_multiple
 		level.AIR_goldboxs[local.f].origin = local.info[local.a][1]
 		level.AIR_goldboxs[local.f].bonus = local.info[local.a][3]
+		level.AIR_goldboxs[local.f].should_respawn = local.info[local.a][4]
 		level.AIR_goldboxs[local.f] setsize ( -35 -35 -20 ) ( 35 35 40 )
 		level.AIR_goldboxs[local.f] setthread global/AIR_gold.scr::treasure_tr
 
@@ -170,7 +174,11 @@ treasure_tr:
 
 	local.p playsound pickup_explosives
 	// self.gold rendereffects "-viewlensflare"
-	self.gold hide
+	
+	if (self.should_respawn == 1)
+		self.gold hide
+	else
+		self.gold remove
 
 	self nottriggerable
 
@@ -335,12 +343,17 @@ treasure_tr:
 		break
 	}
 
-	// self remove
-	// thread global/AIR_gold.scr::treasure_changes
-	
-	wait 240 // 4 minutes before respawning the gold
-	self triggerable
-	self.gold show
+	if (self.should_respawn == 1)
+	{
+		wait 240 // 4 minutes before respawning the gold
+		self triggerable
+		self.gold show
+	}
+	else
+	{
+		self remove
+		// thread global/AIR_gold.scr::treasure_changes
+	}
 
 end
 

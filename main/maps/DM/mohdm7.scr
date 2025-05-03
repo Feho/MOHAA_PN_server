@@ -28,7 +28,7 @@ setcvar "g_scoreboardpic" "mohdm7"
 	exec global/ambient.scr mohdm7
 
 	local.info = makeArray
-		( 1086 -8 -59 ) ( 0 0 0 ) "random"
+		( 1086 -8 -59 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info

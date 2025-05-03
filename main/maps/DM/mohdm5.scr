@@ -31,7 +31,7 @@ main:
 	exec global/ambient.scr mohdm5
 
 	local.info = makeArray
-		( 2124 -4836 168 ) ( 0 0 0 ) "random"
+		( 2124 -4836 168 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info

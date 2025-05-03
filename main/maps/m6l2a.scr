@@ -106,7 +106,7 @@ tdmtype:
 	
 	// Treasure
 	local.info = makeArray
-		( -873 -1305 -120 ) ( 0 0 0 ) "random"
+		( -873 -1305 -120 ) ( 0 0 0 ) "random" 1
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info
