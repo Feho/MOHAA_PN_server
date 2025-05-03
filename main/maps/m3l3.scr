@@ -47,7 +47,7 @@ tdmtype:
 	waitthread Initiate_whats_needed
 
 	// load support gun sounds
-	waitthread global/support/support.scr::soundcache
+	// waitthread global/support/support.scr::soundcache
 	
 	// fadeout .1 0 0 0 1 // black screen on start
 	
@@ -76,18 +76,18 @@ tdmtype:
 
 	
 	// Tanks & Jeeps Base Assault
-	if (level.already_started != 1)
-	{
-		level.already_started = 1
+	// if (level.already_started != 1)
+	// {
+	// 	level.already_started = 1
 
-		exec global/AA/global_detect.scr
-	}
+	// 	exec global/AA/global_detect.scr
+	// }
 	
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -4078.00 -4194.00 -0.88 ) ( 0 7 0 ) level.jeep_mask
-	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3600.00 -4108.00 -0.88 ) ( 0 21 0 ) level.jeep_mask
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -4078.00 -4194.00 -0.88 ) ( 0 7 0 ) level.jeep_mask
+	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3600.00 -4108.00 -0.88 ) ( 0 21 0 ) level.jeep_mask
 	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3243.00 -3948.00 -0.88 ) ( 0 37 0 ) level.jeep_mask
 	
-	exec global/vehicles/playervehicle.scr models/vehicles/opeltruck.tik models/vehicles/opeltruck_d.tik ( -3243.00 -3948.00 -0.88 ) ( 0 37 0 ) 2500
+	// exec global/vehicles/playervehicle.scr models/vehicles/opeltruck.tik models/vehicles/opeltruck_d.tik ( -3243.00 -3948.00 -0.88 ) ( 0 37 0 ) 2500
 	// exec global/vehicles/playervehicle.scr models/vehicles/m3.tik models/vehicles/sdkfz_green_d.tik ( -4078.00 -4194.00 -0.88 ) ( 0 7 0 ) 2500
 	// exec global/vehicles/playervehicle.scr models/vehicles/sdkfz.tik models/vehicles/sdkfz_green_d.tik ( -3600.00 -4108.00 -0.88 ) ( 0 21 0 ) 800
 	
