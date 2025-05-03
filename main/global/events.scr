@@ -25,9 +25,14 @@ event_player_spawned:
         }
 
         wait 1
-        // Set the spread to be the same as the Thompson regardless of the weapon,
-        // so that the bots are not too accurate.
-        self weaponcommand dual dmbulletspread	40 40 50 50
+        if (!self) end
+        
+        if (local.wpnclass != "shotgun")
+        {
+            // Increase the spread of the weapon, so that the bots are not too accurate.
+            self weaponcommand dual dmbulletspread 40 40 70 70
+            self weaponcommand dual dmbulletdamage 30
+        }
     }
 
 end
