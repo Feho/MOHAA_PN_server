@@ -31,6 +31,7 @@ end local.alive_players
 
 get_weapon local.p:
 
+	if (!local.p) end
     local.p weaponcommand dual targetname ("w" + local.p.entnum)
     local.weapon = $("w" + local.p.entnum )
 
