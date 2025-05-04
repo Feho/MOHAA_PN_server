@@ -1508,7 +1508,7 @@ random_exploder1:
 wait (randomfloat(13) + 16)
 $random_explode1 playsound drop_bomb
 wait 2
-$random_explode1 playsound bazooka_exp01
+$random_explode1 playsound bazooka_exp
 wait 1
 exec global/model.scr $random_explode1.origin "models/animate/fx_explosion_flak88.tik" 3
 radiusdamage ($random_explode1.origin + (0 0 64)) 250 400
@@ -1519,7 +1519,7 @@ random_exploder2:
 wait (randomfloat(13) + 16)
 $random_explode2 playsound drop_bomb
 wait 2
-$random_explode2 playsound bazooka_exp01
+$random_explode2 playsound bazooka_exp
 wait 1
 exec global/model.scr $random_explode2.origin "models/animate/fx_explosion_flak88.tik" 3
 radiusdamage ($random_explode2.origin + (0 0 64)) 250 400
@@ -1530,7 +1530,7 @@ random_exploder3:
 wait (randomfloat(13) + 16)
 $random_explode3 playsound drop_bomb
 wait 2
-$random_explode3 playsound bazooka_exp02
+$random_explode3 playsound bazooka_exp
 wait 1
 exec global/model.scr $random_explode3.origin "models/animate/fx_explosion_flak88.tik" 3
 radiusdamage ($random_explode3.origin + (0 0 64)) 250 400
@@ -1541,7 +1541,7 @@ random_exploder4:
 wait (randomfloat(13) + 16)
 $random_explode4 playsound drop_bomb
 wait 2
-$random_explode4 playsound bazooka_exp01
+$random_explode4 playsound bazooka_exp
 wait 1
 exec global/model.scr $random_explode4.origin "models/animate/fx_explosion_flak88.tik" 3
 radiusdamage ($random_explode4.origin + (0 0 64)) 250 400
@@ -1550,9 +1550,9 @@ end
 
 random_exploder5:
 wait (randomfloat(13) + 16)
-$random_explode5 playsound arty_leadin01
+$random_explode5 playsound arty_leadin
 wait 2
-$random_explode5 playsound bazooka_exp01
+$random_explode5 playsound bazooka_exp
 wait 1
 exec global/model.scr $random_explode5.origin "models/animate/fx_explosion_flak88.tik" 3
 radiusdamage ($random_explode5.origin + (0 0 64)) 250 400
@@ -1563,7 +1563,7 @@ random_exploder6:
 wait (randomfloat(13) + 16)
 $random_explode6 playsound drop_bomb
 wait 2
-$random_explode6 playsound bazooka_exp03
+$random_explode6 playsound bazooka_exp
 wait 1
 exec global/model.scr $random_explode6.origin "models/animate/fx_explosion_flak88.tik" 3
 radiusdamage ($random_explode6.origin + (0 0 64)) 250 400
@@ -1574,7 +1574,7 @@ random_exploder7:
 wait (randomfloat(13) + 16)
 $random_explode7 playsound drop_bomb
 wait 2
-$random_explode7 playsound bazooka_exp01 
+$random_explode7 playsound bazooka_exp 
 wait 1
 exec global/model.scr $random_explode7.origin "models/animate/fx_mortar_higgins.tik" 3
 radiusdamage ($random_explode7.origin + (0 0 64)) 250 400
@@ -1583,9 +1583,9 @@ end
 
 random_exploder8:
 wait (randomfloat(13) + 16)
-$random_explode8 playsound arty_leadin01
+$random_explode8 playsound arty_leadin
 wait 2
-$random_explode8 playsound bazooka_exp01
+$random_explode8 playsound bazooka_exp
 wait 1
 exec global/model.scr $random_explode8.origin "models/animate/fx_explosion_flak88.tik" 3
 radiusdamage ($random_explode8.origin + (0 0 64)) 250 400
@@ -1596,7 +1596,7 @@ random_exploder9:
 wait (randomfloat(13) + 16)
 $random_explode9 playsound drop_bomb
 wait 2
-$random_explode9 playsound bazooka_exp01
+$random_explode9 playsound bazooka_exp
 wait 1
 exec global/model.scr $random_explode9.origin "models/animate/fx_explosion_flak88.tik" 3
 radiusdamage ($random_explode9.origin + (0 0 64)) 250 400
