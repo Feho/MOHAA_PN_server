@@ -363,10 +363,10 @@ regenerate:
 
 	while (self && isalive self)
 	{
-		if ( (vector_within local.origin self.origin 10) == 1 && self.health < 100)
-		{
+		// if ( (vector_within local.origin self.origin 10) == 1 && self.health < 100)
+		// {
 			self healthonly (self.health + 5)
-		}
+		// }
 	
 		local.origin = self.origin
 		
