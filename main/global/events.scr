@@ -27,7 +27,7 @@ event_player_spawned:
         wait 1
         if (!self) end
         
-        if (local.wpnclass != "shotgun")
+        if (local.wpnclass != "shotgun" && randomint(100) < 90)
         {
             // Increase the spread of the weapon, so that the bots are not too accurate.
             self weaponcommand dual dmbulletspread 40 40 70 70
