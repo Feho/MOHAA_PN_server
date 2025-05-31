@@ -8,12 +8,14 @@
 
 main: 
 
-	// setcvar "g_gametype" "2"
+	setcvar "g_gametype" "1"
 	setcvar "timelimit" "15"
 	
 	if((getcvar("g_gametype") == "1")) 
 	{
 	waitthread ffatype
+	wait 895 // 15 minutes minus 5 seconds
+	setcvar "g_gametype" "2"
 	end
 	}
 	else
@@ -234,6 +236,19 @@ tdm_spawns:
 	spawn info_player_axis "origin" "-3182.52 -6923.64 -75.44" "angle" "87" "targetname" "X14"
 	spawn info_player_axis "origin" "1996.69 -1255.02 -30.68" "angle" "-90" "targetname" "X15"
 
+	spawn info_player_axis "origin" "2719 2 154" "angle" "-126" "targetname" "X16"
+	spawn info_player_axis "origin" "3911 872 349" "angle" "-177" "targetname" "X17"
+	spawn info_player_axis "origin" "5086 1410 490" "angle" "-92" "targetname" "X18"
+	spawn info_player_axis "origin" "5621 1429 538" "angle" "-91" "targetname" "X19"
+	spawn info_player_axis "origin" "-1939 2860 42" "angle" "-33" "targetname" "X20"
+
+	spawn info_player_axis "origin" "-1523 902 176" "angle" "8" "targetname" "X21"
+	spawn info_player_axis "origin" "-1040 7149 98" "angle" "-94" "targetname" "X22"
+	spawn info_player_axis "origin" "-3271 4502 -229" "angle" "-22" "targetname" "X23"
+	spawn info_player_axis "origin" "-4030 6902 25" "angle" "-64" "targetname" "X24"
+	spawn info_player_axis "origin" "-2626 6647 -73" "angle" "-58" "targetname" "X25"
+
+
 
 	spawn info_player_allied "origin" "-5712.33 -5727.58 -160.32" "angle" "83" "targetname" "A1"
 	spawn info_player_allied "origin" "-5644.18 -5571.55 -160.92" "angle" "83" "targetname" "A2"
@@ -253,29 +268,24 @@ tdm_spawns:
 	spawn info_player_allied "origin" "-2391.16 -7402.13 -90.16" "angle" "94" "targetname" "A14"
 	spawn info_player_allied "origin" "-3519.41 -6771.11 -0.85" "angle" "61" "targetname" "A15"
 	
+	spawn info_player_allied "origin" "242 -5265 -109" "angle" "74" "targetname" "A16"
+	spawn info_player_allied "origin" "1674 -4672 -91" "angle" "87" "targetname" "A17"
+	spawn info_player_allied "origin" "1220 -1703 309" "angle" "52" "targetname" "A18"
+	spawn info_player_allied "origin" "5661 579 538" "angle" "151" "targetname" "A19"
+	spawn info_player_allied "origin" "5627 1270 538" "angle" "-91" "targetname" "A20"
+
+	spawn info_player_allied "origin" "5427 1619 496" "angle" "179" "targetname" "A21"
+	spawn info_player_allied "origin" "3430 2569 412" "angle" "-141" "targetname" "A22"
+	spawn info_player_allied "origin" "-1278 5752 -38" "angle" "-82" "targetname" "A23"
+	spawn info_player_allied "origin" "917 256 294" "angle" "-1" "targetname" "A24"
+	spawn info_player_allied "origin" "2082 -600 4" "angle" "-97" "targetname" "A25"
+
 end
 
 
 ffa_spawns: 
 
-	// spawn info_player_deathmatch "origin" "-5616.88 -2167.78 68.13" "angle" "6"
-	// spawn info_player_deathmatch "origin" "-3353.43 -1609.72 219.66" "angle" "-28"
-	// spawn info_player_deathmatch "origin" "-84.92 -2593.50 482.35" "angle" "-91"
-	// spawn info_player_deathmatch "origin" "-3448.01 -6301.84 -22.90" "angle" "83"
-	// spawn info_player_deathmatch "origin" "1509.62 -4944.87 -95.39" "angle" "85"
 
-	// spawn info_player_deathmatch "origin" "1129.72 -904.86 337.46" "angle" "72"
-	// spawn info_player_deathmatch "origin" "4724.54 2649.63 472.59" "angle" "-133"
-	// spawn info_player_deathmatch "origin" "5876.39 564.04 692.25" "angle" "92"
-	// spawn info_player_deathmatch "origin" "4703.13 1783.13 536.13" "angle" "5"
-	// spawn info_player_deathmatch "origin" "709.42 1970.59 390.49" "angle" "-151"
-
-	// spawn info_player_deathmatch "origin" "382.02 5031.92 68.13" "angle" "-57"
-	// spawn info_player_deathmatch "origin" "-632.02 6897.30 112.85" "angle" "-174"
-	// spawn info_player_deathmatch "origin" "-3267.78 6579.50 -41.95" "angle" "-99"
-	// spawn info_player_deathmatch "origin" "-4865.88 6042.86 -135.25" "angle" "-44"
-	// spawn info_player_deathmatch "origin" "-5200.03 1874.27 68.13" "angle" "29"
-	
 	spawn info_player_deathmatch "origin" "1958.30 -3628.81 -90.13" "angle" "-145" "targetname" "X1"
 	spawn info_player_deathmatch "origin" "1961.08 -2096.13 -90.13" "angle" "-101" "targetname" "X2"
 	spawn info_player_deathmatch "origin" "2092.49 -2587.04 -90.13" "angle" "-118" "targetname" "X3"
@@ -293,6 +303,19 @@ ffa_spawns:
 	spawn info_player_deathmatch "origin" "-2742.05 -7090.08 -90.43" "angle" "85" "targetname" "X13"
 	spawn info_player_deathmatch "origin" "-3182.52 -6923.64 -75.44" "angle" "87" "targetname" "X14"
 	spawn info_player_deathmatch "origin" "1996.69 -1255.02 -30.68" "angle" "-90" "targetname" "X15"
+
+	spawn info_player_deathmatch "origin" "2719 2 154" "angle" "-126" "targetname" "X16"
+	spawn info_player_deathmatch "origin" "3911 872 349" "angle" "-177" "targetname" "X17"
+	spawn info_player_deathmatch "origin" "5086 1410 490" "angle" "-92" "targetname" "X18"
+	spawn info_player_deathmatch "origin" "5621 1429 538" "angle" "-91" "targetname" "X19"
+	spawn info_player_deathmatch "origin" "-1939 2860 42" "angle" "-33" "targetname" "X20"
+
+	spawn info_player_deathmatch "origin" "-1523 902 176" "angle" "8" "targetname" "X21"
+	spawn info_player_deathmatch "origin" "-1040 7149 98" "angle" "-94" "targetname" "X22"
+	spawn info_player_deathmatch "origin" "-3271 4502 -229" "angle" "-22" "targetname" "X23"
+	spawn info_player_deathmatch "origin" "-4030 6902 25" "angle" "-64" "targetname" "X24"
+	spawn info_player_deathmatch "origin" "-2626 6647 -73" "angle" "-58" "targetname" "X25"
+
 
 
 	spawn info_player_deathmatch "origin" "-5712.33 -5727.58 -160.32" "angle" "83" "targetname" "A1"
@@ -312,6 +335,19 @@ ffa_spawns:
 	spawn info_player_deathmatch "origin" "-677.67 -7353.79 -90.47" "angle" "122" "targetname" "A13"
 	spawn info_player_deathmatch "origin" "-2391.16 -7402.13 -90.16" "angle" "94" "targetname" "A14"
 	spawn info_player_deathmatch "origin" "-3519.41 -6771.11 -0.85" "angle" "61" "targetname" "A15"
+	
+	spawn info_player_deathmatch "origin" "242 -5265 -109" "angle" "74" "targetname" "A16"
+	spawn info_player_deathmatch "origin" "1674 -4672 -91" "angle" "87" "targetname" "A17"
+	spawn info_player_deathmatch "origin" "1220 -1703 309" "angle" "52" "targetname" "A18"
+	spawn info_player_deathmatch "origin" "5661 579 538" "angle" "151" "targetname" "A19"
+	spawn info_player_deathmatch "origin" "5627 1270 538" "angle" "-91" "targetname" "A20"
+
+	spawn info_player_deathmatch "origin" "5427 1619 496" "angle" "179" "targetname" "A21"
+	spawn info_player_deathmatch "origin" "3430 2569 412" "angle" "-141" "targetname" "A22"
+	spawn info_player_deathmatch "origin" "-1278 5752 -38" "angle" "-82" "targetname" "A23"
+	spawn info_player_deathmatch "origin" "917 256 294" "angle" "-1" "targetname" "A24"
+	spawn info_player_deathmatch "origin" "2082 -600 4" "angle" "-97" "targetname" "A25"
+
 end
 
 
