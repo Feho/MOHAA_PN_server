@@ -57,7 +57,7 @@ tdmtype:
 	exec global/ambient.scr m3l3
 	exec global/DMprecache.scr
 	
-	thread music
+	// thread music
 	
 	// exec server_planes/trigger.scr ( 1293 4962 -190 ) "allies"
 	// exec server_planes/trigger.scr ( -4538 -5133 -150 ) "axis"
