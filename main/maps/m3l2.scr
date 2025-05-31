@@ -83,6 +83,7 @@ tdmtype:
 
 	// level waittill prespawn
 	
+	level.squad_mod = 0
 
 	thread global/door_locked.scr::lock
 	exec global/ambient.scr obj_team5
