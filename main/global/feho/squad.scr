@@ -1,0 +1,512 @@
+/*
+# Squad mod
+
+This mod allows players to be attached to one of the 3 or 4 squads per team.
+A squad consists of 4 players, and each player can only be in one squad.
+The first player to join a squad is the squad leader.
+Each time a player is killed, he respawns near his squad leader.
+When the squad leader dies, a new squad leader is chosen randomly from the players in the squad.
+
+## Technical details
+
+### Respawning near the squad leader
+
+To be able to respawn near the squad leader, we need to store the last ten positions of the squad leader in an array.
+A new position is added to the array when the squad leader moves by a certain distance, and the oldest position is removed from the array.
+When a player spawns (event_player_spawned), we check if he is in a squad. If he is, we check if the squad leader is alive. If the squad leader is alive, we respawn the player at one of the last ten positions of the squad leader.
+
+*/
+
+main:
+    if (level.squad_mod_started == 1) end
+    if (getcvar "g_gametype" == 1 || getcvar "g_gametype" == 3 || getcvar "squad" != 1 || level.squad_mod == 0) end
+
+    level.squad_mod_started = 1
+    thread init_squad_system
+    thread monitor_squads
+
+    event_subscribe "player_spawned" event_player_spawned
+    event_subscribe "player_killed" event_player_killed
+    event_subscribe "player_disconnecting" event_player_disconnecting
+    //println "Squad Mod Subscribed to Events."
+end
+
+init_squad_system:
+    level.squad_max_squads_per_team = 4
+    level.squad_max_players_per_squad = 4
+    level.squad_leader_pos_history_count = 20
+    level.squad_leader_pos_update_distance = 64.0 // Use float for distance checks
+    level.squad_leader_pos_update_interval = 0.5 // Seconds
+
+    for (local.i = 1; local.i <= level.squad_max_squads_per_team; local.i++)
+    {
+        level.squads[1][local.i] = NIL
+        level.squads[2][local.i] = NIL
+        level.squad_leaders[1][local.i] = NIL
+        level.squad_leaders[2][local.i] = NIL
+    }
+
+    //println "Squad Mod System Initialized."
+end
+
+// Prints squads and their members for debugging every 10 seconds
+monitor_squads:
+    while(1)
+    {
+        wait 10
+
+        for (local.team_idx = 1; local.team_idx <= 2; local.team_idx++)
+        {
+            for (local.squad_idx = 1; local.squad_idx <= level.squad_max_squads_per_team; local.squad_idx++)
+            {
+                local.squad_members = level.squads[local.team_idx][local.squad_idx]
+
+                if (local.squad_members != NIL)
+                {
+                    println("Team " + local.team_idx + ", Squad " + local.squad_idx + " Members:")
+
+                    for (local.i = 1; local.i <= local.squad_members.size; local.i++)
+                    {
+                        local.is_leader = (level.squad_leaders[local.team_idx][local.squad_idx] == local.squad_members[local.i])
+                        local.status = (local.squad_members[local.i].isAlive) ? "    " : "Dead"
+                        local.leader_marker = (local.is_leader) ? " (Leader)" : ""
+                        println("   " + netname local.squad_members[local.i] + " - " + local.status + local.leader_marker)
+                    }
+                }
+            }
+        }
+    }
+end
+
+get_team_idx_internal local.team_name:
+    if (local.team_name == "allies")
+        end 1
+    if (local.team_name == "axis")
+        end 2
+end 0 // 0 for spectator or unknown
+
+min_val local.a local.b:
+    if (local.a < local.b)
+        end local.a
+end local.b
+
+start_leader_position_tracking local.leader_entity:
+    if (local.leader_entity == NIL)
+        end
+    
+    // Clear any old tracking flag before starting a new thread
+    local.leader_entity.squad_stop_tracking = NIL
+    // local.leader_entity light 0.9 0.0 0.0 50
+    thread track_leader_positions local.leader_entity
+    //println ("Squad Mod: Started position tracking for " + netname local.leader_entity)
+end
+
+stop_leader_position_tracking local.leader_entity:
+    if (local.leader_entity == NIL)
+        end
+    
+    local.leader_entity.squad_stop_tracking = 1
+    //println ("Squad Mod: Signaled position tracking to stop for " + netname local.leader_entity)
+end
+
+track_leader_positions local.leader_entity:
+    if (local.leader_entity == NIL)
+        end
+
+    local.leader_entnum = local.leader_entity.entnum
+    local.history_index = 1
+    local.last_recorded_pos = local.leader_entity.origin
+    level.squad_leader_positions[local.leader_entnum][1] = local.last_recorded_pos
+    //println("Squad Mod: Initial position for " + netname local.leader_entity + " is " + local.last_recorded_pos)
+
+    while(1)
+    {
+        wait level.squad_leader_pos_update_interval
+
+        if (!local.leader_entity || local.leader_entity.squad_stop_tracking == 1 || local.leader_entity.health <= 0)
+        {
+            if (local.leader_entity) { local.leader_entity.squad_stop_tracking = NIL }
+            level.squad_leader_positions[local.leader_entnum] = NIL
+            //println ("Squad Mod: Stopping tracking for entnum " + local.leader_entnum + " (NIL, flagged, or dead).")
+            end
+        }
+
+        local.player_squad_data = level.player_squad_info[local.leader_entnum]
+        if (local.player_squad_data == NIL)
+        {
+            level.squad_leader_positions[local.leader_entnum] = NIL
+            //println ("Squad Mod: Stopping tracking for entnum " + local.leader_entnum + " (no squad info).")
+            end
+        }
+        local.squad_team_idx = local.player_squad_data["team_idx"]
+        local.squad_idx = local.player_squad_data["squad_idx"]
+
+        if (level.squad_leaders[local.squad_team_idx][local.squad_idx] != local.leader_entity)
+        {
+            level.squad_leader_positions[local.leader_entnum] = NIL
+            //println ("Squad Mod: Stopping tracking for entnum " + local.leader_entnum + " (no longer leader of squad " + local.squad_idx + " on team " + local.squad_team_idx + ").")
+            end
+        }
+
+        local.current_pos = local.leader_entity.origin
+        if (!(vector_within local.current_pos local.last_recorded_pos level.squad_leader_pos_update_distance))
+        {
+            local.history_index++
+            if (local.history_index > level.squad_leader_pos_history_count)
+                local.history_index = 1
+            
+            level.squad_leader_positions[local.leader_entnum][local.history_index] = local.current_pos
+            local.last_recorded_pos = local.current_pos
+            //// println("Squad Mod: Updated position for " + netname local.leader_entity + ". History size: " + level.squad_leader_positions[local.leader_entnum].size + " at index " + local.history_index + " to " + local.current_pos)
+        }
+    }
+end
+
+assign_player_to_squad local.player:
+    local.player_team_name = local.player.dmteam
+    local.player_team_idx = waitthread get_team_idx_internal local.player_team_name
+
+    if (local.player_team_idx == 0)
+    {
+        //println("Squad Mod: Player " + netname local.player + " is not on a valid team for squad assignment.")
+        end NIL // Not on a team that can have squads
+    }
+
+    // Try to find a squad with a free slot
+    for (local.s_idx = 1; local.s_idx <= level.squad_max_squads_per_team; local.s_idx++)
+    {
+        if (level.squads[local.player_team_idx][local.s_idx] == NIL)
+        {
+            level.squads[local.player_team_idx][local.s_idx][1] = local.player
+            level.squad_leaders[local.player_team_idx][local.s_idx] = local.player
+            
+            level.player_squad_info[local.player.entnum]["team_idx"] = local.player_team_idx
+            level.player_squad_info[local.player.entnum]["squad_idx"] = local.s_idx
+            
+            thread start_leader_position_tracking local.player
+            //println("Squad Mod: Player " + netname local.player + " created and leads squad " + local.s_idx + " on team " + local.player_team_idx)
+            local.player iprint ("You are now the leader of squad " + local.s_idx)
+            end local.player
+        }
+        else if (level.squads[local.player_team_idx][local.s_idx].size < level.squad_max_players_per_squad)
+        {
+            level.squads[local.player_team_idx][local.s_idx][level.squads[local.player_team_idx][local.s_idx].size + 1] = local.player
+            
+            level.player_squad_info[local.player.entnum]["team_idx"] = local.player_team_idx
+            level.player_squad_info[local.player.entnum]["squad_idx"] = local.s_idx
+            //println("Squad Mod: Player " + netname local.player + " joined squad " + local.s_idx + " on team " + local.player_team_idx)
+            local.player iprint ("You joined squad " + local.s_idx)
+            end local.player
+        }
+    }
+    //println("Squad Mod: No available squad for player " + netname local.player + " on team " + local.player_team_idx)
+    local.player iprint ("All squads are currently full.")
+    end NIL // All squads full
+end
+
+promote_new_squad_leader local.team_idx local.squad_idx:
+    local.old_leader = level.squad_leaders[local.team_idx][local.squad_idx]
+    if (local.old_leader != NIL)
+    {
+        thread stop_leader_position_tracking local.old_leader
+    }
+
+    local.current_squad_array = level.squads[local.team_idx][local.squad_idx]
+    if (local.current_squad_array == NIL || local.current_squad_array.size == 0)
+    {
+        level.squad_leaders[local.team_idx][local.squad_idx] = NIL
+        //println("Squad Mod: Squad " + local.squad_idx + " on team " + local.team_idx + " is empty. No new leader.")
+        end
+    }
+
+    // Find a living member to promote
+    //println("Squad Mod: current_squad_array size: " + local.current_squad_array.size)
+    for (local.i = 1; local.i <= local.current_squad_array.size; local.i++)
+    {
+        local.member = local.current_squad_array[local.i]
+        //println("Squad Mod: Checking member " + netname local.member + " (alive: " + local.member.isAlive + ")")
+
+        if (local.member != NIL && local.member.isAlive)
+        {
+            if (local.living_members == NIL)
+                local.living_members[1] = local.member
+            else
+                local.living_members[local.living_members.size + 1] = local.member
+        }
+    }
+    
+    //println("Squad Mod: Living members count: " + local.living_members.size)
+    //println("Squad Mod: Living members: ")
+    for (local.i = 1; local.i <= local.living_members.size; local.i++)
+    {
+        //println("Squad Mod: " + netname local.living_members[local.i])
+    }
+
+    if (local.living_members.size <= 0)
+    {
+        level.squad_leaders[local.team_idx][local.squad_idx] = NIL
+        //println("Squad Mod: Squad " + local.squad_idx + " on team " + local.team_idx + " has no living members. No new leader.")
+        end
+    }
+
+    local.random_idx = (randomint(local.living_members.size) + 1) // randomint(max) is 0 to max. size-1 means 0 to size-1. +1 means 1 to size.
+    local.new_leader = local.living_members[local.random_idx]
+    level.squad_leaders[local.team_idx][local.squad_idx] = local.new_leader
+    thread start_leader_position_tracking local.new_leader
+    //println("Squad Mod: " + netname local.new_leader + " is the new leader of squad " + local.squad_idx + " on team " + local.team_idx)
+
+    // Notify squad members
+    for (local.i = 1; local.i <= local.current_squad_array.size; local.i++)
+    {
+        local.member = local.current_squad_array[local.i]
+        if (local.member != NIL)
+        {
+            local.member iprint (netname local.new_leader + " is now your squad leader.")
+        }
+    }
+end
+
+handle_player_leaving_squad local.player:
+    if (local.player == NIL || level.player_squad_info[local.player.entnum] == NIL)
+        end
+
+    local.player_entnum = local.player.entnum
+    local.squad_info = level.player_squad_info[local.player_entnum]
+    local.team_idx = local.squad_info["team_idx"]
+    local.squad_idx = local.squad_info["squad_idx"]
+
+    //println("Squad Mod: Player " + netname local.player + " is leaving squad " + local.squad_idx + " on team " + local.team_idx)
+
+    // Check if player was leader
+    if (level.squad_leaders[local.team_idx][local.squad_idx] == local.player)
+    {
+        // This player was the leader, promote new one before removing them from array
+        thread promote_new_squad_leader local.team_idx local.squad_idx
+    }
+
+    // Remove player from squad array
+    local.current_squad_array = level.squads[local.team_idx][local.squad_idx]
+    if (local.current_squad_array != NIL)
+    {
+        for (local.i = 1; local.i <= local.current_squad_array.size; local.i++)
+        {
+            if (local.current_squad_array[local.i] != local.player)
+            {
+                if (local.new_squad_list == NIL)
+                    local.new_squad_list[1] = local.current_squad_array[local.i]
+                else
+                    local.new_squad_list[local.new_squad_list.size + 1] = local.current_squad_array[local.i]
+            }
+        }
+
+        level.squads[local.team_idx][local.squad_idx] = local.new_squad_list
+
+        if (local.new_squad_list.size <= 0)
+        {
+            level.squads[local.team_idx][local.squad_idx] = NIL // Mark squad as empty
+            level.squad_leaders[local.team_idx][local.squad_idx] = NIL // No leader if squad is empty
+            //println("Squad Mod: Squad " + local.squad_idx + " on team " + local.team_idx + " is now empty.")
+        }
+    }
+    
+    level.player_squad_info[local.player_entnum] = NIL
+end
+
+get_valid_spawn_pos_near_leader local.leader_entity:
+    if (local.leader_entity == NIL || !local.leader_entity.isAlive)
+        end NIL
+
+    local.pos_history = level.squad_leader_positions[local.leader_entity.entnum]
+    if (local.pos_history == NIL || local.pos_history.size < level.squad_max_players_per_squad - 1)
+        end NIL
+
+    // Pick a random position from history
+    local.random_idx = (randomint(local.pos_history.size) + 1)
+    local.base_pos = local.pos_history[local.random_idx]
+    local.tentatives = 0
+
+    while (!(waitthread can_spawn_here local.base_pos))
+    {
+        local.tentatives++
+        if (local.tentatives > 10)
+        {
+            //println("Squad Mod: No valid spawn position found near leader " + netname local.leader_entity + " after 10 attempts.")
+            end NIL
+        }
+        //// println("random_idx: " + local.random_idx + " history size: " + local.pos_history.size)
+        local.random_idx++
+        if (local.random_idx > local.pos_history.size)
+            local.random_idx = 1 // Loop back to the start of the history
+        local.base_pos = local.pos_history[local.random_idx]
+        waitframe
+    }
+    
+    //println("Squad Mod: Valid spawn position found at " + local.base_pos)
+    
+    // Add a small random offset to avoid stacking
+    // local.offset_x = (randomfloat(1.0) * 64.0) - 32.0 // Random between -32 and 32
+    // local.offset_y = (randomfloat(1.0) * 64.0) - 32.0
+    // local.spawn_pos = local.base_pos + (local.offset_x local.offset_y 0)
+    
+    // // A simple check to ensure player spawns on ground, by tracing down.
+    // // MOHAA's default spawn system might also unstick, but this helps.
+    // local.hit_something = sighttrace (local.spawn_pos + (0 0 80)) (local.spawn_pos + (0 0 5)) // Trace from head height down
+    //// println("--------------- hit_something: " + local.hit_something)
+
+    // if (!local.hit_something)
+    // {
+    //     end local.spawn_pos // Valid spawn position found
+    // }
+
+end local.base_pos // Fallback to the recorded position if trace fails or finds nothing nearby
+
+can_spawn_here local.spawn_pos:
+
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if ( (vector_within local.spawn_pos $player[local.i].origin 80) == 1)
+		{
+            //println("Squad Mod: Spawn position " + local.spawn_pos + " is occupied by player " + netname $player[local.i])
+			end 0
+		}
+	}
+
+end 1
+
+event_player_spawned:
+    local.player = self
+    local.player_team_name = local.player.dmteam
+    local.current_player_team_idx = waitthread get_team_idx_internal local.player_team_name
+    //println("Squad Mod: Player " + netname local.player + " spawned on team " + local.current_player_team_idx)
+
+    // HACK: player is considered alive even if they didn't spawn yet
+    if (local.player.isAlive == NIL)
+    {
+        //println("Squad Mod: Player " + netname local.player + " spawned with isAlive NIL, setting to 0 ~~~~~~~~~~.")
+        local.player.isAlive = 0
+        end
+    }
+
+    if (local.current_player_team_idx == 0) // Spectator or invalid team
+    {
+        if (level.player_squad_info[local.player.entnum] != NIL)
+        {
+            // Was in a squad, but now spectator/invalid team, remove them.
+            thread handle_player_leaving_squad local.player
+        }
+        end
+    }
+
+    local.player.isAlive = 1
+
+    // Check if player is in a squad and if it's for the correct current team
+    local.needs_assignment = 1
+    if (level.player_squad_info[local.player.entnum] != NIL)
+    {
+        local.stored_squad_info = level.player_squad_info[local.player.entnum]
+        if (local.stored_squad_info["team_idx"] == local.current_player_team_idx)
+        {
+            local.needs_assignment = 0 // Already in a squad on the correct team
+        }
+        else
+        {
+            // Team changed, remove from old squad first
+            //println("Squad Mod: Player " + netname local.player + " changed teams. Removing from old squad.")
+            thread handle_player_leaving_squad local.player
+            // level.player_squad_info will be NIL now, so assignment will occur
+        }
+    }
+
+    if (local.needs_assignment == 1 || level.player_squad_info[local.player.entnum] == NIL)
+    {
+        //println("Squad Mod: Player " + netname local.player + " ("+ local.player.entnum +") needs squad assignment.")
+        local.assigned_player = waitthread assign_player_to_squad local.player
+        if (local.assigned_player == NIL)
+        {
+            //println("Squad Mod: Failed to assign " + netname local.player + " to a squad. Spawning normally.")
+            end // Could not assign, player spawns normally
+        }
+    }
+
+    // Player is now in a squad (either newly assigned or was already in one)
+    local.player_squad_data = level.player_squad_info[local.player.entnum]
+    if (local.player_squad_data == NIL) { end } // Should not happen if assignment worked
+
+    local.squad_team_idx = local.player_squad_data["team_idx"]
+    local.squad_idx = local.player_squad_data["squad_idx"]
+    local.squad_leader = level.squad_leaders[local.squad_team_idx][local.squad_idx]
+
+    if (local.squad_leader && local.squad_leader != local.player && local.squad_leader.isAlive)
+    {
+        wait randomfloat(0.5)
+        local.spawn_pos = waitthread get_valid_spawn_pos_near_leader local.squad_leader
+        if (local.spawn_pos != NIL)
+        {
+            //println("Squad Mod: Teleporting " + netname local.player + " near leader " + netname local.squad_leader + " to " + local.spawn_pos)
+            local.player tele local.spawn_pos
+            //local.player.angles = local.squad_leader.angles // Orient player same as leader
+            // MOHAA might automatically unstick player if teleported into something minor.
+        }
+        else
+        {
+            //println("Squad Mod: No valid spawn position near leader for " + netname local.player + ". Spawning normally.")
+        }
+    }
+    else if (!local.squad_leader)
+    {
+        thread promote_new_squad_leader local.squad_team_idx local.squad_idx
+    }
+
+    while (local.player && local.player.isAlive)
+    {
+        if (local.player.dmteam == "spectator")
+        {
+            //println("Squad Mod: Player " + netname local.player + " is now a spectator. Removing from squad.")
+            thread handle_player_leaving_squad local.player
+            end
+        }
+        wait 0.1
+    }
+end
+
+event_player_killed:
+    local.player = self
+    local.player.isAlive = 0
+	// local.player light 0.0 0.0 0.0 0
+    if (local.player == NIL || level.player_squad_info[local.player.entnum] == NIL)
+        end // Not in a squad or invalid player
+
+    //println("Squad Mod: Player " + netname local.player + " killed.")
+
+    local.player_entnum = local.player.entnum
+    local.squad_info = level.player_squad_info[local.player_entnum]
+    // Player might have disconnected right before kill event, squad_info could be NIL
+    if (local.squad_info == NIL) 
+    {
+        //println("Squad Mod: Player " + netname local.player + " had no squad info upon death (possibly disconnected).")
+        end
+    }
+
+    local.team_idx = local.squad_info["team_idx"]
+    local.squad_idx = local.squad_info["squad_idx"]
+
+    // Check if the killed player was the squad leader
+    if (level.squad_leaders[local.team_idx][local.squad_idx] == local.player)
+    {
+        //println("Squad Mod: Squad leader " + netname local.player + " was killed. Promoting new leader for squad " + local.squad_idx + " on team " + local.team_idx)
+        thread promote_new_squad_leader local.team_idx local.squad_idx
+    }
+    // Player remains in the squad data structure.
+    // They will be removed if they disconnect or change teams.
+end
+
+event_player_disconnecting:
+    local.player = self
+    local.player.isAlive = 0
+
+    if (local.player == NIL || level.player_squad_info[local.player.entnum] == NIL)
+        end
+
+    //println("Squad Mod: Player " + netname local.player + " disconnecting. Processing squad leave.")
+    thread handle_player_leaving_squad local.player
+end
