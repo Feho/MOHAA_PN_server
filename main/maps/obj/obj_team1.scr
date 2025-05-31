@@ -39,29 +39,29 @@ local.axis2 = spawn info_player_axis
 local.axis2.origin = ( 4236 1753 -335 ) 
 local.axis2.angle = 10
  
-local.axis3 = spawn info_player_allied 
-local.axis3.origin = ( -2029 3931 -181 ) 
-local.axis3.angle = 14
+// local.axis3 = spawn info_player_allied 
+// local.axis3.origin = ( -2029 3931 -181 ) 
+// local.axis3.angle = 14
 
-local.axis4 = spawn info_player_allied 
-local.axis4.origin = ( -3190 3759 -172 ) 
-local.axis4.angle = 10 
+// local.axis4 = spawn info_player_allied 
+// local.axis4.origin = ( -3190 3759 -172 ) 
+// local.axis4.angle = 10 
 
-local.axis5 = spawn info_player_allied 
-local.axis5.origin = ( -1013 3769 -24 ) 
-local.axis5.angle = 180
+// local.axis5 = spawn info_player_allied 
+// local.axis5.origin = ( -1013 3769 -24 ) 
+// local.axis5.angle = 180
 
-local.axis6 = spawn info_player_allied 
-local.axis6.origin = ( -3551 2300 -104 ) 
-local.axis6.angle = 10 
+// local.axis6 = spawn info_player_allied 
+// local.axis6.origin = ( -3551 2300 -104 ) 
+// local.axis6.angle = 10 
 
-local.axis7 = spawn info_player_allied 
-local.axis7.origin = ( -2824 2339 -97 ) 
-local.axis7.angle = 90 
+// local.axis7 = spawn info_player_allied 
+// local.axis7.origin = ( -2824 2339 -97 ) 
+// local.axis7.angle = 90 
 
-local.axis8 = spawn info_player_allied 
-local.axis8.origin = ( -2869 2778 -134 ) 
-local.axis8.angle = 70 
+// local.axis8 = spawn info_player_allied 
+// local.axis8.origin = ( -2869 2778 -134 ) 
+// local.axis8.angle = 70 
 
 	//////////////////////////
 	level waittill prespawn
@@ -85,11 +85,11 @@ local.axis8.angle = 70
 
 	thread global/AIR_gold.scr::treasure_spawn local.info
 	
-	local.master = spawn ScriptMaster
-	local.master aliascache omaha_background sound/amb_stereo/Amb_M6_BattleExt.mp3 soundparms 2.2 0.0 1.0 0.0 2500 8000 auto loaded maps "m dm moh obj train "
-	local.master = spawn scriptmaster
-	local.master aliascache fly_snd sound/vehicle/M1_StukaIdle.wav soundparms 2.2 0.5 2.0 0.5 2000 1000 item loaded maps "m dm moh obj train"
-	local.master = spawn scriptmaster
+	// local.master = spawn ScriptMaster
+	// local.master aliascache omaha_background sound/amb_stereo/Amb_M6_BattleExt.mp3 soundparms 2.2 0.0 1.0 0.0 2500 8000 auto loaded maps "m dm moh obj train "
+	// local.master = spawn scriptmaster
+	// local.master aliascache fly_snd sound/vehicle/M1_StukaIdle.wav soundparms 2.2 0.5 2.0 0.5 2000 1000 item loaded maps "m dm moh obj train"
+	// local.master = spawn scriptmaster
 
 //*****************************************
 //------- START KRUGERS FIREWORKS---------
@@ -97,48 +97,48 @@ local.axis8.angle = 70
 
 
 //**************************ALLIES**********************************************
-spawn script_origin "origin" ( 4500.57 4400.84 1900.98) "targetname" random_explode1
-spawn script_origin "origin" ( 1900.57 3400.84 1900.98) "targetname" random_explode2
-spawn script_origin "origin" ( 2900.57 1400.84 1900.98) "targetname" random_explode3
-spawn script_origin "origin" ( 3100.57 400.84 1900.98) "targetname" random_explode4
-spawn script_origin "origin" ( 3900.57 1400.84 1900.98) "targetname" random_explode5
-spawn script_origin "origin" ( 4400.57 -500.84 1900.98) "targetname" random_explode6
-spawn script_origin "origin" ( 2400.57 -900.84 1900.98) "targetname" random_explode7
-spawn script_origin "origin" ( 1700.57 4000.84 1900.98) "targetname" random_explode8
-spawn script_origin "origin" ( 1500.57 2000.84 1900.98) "targetname" random_explode9
+// spawn script_origin "origin" ( 4500.57 4400.84 1900.98) "targetname" random_explode1
+// spawn script_origin "origin" ( 1900.57 3400.84 1900.98) "targetname" random_explode2
+// spawn script_origin "origin" ( 2900.57 1400.84 1900.98) "targetname" random_explode3
+// spawn script_origin "origin" ( 3100.57 400.84 1900.98) "targetname" random_explode4
+// spawn script_origin "origin" ( 3900.57 1400.84 1900.98) "targetname" random_explode5
+// spawn script_origin "origin" ( 4400.57 -500.84 1900.98) "targetname" random_explode6
+// spawn script_origin "origin" ( 2400.57 -900.84 1900.98) "targetname" random_explode7
+// spawn script_origin "origin" ( 1700.57 4000.84 1900.98) "targetname" random_explode8
+// spawn script_origin "origin" ( 1500.57 2000.84 1900.98) "targetname" random_explode9
 
 
 
 //==========================
 
-thread krugers_fireworks
+// thread krugers_fireworks
 
- 	thread MULTI_PARA_A
-        thread MULTI_PARA_B
-        thread MULTI_PARA_C
-        thread MULTI_C47_PATH
-        thread MULTI_C47_DROP
+ 	// thread MULTI_PARA_A
+    //     thread MULTI_PARA_B
+    //     thread MULTI_PARA_C
+    //     thread MULTI_C47_PATH
+    //     thread MULTI_C47_DROP
 
 	
-	thread set_shark
-        // thread Allies_drop
-        // thread Allies_drop1
-        // thread Allies_drop2
-        thread Allies_drop3
-        // thread AXis_drop4
-        thread Allies_drop5
-        thread Allies_drop6
-        thread Allies_drop7
-        // thread AXis_drop8
-        // thread Allies_drop9
-      	// thread Allies_drop10
-        // thread AXis_drop11
-        // thread Allies_drop12
-	thread port1
-	thread port2
-	thread port3
-	thread port4
-	thread port5
+	// thread set_shark
+    //     // thread Allies_drop
+    //     // thread Allies_drop1
+    //     // thread Allies_drop2
+    //     thread Allies_drop3
+    //     // thread AXis_drop4
+    //     thread Allies_drop5
+    //     thread Allies_drop6
+    //     thread Allies_drop7
+    //     // thread AXis_drop8
+    //     // thread Allies_drop9
+    //   	// thread Allies_drop10
+    //     // thread AXis_drop11
+    //     // thread Allies_drop12
+	// thread port1
+	// thread port2
+	// thread port3
+	// thread port4
+	// thread port5
 
 	//////////////////////////
 	level waittill spawn
@@ -165,10 +165,10 @@ thread krugers_fireworks
 	
 	
 // using tele for higher altitude for parachutes :) - Feho
-	spawn trigger_multiple "targetname" "tele_para"
-	$tele_para.origin = ( 2641 1898 2113 ) 
-	$tele_para setsize ( -9999 -9999 -20 ) ( 9999 9999 20 ) 
-	$tele_para setthread teleporting
+	// spawn trigger_multiple "targetname" "tele_para"
+	// $tele_para.origin = ( 2641 1898 2113 ) 
+	// $tele_para setsize ( -9999 -9999 -20 ) ( 9999 9999 20 ) 
+	// $tele_para setthread teleporting
 
 	level.defusing_team = "axis"
 	level.planting_team = "allies"
