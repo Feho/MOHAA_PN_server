@@ -1,0 +1,498 @@
+
+//
+// M6L3D - Storming Fort Schmerzen - Chemical Plant
+
+//  
+// 
+// 
+
+
+
+
+main: 
+
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M6L3D" 
+	setcvar "g_obj_alliedtext2"  "Fort Schmerzen"
+	setcvar "g_obj_alliedtext3"  "Chemical Plant"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing6a.tga" 
+
+	setcvar "g_gametype" "2"
+
+	waitthread tdm_spawns
+
+	level waittill prespawn
+
+	local.master = spawn scriptmaster
+	local.master aliascache gasmask1 sound/characters/gasmask1.wav soundparms 0.7 0.0 1.0 0.0 86 100 dialog loaded maps "dm m obj train "
+	local.master aliascache gasmask2 sound/characters/gasmask2.wav soundparms 0.7 0.0 1.0 0.0 86 100 dialog loaded maps "dm m obj train "
+	local.master aliascache gasmask3 sound/characters/gasmask3.wav soundparms 0.7 0.0 1.0 0.0 86 100 dialog loaded maps "dm m obj train "
+	local.master aliascache steamloop sound/mechanics/Mec_SteamLoop_01.wav soundparms 1.0 0.3 1.0 0.0 320 2200 item loaded maps "m6l3c m6l3d m6l3e"
+
+
+	thread global/exploder.scr::main
+
+	level.fogplane = 900 //10000
+	$world farplane level.fogplane
+	level.fogred = .2
+	level.foggreen = .2
+	level.fogblue = .3
+	$world farplane_color (level.fogred + " " + level.foggreen + " " + level.fogblue)
+
+	exec global/door_locked.scr
+
+	exec global/ambient.scr m6l3d
+
+	
+	level waittill spawn
+
+	$elevatorclip solid
+
+	level.clockside = kills
+
+	thread pipeleak
+	$machinehum1 loopsound electrical_hum1
+	
+	thread playercheck
+	
+	thread fogcolorramp .7 .6 .25 60 .025
+	thread fogramp 900 .035 // was 1600 .035
+
+end
+
+
+ffatype:
+
+	
+	setcvar "g_obj_alliedtext1"  "Map Name: M6L3D" 
+	setcvar "g_obj_alliedtext2"  "Fort Schmerzen"
+	setcvar "g_obj_alliedtext3"  "Chemical Plant"
+
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing6a.tga" 
+	
+	setcvar "g_gametype" "1"
+
+	waitthread ffa_spawns
+
+	local.master = spawn scriptmaster
+	local.master aliascache gasmask1 sound/characters/gasmask1.wav soundparms 0.7 0.0 1.0 0.0 86 100 dialog loaded maps "dm m obj train "
+	local.master aliascache gasmask2 sound/characters/gasmask2.wav soundparms 0.7 0.0 1.0 0.0 86 100 dialog loaded maps "dm m obj train "
+	local.master aliascache gasmask3 sound/characters/gasmask3.wav soundparms 0.7 0.0 1.0 0.0 86 100 dialog loaded maps "dm m obj train "
+	local.master aliascache steamloop sound/mechanics/Mec_SteamLoop_01.wav soundparms 1.0 0.3 1.0 0.0 320 2200 item loaded maps "m6l3c m6l3d m6l3e"
+
+	level waittill prespawn
+
+	thread global/exploder.scr::main	
+	exec global/ambient.scr m6l3d
+	exec global/door_locked.scr
+
+	level.fogplane = 900 //10000
+	$world farplane level.fogplane
+	level.fogred = .2
+	level.foggreen = .2
+	level.fogblue = .3
+	$world farplane_color (level.fogred + " " + level.foggreen + " " + level.fogblue)
+
+	exec global/door_locked.scr
+
+	exec global/ambient.scr m6l3d
+
+	
+	level waittill spawn
+
+	$elevatorclip solid
+
+	
+	level.clockside = kills
+
+	thread pipeleak
+	$machinehum1 loopsound electrical_hum1
+	
+	thread playercheck
+	
+	thread fogcolorramp .7 .6 .25 60 .025
+	thread fogramp 900 .035 // was 1600 .035
+	
+
+end
+
+
+
+// Gas Mask Code by JWP
+playercheck:
+local.n = 1
+	while(1)
+	{
+	for(local.i=1;local.i <= $player.size ; local.i++)
+	{
+	if ($player[local.i].hasgasmask != 1 && $player[local.i].dmteam != "spectator" && IsAlive $player[local.i])
+	{
+	thread addgasmask $player[local.i] local.n
+	local.n++
+	}
+	}
+	waitframe
+	}
+   
+end
+   
+
+addgasmask local.guy local.i:
+	local.guy.hasgasmask = 1
+	local.guy attachmodel models/items/gasmask.tik "Bip01 Head" 1 ("mask" + local.i) false -1 -1 -1 -1 ( -1 10 0)
+	$("mask" + local.i).angles += ( -90 180 15)
+	local.team = local.guy.dmteam
+	thread gasmask_sounds local.guy
+	huddraw_shader 200 "textures/hud/gasmask_overlay"
+	huddraw_align 200 left top
+	huddraw_rect 200 0 0 640 480
+	huddraw_virtualsize 200 1
+	huddraw_color 200 1 1 1
+	huddraw_alpha 200 1
+	while (local.guy != NULL)
+	 {
+	if (local.guy.dmteam!=local.team || !(IsAlive local.guy))
+	break
+   
+	 $("mask" + local.i) notsolid
+	 waitframe
+	 }
+	 local.guy removeattachedmodel "bip01 head"
+	local.guy.hasgasmask = 0
+end
+   
+gasmask_sounds local.guy:
+	while (local.guy.hasgasmask == 1)
+	 {
+	local.playerhealth = local.guy.health
+  	if(local.playerhealth > 66 && local.currentsound != 1)
+  	{
+  		local.currentsound = 1
+  		local.guy stoploopsound
+  		local.guy loopsound gasmask1
+  	}
+  	if (local.playerhealth > 33 && local.playerhealth <= 66 && local.currentsound != 2)
+  	{ 
+  		local.currentsound = 2
+  		local.guy stoploopsound
+  		local.guy loopsound gasmask2
+  	}
+  	if (local.playerhealth <= 33 && local.currentsound != 3)
+  	{
+  		local.currentsound = 3
+  		local.guy stoploopsound
+  		local.guy loopsound gasmask3
+  	}
+  	wait 1
+  }
+  local.guy stoploopsound
+  end
+
+
+
+
+z_bomb_set_explosive:
+	
+	$z_bomb_explosive waitthread explode_controller $z_bomb_explosive
+end
+
+explode_controller local.target: 
+
+	self model static/v2.tik
+	self scale 0.05
+	self notsolid
+	spawn models/emitters/fancyfire.tik "targetname" "flamer"
+	$flamer.origin = $z_bomb_explosive.origin
+	$flamer scale .5
+	$flamer notsolid
+	$flamer glue $z_bomb_explosive
+	self speed 20
+	self playsound plantbomb
+ 	parm.other stopwatch 5
+	wait 5
+	$flamer anim start
+	self moveup 500
+	self waitmove
+	$flamer remove
+	self remove
+end
+
+
+
+
+
+
+open_gas_valve1:
+	self notsolid
+	self time 3
+	self rotateZdown 360
+	self playsound flywheel
+	self waitmove
+	wait 2
+	self.model = animate/redvalve_nopulse.tik
+end
+
+open_gas_valve2:
+	self notsolid
+	self time 3
+	self rotateZdown 360
+	self playsound flywheel
+	self waitmove
+	wait 2
+	self.model = animate/redvalve_nopulse.tik
+end
+
+gas_valve1:
+	level.valvecount++
+	level.nextobjective = $gas_valve2
+	$gas_valve1 thread open_gas_valve1
+	thread setvalveobjective
+	wait 3
+	thread manual_gas gas_flowing1
+end
+
+gas_valve2:
+	level.valvecount++
+	level.nextobjective = $gas_valve1
+	$gas_valve2 thread open_gas_valve2
+	thread setvalveobjective
+	wait 3
+	thread manual_gas gas_flowing2
+end
+
+
+pipeleaks:
+	for(local.i = 1;local.i <= $pipeleak.size;local.i++)
+	{
+		$pipeleak[local.i] thread pipeleak
+
+		local.leakingpipe = $pipeleak[local.i].target	
+		while(local.leakingpipe)
+		{
+
+			local.leakingpipe anim stop
+			local.leakingpipe = local.leakingpipe.target
+		}
+	}
+end
+
+pipeleak:
+	//self waittill trigger
+	//local.gas_leak = self.target
+	while (local.gas_leak)
+	{
+		local.gas_leak anim start
+		local.gas_leak = local.gas_leak.target
+	
+	}
+	
+end
+
+
+
+
+manual_gas local.manual_name:
+	for (local.i = 1;local.i <= $pipeleak.size;local.i++)
+	{
+		if ($pipeleak[local.i].manual == local.manual_name)
+			trigger $pipeleak[local.i]
+	}
+
+
+end
+
+fogramp local.rampto local.ramptime:
+	if (level.fogplane == local.rampto)
+	{
+		end
+	}
+	if (level.fogplane < local.rampto)
+	{
+		for (local.bleh = level.fogplane; local.bleh < local.rampto; local.bleh += 100)
+		{
+			level.fogplane = local.bleh
+			$world farplane level.fogplane
+			wait local.ramptime
+		}
+		end
+	}
+	if (level.fogplane > local.rampto)
+	{
+		for (local.bleh = level.fogplane; local.bleh > local.rampto; local.bleh -= 100)
+		{
+			level.fogplane = local.bleh
+			$world farplane level.fogplane
+			wait local.ramptime
+		}
+		end
+	}
+end
+
+fogcolorramp local.red local.green local.blue local.increments local.time:
+	local.reddif = (local.red - level.fogred)
+	local.greendif = (local.green - level.foggreen)
+	local.bluedif = (local.blue - level.fogblue)
+	local.redinc = (local.reddif / local.increments)
+	local.blueinc = (local.bluedif / local.increments)
+	local.greeninc = (local.greendif / local.increments)
+	for(local.i = 1; local.i <= local.increments; local.i++)
+	{
+		level.fogred  = (level.fogred + local.redinc)
+		level.foggreen = (level.foggreen + local.greeninc)
+		level.fogblue = (level.fogblue + local.blueinc)
+		$world farplane_color (level.fogred + " " + level.foggreen + " " + level.fogblue)
+		wait local.time
+	}
+
+end
+
+
+tdm_spawns:
+
+ 
+	removeclass actor
+	removeclass ammoentity
+
+	// Stage 1 Axis
+	spawn info_player_axis "origin" "158.51 2472.88 -1471.88" "angle" "-120" "targetname" "X1"
+	
+	spawn info_player_axis "origin" "688.88 1743.13 -1519.88" "angle" "113" "targetname" "X2"
+	spawn info_player_axis "origin" "587.85 1744.43 -1519.88" "angle" "79" "targetname" "X3"
+	spawn info_player_axis "origin" "527.13 1743.13 -1519.88" "angle" "66" "targetname" "X4"
+	spawn info_player_axis "origin" "532.55 1879.14 -1519.88" "angle" "74" "targetname" "X5"
+
+	spawn info_player_axis "origin" "701.54 1835.74 -1519.88" "angle" "116" "targetname" "X6" 
+	spawn info_player_axis "origin" "748.81 1986.20 -1519.88" "angle" "122" "targetname" "X7"
+	spawn info_player_axis "origin" "752.88 2041.68 -1519.88" "angle" "142" "targetname" "X8"
+	spawn info_player_axis "origin" "752.87 2141.53 -1519.88" "angle" "155" "targetname" "X9"
+	spawn info_player_axis "origin" "470.96 2000.73 -1519.88" "angle" "95" "targetname" "X10"
+
+	spawn info_player_axis "origin" "399.13 2076.99 -1519.88" "angle" "75" "targetname" "X11"
+	spawn info_player_axis "origin" "399.13 2526.88 -1519.88" "angle" "-130" "targetname" "X12"
+	spawn info_player_axis "origin" "458.72 2526.88 -1519.88" "angle" "-151" "targetname" "X13"
+	spawn info_player_axis "origin" "516.15 2526.88 -1519.88" "angle" "-150" "targetname" "X14"
+	spawn info_player_axis "origin" "600.87 2431.20 -1519.88" "angle" "-168" "targetname" "X15"
+
+
+	// Stage 1 Allies
+
+	spawn info_player_allied "origin" "-673.08 496.12 -1471.88" "angle" "168" "targetname" "A1" 
+	spawn info_player_allied "origin" "-671.13 580.55 -1471.88" "angle" "167" "targetname" "A2"
+	spawn info_player_allied "origin" "-671.13 770.74 -1471.88" "angle" "-166" "targetname" "A3"
+	spawn info_player_allied "origin" "-695.84 855.57 -1471.88" "angle" "-155" "targetname" "A4"
+	spawn info_player_allied "origin" "-811.89 872.78 -1471.88" "angle" "-120" "targetname" "A5" 
+	
+	spawn info_player_allied "origin" "-873.82 880.88 -1471.88" "angle" "-105" "targetname" "A6" 
+	spawn info_player_allied "origin" "-928.87 880.88 -1471.88" "angle" "-93" "targetname" "A7" 
+	spawn info_player_allied "origin" "-928.69 607.13 -1471.88" "angle" "91" "targetname" "A8"
+	spawn info_player_allied "origin" "-1031.13 545.34 -1463.88" "angle" "105" "targetname" "A9"
+	spawn info_player_allied "origin" "-1128.87 545.13 -1463.88" "angle" "83" "targetname" "A10"
+
+	spawn info_player_allied "origin" "-1094.93 720.87 -1463.88" "angle" "-163" "targetname" "A11"
+	spawn info_player_allied "origin" "-1231.13 832.88 -1471.88" "angle" "-174" "targetname" "A12"
+	spawn info_player_allied "origin" "-1231.13 607.13 -1471.88" "angle" "119" "targetname" "A13"
+	spawn info_player_allied "origin" "-1900.25 572.79 -1471.88" "angle" "28" "targetname" "A14" 
+	spawn info_player_allied "origin" "-1890.16 763.57 -1471.88" "angle" "-33" "targetname" "A15"
+
+
+	
+	//level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1
+	level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	level.rifle = 1
+
+end
+
+
+ffa_spawns: 
+
+	removeclass actor
+	removeclass ammoentity
+
+
+	spawn info_player_deathmatch "origin" "600.87 2526.57 -1519.88" "angle" "-163"
+	spawn info_player_deathmatch "origin" "752.87 2168.88 -1519.88" "angle" "-164"
+	spawn info_player_deathmatch "origin" "688.87 1746.93 -1519.88" "angle" "97"
+	spawn info_player_deathmatch "origin" "527.13 1743.13 -1519.88" "angle" "54"
+	spawn info_player_deathmatch "origin" "409.57 2043.82 -1519.88" "angle" "36"
+
+	spawn info_player_deathmatch "origin" "225.89 2263.14 -1471.88" "angle" "152"
+	spawn info_player_deathmatch "origin" "152.73 2472.87 -1471.88" "angle" "-50"
+	spawn info_player_deathmatch "origin" "-48.61 2263.13 -1471.88" "angle" "17"
+	spawn info_player_deathmatch "origin" "-223.13 2267.55 -1471.88" "angle" "148"
+	spawn info_player_deathmatch "origin" "-295.13 2475.59 -1471.88" "angle" "-160"
+
+	spawn info_player_deathmatch "origin" "-634.87 2492.88 -1519.88" "angle" "-28"
+	spawn info_player_deathmatch "origin" "-967.18 2416.88 -1471.88" "angle" "-30"
+	spawn info_player_deathmatch "origin" "-928.98 2195.98 -1471.88" "angle" "-95"
+	spawn info_player_deathmatch "origin" "-929.12 2012.88 -1471.88" "angle" "-51"
+	spawn info_player_deathmatch "origin" "-972.88 1745.13 -1471.88" "angle" "30"
+
+
+	spawn info_player_deathmatch "origin" "-824.55 1687.13 -1471.88" "angle" "91"
+	spawn info_player_deathmatch "origin" "-630.95 1996.88 -1471.88" "angle" "-30"
+	spawn info_player_deathmatch "origin" "-395.36 1987.19 -1471.88" "angle" "-100"
+	spawn info_player_deathmatch "origin" "-44.39 1846.87 -1471.88" "angle" "-130"
+	spawn info_player_deathmatch "origin" "120.94 1756.21 -1471.88" "angle" "179"
+
+	spawn info_player_deathmatch "origin" "129.12 1455.14 -1471.88" "angle" "114"
+	spawn info_player_deathmatch "origin" "-35.14 1507.49 -1471.88" "angle" "107"
+	spawn info_player_deathmatch "origin" "-385.13 1264.70 -1471.88" "angle" "98"
+	spawn info_player_deathmatch "origin" "-720.87 1257.44 -1471.88" "angle" "58"
+	spawn info_player_deathmatch "origin" "-1034.03 1249.13 -1467.88" "angle" "25"
+
+	spawn info_player_deathmatch "origin" "-832.13 1249.13 -1467.88" "angle" "150"
+	spawn info_player_deathmatch "origin" "-1167.13 1574.14 -1471.88" "angle" "-114"
+	spawn info_player_deathmatch "origin" "-1313.85 956.62 -1463.88" "angle" "110"
+	spawn info_player_deathmatch "origin" "-1904.88 823.78 -1471.88" "angle" "-45"
+	spawn info_player_deathmatch "origin" "-689.81 880.87 -1471.88" "angle" "-144"
+
+	
+
+	//level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1
+	level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	level.rifle = 1
+	
+	
+
+end
+
+// End some labels
+levelbluh:
+end
+
+
+
+// Cobs
+

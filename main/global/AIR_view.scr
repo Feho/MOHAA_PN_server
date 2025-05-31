@@ -1,0 +1,203 @@
+/*
+======================================================
+*** AIRborne; Realism Script for MoH:AA
+======================================================
+by Sor
+Version: v1.2
+-----------------------------------
+--- COPY/EDIT:
+
+ A) All files related to the Airborne Server for MoHAA
+ are free to be modified in any proportion. For any reason.
+ Mods can always be made better :)
+
+ B) Keep this heading in this file in any case (modified/original)
+ and if you wish, add your own nickname/contact underneath it.
+
+ C) If you changed the files in any way, please state so clearly
+ when releasing it to the public. I also recommend: marking
+ or mentioning what you changed exactly in the modified files.
+
+ Feel free to ask me any help regarding problems/bugs
+ when playing this Mod or regarding the modification this Mod.
+
+-------------------
+DO NOT TAKE CREDIT FOR OTHER PEOPLE'S WORK!
+EITHER SUBMIT MODIFIED/ORIGINAL WORK WITHOUT CREDIT
+OR JUST CREDIT Rindog.
+---------------------------------------------
+--- CONTACT:
+E-Mail: 	MOHAALennySoldier@hotmail.com
+Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
+======================================================
+*/
+
+main:
+
+if (level.view_run != 1)
+{
+	// local.master = spawn ScriptMaster
+	// local.master aliascache inhale sound/characters/gasmask1.wav soundparms 1.0 0.0 1.0 0.0 320 2200 dialog loaded maps "m dm obj train "
+	// local.master aliascache exhale sound/characters/gasmask2.wav soundparms 1.0 0.0 1.0 0.0 320 2200 dialog loaded maps "m dm obj train "
+	level waittill spawn
+	thread dm_view
+}
+
+end
+
+dm_view:
+
+	if (level.view_run != 1)
+	{
+		level.view_run = 1
+		level.view_p = 0
+		level.view_y = 0
+		level.view_p_mid = 0
+		level.view_y_mid = 0
+		level.view_p_high = 0
+		level.view_y_high = 0
+		level.view_toggle_p = -0.001
+		level.view_toggle_y = -0.001
+	}
+	else
+	{
+		end
+	}
+
+	local.pitch_max = 0.015  //0.015
+	local.pitch_jitter = 0.0006 //0.0006
+	local.yaw_max = 0.018 
+	local.yaw_jitter = 0.0003 //0.0003
+
+	local.AIR_realism = getcvar "g_realism"
+	if (local.AIR_realism == 1)
+	{
+		println "[AIR Realism::view]: Realistic View enabled!"
+	}
+	
+	while (local.AIR_realism == 1)
+	{
+
+		// local.AIR_realism = level.AIR["realism"]
+
+		if (level.AIR_wintermap == 1 && local.already_cold != 1)
+		{
+			thread breathe_winter local.AIR_realism
+			local.already_cold = 1
+		}
+	
+		waitframe //0.1 //maybe increase
+		if(level.view_p > local.pitch_max)
+		{
+			level.view_toggle_p = -local.pitch_jitter
+		}
+		else if(level.view_p < -local.pitch_max)
+		{
+			level.view_toggle_p = local.pitch_jitter
+		}
+
+		if(level.view_y > local.yaw_max)
+		{
+			level.view_toggle_y = -local.yaw_jitter
+		}
+		else if(level.view_y < -local.yaw_max)
+		{
+			level.view_toggle_y = local.yaw_jitter
+		}
+
+		level.view_p += level.view_toggle_p
+		level.view_y += level.view_toggle_y
+
+		level.view_p_mid += level.view_toggle_p * 1.5
+		level.view_y_mid += level.view_toggle_y * 1.5
+
+		level.view_p_high += level.view_toggle_p * 2.5
+		level.view_y_high += level.view_toggle_y * 2.5
+
+		for (local.p = 1; local.p <= $player.size ;local.p++)
+		{
+			if ($player[local.p].usingScope == 1 && $player[local.p].useheld == 1)
+			{
+				if ($player[local.p].holding != 1)
+				{
+					$player[local.p] thread hold_breath
+				}
+			}
+			// else if($player[local.p].health > 50)
+			// {
+			// 	$player[local.p].viewangles =  $player[local.p].viewangles + (level.view_p level.view_y  0)
+			// }
+			// else if($player[local.p].health <= 50 && $player[local.p].health > 15)
+			// {
+			// 	$player[local.p].viewangles =  $player[local.p].viewangles + (level.view_p_mid level.view_y_mid  0)
+			// }
+			else if($player[local.p].health <= 15)
+			{
+				$player[local.p].viewangles =  $player[local.p].viewangles + (level.view_p_high level.view_y_high  0)
+			}
+		}		 
+	}
+
+	level.view_run = 0
+	println "[AIR Realism::view]: Realistic View Disabled!"
+
+end
+
+//=======================
+breathe_winter:
+
+	local.AIR_realism = getcvar "g_realism"
+
+	while (level.AIR_wintermap == 1 && local.AIR_realism == 1)
+	{
+		local.AIR_realism = level.AIR["realism"]
+
+		if ($player.size > 0) 
+		{
+			for(local.i = 1; local.i <= $player.size; local.i++)
+			{
+				if ($player[local.i].status == "alive" && $player[local.i].dmteam != "spectator")
+				{
+					$player[local.i] attachmodel models/emitters/breath_steam_emitter.tik "Bip01 Head" 1 1
+					wait ((randomfloat 1) + 3.5)
+				}
+			}
+		}
+		wait 1.3
+	}
+end
+
+hold_breath:
+
+	self.holding = 1
+	self thread inhale
+
+	while ( self.status == "alive" && (self.useheld) && self.usingScope)
+	{
+		wait 0.2
+	}
+
+	if (self.status == "alive")
+	{
+		self thread exhale
+	}
+
+	self.holding = 0
+
+end
+
+inhale:
+
+	self loopsound inhale
+	wait 0.85
+	self stoploopsound
+
+end
+
+exhale:
+
+	self loopsound exhale
+	wait 4.5
+	self stoploopsound
+
+end
