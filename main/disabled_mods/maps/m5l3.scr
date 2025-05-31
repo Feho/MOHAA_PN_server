@@ -1,0 +1,894 @@
+//
+// M5L3 - The Bridge
+
+//  
+// 
+// 
+
+
+
+
+main: 
+	
+	waitexec maps/stuffm5l3.scr
+	setcvar "g_gametype" "2"
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M5L3" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3"    "The Bridge"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
+
+	setcvar "g_gametype" "2"
+setcvar "g_gametypestring" "Team-Match"
+	setcvar "timelimit" "15" 
+
+	waitthread tdm_spawns
+
+	
+	exec global/exploder.scr
+	
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	level waittill prespawn
+
+	exec global/DMprecache.scr
+
+	exec global/shutter.scr
+	exec global/ambient.scr m5l3
+	exec global/bomberB.scr
+
+	exec global/door_locked.scr
+	
+	// Portable 30 cals
+	exec models/create_guns.scr ( 18 2944 416.13 )
+
+	level waittill spawn
+	
+	level.squadmaker_areaname = "in the village"
+	
+	// start support gunner scripts
+	exec global/support/support.scr
+	
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	// unlock some doors with triggers
+	exec global/fake_door.scr ( 1932 4332 300 ) ( 2314 4332 273 )
+	exec global/fake_door.scr ( 2295 4332 290 ) ( 1910 4332 274 )
+	exec global/fake_door.scr ( 760 4120 530 ) ( 890 5721 386 )
+	exec global/fake_door.scr ( 858 5721 404 ) ( 760 4090 530 )
+	exec global/fake_door.scr ( 956 5425 260 ) ( 760 4090 530 )
+	
+	$tankclip.origin = ( -430.51 -56.42 381.42 )
+	$tankclip2 notsolid
+	$explodersmashed notsolid
+	$exploderchunk notsolid
+	$exploderfire notsolid
+
+	waitthread furniture
+
+	thread Stage2_Bit
+
+	thread Map_Guard
+	
+	level.clockside = kills
+
+end
+
+	
+
+ffatype:
+
+	
+	setcvar "g_obj_alliedtext1"   "Map Name: M5L3" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3"    "The Bridge"
+
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
+	
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	setcvar "timelimit" "15" 
+	
+	waitthread ffa_spawns
+
+	exec global/exploder.scr::main
+
+	level waittill prespawn
+
+	exec global/DMprecache.scr
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m5l3
+	
+	level waittill spawn
+
+	$tankclip remove
+	$tankclip2 remove
+	$explodersmashed notsolid
+	$exploderchunk notsolid
+	$exploderfire notsolid
+
+	waitthread furniture
+
+	thread Map_Guard
+
+	
+
+	level.clockside = kills
+
+end
+
+
+tdm_spawns:
+
+ 
+	removeclass actor
+	removeclass ammoentity
+
+
+	spawn info_player_axis "origin" "-516.37 164.01 395.15" "angle" "87" "targetname" "X1"
+	spawn info_player_axis "origin" "-342.43 231.03 402.88" "angle" "81" "targetname" "X2"
+	spawn info_player_axis "origin" "-245.91 410.16 423.57" "angle" "83" "targetname" "X3"
+	spawn info_player_axis "origin" "-404.89 488.61 432.29" "angle" "89" "targetname" "X4"
+	spawn info_player_axis "origin" "-537.47 634.13 448.95" "angle" "93" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-248.53 905.38 448.06" "angle" "87" "targetname" "X6" 
+	spawn info_player_axis "origin" "-394.99 1111.98 425.14" "angle" "84" "targetname" "X7"
+	spawn info_player_axis "origin" "-510.98 1225.90 412.09" "angle" "85" "targetname" "X8"
+	spawn info_player_axis "origin" "128.87 1575.13 399.94" "angle" "112" "targetname" "X9"
+	spawn info_player_axis "origin" "-27.01 1627.52 397.12" "angle" "89" "targetname" "X10"
+
+	spawn info_player_axis "origin" "-1144.88 2088.87 416.13" "angle" "-27" "targetname" "X11"
+	spawn info_player_axis "origin" "-967.22 1609.50 416.13" "angle" "57" "targetname" "X12"
+	spawn info_player_axis "origin" "-855.13 1607.13 416.13" "angle" "99" "targetname" "X13"
+	spawn info_player_axis "origin" "-1067.13 2081.67 644.13" "angle" "-123" "targetname" "X14"
+	spawn info_player_axis "origin" "-1224.87 2088.88 644.13" "angle" "-90" "targetname" "X15"
+	
+
+
+	spawn info_player_allied "origin" "3008.88 5118.93 239.94" "angle" "-136" "targetname" "A1"
+	spawn info_player_allied "origin" "2643.99 5206.00 236.29" "angle" "-89" "targetname" "A2"
+	spawn info_player_allied "origin" "2644.08 5331.26 231.04" "angle" "-90" "targetname" "A3"
+	spawn info_player_allied "origin" "2707.31 5372.79 229.30" "angle" "-95" "targetname" "A4"
+	spawn info_player_allied "origin" "2793.80 5374.85 229.22" "angle" "-101" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "2849.87 4652.87 259.48" "angle" "-138" "targetname" "A6"
+	spawn info_player_allied "origin" "2347.31 4651.74 259.53" "angle" "-87" "targetname" "A7"
+	spawn info_player_allied "origin" "2937.66 6351.50 168.13" "angle" "-140" "targetname" "A8"
+	spawn info_player_allied "origin" "2421.94 6304.47 190.35" "angle" "-148" "targetname" "A9"
+	spawn info_player_allied "origin" "2533.69 5746.70 182.24" "angle" "-172" "targetname" "A10"
+
+	spawn info_player_allied "origin" "2294.27 5656.66 202.19" "angle" "175" "targetname" "A11"
+	spawn info_player_allied "origin" "2173.40 5776.51 212.26" "angle" "-160" "targetname" "A12"
+	spawn info_player_allied "origin" "1380.14 6265.74 224.13" "angle" "-40" "targetname" "A13"
+	spawn info_player_allied "origin" "926.34 5954.90 384.13" "angle" "31" "targetname" "A14"
+	spawn info_player_allied "origin" "3052.65 6232.56 168.13" "angle" "-163" "targetname" "A15"
+
+
+
+
+	// Stage 2 Axis
+	spawn info_player_axis "origin" "-1288.80 -2190.14 392.13" "angle" "34" "targetname" "XX1"
+	spawn info_player_axis "origin" "-1123.36 -2240.71 392.13" "angle" "63" "targetname" "XX2"
+	spawn info_player_axis "origin" "431.75 -2260.12 392.13" "angle" "135" "targetname" "XX3"
+	spawn info_player_axis "origin" "533.96 -2275.30 392.13" "angle" "142" "targetname" "XX4"
+	spawn info_player_axis "origin" "692.91 -2281.27 392.13" "angle" "143" "targetname" "XX5"
+
+	spawn info_player_axis "origin" "994.97 -1818.16 392.13" "angle" "168" "targetname" "XX6" 
+	spawn info_player_axis "origin" "681.29 -1830.37 392.13" "angle" "154" "targetname" "XX7"
+	spawn info_player_axis "origin" "404.91 -1847.48 392.13" "angle" "165" "targetname" "XX8"
+	spawn info_player_axis "origin" "-1009.40 -1786.01 392.13" "angle" "3" "targetname" "XX9"
+	spawn info_player_axis "origin" "-1232.24 -1802.12 392.13" "angle" "4" "targetname" "XX10"
+
+	spawn info_player_axis "origin" "-1439.27 -1820.73 392.13" "angle" "7" "targetname" "XX11"
+	spawn info_player_axis "origin" "-1493.28 -1178.69 392.13" "angle" "82" "targetname" "XX12"
+	spawn info_player_axis "origin" "-1350.47 -1155.43 392.13" "angle" "142" "targetname" "XX13"
+	spawn info_player_axis "origin" "-1649.25 -1672.79 392.13" "angle" "54" "targetname" "XX14"
+	spawn info_player_axis "origin" "1080.48 -2316.03 392.13" "angle" "146" "targetname" "XX15"
+
+
+	// Stage 2 Allies
+	spawn info_player_allied "origin" "2021.80 3152.27 280.13" "angle" "-123" "targetname" "AA1"
+	spawn info_player_allied "origin" "2201.39 2879.11 280.13" "angle" "-135" "targetname" "AA2"
+	spawn info_player_allied "origin" "2133.50 2658.85 280.13" "angle" "-167" "targetname" "AA3"
+	spawn info_player_allied "origin" "2335.71 2993.06 280.13" "angle" "-141" "targetname" "AA4"
+	spawn info_player_allied "origin" "2446.63 3158.57 280.13" "angle" "-140" "targetname" "AA5" 
+
+	spawn info_player_allied "origin" "2166.07 3288.27 280.13" "angle" "-122" "targetname" "AA6"
+	spawn info_player_allied "origin" "2359.35 3404.64 280.13" "angle" "-115" "targetname" "AA7"
+	spawn info_player_allied "origin" "1064.87 4217.85 516.13" "angle" "-117" "targetname" "AA8"
+	spawn info_player_allied "origin" "1051.86 4371.27 512.13" "angle" "-103" "targetname" "AA9"
+	spawn info_player_allied "origin" "1044.20 4550.72 512.13" "angle" "-99" "targetname" "AA10"
+
+	spawn info_player_allied "origin" "1211.67 4502.04 265.80" "angle" "-96" "targetname" "AA11"
+	spawn info_player_allied "origin" "1274.46 4712.94 256.96" "angle" "-97" "targetname" "AA12"
+	spawn info_player_allied "origin" "1771.46 4840.84 251.60" "angle" "-115" "targetname" "AA13"
+	spawn info_player_allied "origin" "1863.78 4529.21 264.66" "angle" "-144" "targetname" "AA14"
+	spawn info_player_allied "origin" "1951.60 5133.83 252.13" "angle" "-126" "targetname" "AA15"
+
+	$XX1 disablespawn
+	$XX2 disablespawn
+	$XX3 disablespawn
+	$XX4 disablespawn
+	$XX5 disablespawn
+	$XX6 disablespawn
+	$XX7 disablespawn
+	$XX8 disablespawn
+	$XX9 disablespawn
+	$XX10 disablespawn
+	$XX11 disablespawn
+	$XX12 disablespawn
+	$XX13 disablespawn
+	$XX14 disablespawn
+	$XX15 disablespawn
+
+	$AA1 disablespawn
+	$AA2 disablespawn
+	$AA3 disablespawn
+	$AA4 disablespawn
+	$AA5 disablespawn
+	$AA6 disablespawn
+	$AA7 disablespawn
+	$AA8 disablespawn
+	$AA9 disablespawn
+	$AA10 disablespawn
+	$AA11 disablespawn
+	$AA12 disablespawn
+	$AA13 disablespawn
+	$AA14 disablespawn
+	$AA15 disablespawn
+
+	local.master = spawn scriptmaster
+	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+	local.master aliascache gas_explode1 sound/weapons/explo/Explo_GasTank1.wav soundparms 0.9 0.2 0.8 0.4 700 8000 auto loaded maps "m dm moh obj train"
+	local.master aliascache mine_trigger sound/weapons/foley/MineTrigger1.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m3l1 m3l3 dm moh obj train"
+	local.master aliascache arty_leadin08 sound/weapons/explo/Exp_LeadIn_07.wav soundparms 1.0 0.2 0.7 0.5 900 20000 local loaded maps "m dm obj"
+	local.master aliascache tank_snd_move sound/vehicle/veh_tank_turret1.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps "m3l3 m5"
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+	
+end
+
+
+
+
+
+ffa_spawns: 
+
+	removeclass actor
+	removeclass ammoentity
+
+	spawn info_player_deathmatch "origin" "3006.87 2932.87 280.13" "angle" "-158"
+	spawn info_player_deathmatch "origin" "2867.10 6457.04 168.13" "angle" "-69"
+	spawn info_player_deathmatch "origin" "1063.04 5617.49 384.13" "angle" "95"
+	spawn info_player_deathmatch "origin" "1255.10 3340.99 280.13" "angle" "113"
+	spawn info_player_deathmatch "origin" "806.72 4108.69 512.13" "angle" "-155"
+
+	spawn info_player_deathmatch "origin" "-815.13 1942.23 644.13" "angle" "-150"
+	spawn info_player_deathmatch "origin" "583.07 1599.13 410.13" "angle" "38"
+	spawn info_player_deathmatch "origin" "183.13 1663.13 568.13" "angle" "18"
+	spawn info_player_deathmatch "origin" "1568.87 2496.88 400.13" "angle" "-121"
+	spawn info_player_deathmatch "origin" "1161.34 1951.26 880.13" "angle" "-129"
+
+	spawn info_player_deathmatch "origin" "291.93 -1153.15 392.13" "angle" "147"
+	spawn info_player_deathmatch "origin" "-1489.35 -919.96 392.13" "angle" "87"
+	spawn info_player_deathmatch "origin" "-4724.32 -149.29 392.13" "angle" "30"
+	spawn info_player_deathmatch "origin" "-2223.49 -746.56 456.13" "angle" "39"
+	spawn info_player_deathmatch "origin" "2567.46 -870.25 392.13" "angle" "107"
+
+	local.master = spawn scriptmaster
+	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+	local.master aliascache gas_explode1 sound/weapons/explo/Explo_GasTank1.wav soundparms 0.9 0.2 0.8 0.4 700 8000 auto loaded maps "m dm moh obj train"
+	local.master aliascache mine_trigger sound/weapons/foley/MineTrigger1.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m3l1 m3l3 dm moh obj train"
+	local.master aliascache arty_leadin08 sound/weapons/explo/Exp_LeadIn_07.wav soundparms 1.0 0.2 0.7 0.5 900 20000 local loaded maps "m dm obj"
+	local.master aliascache tank_snd_move sound/vehicle/veh_tank_turret1.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps "m3l3 m5"
+
+	
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+end
+
+
+// Re-arrange some things for better gameplay / cover/ fx :) 
+furniture:
+
+	$plunger notsolid	
+	
+	$flak88base remove
+	$flak88 remove
+
+	spawn models/vehicles/tigertank.tik "targetname" "tigger1" 
+	$tigger1.origin = ( -408 -1880 424 )
+	$tigger1.angle = 33
+	$tigger1 setsize ( -147 -93 0 ) ( 170 98 110 )
+	$tigger1 nodamage
+	$tigger1.gun = $tigger1 queryturretslotentity 0
+	$tigger1.gun setaimtarget $towerdown
+	$tigger1 setcollisionentity $tigercollision
+
+	spawn models/vehicles/tigertank.tik "targetname" "tigger2" 
+	$tigger2.origin = ( -808 -240 432 )
+	$tigger2.angle = -5
+	$tigger2 setsize ( -147 -93 0 ) ( 170 98 110 )
+	$tigger2 nodamage
+	$tigger2.gun = $tigger2 queryturretslotentity 0
+	$tigger2.gun setaimtarget $playertank
+	$tigger2 setcollisionentity $tigercollision
+
+	
+	$playertank setcollisionentity $kingtigercollision
+	$playertank.origin = ( -227.55 3769.63 376.13 )
+	$playertank.angle = -166
+	$playertank nodamage
+	$playertank.gun = $playertank queryturretslotentity 0
+	$playertank.gun setaimtarget $tigger1
+
+	$flak88trigger remove
+	$towerkill remove
+	$towerup remove
+	$endtouch remove
+	$endtank2 remove
+	$endtank1 remove
+	$deathtrigger remove
+
+/////////////////////////DOOR
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 2280 4332 342 )
+	local.static.angles = ( 0 90 90 )
+	local.static.scale = 4
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 858 5721 450 )
+	local.static.angles = ( 0 90 90 )
+	local.static.scale = 4
+
+/////////////////// Fake walls
+
+	// House 1
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1428 -554 490 )
+	local.static.angles = ( 0 90 90 )
+	local.static.scale = 7
+	
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1428 -702 490 )
+	local.static.angles = ( 0 90 90 )
+	local.static.scale = 7
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1427 -815 490 )
+	local.static.angles = ( 0 90 90 )
+	local.static.scale = 7
+	
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1500 -892 490 )
+	local.static.angles = ( 0 180 90 )
+	local.static.scale = 7
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1648 -892 490 )
+	local.static.angles = ( 0 180 90 )
+	local.static.scale = 7
+	
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1796 -892 490 )
+	local.static.angles = ( 0 180 90 )
+	local.static.scale = 7
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1934 -893 490 )
+	local.static.angles = ( 0 180 90 )
+	local.static.scale = 7
+	
+	// a roof...
+	local.static = spawn script_model "targetname" "wall3"
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( 1934 -803 660 )
+	local.static.angles = ( 0 180 -35 )
+	local.static.scale = 7
+	local.static targetname "wall3"
+	
+	local.static = spawn script_model
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ($wall3.origin + ( -148 0 0 ))
+	local.static.angles = ( 0 180 -35 )
+	local.static.scale = 7
+	
+	local.static = spawn script_model
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ($wall3.origin + ( -296 0 0 ))
+	local.static.angles = ( 0 180 -35 )
+	local.static.scale = 7
+
+	local.static = spawn script_model
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ($wall3.origin + ( -430 0 0 ))
+	local.static.angles = ( 0 180 -35 )
+	local.static.scale = 7
+	
+	// House 2 - roof
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( -1340 -762 750 )
+	local.static.angles = ( -27 180 90 )
+	local.static.scale = 7
+	
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( -1285 -763 772 )
+	local.static.angles = ( 0 180 90 )
+	local.static.scale = 7
+	
+	// House 3
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( -1447 -1086 666 )
+	local.static.angles = ( 0 90 90 )
+	local.static.scale = 6.2
+	
+	// House 3 - roof
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( -925 -1628 780 )
+	local.static.angles = ( -44 180 90 )
+	local.static.scale = 7
+	
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( -871 -1627 780 )
+	local.static.angles = ( 46 180 90 )
+	local.static.scale = 7
+	
+	// Piliers
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1417 -1039 444 )
+	local.static.angles = ( 0 -90 90 )
+	local.static.scale = 1
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1416 -1039 524 )
+	local.static.angles = ( 0 -90 90 )
+	local.static.scale = 1
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1427 -1028 524 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1427 -1029 444 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1203 -1030 444 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1203 -1031 524 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1552 -815 454 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1552 -814 594 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1552 -813 720 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1552 -559 454 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1552 -558 594 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2047 -815 454 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2047 -814 594 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2288 -815 454 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2288 -814 604 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2288 -813 750 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2270 -833 454 )
+	local.static.angles = ( 0 -90 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2269 -832 604 )
+	local.static.angles = ( 0 -90 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2268 -831 750 )
+	local.static.angles = ( 0 -90 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2288 -559 454 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2288 -558 604 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2288 -557 680 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2270 -576 454 )
+	local.static.angles = ( 0 -90 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2269 -576 604 )
+	local.static.angles = ( 0 -90 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2268 -576 680 )
+	local.static.angles = ( 0 -90 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2047 -560 454 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -2047 -559 500 )
+	local.static.angles = ( 0 0 90 )
+	local.static.scale = 1.5
+	
+	// Pilier bancal
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1730 -815 463 )
+	local.static.angles = ( -60 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1866 -814 541 )
+	local.static.angles = ( -60 0 90 )
+	local.static.scale = 1.5
+	
+	local.static = spawn script_model 
+	local.static model "static/bunkerbench.tik" 
+	local.static.origin = ( -1950 -813 590 )
+	local.static.angles = ( -60 0 90 )
+	local.static.scale = 1.5
+end
+
+
+FX:	
+	wait 30
+	spawn script_origin "origin" "-7081.58 3814.10 1341.13" "targetname" "P47_1"
+	spawn script_origin "origin" "-128.31 -264.24 629.60" "targetname" "P47_3"
+	spawn script_model model "models/vehicles/p47fly.tik" "targetname" "gonnadie"
+	spawn models/emitters/plane_smoke.tik "targetname" "PS"
+	$PS glue $gonnadie
+	$gonnadie.origin = $P47_1.origin
+	$gonnadie.angle = -37
+	$gonnadie speed 1900
+	$gonnadie rotatez 70
+	$gonnadie playsound m1l3b_stuka_strafing_run 
+	$gonnadie moveto $P47_3
+	$gonnadie waitmove
+	$gonnadie stop playsound
+	$gonnadie thread spawn_fx models/animate/explosion_bridge.tik
+	// exec global/exploder.scr::explode 2
+	$gonnadie remove
+	$PS remove
+
+	wait 60
+
+	thread global/bomberB.scr::bomb 2
+
+	wait 35
+
+	thread global/bomberB.scr::bomb 3
+
+	wait 45
+
+	thread global/bomberB.scr::bomb 4
+
+	wait 30
+
+	thread global/bomberB.scr::bomb 1
+	
+
+end
+
+
+
+
+
+
+	
+
+Stage2_Bit:
+
+	// initiate Stage 2
+
+	wait 500 // 8.3 mins
+
+	thread FX
+
+	$tankclip notsolid // Allow full over-bridge access
+
+	$X1 disablespawn
+	$X2 disablespawn
+	$X3 disablespawn
+	$X4 disablespawn
+	$X5 disablespawn
+	$X6 disablespawn
+	$X7 disablespawn
+	$X8 disablespawn
+	$X9 disablespawn
+	$X10 disablespawn
+	$X11 disablespawn
+	$X12 disablespawn
+	$X13 disablespawn
+	$X14 disablespawn
+	$X15 disablespawn
+
+	$A1 disablespawn
+	$A2 disablespawn
+	$A3 disablespawn
+	$A4 disablespawn
+	$A5 disablespawn
+	$A6 disablespawn
+	$A7 disablespawn
+	$A8 disablespawn
+	$A9 disablespawn
+	$A10 disablespawn
+	$A11 disablespawn
+	$A12 disablespawn
+	$A13 disablespawn
+	$A14 disablespawn
+	$A15 disablespawn
+
+	$XX1 enablespawn
+	$XX2 enablespawn
+	$XX3 enablespawn
+	$XX4 enablespawn
+	$XX5 enablespawn
+	$XX6 enablespawn
+	$XX7 enablespawn
+	$XX8 enablespawn
+	$XX9 enablespawn
+	$XX10 enablespawn
+	$XX11 enablespawn
+	$XX12 enablespawn
+	$XX13 enablespawn
+	$XX14 enablespawn
+	$XX15 enablespawn
+
+	$AA1 enablespawn
+	$AA2 enablespawn
+	$AA3 enablespawn
+	$AA4 enablespawn
+	$AA5 enablespawn
+	$AA6 enablespawn
+	$AA7 enablespawn
+	$AA8 enablespawn
+	$AA9 enablespawn
+	$AA10 enablespawn
+	$AA11 enablespawn
+	$AA12 enablespawn
+	$AA13 enablespawn
+	$AA14 enablespawn
+	$AA15 enablespawn
+end
+
+
+
+killplayer local.ent:
+end
+
+
+
+
+// Under Map Protection
+Map_Guard:
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( -391.95 694.68 128.13 ) 
+	$Killah setsize ( -9999 -9999 -900 ) ( 9999 9999 2 )
+	$Killah setthread die
+	
+end
+
+die:
+	
+	local.punk = parm.other
+	if( !(isalive local.punk) || (local.punk.needrevive == 1) )
+	{
+		end
+	}
+	iprintln "*** - Map_Guard Triggered - ***"
+	local.punk thread spawn_fx2 models/animate/explosion_bridge.tik 
+end
+
+
+
+spawn_fx local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp.scale = .7
+	local.temp playsound gas_explode1
+	local.temp anim start
+	radiusdamage local.temp 300 450
+	wait 3
+	local.temp remove
+end
+
+
+spawn_fx2 local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp.scale = .3
+	local.temp playsound gas_explode1
+	local.temp anim start
+	radiusdamage local.temp 120 120
+	wait 3
+	local.temp remove
+end
+
+
+// End some labels
+bomberdetect local.bomb:
+end
+bomberhit:
+end
+flak88click:
+end
+dotankkill:
+end
+enemytankstart:
+end
+buildingsolid:
+end
+artilleryattack:
+end
+bridgeprep2:
+end
+alarm2:
+end
+alarm1:
+end
+click9:
+end
+click8:
+end
+click7:
+end
+click6:
+end
+click5:
+end
+click4:
+end
+click3:
+end
+click2:
+end
+click1:
+end
+clickhit:
+end
+
+// Cobs
+
