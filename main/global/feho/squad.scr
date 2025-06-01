@@ -33,7 +33,7 @@ end
 
 init_squad_system:
     level.squad_max_squads_per_team = 4
-    level.squad_max_players_per_squad = 4
+    level.squad_max_players_per_squad = 3
     level.squad_leader_pos_history_count = 20
     level.squad_leader_pos_update_distance = 64.0 // Use float for distance checks
     level.squad_leader_pos_update_interval = 0.5 // Seconds
@@ -53,7 +53,7 @@ end
 monitor_squads:
     while(1)
     {
-        wait 10
+        wait 30
 
         for (local.team_idx = 1; local.team_idx <= 2; local.team_idx++)
         {
@@ -63,14 +63,14 @@ monitor_squads:
 
                 if (local.squad_members != NIL)
                 {
-                    println("Team " + local.team_idx + ", Squad " + local.squad_idx + " Members:")
+                    println("             Team " + local.team_idx + ", Squad " + local.squad_idx + " Members:")
 
                     for (local.i = 1; local.i <= local.squad_members.size; local.i++)
                     {
                         local.is_leader = (level.squad_leaders[local.team_idx][local.squad_idx] == local.squad_members[local.i])
-                        local.status = (local.squad_members[local.i].isAlive) ? "    " : "Dead"
+                        local.status = (local.squad_members[local.i].isAlive) ? "" : "(Dead)"
                         local.leader_marker = (local.is_leader) ? " (Leader)" : ""
-                        println("   " + netname local.squad_members[local.i] + " - " + local.status + local.leader_marker)
+                        println("   " + netname local.squad_members[local.i] + " " + local.status + local.leader_marker)
                     }
                 }
             }
@@ -439,7 +439,17 @@ event_player_spawned:
     if (local.squad_leader && local.squad_leader != local.player && local.squad_leader.isAlive)
     {
         wait randomfloat(0.5)
+
+        while (level.lock[local.squad_leader.entnum] == 1)
+        {
+            println("Squad Mod: Waiting for lock on squad leader " + netname local.squad_leader + " to be released.")
+            wait 0.1
+        }
+
+        level.lock[local.squad_leader.entnum] = 1 // Lock to prevent concurrent access
         local.spawn_pos = waitthread get_valid_spawn_pos_near_leader local.squad_leader
+        level.lock[local.squad_leader.entnum] = 0 // Unlock after getting position
+
         if (local.spawn_pos != NIL)
         {
             //println("Squad Mod: Teleporting " + netname local.player + " near leader " + netname local.squad_leader + " to " + local.spawn_pos)
@@ -509,4 +519,23 @@ event_player_disconnecting:
 
     //println("Squad Mod: Player " + netname local.player + " disconnecting. Processing squad leave.")
     thread handle_player_leaving_squad local.player
+end
+
+reset:
+    for (local.team_idx = 1; local.team_idx <= 2; local.team_idx++)
+    {
+        if (level.squads[local.team_idx] != NIL)
+        {
+            for (local.squad_idx = 1; local.squad_idx <= level.squad_max_squads_per_team; local.squad_idx++)
+            {
+                level.squads[local.team_idx][local.squad_idx] = NIL
+                level.squad_leaders[local.team_idx][local.squad_idx] = NIL
+            }
+        }
+    }
+
+    level.squads = NIL
+    level.squad_leaders = NIL
+    level.player_squad_info = NIL
+    level.squad_leader_positions = NIL
 end
