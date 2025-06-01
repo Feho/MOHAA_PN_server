@@ -65,7 +65,7 @@ tdmtype:
 
 	waitthread furniture
 
-	thread Stage2_Bit
+	// thread Stage2_Bit
 
 	thread Map_Guard
 	

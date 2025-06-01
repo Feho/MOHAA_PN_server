@@ -1,0 +1,303 @@
+//
+// M2L1 - Secret Documents of the Kriegsmarine
+//
+
+
+main: 
+
+	setcvar "timelimit" "7"
+	
+	// local.x = randomint(2)
+
+	// if (local.x == 0)
+	// {
+		// setcvar "g_gametype" "1"
+	// }
+	// else
+	// {
+		setcvar "g_gametype" "2"
+	// }
+
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M2L2A" 
+	setcvar "g_obj_alliedtext2" "Scuttling the U-529  "
+	setcvar "g_obj_alliedtext3"  " Naxos Prototype"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "Team-Match"
+		// load support gun sounds
+	// waitthread global/support/support.scr::soundcache
+	
+	waitthread tdm_spawns
+	waitthread set_da_stuff_up
+
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m2l2a
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+	
+	// level.squadmaker_areaname 	= "in the U-529 factory"
+
+	// start support gunner scripts
+	// exec global/support/support.scr
+
+	// start squadmaker
+	// exec global/squadmaker/squadmaker.scr
+	
+	// unlock some doors with triggers
+	exec global/fake_door.scr ( -3919 -3570 -495 ) ( -3919 -3502 -511 ) NIL "metal"
+	exec global/fake_door.scr ( -3919 -3527 -495 ) ( -3919 -3595 -511 ) NIL "metal"
+
+	level.clockside = kills
+
+	
+end
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M2L2A" 
+	setcvar "g_obj_alliedtext2" "Scuttling the U-529  "
+	setcvar "g_obj_alliedtext3"  " Naxos Prototype"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
+
+	
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	waitthread ffa_spawns
+	waitthread set_da_stuff_up
+	
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m2l2a
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	level.clockside = kills
+
+	
+
+end
+
+
+tdm_spawns:
+
+
+
+
+	// 
+	spawn info_player_axis "origin" "-3315.42 -7120.86 -319.88" "angle" "125" "targetname" "X1"
+	spawn info_player_axis "origin" "-3039.09 -7018.14 -319.88" "angle" "159" "targetname" "X2"
+	spawn info_player_axis "origin" "-3039.98 -6840.75 -319.88" "angle" "-176" "targetname" "X3"
+	spawn info_player_axis "origin" "-3696.99 -6515.13 -319.88" "angle" "-70" "targetname" "X4"
+	spawn info_player_axis "origin" "-3728.87 -6684.58 -319.88" "angle" "-24" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-2915.35 -6848.87 -511.88" "angle" "101" "targetname" "X6" 
+	spawn info_player_axis "origin" "-2375.05 -6960.87 -511.88" "angle" "123" "targetname" "X7"
+	spawn info_player_axis "origin" "-2227.59 -6905.85 -511.88" "angle" "116" "targetname" "X8"
+	spawn info_player_axis "origin" "-2049.56 -6791.34 -511.88" "angle" "100" "targetname" "X9"
+	spawn info_player_axis "origin" "-1782.98 -6878.69 -511.88" "angle" "147" "targetname" "X10"
+
+	spawn info_player_axis "origin" "-1666.23 -6664.84 -511.88" "angle" "161" "targetname" "X11"
+	spawn info_player_axis "origin" "-1320.92 -6322.29 -515.88" "angle" "176" "targetname" "X12"
+	spawn info_player_axis "origin" "-1199.71 -6414.67 -511.88" "angle" "177" "targetname" "X13"
+	spawn info_player_axis "origin" "-1040.91 -6559.41 -511.88" "angle" "150" "targetname" "X14"
+	spawn info_player_axis "origin" "-1194.83 -6702.10 -511.88" "angle" "135" "targetname" "X15"
+
+
+location: 
+
+
+	spawn info_player_allied "origin" "-3831.80 -1319.69 -511.88" "angle" "-37" "targetname" "A1"
+	spawn info_player_allied "origin" "-4432.88 -914.13 -511.88" "angle" "-9" "targetname" "A2"
+	spawn info_player_allied "origin" "-4526.62 -2126.18 -511.88" "angle" "76" "targetname" "A3"
+	spawn info_player_allied "origin" "-3858.21 -2237.14 -511.88" "angle" "145" "targetname" "A4"
+	spawn info_player_allied "origin" "-3728.87 -2740.95 -511.88" "angle" "-58" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "-4304.26 -3919.57 -511.88" "angle" "-72" "targetname" "A6"
+	spawn info_player_allied "origin" "-3844.60 -5090.31 -111.88" "angle" "115" "targetname" "A7"
+	spawn info_player_allied "origin" "-4044.44 -5109.99 -113.88" "angle" "95" "targetname" "A8"
+	spawn info_player_allied "origin" "-4249.45 -5104.20 -113.88" "angle" "61" "targetname" "A9"
+	spawn info_player_allied "origin" "-4288.12 -4443.13 -511.88" "angle" "-83" "targetname" "A10"
+
+	spawn info_player_allied "origin" "-3895.27 -4431.06 -511.88" "angle" "-109" "targetname" "A11"
+	spawn info_player_allied "origin" "-3839.14 -4770.94 -511.88" "angle" "-121" "targetname" "A12"
+	spawn info_player_allied "origin" "-3856.96 -5135.52 -511.88" "angle" "-152" "targetname" "A13"
+	spawn info_player_allied "origin" "-3972.78 -3622.16 -511.88" "angle" "-84" "targetname" "A14"
+	spawn info_player_allied "origin" "-3855.30 -3625.21 -511.88" "angle" "-100" "targetname" "A15"
+	 
+
+	
+
+end
+
+
+
+
+ffa_spawns: 
+
+	spawn info_player_deathmatch "origin" "-1139.26 -6771.46 -511.88" "angle" "128"
+	spawn info_player_deathmatch "origin" "-3627.35 -6576.81 -319.88" "angle" "-64"
+	spawn info_player_deathmatch "origin" "-3839.13 -5808.88 -511.88" "angle" "131"
+	spawn info_player_deathmatch "origin" "-4304.88 -5120.87 -111.88" "angle" "67"
+	spawn info_player_deathmatch "origin" "-3728.87 -2769.02 -511.88" "angle" "-35"
+
+	spawn info_player_deathmatch "origin" "-3856.87 -1406.07 -511.88" "angle" "20"
+	spawn info_player_deathmatch "origin" "-4806.88 -2070.87 -511.88" "angle" "5"
+	spawn info_player_deathmatch "origin" "-3967.80 -3523.04 -509.88" "angle" "83"
+	spawn info_player_deathmatch "origin" "-4179.13 -1594.64 -183.88" "angle" "-128"
+	spawn info_player_deathmatch "origin" "-4463.13 -2343.13 -239.88" "angle" "-127"
+
+	spawn info_player_deathmatch "origin" "-4120.88 -3712.87 -287.88" "angle" "45"
+	spawn info_player_deathmatch "origin" "-4248.87 -3776.29 -47.88" "angle" "-69"
+	spawn info_player_deathmatch "origin" "-4616.88 -3775.13 -47.88" "angle" "-70"
+	spawn info_player_deathmatch "origin" "-2277.25 -4056.90 -449.88" "angle" "-93"
+	spawn info_player_deathmatch "origin" "-2928.87 -6848.88 -511.88" "angle" "94"
+
+end
+
+
+
+set_da_stuff_up:
+	
+	// Remove AI
+	removeclass actor
+
+	$radio loopsound m2l2_radio
+	$crate1_end notsolid
+	$crate2_end notsolid
+	$crate3_end notsolid
+	$crate1_start notsolid
+	$crate2_start notsolid
+	$crate3_start notsolid
+	
+	$gate3.origin = ( -280.78 -6346.54 -380.76 )
+
+	$hangingflak anim "idle"
+	thread intercomsoundcycle
+	$crane thread mover
+	$hangingflak thread mover
+
+	
+	$wavelaps remove // sounds didnt seem to work
+
+end	
+
+
+
+mover:
+	while (1)
+	{
+	wait 60
+	self speed 40
+	self movenorth 3900
+	self loopsound crane_run
+	self waitmove
+	self stoploopsound
+	self stop
+	wait 180
+	self speed 40
+	self movesouth 3900
+	self loopsound crane_run
+	self waitmove
+	self stoploopsound
+	self stop
+	}
+end
+
+
+	
+
+
+intercomsoundcycle:
+	
+		while (1)
+		{
+	
+		wait 20
+
+		$alarm_sound playsound den_m2l2_253p
+		
+		wait 70
+	
+		$alarm_sound playsound den_m2l2_254p
+		
+		wait 70
+	
+		$alarm_sound playsound den_m2l2_255p
+		
+		wait 70
+	
+		$alarm_sound playsound den_m2l2_256p
+		
+		wait 70
+	
+		$alarm_sound playsound den_m2l2_257p
+		
+		wait 70
+
+		}
+end
+
+
+
+
+
+doorlocked:
+	self playsound door_metal_locked
+end
+
+
+
+
+// End some labels
+gate3lockedsound:
+end
+papers2pickup:
+end
+likeynorway:
+end
+sentry2accept:
+end
+sentry1trigdisable:
+end
+
+
+
+
+
+
+
+

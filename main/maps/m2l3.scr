@@ -41,7 +41,6 @@ main:
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
 	
 	setcvar "timelimit" "15"
-	setcvar "fraglimit" "3"
 	
 
 	exec global/AIR/AIR_Control.scr
@@ -111,6 +110,7 @@ main:
 			setcvar "g_obj_axistext3" "178.32.28.179:12203 "
 			setcvar "g_gametypestring" "Team Deathmatch"
 			setcvar "g_gametype" "2"
+			setcvar "fraglimit" "0"
 		break
 	}
  

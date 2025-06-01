@@ -1,0 +1,245 @@
+//
+// M2L2B - Scuttling the U-529
+//
+
+
+main: 
+
+	setcvar "timelimit" "7"
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M2L2C" 
+	setcvar "g_obj_alliedtext2" "Scuttling the U-529" 
+	setcvar "g_obj_alliedtext3"    "Cover Blown"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "Team-Match"
+	waitthread tdm_spawns
+	waitthread set_da_stuff_up
+
+	// load support gun sounds
+	// waitthread global/support/support.scr::soundcache
+	
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m2l2a
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	// level.squadmaker_areaname 	= "in the U-529 factory"
+
+	// start support gunner scripts
+	// exec global/support/support.scr
+
+	// start squadmaker
+	// exec global/squadmaker/squadmaker.scr
+	
+	level.clockside = kills
+
+	
+end
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M2L2C" 
+	setcvar "g_obj_alliedtext2" "Scuttling the U-529  "
+	setcvar "g_obj_alliedtext3"    "Cover Blown"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
+
+	
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	waitthread ffa_spawns
+	waitthread set_da_stuff_up
+	
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m2l2a
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	level.clockside = kills
+
+	
+
+end
+
+tdm_spawns:
+
+	
+	spawn info_player_axis "origin" "-1488.88 -5920.68 -511.88" "angle" "-26" "targetname" "X1"
+	spawn info_player_axis "origin" "-1425.46 -6622.58 -511.88" "angle" "19" "targetname" "X2"
+	spawn info_player_axis "origin" "-1307.66 -6822.28 -511.88" "angle" "24" "targetname" "X3"
+	spawn info_player_axis "origin" "-1065.05 -6949.41 -511.88" "angle" "36" "targetname" "X4"
+	spawn info_player_axis "origin" "-1023.18 -6741.01 -511.88" "angle" "35" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-763.70 -6762.89 -511.88" "angle" "42" "targetname" "X6" 
+	spawn info_player_axis "origin" "-500.41 -6869.40 -511.88" "angle" "81" "targetname" "X7"
+	spawn info_player_axis "origin" "-491.30 -5790.72 -511.88" "angle" "-87" "targetname" "X8"
+	spawn info_player_axis "origin" "-444.93 -6002.38 -511.88" "angle" "-84" "targetname" "X9"
+	spawn info_player_axis "origin" "-811.98 -6599.76 -511.88" "angle" "37" "targetname" "X10"
+
+	spawn info_player_axis "origin" "-880.88 -6558.18 -511.88" "angle" "17" "targetname" "X11"
+	spawn info_player_axis "origin" "-1069.95 -6521.10 -511.88" "angle" "11" "targetname" "X12"
+	spawn info_player_axis "origin" "-272.88 -7008.87 -511.88" "angle" "35" "targetname" "X13"
+	spawn info_player_axis "origin" "-264.65 -6860.40 -511.88" "angle" "19" "targetname" "X14"
+	spawn info_player_axis "origin" "-272.87 -6649.27 -511.88" "angle" "11" "targetname" "X15"
+
+
+	spawn info_player_allied "origin" "3447.16 -3117.67 -511.88" "angle" "-140" "targetname" "A1"
+	spawn info_player_allied "origin" "3353.97 -3317.94 -511.88" "angle" "-170" "targetname" "A2"
+	spawn info_player_allied "origin" "3155.13 -4059.89 -511.88" "angle" "-104" "targetname" "A3"
+	spawn info_player_allied "origin" "3063.86 -4642.50 -615.88" "angle" "-116" "targetname" "A4"
+	spawn info_player_allied "origin" "3155.13 -5338.81 -511.88" "angle" "-124" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "3152.65 -6623.76 -511.88" "angle" "153" "targetname" "A6"
+	spawn info_player_allied "origin" "2956.54 -6940.76 -511.88" "angle" "133" "targetname" "A7"
+	spawn info_player_allied "origin" "3128.79 -6933.54 -511.88" "angle" "148" "targetname" "A8"
+	spawn info_player_allied "origin" "3216.87 -6863.17 -511.88" "angle" "152" "targetname" "A9"
+	spawn info_player_allied "origin" "3207.09 -6728.45 -511.88" "angle" "162" "targetname" "A10"
+
+	spawn info_player_allied "origin" "2635.07 -6963.48 -511.88" "angle" "106" "targetname" "A11"
+	spawn info_player_allied "origin" "2432.69 -6951.63 -511.88" "angle" "110" "targetname" "A12"
+	spawn info_player_allied "origin" "2279.93 -6974.16 -511.88" "angle" "92" "targetname" "A13"
+	spawn info_player_allied "origin" "2160.10 -5748.56 -511.88" "angle" "-90" "targetname" "A14"
+	spawn info_player_allied "origin" "2197.26 -5525.15 -511.88" "angle" "-96" "targetname" "A15"
+	 
+
+	
+
+end
+
+
+
+
+ffa_spawns: 
+
+	spawn info_player_deathmatch "origin" "3657.02 -3628.51 -303.78" "angle" "-107"
+	spawn info_player_deathmatch "origin" "3557.04 -4010.09 -511.88" "angle" "84"
+	spawn info_player_deathmatch "origin" "3717.53 -3535.13 -303.88" "angle" "-120"
+	spawn info_player_deathmatch "origin" "3618.88 -3456.87 -507.88" "angle" "138"
+	spawn info_player_deathmatch "origin" "2927.14 -6706.86 -511.88" "angle" "122"
+
+	spawn info_player_deathmatch "origin" "1991.11 -6995.61 -511.88" "angle" "130"
+	spawn info_player_deathmatch "origin" "2167.62 -3528.37 -511.88" "angle" "-70"
+	spawn info_player_deathmatch "origin" "945.56 -4422.66 -511.84" "angle" "-82"
+	spawn info_player_deathmatch "origin" "784.87 -7001.15 -511.88" "angle" "131"
+	spawn info_player_deathmatch "origin" "-272.87 -4416.26 -511.88" "angle" "-67"
+
+	spawn info_player_deathmatch "origin" "784.87 -1663.13 -511.88" "angle" "-96"
+	spawn info_player_deathmatch "origin" "-431.13 -7008.88 -511.88" "angle" "114"
+	spawn info_player_deathmatch "origin" "-1488.88 -6054.87 -511.88" "angle" "-34"
+	spawn info_player_deathmatch "origin" "-431.13 -1671.13 -511.87" "angle" "-101"
+	
+
+end
+
+
+set_da_stuff_up:
+	
+	// Remove AI
+	removeclass actor
+
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1	
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1 
+
+	local.master = spawn ScriptMaster
+	local.master aliascache snd_gasp sound/dialogue/Generic/G/fear/Fer_010e.wav soundparms 0.7 0.6 0.6 0.6 300 1000 auto loaded maps "m dm obj"
+	
+	spawn script_object "targetname" "vent_block"
+	$vent_block.origin = ( 3735.95 -3811.93 -96.70 )
+	$vent_block setsize ( -10 -10 -200 ) ( 10 10 1 )
+	$vent_block solid
+	$vent_block nodamage
+
+	spawn trigger_multiple "targetname" "Vent_Trig"
+	$Vent_Trig.origin = ( 3730.95 -3811.93 -303.70 )
+	$Vent_Trig setsize ( -5 -5 -1 ) ( 5 5 1 )
+	$Vent_Trig message "Sorry - thats out of bounds"
+
+	thread Map_Guard
+end	
+
+
+
+
+
+Map_Guard:
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( 858.28 -3754.33 -773 ) 
+	$Killah setsize ( -3000 -2900 -700 ) ( 3000 6000 10 )
+	$Killah setthread die
+	
+end
+
+die:
+	local.punk = parm.other
+	if!(isalive local.punk)
+	{
+	end
+	}
+
+	local.punk playsound snd_gasp
+	local.punk hurt 10 impale ( 200 0 200 ) // lava falling explosion bullet - ta Ric ;)
+end
+
+
+lockedvent:
+ 	self playsound vent_gate_locked
+end
+
+lockedgate:
+	self playsound gate_metal_locked
+end
+
+doorlocked:
+	self playsound door_metal_locked
+end
+
+
+// End some labels
+becomecoverguy:
+end
+becomecover:
+end
+
+
+
+

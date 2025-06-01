@@ -8,8 +8,8 @@
 
 main: 
 
-	setcvar "g_gametype" "1"
-	setcvar "timelimit" "15"
+	setcvar "g_gametype" "2"
+	setcvar "timelimit" "12"
 	
 	if((getcvar("g_gametype") == "1")) 
 	{
