@@ -44,6 +44,8 @@ main:
 	$world farplane_color ( 0 0.0.5 0.092 )
 	$world farplane 18000
 
+	level.squad_mod = 0
+
 	//*** Precache Dm Stuff
 	exec global/DMprecache.scr
 

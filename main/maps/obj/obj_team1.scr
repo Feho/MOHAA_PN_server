@@ -67,6 +67,8 @@ local.axis2.angle = 10
 	level waittill prespawn
 	//////////////////////////
 
+	level.squad_mod = 0
+
 	//*** Precache Dm Stuff
 	exec global/DMprecache.scr
 
