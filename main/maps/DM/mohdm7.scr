@@ -18,6 +18,9 @@ main:
 
 	setcvar "g_scoreboardpic" "mohdm7"
 
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
 	// call additional stuff for playing this map round based is needed
 	if(level.roundbased)
 		thread roundbasedthread
@@ -37,7 +40,15 @@ main:
 
 	thread global/AIR_gold.scr::treasure_spawn local.info
 	
-	level waittill spawn
+		level waittill spawn
+
+	level.squadmaker_areaname = "in North Afrika"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 end
 

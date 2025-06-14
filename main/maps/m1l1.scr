@@ -30,8 +30,10 @@ tdmtype:
 	setcvar "g_obj_axistext1" ""
 	setcvar "g_obj_axistext2" ""
 	setcvar "g_obj_axistext3" "" 
-
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
 
 	setcvar "g_gametype" "2"
 	setcvar "g_gametypestring" "Team-match"
@@ -47,6 +49,14 @@ tdmtype:
 	exec global/DMprecache.scr
 
 	level waittill spawn
+
+	level.squadmaker_areaname = "leading the way"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	level.clockside = kills
 
@@ -64,8 +74,10 @@ ffatype:
 	setcvar "g_obj_axistext1" ""
 	setcvar "g_obj_axistext2" ""
 	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
-
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
 
 	setcvar "g_gametype" "1"
 	
@@ -80,6 +92,14 @@ ffatype:
 	exec global/DMprecache.scr
 
 	level waittill spawn
+
+	level.squadmaker_areaname = "leading the way"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	level.clockside = kills
 

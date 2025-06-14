@@ -40,7 +40,7 @@ tdmtype:
 	waitthread set_da_stuff_up
 
 	// load support gun sounds
-	// waitthread global/support/support.scr::soundcache
+	waitthread global/support/support.scr::soundcache
 	
 	level waittill prespawn
 
@@ -48,9 +48,15 @@ tdmtype:
 	exec global/ambient.scr m1l1
 	exec global/shutter.scr
 	exec global/DMprecache.scr
-
 	level waittill spawn
 
+	level.squadmaker_areaname = "on the rescue mission"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	level.clockside = kills
 
@@ -76,14 +82,24 @@ ffatype:
 	waitthread ffa_spawns
 	waitthread set_da_stuff_up
 	
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
 	level waittill prespawn
 
 	exec global/door_locked.scr
 	exec global/ambient.scr m1l1
-	exec global/shutter.scr
-	exec global/DMprecache.scr
+	exec global/shutter.scr	exec global/DMprecache.scr
 
 	level waittill spawn
+
+	level.squadmaker_areaname = "on the rescue mission"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	level.clockside = kills
 

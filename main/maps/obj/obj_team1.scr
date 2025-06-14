@@ -21,10 +21,10 @@ main:
 	setcvar "timelimit" "15"
 	setcvar "fraglimit" "3"
 	
-	setcvar "g_gametypestring" "**Airborne** Search & Destroy"
+	setcvar "g_gametypestring" "Search & Destroy"
 	
 		// load support gun sounds
-	// waitthread global/support/support.scr::soundcache
+	waitthread global/support/support.scr::soundcache
 
 //------------------------------------------------ 
 //   Axis Spawn Points 
@@ -141,10 +141,17 @@ local.axis2.angle = 10
 	// thread port3
 	// thread port4
 	// thread port5
-
 	//////////////////////////
 	level waittill spawn
 	//////////////////////////
+
+	level.squadmaker_areaname = "on the hunt"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 	
 	//S&D feho
 	local.x = randomint(3)

@@ -42,6 +42,9 @@ tdmtype:
 
 	waitthread tdm_spawns
 
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
 	exec global/exploder.scr::main
 	
 	level waittill prespawn
@@ -66,6 +69,14 @@ tdmtype:
 	thread global/barrel.scr::explosive_barrel
 
 	level waittill spawn
+
+	level.squadmaker_areaname = "hunting the king tiger"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	$explodertrigger thread setuptype
 

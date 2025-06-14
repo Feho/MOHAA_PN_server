@@ -39,23 +39,22 @@ tdmtype:
 	waitthread set_da_stuff_up
 
 	// load support gun sounds
-	// waitthread global/support/support.scr::soundcache
+	waitthread global/support/support.scr::soundcache
 	
 	level waittill prespawn
 
 	thread global/door_locked.scr::lock
 	exec global/ambient.scr m2l2a
 	exec global/DMprecache.scr
-	
-	level waittill spawn
+		level waittill spawn
 
-	// level.squadmaker_areaname 	= "in the U-529 factory"
+	level.squadmaker_areaname 	= "in the U-529 factory"
 
 	// start support gunner scripts
-	// exec global/support/support.scr
+	exec global/support/support.scr
 
 	// start squadmaker
-	// exec global/squadmaker/squadmaker.scr
+	exec global/squadmaker/squadmaker.scr
 	
 	level.clockside = kills
 
@@ -82,6 +81,9 @@ ffatype:
 	waitthread ffa_spawns
 	waitthread set_da_stuff_up
 	
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
 	level waittill prespawn
 
 	thread global/door_locked.scr::lock
@@ -89,6 +91,14 @@ ffatype:
 	exec global/DMprecache.scr
 	
 	level waittill spawn
+
+	level.squadmaker_areaname = "in the U-529 factory"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	level.clockside = kills
 

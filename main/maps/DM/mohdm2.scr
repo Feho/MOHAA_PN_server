@@ -19,7 +19,7 @@ main:
 	setcvar "g_scoreboardpic" "mohdm2"
 
 	// load support gun sounds
-	// waitthread global/support/support.scr::soundcache	
+	waitthread global/support/support.scr::soundcache	
 	// call additional stuff for playing this map round based is needed
 	if(level.roundbased)
 		thread roundbasedthread
@@ -49,15 +49,15 @@ main:
 	$world farplane_color ( 0 0.0.5 0.092 )
 	$world farplane 18000
 	
-	level waittill spawn
+		level waittill spawn
 
-	// level.squadmaker_areaname = "in the village"
+	level.squadmaker_areaname = "in the village"
 
 	// start support gunner scripts
-	// exec global/support/support.scr
+	exec global/support/support.scr
 
 	// start squadmaker
-	// exec global/squadmaker/squadmaker.scr
+	exec global/squadmaker/squadmaker.scr
 	
 	// exec global/flakfire.scr ( -480.99 -3030.77 -61.88 ) ( 0.000 134.13 0.000 ) 5 1 50
 	// thread global/AA/vezetheto_tankok.scr::spawn_tank ( -1429.00 -465.00 -22.79 ) ( 0 110 0 ) "panzer_brown" "axis"

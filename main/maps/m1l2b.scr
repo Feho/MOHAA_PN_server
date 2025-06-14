@@ -38,9 +38,8 @@ tdmtype:
 
 	setcvar "g_gametype" "2"
 	setcvar "g_gametypestring" "Team-Match"
-	
-	// load support gun sounds
-	// waitthread global/support/support.scr::soundcache
+		// load support gun sounds
+	waitthread global/support/support.scr::soundcache
 	
 	waitthread tdm_spawns
 	waitthread set_da_stuff_up
@@ -68,8 +67,15 @@ tdmtype:
 	local.mur.origin = ( 2408 -2489 -125)
 	local.mur.angle = 180
 	local.mur setsize ( -1 -10 -96) ( 1 200 96)
-	local.mur solid
-	level waittill spawn
+	local.mur solid	level waittill spawn
+
+	level.squadmaker_areaname = "sabotaging the motorpool"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 		
 	thread setup
 	thread hudstuff
@@ -101,18 +107,26 @@ ffatype:
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
 
 	setcvar "g_gametype" "1"
-	setcvar "g_gametypestring" "Free-For-All"
-	waitthread ffa_spawns
+	setcvar "g_gametypestring" "Free-For-All"	waitthread ffa_spawns
 	waitthread set_da_stuff_up
 
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
 	
 	level waittill prespawn
 
 	exec global/door_locked.scr
 	exec global/ambient.scr m1l2b
 	exec global/DMprecache.scr
-	
-	level waittill spawn
+		level waittill spawn
+
+	level.squadmaker_areaname = "sabotaging the motorpool"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	level.clockside = kills
 

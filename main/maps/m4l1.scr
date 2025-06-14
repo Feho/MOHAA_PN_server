@@ -40,8 +40,8 @@ tdmtype:
     setcvar "g_gametypestring" "Team-Match"
     waitthread tdm_spawns
     
-    // load support gun sounds
-    // waitthread global/support/support.scr::soundcache
+      // load support gun sounds
+    waitthread global/support/support.scr::soundcache
     
     fadeout .1 0 0 0 1 // black screen on start
     
@@ -67,8 +67,15 @@ tdmtype:
     endArray
 
     thread global/AIR_gold.scr::treasure_spawn local.info
-    
-    level waittill spawn
+      level waittill spawn
+
+    level.squadmaker_areaname = "with the resistance"
+
+    // start support gunner scripts
+    exec global/support/support.scr
+
+    // start squadmaker
+    exec global/squadmaker/squadmaker.scr
 
     thread music
     thread music_end
@@ -125,15 +132,23 @@ ffatype:
     setcvar "g_gametypestring" "Free-For-All"
     waitthread ffa_spawns
     
+    // load support gun sounds
+    waitthread global/support/support.scr::soundcache
     
     level waittill prespawn
 
     exec global/door_locked.scr
     exec global/ambient.scr m4l2
     exec global/DMprecache.scr
-    
+        level waittill spawn
 
-    level waittill spawn
+    level.squadmaker_areaname = "with the resistance"
+
+    // start support gunner scripts
+    exec global/support/support.scr
+
+    // start squadmaker
+    exec global/squadmaker/squadmaker.scr
 
     level.clockside = kills
 

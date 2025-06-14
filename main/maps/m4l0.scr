@@ -42,7 +42,7 @@ tdmtype:
 	setcvar "g_gametype" "2"
 	setcvar "g_gametypestring" "Team-Match"
 	// load support gun sounds
-	// waitthread global/support/support.scr::soundcache
+	waitthread global/support/support.scr::soundcache
 	
 	thread global/bomber.scr::main
 
@@ -66,8 +66,15 @@ tdmtype:
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info
-	
-	level waittill spawn
+		level waittill spawn
+
+	level.squadmaker_areaname = "at the farm house"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	// Murs invisibles
 	waitthread blokkok
@@ -123,6 +130,9 @@ ffatype:
 	waitthread ffa_spawns
 	waitthread Initiate_whats_needed
 	
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
 	level waittill prespawn
 
 	// exec global/ladderspawn.scr ( -4957 -2669 70 ) 220 wood 0
@@ -135,8 +145,15 @@ ffatype:
 	thread global/door_locked.scr::lock
 	exec global/ambient.scr m4l0
 	exec global/DMprecache.scr
-	
-	level waittill spawn
+		level waittill spawn
+
+	level.squadmaker_areaname = "at the farm house"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	level.flyplane = 1
 	

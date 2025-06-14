@@ -19,7 +19,7 @@ main:
 	setcvar "g_gametypestring" "Search and Destroy"
 
 	// load support gun sounds
-	// waitthread global/support/support.scr::soundcache
+	waitthread global/support/support.scr::soundcache
 	
 	setcvar "g_gametype" "3"
 	setcvar "fraglimit" "3"
@@ -69,6 +69,14 @@ main:
 	//////////////////////
 	level waittill spawn
 	////////////////////
+
+	level.squadmaker_areaname = "in Remagen"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	// Bots 3
 	// waitthread global/bots3/main.scr::info_bot_deathmatch (3151.23 -2943.19 1.65) 0.0

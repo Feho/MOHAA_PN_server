@@ -41,6 +41,9 @@ tdmtype:
 setcvar "g_gametypestring" "Team-Match"
 	waitthread tdm_spawns
 
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
 	exec global/exploder.scr
 	
 	level waittill prespawn
@@ -55,10 +58,17 @@ setcvar "g_gametypestring" "Team-Match"
 	exec global/weather.scr
 	exec global/shutter.scr
 	exec global/bomber.scr
-
 	setcvar "cg_rain" "1"
 
 	level waittill spawn
+
+	level.squadmaker_areaname = "on the outskirts"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	waitthread furniture
 	thread Map_Guard
@@ -86,6 +96,9 @@ ffatype:
 	setcvar "g_gametypestring" "Free-For-All"
 	waitthread ffa_spawns
 	
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
 	exec global/exploder.scr
 
 	level waittill prespawn
@@ -103,7 +116,15 @@ ffatype:
 	exec global/shutter.scr
 	exec global/bomber.scr
 	
-	level waittill spawn
+		level waittill spawn
+
+	level.squadmaker_areaname = "on the outskirts"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	waitthread furniture
 	thread Map_Guard

@@ -42,6 +42,8 @@ tdmtype:
 
 	waitthread tdm_spawns
 
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
 	
 	exec global/exploder.scr
 	
@@ -54,8 +56,15 @@ tdmtype:
 
 	exec global/door_locked.scr
 	exec global/DMprecache.scr
-
 	level waittill spawn
+
+	level.squadmaker_areaname = "at the bridge"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	$tankclip.origin = ( -430.51 -56.42 381.42 )
 	$tankclip2 notsolid

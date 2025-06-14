@@ -1,4 +1,3 @@
-
 //
 // M6L3D - Storming Fort Schmerzen - Chemical Plant
 
@@ -41,6 +40,9 @@ tdmtype:
 
 	waitthread tdm_spawns
 
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
 	level waittill prespawn
 
 	local.master = spawn scriptmaster
@@ -60,11 +62,18 @@ tdmtype:
 	$world farplane_color (level.fogred + " " + level.foggreen + " " + level.fogblue)
 
 	exec global/door_locked.scr
-
 	exec global/ambient.scr m6l3d
 
 	
 	level waittill spawn
+
+	level.squadmaker_areaname = "at fort schmerzen"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	$elevatorclip solid
 

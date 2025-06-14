@@ -39,9 +39,11 @@ tdmtype:
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
 
 	setcvar "g_gametype" "2"
-	
-	waitthread tdm_spawns
+		waitthread tdm_spawns
 	waitthread set_da_stuff_up
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
 
 	level waittill prespawn
 
@@ -50,6 +52,14 @@ tdmtype:
 	exec global/DMprecache.scr
 	
 	level waittill spawn
+
+	level.squadmaker_areaname = "inside the U-529"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	level.clockside = kills
 
@@ -72,17 +82,26 @@ ffatype:
 
 	
 	setcvar "g_gametype" "1"
-	
-	waitthread ffa_spawns
+		waitthread ffa_spawns
 	waitthread set_da_stuff_up
+	
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
 	
 	level waittill prespawn
 
-	thread global/door_locked.scr::lock
-	exec global/ambient.scr m2l2b
+	thread global/door_locked.scr::lock	exec global/ambient.scr m2l2b
 	exec global/DMprecache.scr
 	
 	level waittill spawn
+
+	level.squadmaker_areaname = "inside the U-529"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	level.clockside = kills
 

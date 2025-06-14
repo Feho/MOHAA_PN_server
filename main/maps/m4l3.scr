@@ -50,7 +50,7 @@ tdmtype:
 	setcvar "g_gametype" "2"
 	setcvar "g_gametypestring" "Team-Match"
 	// load support gun sounds
-	// waitthread global/support/support.scr::soundcache
+	waitthread global/support/support.scr::soundcache
 
 	waitthread tdm_spawns
 	
@@ -211,16 +211,15 @@ tdmtype:
 	exec global/DMprecache.scr
 
 	thread global/barrel.scr::explosive_barrel
-	
-	level waittill spawn
+		level waittill spawn
 	
 	level.squadmaker_areaname = "in the Command Post"
 	
 	// start support gunner scripts
-	// exec global/support/support.scr
+	exec global/support/support.scr
 	
 	// start squadmaker
-	// exec global/squadmaker/squadmaker.scr
+	exec global/squadmaker/squadmaker.scr
 	
 	// {sfx} mini planes - one per team
 	// exec server_planes/trigger.scr ( -4694 1090 10 ) "allies"
@@ -273,8 +272,10 @@ ffatype:
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing4a.tga" 
 	
 	setcvar "g_gametype" "1"
+		waitthread ffa_spawns
 	
-	waitthread ffa_spawns
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
 	
 	level waittill prespawn
 
@@ -292,8 +293,15 @@ ffatype:
 	$world farplane_color ( 0.3 0.3 0.3 )
 	$world farplane 12000
 	// $world farplane_cull 1
-	
-	level waittill spawn
+		level waittill spawn
+
+	level.squadmaker_areaname = "in the Command Post"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	thread Map_Guard
 
