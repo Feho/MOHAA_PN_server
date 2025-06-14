@@ -44,8 +44,6 @@ tdmtype:
 	waitthread tdm_spawns
 
 	level waittill prespawn
-	
-	level.squad_mod = 0
 
 	exec global/door_locked.scr
 	exec global/DMprecache.scr
@@ -402,6 +400,8 @@ end
 
 // initiate Stage 2
 Stage_2:
+
+	exec global/feho/squad.scr::reset_squad_mod
 
 	$X1 disablespawn
 	$X2 disablespawn

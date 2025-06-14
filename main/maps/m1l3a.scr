@@ -1,0 +1,294 @@
+//
+// M1L3A - Lighting the Torch - Desert Road
+//
+
+
+main: 
+
+	setcvar "g_gametype" "1"
+	setcvar "timelimit" "15"
+
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M1L3A" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3"    "Desert Road"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "Team-Match"
+	waitthread tdm_spawns
+	waitthread set_da_stuff_up
+
+	level waittill prespawn
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m1l3a
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	thread Map_Guard
+
+	level.clockside = kills
+
+end
+
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M1L3A" 
+	setcvar "g_obj_alliedtext2" ""
+	setcvar "g_obj_alliedtext3"    "Desert Road"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	
+	waitthread ffa_spawns
+	waitthread set_da_stuff_up
+	
+	level waittill prespawn
+
+	exec global/door_locked.scr
+	exec global/ambient.scr m1l3a
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	thread Map_Guard
+
+	level.clockside = kills
+
+end
+
+
+
+
+tdm_spawns:
+
+
+
+	spawn info_player_axis "origin" "2103.94 -1585.41 -31.88" "angle" "-132"
+	spawn info_player_axis "origin" "1964.30 -1546.04 -31.88" "angle" "-119"
+	spawn info_player_axis "origin" "1837.24 -1379.33 -27.34" "angle" "-125"
+	spawn info_player_axis "origin" "1347.45 -1661.51 4.50" "angle" "-108"
+	spawn info_player_axis "origin" "1100.03 -1857.81 -14.43" "angle" "-96"
+
+	spawn info_player_axis "origin" "611.57 -2221.28 140.63" "angle" "-128"
+	spawn info_player_axis "origin" "768.42 -2473.34 82.39" "angle" "176"
+	spawn info_player_axis "origin" "827.55 -2644.94 71.40" "angle" "-177"
+	spawn info_player_axis "origin" "1134.46 -2917.29 62.03" "angle" "-166"
+	spawn info_player_axis "origin" "1388.55 -3249.52 10.48" "angle" "-164"
+
+	spawn info_player_axis "origin" "2330.16 -2008.67 63.95" "angle" "-131"
+	spawn info_player_axis "origin" "2136.19 -1494.31 160.13" "angle" "-128"
+	spawn info_player_axis "origin" "2399.84 -1237.00 229.45" "angle" "-125"
+	spawn info_player_axis "origin" "1372.75 -1243.90 -32.06" "angle" "-98"
+	spawn info_player_axis "origin" "1058.32 -1102.24 -11.54" "angle" "-91"
+
+
+	spawn info_player_allied "origin" "3263.81 -5748.44 -155.46" "angle" "144"
+	spawn info_player_allied "origin" "3143.97 -6090.40 -159.88" "angle" "128"
+	spawn info_player_allied "origin" "2823.73 -6234.56 -132.35" "angle" "123"
+	spawn info_player_allied "origin" "2554.58 -6070.53 -103.88" "angle" "126"
+	spawn info_player_allied "origin" "2561.76 -5791.65 -111.88" "angle" "130"
+
+	spawn info_player_allied "origin" "1891.44 -5732.42 47.42" "angle" "129"
+	spawn info_player_allied "origin" "1846.75 -5938.70 79.14" "angle" "121"
+	spawn info_player_allied "origin" "2828.59 -5055.45 -100.20" "angle" "162"
+	spawn info_player_allied "origin" "2961.78 -4807.75 -78.71" "angle" "172"
+	spawn info_player_allied "origin" "2553.67 -4729.47 -56.62" "angle" "176"
+
+	spawn info_player_allied "origin" "2120.48 -4670.97 -63.19" "angle" "-171"
+	spawn info_player_allied "origin" "1456.95 -6050.02 236.17" "angle" "114"
+	spawn info_player_allied "origin" "2289.00 -5974.51 -111.88" "angle" "112"
+	spawn info_player_allied "origin" "2345.85 -5809.36 -111.88" "angle" "118"
+	spawn info_player_allied "origin" "3182.80 -6666.78 -131.23" "angle" "116"
+	 
+
+end
+
+
+
+ffa_spawns:
+	
+	spawn info_player_deathmatch "origin" "2503.47 -5949.41 -111.88" "angle" "111"
+	spawn info_player_deathmatch "origin" "530.38 -5531.19 223.38" "angle" "158"
+	spawn info_player_deathmatch "origin" "58.22 -4371.52 297.71" "angle" "129"
+	spawn info_player_deathmatch "origin" "1854.33 -3730.58 341.37" "angle" "-151"
+	spawn info_player_deathmatch "origin" "2400.88 -2903.28 100.43" "angle" "167"
+
+	spawn info_player_deathmatch "origin" "2124.74 -1534.44 -31.88" "angle" "-136"
+	spawn info_player_deathmatch "origin" "680.99 -2159.98 136.57" "angle" "-156"
+	spawn info_player_deathmatch "origin" "-1361.49 -1496.67 18.15" "angle" "-145"
+	spawn info_player_deathmatch "origin" "-2896.44 -1875.06 18.13" "angle" "-109"
+	spawn info_player_deathmatch "origin" "-3450.70 -2277.46 22.56" "angle" "10"
+
+	spawn info_player_deathmatch "origin" "-3120.51 -3527.11 23.20" "angle" "19"
+	spawn info_player_deathmatch "origin" "-1928.07 -3692.56 20.13" "angle" "62"
+	spawn info_player_deathmatch "origin" "-2158.33 -3626.28 192.13" "angle" "21"
+	spawn info_player_deathmatch "origin" "-850.16 -4485.34 -21.82" "angle" "74"
+	spawn info_player_deathmatch "origin" "1324.68 564.46 48.77" "angle" "-109"
+
+end
+
+
+
+set_da_stuff_up:
+	
+	// Some sounds
+	local.master = spawn scriptmaster
+	local.master aliascache opeltruck_snd_idle sound/vehicle/veh_truck_idle.wav soundparms 1.0 0.0 1.0 0.0 300 7000 auto loaded maps "m dm obj"
+	local.master aliascache arty_exp_sand1 sound/weapons/explo/exp_dirt_01.wav soundparms 0.8 0.3 0.7 0.4 1000 8000 weapon loaded maps "m dm moh obj train"
+
+	thread global/exploder.scr::main
+	thread global/barrel.scr::explosive_barrel
+	// Remove AI
+	removeclass actor
+	
+	
+	// Make use of some things lying around
+	$opel1 thread selfstuff
+	$opel2 thread selfstuff	
+
+	// Relocate the Trucks 
+	$opel1.origin = ( 340.00 -2984.32 43.29 ) 
+	$opel1.angles = ( 2.29 -162.19 0.00 )
+	$opel2.origin = ( -1819.56 -3727.91 20.16 ) 
+	$opel2.angles = ( 0.14 65.78 0.00 )
+
+	// Leave the Trucks Destroyable for fun
+	$opel1 thread global/vehicles_thinkers.scr::enemy_truck_think 500
+	$opel2 thread global/vehicles_thinkers.scr::enemy_truck_think 500
+
+	//Relocate the Jeep
+	$s1_jeep1.origin = ( 799.40 -5100.29 176.80 ) 
+	$s1_jeep1.angles = ( -5.27 -171.01 0.00 )
+	$s1_jeep1 nodamage
+
+	
+end
+
+
+radio_tower_barrel:
+
+	$radio_tower playsound m1l3a_tower_falls
+	$radio_tower time 1
+	$radio_tower rotatez 100
+	$radio_tower waitmove
+end
+
+
+
+// Vehicle thread
+selfstuff:
+	
+	self anim idlenolights
+	self solid
+end
+
+
+// End some labels
+scene3:
+end
+over_the_wall:
+end
+friendly_message5:
+end
+friendly_message4:
+end
+friendly_message3:
+end
+friendly_message2:
+end
+friendly_message1:
+end
+scene2:
+end
+barrier_damage_trigger:
+end
+
+
+
+// Under Map Protection
+Map_Guard:
+
+	level.killcount = 0
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( 1998.29 -4891.05 -172.88 ) 
+	$Killah setsize ( -9999 -9999 -30 ) ( 9999 9999 4 )
+	$Killah setthread die
+	$Killah message "Play fair!"
+end
+
+die:
+	iprintln "*** - Map_Guard Triggered - ***"
+	local.punk = parm.other
+	if!(isalive local.punk)
+	{
+	end
+	}
+	local.punk thread spawn_fx models/animate/fx_mortar_dirt.tik 
+	local.punk kill
+	wait 1
+	if (local.punk.health == 0)
+	{
+	level.killcount ++
+	waitthread hudprint ("Under Map Deaths:" + level.killcount ) .75 .65 .1
+	}
+end
+
+
+spawn_fx local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp notsolid
+	local.temp.origin = self.origin
+	local.temp anim start
+	wait 3
+	local.temp remove
+end
+
+
+
+hudprint local.nstring local.r local.g local.b:
+
+	huddraw_rect 187 140 -84 50 50 
+	huddraw_color 187 local.r local.g local.b 
+	huddraw_font 187 "facfont-20" 
+	huddraw_string 187 local.nstring 
+	huddraw_align 187 left bottom 
+	huddraw_alpha 187 1 
+end 
+
+
+// Cobs was ere :P
+
+

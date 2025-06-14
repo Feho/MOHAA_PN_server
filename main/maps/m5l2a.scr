@@ -1,0 +1,652 @@
+//
+// M5L2A- The Hunt for the King Tiger - Destroyed Village
+
+// This map is full of holes!!! - too many to clip!!! (for me anyway) :P 
+// 
+// full undermap kill trig has been added :)
+
+
+
+
+main: 
+	
+	setcvar "timelimit" "15"
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M5L2A" 
+	setcvar "g_obj_alliedtext2" "The Hunt for the King Tiger"
+	setcvar "g_obj_alliedtext3"    "Destroyed Village"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
+
+	setcvar "g_gametype" "2"
+setcvar "g_gametypestring" "Team-Match"
+	setcvar "timelimit" "15" 
+	
+	waitthread tdm_spawns
+
+	$explodertrigger immune bullet
+	$explodertrigger immune fastbullet
+	$explodertrigger immune bash
+
+	exec global/exploder.scr::main
+	
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	level waittill prespawn
+	exec global/DMprecache.scr
+
+	exec global/ambient.scr m5l2a
+	exec global/door_locked.scr
+
+	$world farplane 8000
+	
+
+	thread global/barrel.scr::explosive_barrel
+
+	level waittill spawn
+
+		level.squadmaker_areaname = "in the Destroyed Village"
+	
+	// start support gunner scripts
+	exec global/support/support.scr
+	
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+	
+	$explodertrigger thread setuptype
+
+	waitthread furniture
+	thread Map_Guard
+	
+
+	level.clockside = kills
+
+end
+
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M5L2A" 
+	setcvar "g_obj_alliedtext2" "The Hunt for the King Tiger"
+	setcvar "g_obj_alliedtext3"    "Destroyed Village"
+
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
+	
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	waitthread ffa_spawns
+
+	exec global/exploder.scr::main
+
+	level waittill prespawn
+	exec global/DMprecache.scr
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m5l2a
+	thread global/barrel.scr::explosive_barrel
+	
+	$world farplane 8000
+	
+	level waittill spawn
+
+	waitthread furniture
+	thread Map_Guard
+
+	level.clockside = kills
+
+end
+
+
+tdm_spawns:
+
+ 
+	removeclass actor
+	removeclass ammoentity
+
+	spawn info_player_axis "origin" "1282.28 3958.68 214.19" "angle" "1" "targetname" "X1"
+	spawn info_player_axis "origin" "1373.11 3544.60 302.29" "angle" "31" "targetname" "X2"
+	spawn info_player_axis "origin" "1272.26 3396.69 332.43" "angle" "35" "targetname" "X3"
+	spawn info_player_axis "origin" "1036.04 3567.83 220.51" "angle" "32" "targetname" "X4"
+	spawn info_player_axis "origin" "961.26 4419.14 306.84" "angle" "-13" "targetname" "X5"
+
+	spawn info_player_axis "origin" "1608.69 3036.92 370.50" "angle" "74" "targetname" "X6" 
+	spawn info_player_axis "origin" "1694.06 3210.51 338.96" "angle" "87" "targetname" "X7"
+	spawn info_player_axis "origin" "1835.48 3557.31 283.29" "angle" "61" "targetname" "X8"
+	spawn info_player_axis "origin" "1601.47 4418.06 234.91" "angle" "-32" "targetname" "X9"
+	spawn info_player_axis "origin" "1709.19 4264.50 221.66" "angle" "-24" "targetname" "X10"
+
+	spawn info_player_axis "origin" "1882.13 3914.62 235.44" "angle" "-10" "targetname" "X11"
+	spawn info_player_axis "origin" "2300.51 4551.53 236.07" "angle" "-56" "targetname" "X12"
+	spawn info_player_axis "origin" "2371.04 3924.12 225.00" "angle" "-24" "targetname" "X13"
+	spawn info_player_axis "origin" "5546.83 4625.38 244.13" "angle" "-127" "targetname" "X14"
+	spawn info_player_axis "origin" "5975.12 3507.51 215.93" "angle" "-164" "targetname" "X15"
+	
+
+	spawn info_player_allied "origin" "2361.31 -1755.49 190.40" "angle" "112" "targetname" "A1"
+	spawn info_player_allied "origin" "2045.88 -1565.55 209.02" "angle" "99" "targetname" "A2"
+	spawn info_player_allied "origin" "1814.68 -1744.51 241.26" "angle" "69" "targetname" "A3"
+	spawn info_player_allied "origin" "2188.52 -1883.91 193.36" "angle" "102" "targetname" "A4"
+	spawn info_player_allied "origin" "2447.57 -2054.66 188.29" "angle" "113" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "2673.13 -1590.52 233.43" "angle" "152" "targetname" "A6"
+	spawn info_player_allied "origin" "2855.79 -1640.88 239.99" "angle" "150" "targetname" "A7"
+	spawn info_player_allied "origin" "1548.48 -1094.83 284.18" "angle" "28" "targetname" "A8"
+	spawn info_player_allied "origin" "1135.13 -39.13 170.81" "angle" "-11" "targetname" "A9"
+	spawn info_player_allied "origin" "1135.13 -224.88 192.33" "angle" "17" "targetname" "A10"
+
+	spawn info_player_allied "origin" "1017.59 75.05 168.13" "angle" "1" "targetname" "A11"
+	spawn info_player_allied "origin" "959.07 168.02 168.13" "angle" "-9" "targetname" "A12"
+	spawn info_player_allied "origin" "1491.93 282.33 171.03" "angle" "13" "targetname" "A13"
+	spawn info_player_allied "origin" "1623.76 817.05 270.79" "angle" "1" "targetname" "A14"
+	spawn info_player_allied "origin" "2541.80 -1121.23 253.51" "angle" "98" "targetname" "A15"
+
+
+	local.master = spawn scriptmaster
+	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+	local.master aliascache gas_explode1 sound/weapons/explo/Explo_GasTank1.wav soundparms 0.9 0.2 0.8 0.4 700 8000 auto loaded maps "m dm moh obj train"
+	local.master aliascache mine_trigger sound/weapons/foley/MineTrigger1.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m3l1 m3l3 dm moh obj train"
+	local.master aliascache arty_leadin2 sound/weapons/explo/Exp_LeadIn_07.wav soundparms 1.0 5.2 0.7 0.5 2160 4600 auto loaded maps "m dm obj "
+	local.master aliascache arty_leadin08 sound/weapons/explo/Exp_LeadIn_07.wav soundparms 1.0 0.2 0.7 0.5 900 20000 local loaded maps "m dm obj"
+
+
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+	
+end
+
+
+
+
+
+ffa_spawns: 
+
+	removeclass actor
+	removeclass ammoentity
+
+	spawn info_player_deathmatch "origin" "5485.18 4567.94 244.12" "angle" "-114"
+	spawn info_player_deathmatch "origin" "4397.62 4409.68 205.37" "angle" "-120"
+	spawn info_player_deathmatch "origin" "3353.18 4733.20 347.66" "angle" "-85"
+	spawn info_player_deathmatch "origin" "1714.91 3302.00 321.88" "angle" "99"
+	spawn info_player_deathmatch "origin" "2799.31 3211.58 236.15" "angle" "-61"
+
+	spawn info_player_deathmatch "origin" "3216.88 2567.13 209.09" "angle" "112"
+	spawn info_player_deathmatch "origin" "3119.13 1338.58 209.15" "angle" "50"
+	spawn info_player_deathmatch "origin" "3816.88 1399.13 191.92" "angle" "93"
+	spawn info_player_deathmatch "origin" "5107.48 1878.87 301.51" "angle" "2172"
+	spawn info_player_deathmatch "origin" "4769.65 44.86 308.64" "angle" "122"
+
+	spawn info_player_deathmatch "origin" "4192.88 -691.47 228.70" "angle" "120"
+	spawn info_player_deathmatch "origin" "3058.75 999.99 257.30" "angle" "-151"
+	spawn info_player_deathmatch "origin" "1487.68 789.07 287.34" "angle" "-58"
+	spawn info_player_deathmatch "origin" "970.98 29.50 168.13" "angle" "13"
+	spawn info_player_deathmatch "origin" "3100.95 -1073.68 256.34" "angle" "83"
+
+	local.master = spawn scriptmaster
+	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+	local.master aliascache gas_explode1 sound/weapons/explo/Explo_GasTank1.wav soundparms 0.9 0.2 0.8 0.4 700 8000 auto loaded maps "m dm moh obj train"
+	local.master aliascache mine_trigger sound/weapons/foley/MineTrigger1.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m3l1 m3l3 dm moh obj train"
+	local.master aliascache arty_leadinmp2 sound/weapons/explo/Exp_LeadIn_07.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps "m dm obj"
+
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+end
+
+
+// Re-arrange some things for better gameplay / cover/ fx :) 
+furniture:
+
+	$s3_flak88 thread global/vehicles_thinkers.scr::enemy_flak_think 100
+	
+	$s3_halftrak notsolid
+	$s3_halftrak.origin = ( 4813.31 2931.89 152.25 )
+	$s3_halftrak.angle = -136
+	$s3_halftrak thread global/vehicles_thinkers.scr::enemy_half-trak_think 800
+
+	$mg42_1 remove	
+	$mg42_2	remove
+	$mg42_1_bipod remove
+	$mg42_2_bipod remove
+
+	$s5_tank.origin = ( 4352.84 4017.35 289.30 )
+	$s5_tank.angle = -32
+	$s5_tank setcollisionentity $panzer_mask
+
+	$s10_tank1.origin = ( 3766.01 3168.90 202.63 ) 
+	$s10_tank1.angle = 180
+	$s10_tank1 setcollisionentity $panzer_mask
+
+	$s10_tank2.origin = ( 2630.77 4390.92 212.57 )
+	$s10_tank2.angle = -23
+	$s10_tank2 setcollisionentity $tank_mask
+
+	$playertank.origin = ( 3926.03 328.38 169.97 )
+	$playertank.angle = 62
+	$playertank setcollisionentity $t472
+
+	$s5_tank thread tankdeath panzer
+	$s10_tank1 thread tankdeath panzer
+	$s10_tank2 thread tankdeath empty_tiger
+	$playertank thread tankdeath empty_king
+
+	$panzer_mask solid
+	$panzer_mask nodamage
+
+	$tank_mask solid
+	$tank_mask nodamage
+
+	$t472 solid
+	$t472 nodamage
+
+
+	// Allies notsolid Rubble Blocker  ( Some Rubble that isnt solid near Allied Spawn - player falls under map - best left blocked )  
+	spawn script_object "targetname" "blocker1" 
+	$blocker1.origin = ( 1529.93 -482.94 241.53 )
+	$blocker1 setsize ( -140 -140 -100 ) ( 140 140 50 )
+	$blocker1 solid
+	$blocker1 nodamage
+
+	// Allies Rear Blocker  ( Out of Bounds Blocker - Down Lane)  
+	spawn script_object "targetname" "blocker2" 
+	$blocker2.origin = ( 2833.49 -2746.24 188.10 )
+	$blocker2 setsize ( -1000 -1 -100 ) (1000 1 500 )
+	$blocker2 solid
+	$blocker2 nodamage
+	
+
+	//Axis out of Bounds Blocker - Road out of town
+	spawn script_object "targetname" "blocker3" 
+	$blocker3.origin = ( -256.71 1694.76 310.60 )
+	$blocker3 setsize ( -1200 -1 -100 ) ( 1200 1 500 )
+	$blocker3 solid
+	$blocker3 nodamage
+
+	//Axis out of bounds Blocker 2 - behind Tank traps
+	spawn script_object "targetname" "blocker4" 
+	$blocker4.origin = ( 7040.32 4667.81 201.26 )
+	$blocker4 setsize ( -1100 -1 -100 ) ( 1100 300 500 )
+	$blocker4 solid
+	$blocker4 nodamage
+
+
+	thread FX
+
+
+end
+
+
+
+// Attempt at stopping players shooting the exploder triggers
+setuptype:
+self health 3000
+end
+
+
+FX:	
+	
+	spawn script_origin "origin" "2696.08 299.59 1187.12" "targetname" "speaker1"
+	spawn script_origin "origin" "4158.43 1484.85 1187.12" "targetname" "speaker2"
+	spawn script_origin "origin" "2731.93 4615.59 1263.65" "targetname" "speaker3"
+
+
+	// let the players watch the Village + Armour get blown to pieces as they play :)
+	wait 10
+	$speaker2 playsound arty_leadin08
+	wait .4
+	$pole1 thread spawn_fx2 models/animate/explosion_bridge.tik
+	wait .3
+	$pole1 playsound m5l2a_pole_fall
+	$pole1 time 1
+	$pole1 notsolid
+	$pole1 rotatezdown 85
+	$pole1 waitmove
+	
+	wait 7
+	
+	$speaker2 playsound arty_leadin08
+	wait .7
+	$s3_halftrak thread spawn_fx models/animate/explosion_bridge.tik
+	wait 10
+	$building1_damage_volume volumedamage 400
+	$speaker1 playsound arty_leadin08
+	wait 1
+	$building1_damage_volume thread spawn_fx models/animate/explosion_bridge.tik
+	exec global/exploder.scr::explode 2
+	wait 7
+	$t31 playsound arty_leadin08
+	wait 1
+	exec global/exploder.scr::explode 1
+	wait 20
+	$speaker2 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 4
+	wait 9
+	$speaker1 playsound arty_leadin08
+	wait .7
+	$playertank thread spawn_fx models/animate/explosion_bridge.tik
+	wait 20
+	$t202 playsound arty_leadin08
+	wait 1
+	$t202 thread spawn_fx models/animate/explosion_bridge.tik
+	exec global/exploder.scr::explode 21
+	wait 15
+	$speaker3 playsound arty_leadin08
+	wait .6
+	$s10_tank2 thread spawn_fx models/animate/explosion_bridge.tik
+	wait 5
+	$building2_damage_volume volumedamage 400
+	$building2_damage_volume playsound arty_leadin08 
+	wait 1
+	$building2_damage_volume thread spawn_fx models/animate/explosion_bridge.tik
+	exec global/exploder.scr::explode 12
+	wait 9
+	$speaker2 playsound arty_leadin08
+	wait .4
+	$pole2 thread spawn_fx2 models/animate/explosion_bridge.tik
+	wait .3
+	$pole2 playsound m5l2a_pole_fall
+	$pole2 time 1
+	$pole2 notsolid
+	$pole2 rotatezdown 85
+	$pole2 waitmove
+	wait 11
+	$building3_damage_volume volumedamage 400
+	$building3_damage_volume playsound arty_leadin08
+	wait 1
+	$building3_damage_volume thread spawn_fx models/animate/explosion_bridge.tik
+	exec global/exploder.scr::explode 11
+	wait 14
+	$speaker3 playsound arty_leadin08
+	wait .6
+	$s5_tank thread spawn_fx models/animate/explosion_bridge.tik
+	wait 25
+	$speaker2 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 17
+	wait 30
+	$building4_damage_volume volumedamage 400
+	$speaker2 playsound arty_leadin08 
+	wait 1
+	$building4_damage_volume thread spawn_fx models/animate/explosion_bridge.tik
+	exec global/exploder.scr::explode 16
+	wait 9
+	$speaker2 playsound arty_leadin08 
+	wait .5
+	$s10_tank1 thread spawn_fx models/animate/explosion_bridge.tik
+	wait 25
+	$building5_damage_volume volumedamage 400
+	$building5_damage_volume playsound arty_leadin08 
+	wait 1
+	$building5_damage_volume thread spawn_fx models/animate/explosion_bridge.tik
+	exec global/exploder.scr::explode 18
+	wait 15
+	$building6_damage_volume volumedamage 400
+	$building6_damage_volume playsound arty_leadin08
+	wait 1
+	$building6_damage_volume thread spawn_fx models/animate/explosion_bridge.tik
+	exec global/exploder.scr::explode 12
+	wait 26
+	$speaker2 playsound arty_leadin08
+	wait .4
+	$pole3 thread spawn_fx2 models/animate/explosion_bridge.tik
+	wait .3
+	$pole3 playsound m5l2a_pole_fall
+	$pole3 time 1
+	$pole3 notsolid
+	$pole3 rotatezdown 85
+	$pole3 waitmove
+	wait 11
+	$speaker1 playsound arty_leadin08 
+	wait 1
+	exec global/exploder.scr::explode 23
+	wait 20
+	$speaker1 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 15
+	wait 20
+	$speaker2 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 14
+	wait 15
+	$speaker3 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 13
+	wait 30
+	$speaker2 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 24
+	wait 10
+	$speaker1 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 6
+	wait 35
+	$speaker2 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 19
+	wait 19
+	$speaker3 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 22
+	wait 39
+	$speaker3 playsound arty_leadin08 
+	wait .5
+	exec global/exploder.scr::explode 20
+
+end
+
+
+tankdeath local.type:
+
+	self.type = local.type
+	self.health = 400
+	self removeondeath 0
+	
+	self waittill death
+	
+	self thread switch_em
+	
+end
+
+
+switch_em:
+	
+	self playsound explode_tank
+	switch (self.type)
+	{
+	
+	case panzer:
+	self thread spawn_fx models/emitters/explosion_tank.tik
+	self thread spawn_fx models/animate/explosion_bridge.tik
+	self.model = models/vehicles/panzer_iv_eud.tik
+	local.get_out = 0
+	exec global/earthquake.scr .2 4 0 0
+
+	self.gun = self QueryTurretSlotEntity 0
+	self.gun2 = self QueryTurretSlotEntity 1
+
+	if (self.gun)
+	{
+	self DetachTurretSlot 0
+	self.gun remove
+	}
+	if (self.gun2)
+	{
+	self DetachTurretSlot 1
+	self.gun2 remove
+	}
+	break
+
+	case empty_tiger:
+	self thread spawn_fx models/emitters/explosion_tank.tik
+	self thread spawn_fx models/animate/explosion_bridge.tik
+	self.model = models/vehicles/tigertank_d.tik
+	local.get_out = 0
+	exec global/earthquake.scr .2 4 0 0
+	
+	self.gun = self QueryTurretSlotEntity 0
+	self.gun2 = self QueryTurretSlotEntity 1
+	if (self.gun)
+	{
+	self DetachTurretSlot 0
+	self.gun remove
+	}
+	if (self.gun2)
+	{
+	self DetachTurretSlot 1
+	self.gun2 remove
+	}
+	break
+	
+
+	case empty_king:
+	self thread spawn_fx models/emitters/explosion_tank.tik
+	self thread spawn_fx models/animate/explosion_bridge.tik
+	self.model = models/vehicles/kingtank_all_d.tik
+	local.get_out = 0
+	exec global/earthquake.scr .2 4 0 0
+
+	self.gun = self QueryTurretSlotEntity 0
+	self.gun2 = self QueryTurretSlotEntity 1
+	if (self.gun)
+	{
+	self DetachTurretSlot 0
+	self.gun remove
+	}
+	if (self.gun2)
+	{
+	self DetachTurretSlot 1
+	self.gun2 remove
+	}
+	break
+	}
+	
+end
+
+
+
+
+// Under Map Protection
+Map_Guard:
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( 3707.45 3748.73 64.66 ) 
+	$Killah setsize ( -9999 -9999 -900 ) ( 9999 9999 2 )
+	$Killah setthread die
+	
+end
+
+die:
+	
+	iprintln "*** - Map_Guard Triggered - ***"
+	local.punk = parm.other
+	if!(isalive local.punk)
+	{
+	end
+	}
+	local.punk thread spawn_fx models/animate/explosion_bridge.tik 
+end
+
+
+
+spawn_fx local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp.scale = 1
+	local.temp playsound gas_explode1
+	local.temp anim start
+	radiusdamage local.temp 600 900
+	wait 3
+	local.temp remove
+end
+
+
+spawn_fx2 local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp.scale = .7
+	local.temp playsound gas_explode1
+	local.temp anim start
+	radiusdamage local.temp 90 90
+	wait 3
+	local.temp remove
+end
+
+
+// End some labels
+pole1:
+end
+pole2:
+end
+pole3:
+end
+drive_path local.path local.speed:
+end
+level_end:
+end
+cant_go_that_way:
+end
+get_random_entry local.entries:
+end
+get_random_entry_loop:
+end
+building1:
+end
+building2:
+end
+building3:
+end
+building4:
+end
+building5:
+end
+building6:
+end
+kill_mg_1:
+end
+kill_mg_2:
+end
+kill_mg local.gunner local.gun local.bipod:
+end
+pole_think:
+end
+
+// Cobs
+

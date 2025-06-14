@@ -1,0 +1,193 @@
+//
+// M2L2B - Scuttling the U-529
+//
+
+
+main: 
+	local.timelimit = 1
+	setcvar "timelimit" local.timelimit
+	
+	local.min_players = (getcvar "sv_minplayers")
+	setcvar "sv_minplayers" "4"
+
+	if((getcvar("g_gametype") == "1")) 
+	{
+		waitthread ffatype
+	}
+	else
+	{
+		waitthread tdmtype  
+	}
+	
+	wait (local.timelimit * 60 - 5)
+	println("local.min_players: " + local.min_players)
+	setcvar "sv_minplayers" local.min_players
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M2L2B" 
+	setcvar "g_obj_alliedtext2" "Scuttling the U-529"
+	setcvar "g_obj_alliedtext3"  "Inside the U-529"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
+
+	setcvar "g_gametype" "2"
+	
+	waitthread tdm_spawns
+	waitthread set_da_stuff_up
+
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m2l2b
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	level.clockside = kills
+
+	
+end
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"  "Map Name: M2L2B" 
+	setcvar "g_obj_alliedtext2" "Scuttling the U-529  "
+	setcvar "g_obj_alliedtext3"  "Inside the U-529"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
+
+	
+	setcvar "g_gametype" "1"
+	
+	waitthread ffa_spawns
+	waitthread set_da_stuff_up
+	
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m2l2b
+	exec global/DMprecache.scr
+	
+	level waittill spawn
+
+	level.clockside = kills
+
+	
+
+end
+
+
+tdm_spawns:
+
+
+	spawn info_player_axis "origin" "3550.38 -6737.54 0.12" "angle" "0" "targetname" "X3"
+	spawn info_player_axis "origin" "3610.03 -6802.88 0.12" "angle" "45" "targetname" "X4"
+	spawn info_player_axis "origin" "3592.04 -6621.13 0.12" "angle" "-60" "targetname" "X5"
+
+	spawn info_player_axis "origin" "4171.13 -6826.88 0.12" "angle" "14" "targetname" "X6" 
+	spawn info_player_axis "origin" "4262.87 -6673.13 0.12" "angle" "-100" "targetname" "X7"
+	spawn info_player_axis "origin" "4373.13 -6615.47 0.12" "angle" "-85" "targetname" "X8"
+	spawn info_player_axis "origin" "4503.13 -6617.13 0.12" "angle" "-68" "targetname" "X9"
+	spawn info_player_axis "origin" "4403.39 -6800.88 44.13" "angle" "85" "targetname" "X10"
+
+	spawn info_player_axis "origin" "4170.20 -6666.13 44.12" "angle" "-58" "targetname" "X11"
+	spawn info_player_axis "origin" "4001.52 -6714.16 0.31" "angle" "-9" "targetname" "X12"
+	
+
+	spawn info_player_allied "origin" "6730.82 -6750.88 0.13" "angle" "175" "targetname" "A3"
+	spawn info_player_allied "origin" "6587.69 -6695.13 0.13" "angle" "-179" "targetname" "A4"
+	spawn info_player_allied "origin" "6456.91 -6760.88 0.13" "angle" "165" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "6106.07 -6786.88 0.13" "angle" "96" "targetname" "A6"
+	spawn info_player_allied "origin" "5994.87 -6776.88 0.13" "angle" "153" "targetname" "A7"
+	spawn info_player_allied "origin" "5914.42 -6776.88 0.13" "angle" "92" "targetname" "A8"
+	spawn info_player_allied "origin" "5790.88 -6802.88 0.13" "angle" "127" "targetname" "A9"
+	spawn info_player_allied "origin" "5713.16 -6802.88 0.13" "angle" "92" "targetname" "A10"
+
+	spawn info_player_allied "origin" "5588.18 -6800.87 0.13" "angle" "98" "targetname" "A11"
+	spawn info_player_allied "origin" "5405.92 -6808.24 0.13" "angle" "60" "targetname" "A12"
+	
+
+	
+
+end
+
+
+
+
+ffa_spawns: 
+
+
+	spawn info_player_deathmatch "origin" "6641.62 -6651.30 -7.87" "angle" "-159"
+	spawn info_player_deathmatch "origin" "5994.88 -6776.88 0.12" "angle" "123"
+	spawn info_player_deathmatch "origin" "5713.13 -6802.88 0.12" "angle" "47"
+	spawn info_player_deathmatch "origin" "5410.38 -6808.24 0.12" "angle" "116"
+	spawn info_player_deathmatch "origin" "4797.13 -6826.88 0.12" "angle" "30"
+
+	spawn info_player_deathmatch "origin" "4528.88 -6617.13 0.12" "angle" "-118"
+	spawn info_player_deathmatch "origin" "4175.03 -6826.88 0.12" "angle" "51"
+	spawn info_player_deathmatch "origin" "3597.89 -6621.13 0.12" "angle" "-66"
+	spawn info_player_deathmatch "origin" "3985.17 -6733.32 0.12" "angle" "0"
+	spawn info_player_deathmatch "origin" "4373.13 -6615.47 0.12" "angle" "-84"
+
+end
+
+
+
+set_da_stuff_up:
+	
+	// Remove AI
+	removeclass actor
+
+	$world northyaw -90
+
+	
+
+	//level.springfield = 1								
+	level.bar = 1								
+	level.bazooka = 1	
+	level.mp44 = 1		
+	level.shotgun = 1
+	level.rifle = 1 // crashes on my server
+
+	
+
+end	
+
+
+
+spray:
+	self anim start
+	wait 1 
+	self anim stop
+end
+
+
+
+// End some labels
+plantthebomb:
+end
+plantthebomb2:
+end
+
+
+
+
+
+
+
+

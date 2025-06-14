@@ -1,0 +1,652 @@
+//
+// M5L1B - Sniper's Last Stand - City Hall
+
+//
+// 
+// 
+
+
+main: 
+	
+	setcvar "g_gametype" "2"
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M5L1B" 
+	setcvar "g_obj_alliedtext2" "Sniper's Last Stand"
+	setcvar "g_obj_alliedtext3"     "City Hall"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
+
+	setcvar "g_gametype" "2"
+	setcvar "g_gametypestring" "** Airborne-Mod **"
+	
+	setcvar "timelimit" "20"
+
+	waitthread tdm_spawns
+
+	exec global/exploder.scr
+	
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+	level waittill prespawn
+
+	exec global/ambient.scr m5l1b
+	exec global/door_locked.scr
+	exec global/DMprecache.scr
+
+	$world farplane 4500 //3500
+	//level.farplanecolor = (0.333 0.333 0.359)
+
+	exec global/weather.scr
+	exec global/shutter.scr
+	exec global/bomber.scr
+
+	setcvar "cg_rain" "1"
+
+	level waittill spawn
+
+	level.squadmaker_areaname = "in the City Hall"
+	
+	// start support gunner scripts
+	exec global/support/support.scr
+	
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+	
+	waitthread furniture
+	thread Map_Guard
+	thread Stage_Timer
+
+	level.clockside = kills
+
+end
+
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M5L1B" 
+	setcvar "g_obj_alliedtext2" "Sniper's Last Stand"
+	setcvar "g_obj_alliedtext3"     "City Hall"
+
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
+	
+	setcvar "g_gametype" "1"
+	
+	setcvar "timelimit" "20"
+	
+	waitthread ffa_spawns
+	
+	exec global/exploder.scr
+
+	level waittill prespawn
+	exec global/DMprecache.scr
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m5l1b
+
+	setcvar "cg_rain" "1"
+
+	level.farplane = 4500
+	$world farplane 4500 //3500
+	level.farplanecolor = (0.333 0.333 0.359)
+
+	exec global/weather.scr
+	exec global/shutter.scr
+	exec global/bomber.scr
+	
+	level waittill spawn
+
+	waitthread furniture
+	thread Map_Guard
+
+	level.clockside = kills
+
+end
+
+
+tdm_spawns:
+
+ 
+	removeclass actor
+	removeclass ammoentity
+
+	// Stage 1
+	spawn info_player_axis "origin" "-1200.81 995.44 400.13" "angle" "-90" "targetname" "X1"
+	spawn info_player_axis "origin" "-1881.04 -49.79 450.13" "angle" "-48" "targetname" "X2"
+	spawn info_player_axis "origin" "-463.34 156.86 460.13" "angle" "175" "targetname" "X3"
+	spawn info_player_axis "origin" "-593.87 -206.13 390.13" "angle" "-90" "targetname" "X4"
+	spawn info_player_axis "origin" "-7.87 -590.11 430.13" "angle" "-180" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-857.94 -2517.65 490.13" "angle" "90" "targetname" "X6" 
+	spawn info_player_axis "origin" "-682.80 -2523.79 490.13" "angle" "107" "targetname" "X7"
+	spawn info_player_axis "origin" "-861.87 -2318.13 490.13" "angle" "90" "targetname" "X8"
+	spawn info_player_axis "origin" "-1673.21 -1070.13 490.13" "angle" "-90" "targetname" "X9"
+	spawn info_player_axis "origin" "-585.13 -1454.49 390.13" "angle" "-180" "targetname" "X10"
+
+	spawn info_player_axis "origin" "-1346.99 483.52 400.13" "angle" "-90" "targetname" "X11"
+	spawn info_player_axis "origin" "-342.20 -529.87 365.13" "angle" "-132" "targetname" "X12"
+	spawn info_player_axis "origin" "-2115.68 -1077.64 490.41" "angle" "-90" "targetname" "X13"
+	spawn info_player_axis "origin" "-30.67 743.10 408.52" "angle" "-167" "targetname" "X14"
+	spawn info_player_axis "origin" "-115.79 804.93 409.20" "angle" "-163" "targetname" "X15"
+	
+
+	// Stage 1
+	spawn info_player_allied "origin" "-1204.97 -5254.35 89.45" "angle" "176" "targetname" "A1"
+	spawn info_player_allied "origin" "-1352.21 -5414.23 89.60" "angle" "165" "targetname" "A2"
+	spawn info_player_allied "origin" "-1576.25 -5143.92 111.59" "angle" "163" "targetname" "A3"
+	spawn info_player_allied "origin" "-1833.66 -5553.69 112.13" "angle" "138" "targetname" "A4"
+	spawn info_player_allied "origin" "-1439.15 -5794.20 182.13" "angle" "139" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "-2015.78 -4943.41 112.13" "angle" "130" "targetname" "A6"
+	spawn info_player_allied "origin" "-3072.88 -5402.10 304.13" "angle" "18" "targetname" "A7"
+	spawn info_player_allied "origin" "-2718.61 -5133.92 304.13" "angle" "99" "targetname" "A8"
+	spawn info_player_allied "origin" "-2687.13 -5156.50 508.13" "angle" "100" "targetname" "A9"
+	spawn info_player_allied "origin" "-2810.97 -3976.46 186.91" "angle" "32" "targetname" "A10"
+
+	spawn info_player_allied "origin" "-2810.16 -3878.52 195.31" "angle" "13" "targetname" "A11"
+	spawn info_player_allied "origin" "-2909.79 -3889.31 206.30" "angle" "171" "targetname" "A12"
+	spawn info_player_allied "origin" "-2860.98 -4094.91 159.28" "angle" "144" "targetname" "A13"
+	spawn info_player_allied "origin" "-3969.46 -4355.39 185.80" "angle" "39" "targetname" "A14"
+	spawn info_player_allied "origin" "-3820.54 -4439.80 221.26" "angle" "73" "targetname" "A15"
+
+
+	local.master = spawn scriptmaster
+	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+	local.master aliascache gas_explode1 sound/weapons/explo/Explo_GasTank1.wav soundparms 0.9 0.2 0.8 0.4 700 8000 auto loaded maps "m dm moh obj train"
+	local.master aliascache mine_trigger sound/weapons/foley/MineTrigger1.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m3l1 m3l3 dm moh obj train"
+	local.master aliascache drop_bomb6 sound/weapons/explo/Exp_LeadIn_11.wav soundparms 1.0 1.2 0.7 0.5 1000 8000 auto loaded maps "m3l2 m5l1b m5l3"
+
+
+	// Stage2
+	spawn info_player_axis "origin" "3727.13 -1632.87 392.13" "angle" "47" "targetname" "XX1"
+	spawn info_player_axis "origin" "4020.06 -1632.33 419.86" "angle" "135" "targetname" "XX2"
+	spawn info_player_axis "origin" "4203.81 -1623.52 444.47" "angle" "110" "targetname" "XX3"
+	spawn info_player_axis "origin" "4253.91 -1132.41 384.13" "angle" "118" "targetname" "XX4"
+	spawn info_player_axis "origin" "4197.06 -1202.05 384.13" "angle" "-151" "targetname" "XX5"
+
+	spawn info_player_axis "origin" "4590.59 -337.58 428.53" "angle" "155" "targetname" "XX6" 
+	spawn info_player_axis "origin" "3912.87 953.91 464.13" "angle" "-150" "targetname" "XX7"
+	spawn info_player_axis "origin" "3888.99 734.44 464.13" "angle" "-176" "targetname" "XX8"
+	spawn info_player_axis "origin" "3912.88 547.91 464.13" "angle" "160" "targetname" "XX9"
+	spawn info_player_axis "origin" "3562.60 911.58 464.13" "angle" "-126" "targetname" "XX10"
+
+	spawn info_player_axis "origin" "3487.13 1040.88 464.13" "angle" "-88" "targetname" "XX11"
+	spawn info_player_axis "origin" "3713.81 836.84 464.13" "angle" "-152" "targetname" "XX12"
+	spawn info_player_axis "origin" "2123.49 -103.90 712.13" "angle" "-27" "targetname" "XX13"
+	spawn info_player_axis "origin" "2122.52 32.09 712.13" "angle" "-16" "targetname" "XX14"
+	spawn info_player_axis "origin" "2127.30 198.36 712.13" "angle" "52" "targetname" "XX15"
+
+
+	// Stage 2
+	spawn info_player_allied "origin" "-2130.46 -2404.12 540.13" "angle" "71" "targetname" "AA1"
+	spawn info_player_allied "origin" "-2177.32 -1876.24 290.96" "angle" "16" "targetname" "AA2"
+	spawn info_player_allied "origin" "-2150.65 -1039.13 480.13" "angle" "-74" "targetname" "AA3"
+	spawn info_player_allied "origin" "-1737.48 -1404.29 480.13" "angle" "157" "targetname" "AA4"
+	spawn info_player_allied "origin" "-1231.13 -2000.87 432.37" "angle" "96" "targetname" "AA5" 
+
+	spawn info_player_allied "origin" "-1163.65 -1992.51 480.13" "angle" "48" "targetname" "AA6"
+	spawn info_player_allied "origin" "-799.04 -2215.66 480.13" "angle" "88" "targetname" "AA7"
+	spawn info_player_allied "origin" "-677.51 -2282.66 480.13" "angle" "101" "targetname" "AA8"
+	spawn info_player_allied "origin" "-607.13 -1796.84 483.92" "angle" "145" "targetname" "AA9"
+	spawn info_player_allied "origin" "-1299.49 -1360.85 339.86" "angle" "41" "targetname" "AA10"
+
+	spawn info_player_allied "origin" "-1952.64 -464.87 448.13" "angle" "32" "targetname" "AA11"
+	spawn info_player_allied "origin" "-537.40 -293.68 384.19" "angle" "152" "targetname" "AA12"
+	spawn info_player_allied "origin" "-464.27 -589.39 351.07" "angle" "135" "targetname" "AA13"
+	spawn info_player_allied "origin" "-515.78 -1453.48 386.30" "angle" "103" "targetname" "AA14"
+	spawn info_player_allied "origin" "-1928.28 -194.06 448.13" "angle" "17" "targetname" "AA15"
+
+
+	$XX1 disablespawn
+	$XX2 disablespawn
+	$XX3 disablespawn
+	$XX4 disablespawn
+	$XX5 disablespawn
+	$XX6 disablespawn
+	$XX7 disablespawn
+	$XX8 disablespawn
+	$XX9 disablespawn
+	$XX10 disablespawn
+	$XX11 disablespawn
+	$XX12 disablespawn
+	$XX13 disablespawn
+	$XX14 disablespawn
+	$XX15 disablespawn
+
+	$AA1 disablespawn
+	$AA2 disablespawn
+	$AA3 disablespawn
+	$AA4 disablespawn
+	$AA5 disablespawn
+	$AA6 disablespawn
+	$AA7 disablespawn
+	$AA8 disablespawn
+	$AA9 disablespawn
+	$AA10 disablespawn
+	$AA11 disablespawn
+	$AA12 disablespawn
+	$AA13 disablespawn
+	$AA14 disablespawn
+	$AA15 disablespawn
+
+	// Axis Stage 1 rear Blocker
+	spawn script_object "targetname" "blocker2" 
+	$blocker2.origin = ( 407.07 570.83 382.25 )
+	$blocker2 setsize ( -1 -700 -100 ) ( 1 400 600 )
+	$blocker2 solid
+	$blocker2 nodamage
+
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+	
+end
+
+
+Stage_Timer:
+
+	wait 20
+	
+	local.messagetosay = "S T A G E  1 - P U S H  TO  C I T Y  H A L L "
+	thread scrollMsg local.messagetosay
+
+	wait 580
+
+	exec global/feho/squad.scr::reset
+
+	// Initiate Stage 2
+	level.m5l1b_stage2 = 1
+	
+	$X1 disablespawn
+	$X2 disablespawn
+	$X3 disablespawn
+	$X4 disablespawn
+	$X5 disablespawn
+	$X6 disablespawn
+	$X7 disablespawn
+	$X8 disablespawn
+	$X9 disablespawn
+	$X10 disablespawn
+	$X11 disablespawn
+	$X12 disablespawn
+	$X13 disablespawn
+	$X14 disablespawn
+	$X15 disablespawn
+
+	$A1 disablespawn
+	$A2 disablespawn
+	$A3 disablespawn
+	$A4 disablespawn
+	$A5 disablespawn
+	$A6 disablespawn
+	$A7 disablespawn
+	$A8 disablespawn
+	$A9 disablespawn
+	$A10 disablespawn
+	$A11 disablespawn
+	$A12 disablespawn
+	$A13 disablespawn
+	$A14 disablespawn
+	$A15 disablespawn
+
+	$XX1 enablespawn
+	$XX2 enablespawn
+	$XX3 enablespawn
+	$XX4 enablespawn
+	$XX5 enablespawn
+	$XX6 enablespawn
+	$XX7 enablespawn
+	$XX8 enablespawn
+	$XX9 enablespawn
+	$XX10 enablespawn
+	$XX11 enablespawn
+	$XX12 enablespawn
+	$XX13 enablespawn
+	$XX14 enablespawn
+	$XX15 enablespawn
+
+	$AA1 enablespawn
+	$AA2 enablespawn
+	$AA3 enablespawn
+	$AA4 enablespawn
+	$AA5 enablespawn
+	$AA6 enablespawn
+	$AA7 enablespawn
+	$AA8 enablespawn
+	$AA9 enablespawn
+	$AA10 enablespawn
+	$AA11 enablespawn
+	$AA12 enablespawn
+	$AA13 enablespawn
+	$AA14 enablespawn
+	$AA15 enablespawn
+
+	// Relocate this blocker to stop Allies going towards old start area
+	$blocker2.origin = ( -2205.54 -1998.62 341.56 )
+
+	$player respawn
+
+	wait 5
+
+	local.messagetosay = "S T A G E  2 ...  C I T Y - H A L L"
+	thread scrollMsg local.messagetosay
+
+end
+
+
+ffa_spawns: 
+
+	removeclass actor
+	removeclass ammoentity
+
+	spawn info_player_deathmatch "origin" "-2776.90 -5101.28 508.13" "angle" "70"
+	spawn info_player_deathmatch "origin" "-3013.30 -5229.71 304.13" "angle" "30"
+	spawn info_player_deathmatch "origin" "-3030.56 -4670.85 416.13" "angle" "41"
+	spawn info_player_deathmatch "origin" "-2014.22 -3702.40 194.44" "angle" "-163"
+	spawn info_player_deathmatch "origin" "-2671.13 -2752.88 352.13" "angle" "168"
+
+	spawn info_player_deathmatch "origin" "-2671.13 -2661.33 568.13" "angle" "124"
+	spawn info_player_deathmatch "origin" "-2189.99 -2816.88 540.13" "angle" "89"
+	spawn info_player_deathmatch "origin" "-1567.13 -1055.13 480.12" "angle" "-126"
+	spawn info_player_deathmatch "origin" "-1952.87 -464.87 448.13" "angle" "25"
+	spawn info_player_deathmatch "origin" "-1039.13 1056.87 426.04" "angle" "-147"
+
+	spawn info_player_deathmatch "origin" "3967.91 -1631.79 414.24" "angle" "125"
+	spawn info_player_deathmatch "origin" "4592.00 -290.17 431.00" "angle" "-174"
+	spawn info_player_deathmatch "origin" "2959.13 248.67 672.13" "angle" "59"
+	spawn info_player_deathmatch "origin" "2126.06 26.13 712.13" "angle" "-32"
+	spawn info_player_deathmatch "origin" "1951.99 -415.13 632.13" "angle" "-40"
+
+	local.master = spawn scriptmaster
+	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+	local.master aliascache gas_explode1 sound/weapons/explo/Explo_GasTank1.wav soundparms 0.9 0.2 0.8 0.4 700 8000 auto loaded maps "m dm moh obj train"
+	local.master aliascache mine_trigger sound/weapons/foley/MineTrigger1.wav soundparms 1.0 0.0 1.0 0.0 100 2000 item loaded maps "m3l1 m3l3 dm moh obj train"
+	local.master aliascache drop_bomb6 sound/weapons/explo/Exp_LeadIn_11.wav soundparms 1.0 1.2 0.7 0.5 1000 8000 auto loaded maps "m3l2 m5l1b m5l3"
+
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+end
+
+
+// Re-arrange some things for better gameplay / cover/ fx :) 
+furniture:
+
+	$kingtank.origin = ( 3224.86 -559.74 384.27 )
+	$kingtank.angle = -116
+	$kingtank setcollisionentity $kingtank.target
+
+	$kingtigercollision solid
+	$kingtigercollision nodamage
+
+
+	$tank.origin = ( -3997.13 -3157.70 241.75 )
+	$tank.angles = ( 11.12 -56.59 0.00 )
+	$tank setcollisionentity $tank.target
+
+	$tank_mask solid
+	$tank_mask nodamage
+
+
+	// Allies rear blocker  ( The Map_Guard trig is slightly above ground here due to the map angle - hence the blocker )  
+	spawn script_object "targetname" "blocker1" 
+	$blocker1.origin = ( -984 -5392 50 )
+	$blocker1 setsize ( -1 -700 -100 ) ( 1 700 500 )
+	$blocker1 solid
+	$blocker1 nodamage
+
+	// Let the players be able to destoy the Armour
+	$tank thread tankdeath panzer
+	$kingtank thread tankdeath empty_king
+
+	thread FX
+
+	
+end
+
+
+FX:
+	wait 90
+	
+	// Some FX 
+	local.bombertime[105] = level.time
+	thread global/bomber.scr::bomb 105
+	wait 5
+	spawn script_origin "origin" "-1187 -1060 446" "targetname" "EX5"
+	$EX5 thread spawn_fx models/animate/explosion_bridge.tik
+	thread global/exploder.scr::explode 5
+	
+	spawn script_origin "origin" "-2032.01 -5704.01 624.13" "targetname" "EX1"
+	wait 30
+	$EX1 playsound drop_bomb6 
+	wait 1
+	$EX1 thread spawn_fx models/animate/explosion_bridge.tik
+	thread global/exploder.scr::explode 1
+	
+	wait 30
+	spawn script_origin "origin" "-1130 -5682 159" "targetname" "EX2"
+	$EX2 playsound drop_bomb6 
+	wait 1
+	$EX2 thread spawn_fx models/animate/explosion_bridge.tik
+	thread global/exploder.scr::explode 2
+
+	wait 30
+	spawn script_origin "origin" "-116 -5856 434" "targetname" "EX3"
+	$EX3 playsound drop_bomb6 
+	wait 1
+	$EX3 thread spawn_fx models/animate/explosion_bridge.tik
+	thread global/exploder.scr::explode 3
+
+end
+	
+
+
+tankdeath local.type:
+
+	self.type = local.type
+	self.health = 1000
+	self removeondeath 0
+	
+	self waittill death
+	
+	self thread switch_em
+	
+	
+end
+
+switch_em:
+	
+	self playsound explode_tank
+	switch (self.type)
+	{
+	
+	case panzer:
+	self thread spawn_fx models/emitters/explosion_tank.tik
+	self thread spawn_fx models/animate/explosion_bridge.tik
+	self.model = models/vehicles/panzer_iv_eud.tik
+	local.get_out = 0
+	exec global/earthquake.scr .2 4 0 0
+
+	self.gun = self QueryTurretSlotEntity 0
+	self.gun2 = self QueryTurretSlotEntity 1
+
+	if (self.gun)
+	{
+	self DetachTurretSlot 0
+	self.gun remove
+	}
+	if (self.gun2)
+	{
+	self DetachTurretSlot 1
+	self.gun2 remove
+	}
+	break
+
+	case empty_king:
+
+	self thread spawn_fx models/emitters/explosion_tank.tik
+	self thread spawn_fx models/animate/explosion_bridge.tik
+	self.model = models/vehicles/kingtank_all_d.tik
+	local.get_out = 0
+	exec global/earthquake.scr .2 4 0 0
+
+	self.gun = self QueryTurretSlotEntity 0
+	self.gun2 = self QueryTurretSlotEntity 1
+	if (self.gun)
+	{
+	self DetachTurretSlot 0
+	self.gun remove
+	}
+	if (self.gun2)
+	{
+	self DetachTurretSlot 1
+	self.gun2 remove
+	}
+	break
+	}
+	
+end
+
+
+
+
+// Under Map Protection
+Map_Guard:
+
+	//clip by wall
+	spawn script_object "targetname" "blockerx"
+	$blockerx.origin = ( -3282.73 -1472.07 561.88 )
+	$blockerx setsize ( -100 -1 0 ) ( 100 1 300 )
+	$blockerx solid
+	$blockerx nodamage
+
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( -2610.24 -1978.16 60 ) 
+	$Killah setsize ( -9999 -9999 -30 ) ( 9999 9999 6 )
+	$Killah setthread die
+	
+end
+
+die:
+	
+	iprintln "*** - Map_Guard Triggered - ***"
+	local.punk = parm.other
+	if (!(isalive local.punk) || local.punk.needrevive == 1)
+	{
+	end
+	}
+	local.punk thread spawn_fx models/animate/explosion_bridge.tik 
+end
+
+
+
+spawn_fx local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp.scale = .5
+	local.temp playsound gas_explode1
+	local.temp anim start
+	radiusdamage local.temp 150 150
+	wait 3
+	local.temp remove
+end
+
+
+// End some labels
+planesflyby:
+end
+kaboom:
+end
+kaboom1:
+end
+early_trigger:
+end
+tankdrive:
+end
+building4thread:
+end
+403_trigger:
+end
+obj3:
+end
+endsetup:
+end
+obj2:
+end
+lateleveltrigger:
+end
+obj1:
+end
+building_explode:
+end
+
+scrollMsg local.messagetosay:
+
+	huddraw_align 223 left center
+	huddraw_font 223 facfont-20
+	huddraw_alpha 223 1
+
+	huddraw_color 223 1 1 1
+
+	huddraw_rect 223 20 150 200 40
+	huddraw_string 223 local.messagetosay
+
+	for(local.i=1;local.i<=local.messagetosay.size;local.i++)
+	{
+	local.x = ""
+	for(local.z=1;local.z<=(local.messagetosay.size - local.i);local.z++)
+	{
+	local.x = (local.x + " ")
+	}
+	local.tmpstring4 = ""
+	for (local.o=0;local.o<local.i;local.o++) local.tmpstring4 = local.tmpstring4 + local.messagetosay[local.o]
+	huddraw_string 223 (local.x + local.tmpstring4)
+	wait .03
+	}
+	wait 3
+	for (local.o=1;local.o>0;local.o=local.o - 0.01)
+	{
+	huddraw_alpha 223 local.o
+	wait 0.05
+	}
+	huddraw_alpha 223 0 
+end
+
+// Cobs
+

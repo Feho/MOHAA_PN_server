@@ -1,0 +1,371 @@
+//
+// M5L1A - Sniper's Last Stand - Outskirts
+
+//
+// 
+// 
+
+
+main: 
+
+	setcvar "g_gametype" "2"
+	setcvar "timelimit" "12"
+	
+	if((getcvar("g_gametype") == "1")) 
+	{
+	waitthread ffatype
+	end
+	}
+	else
+	{
+	waitthread tdmtype  
+	end
+	}
+end
+
+
+
+tdmtype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M5L1A" 
+	setcvar "g_obj_alliedtext2" "Sniper's Last Stand"
+	setcvar "g_obj_alliedtext3"     "Outskirts"
+	
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
+
+	setcvar "g_gametype" "2"
+setcvar "g_gametypestring" "Team-Match"
+	waitthread tdm_spawns
+
+	exec global/exploder.scr
+	
+	level waittill prespawn
+
+	exec global/ambient.scr m5l1a
+	exec global/door_locked.scr
+	exec global/DMprecache.scr
+
+	level.farplane = 3500
+	level.farplanecolor = (0.333 0.333 0.359)
+
+	exec global/weather.scr
+	exec global/shutter.scr
+	exec global/bomber.scr
+
+	setcvar "cg_rain" "1"
+
+	level waittill spawn
+
+	waitthread furniture
+	thread Map_Guard
+
+	level.clockside = kills
+
+end
+
+
+
+
+ffatype:
+
+	setcvar "g_obj_alliedtext1"   "Map Name: M5L1A" 
+	setcvar "g_obj_alliedtext2" "Sniper's Last Stand"
+	setcvar "g_obj_alliedtext3"     "Outskirts"
+
+	setcvar "g_obj_axistext1" ""
+	setcvar "g_obj_axistext2" ""
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
+	
+	setcvar "g_gametype" "1"
+	setcvar "g_gametypestring" "Free-For-All"
+	waitthread ffa_spawns
+	
+	exec global/exploder.scr
+
+	level waittill prespawn
+
+	thread global/door_locked.scr::lock
+	exec global/ambient.scr m5l1a
+	exec global/DMprecache.scr
+
+	setcvar "cg_rain" "1"
+
+	level.farplane = 3500
+	level.farplanecolor = (0.333 0.333 0.359)
+
+	exec global/weather.scr
+	exec global/shutter.scr
+	exec global/bomber.scr
+	
+	level waittill spawn
+
+	waitthread furniture
+	thread Map_Guard
+
+	level.clockside = kills
+
+end
+
+
+tdm_spawns:
+
+ 
+	removeclass actor
+
+	removeclass ammoentity
+	$m5_ammo remove
+
+	spawn info_player_axis "origin" "-223.20 -1696.87 104.13" "angle" "90" "targetname" "X1"
+	spawn info_player_axis "origin" "-361.42 -1554.22 104.13" "angle" "71" "targetname" "X2"
+	spawn info_player_axis "origin" "-223.13 -1347.07 44.12" "angle" "85" "targetname" "X3"
+	spawn info_player_axis "origin" "-378.22 -1215.88 32.12" "angle" "11" "targetname" "X4"
+	spawn info_player_axis "origin" "-375.91 -985.48 32.13" "angle" "-15" "targetname" "X5"
+
+	spawn info_player_axis "origin" "-80.25 -1186.75 -37.64" "angle" "0" "targetname" "X6" 
+	spawn info_player_axis "origin" "89.99 -1027.73 -35.88" "angle" "-16" "targetname" "X7"
+	spawn info_player_axis "origin" "169.76 -1192.87 -35.88" "angle" "-2" "targetname" "X8"
+	spawn info_player_axis "origin" "303.13 -917.49 -8.87" "angle" "-41" "targetname" "X9"
+	spawn info_player_axis "origin" "1223.80 -1020.38 5.51" "angle" "-113" "targetname" "X10"
+
+	spawn info_player_axis "origin" "287.13 -1449.77 50.91" "angle" "-48" "targetname" "X11"
+	spawn info_player_axis "origin" "191.13 -1856.88 36.12" "angle" "4" "targetname" "X12"
+	spawn info_player_axis "origin" "153.39 -1011.81 264.13" "angle" "-43" "targetname" "X13"
+	spawn info_player_axis "origin" "1.38 -1076.22 264.13" "angle" "-47" "targetname" "X14"
+	spawn info_player_axis "origin" "-6.33 -1219.92 264.13" "angle" "-17" "targetname" "X15"
+	
+
+
+	spawn info_player_allied "origin" "4982.75 -5072.07 -21.62" "angle" "137" "targetname" "A1"
+	spawn info_player_allied "origin" "4971.63 -4793.88 -11.41" "angle" "145" "targetname" "A2"
+	spawn info_player_allied "origin" "4996.08 -4643.08 -13.85" "angle" "157" "targetname" "A3"
+	spawn info_player_allied "origin" "5055.59 -4258.90 8.04" "angle" "-171" "targetname" "A4"
+	spawn info_player_allied "origin" "4904.09 -4239.13 33.10" "angle" "-167" "targetname" "A5" 
+
+	spawn info_player_allied "origin" "4404.35 -4773.76 3.99" "angle" "102" "targetname" "A6"
+	spawn info_player_allied "origin" "4335.09 -4533.30 11.95" "angle" "114" "targetname" "A7"
+	spawn info_player_allied "origin" "4640.85 -3986.52 39.32" "angle" "-170" "targetname" "A8"
+	spawn info_player_allied "origin" "4446.32 -3985.91 3.20" "angle" "-159" "targetname" "A9"
+	spawn info_player_allied "origin" "4166.51 -3983.13 -0.47" "angle" "-122" "targetname" "A10"
+
+	spawn info_player_allied "origin" "4256.88 -4543.55 37.74" "angle" "175" "targetname" "A11"
+	spawn info_player_allied "origin" "4238.41 -4706.25 45.71" "angle" "160" "targetname" "A12"
+	spawn info_player_allied "origin" "3905.62 -4779.51 46.13" "angle" "143" "targetname" "A13"
+	spawn info_player_allied "origin" "4654.20 -4694.91 -53.51" "angle" "132" "targetname" "A14"
+	spawn info_player_allied "origin" "4586.32 -4573.16 -47.76" "angle" "145" "targetname" "A15"
+
+	local.master = spawn scriptmaster
+	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+	local.master aliascache explode_plane1 sound/weapons/explo/Explo_MetalMed1.wav soundparms 1.2 0.2 0.8 0.2 2500 8000 weapon loaded maps "m dm obj"
+
+	
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+end
+
+
+ffa_spawns: 
+
+	removeclass actor
+
+	removeclass ammoentity
+	$m5_ammo remove	
+
+	spawn info_player_deathmatch "origin" "5102.10 -5324.47 4.29" "angle" "126"
+	spawn info_player_deathmatch "origin" "4303.13 -4784.88 34.61" "angle" "51"
+	spawn info_player_deathmatch "origin" "4132.70 -4522.88 8.96" "angle" "-172"
+	spawn info_player_deathmatch "origin" "3216.88 -3496.89 188.13" "angle" "-157"
+	spawn info_player_deathmatch "origin" "1887.13 -4399.44 11.13" "angle" "-64"
+
+	spawn info_player_deathmatch "origin" "1631.13 -3392.88 128.13" "angle" "27"
+	spawn info_player_deathmatch "origin" "3520.84 -2899.71 17.50" "angle" "138"
+	spawn info_player_deathmatch "origin" "1639.97 -1695.13 125.61" "angle" "-53"
+	spawn info_player_deathmatch "origin" "542.51 -2918.47 -52.97" "angle" "-5"
+	spawn info_player_deathmatch "origin" "1255.13 -2191.13 192.21" "angle" "-43"
+
+	spawn info_player_deathmatch "origin" "1222.76 1.29 -29.03" "angle" "-155"
+	spawn info_player_deathmatch "origin" "1445.10 -1068.73 51.27" "angle" "-46"
+	spawn info_player_deathmatch "origin" "-112.87 -927.13 264.13" "angle" "-53"
+	spawn info_player_deathmatch "origin" "-169.34 -1280.86 80.13" "angle" "108"
+	spawn info_player_deathmatch "origin" "-983.77 -572.43 139.48" "angle" "-68"
+
+	local.master = spawn scriptmaster
+	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
+	local.master aliascache snd_gasp sound/dialogue/Generic/G/fear/Fer_010e.wav soundparms 0.7 0.6 0.6 0.6 300 1000 auto loaded maps "m dm obj"
+	
+
+	//level.springfield = 1								
+	//level.bar = 1								
+	//level.bazooka = 1
+	//level.panzer = 1 
+	//level.mp44 = 1		
+	//level.shotgun = 1
+	//level.rifle = 1
+
+end
+
+
+// Re-arrange some things for better gameplay / fx :)
+furniture:
+
+	$leftgate remove
+	$rightgate remove
+
+	$explodersmashed remove
+	$exploderchunk remove
+
+	$fire loopsound fire_med
+	$fireD.origin = ( 2744.42 -2423.06 215.19 )
+	$fireD hide
+
+	// Axis rear blocker  (stops them going into M5L1B map start area)
+	spawn script_object "targetname" "blocker1" 
+	$blocker1.origin = ( -1103.63 -917.94 91.35 )
+	$blocker1 setsize ( -1 -570 -10 ) ( 1 570 500 )
+	$blocker1 solid
+	$blocker1 nodamage
+
+
+	// Relocate some FX :)
+	$bomberpath2015.origin = "-528 416 1528"
+	$ac1.origin = "-555 -1799 1284"
+	$ac2.origin = "-429 -2201 1068"
+	$ac3.origin = "-127 -2442 807"
+	$ac4.origin = "172 -2504 673"
+	$ac5.origin = "473 -2521 599"
+	$ac6.origin = "909 -2554 600"
+	$ac7.origin = "1381 -2596 379"
+	$ac8.origin = "1885 -2520 307"
+	$ac9.origin = "2381 -2490 274"
+	$mackey.origin = "2737 -2454 244"
+	$bomberpath78.origin = "-528 416 1528"
+	$powzer.origin = "-557 -1450 1455"
+	$ned.origin = "-471 -2058 1305"
+	$adam.origin = "-239 -2355 1122"
+	$benson.origin = "168 -2522 944"
+	$z.origin = "688 -2544 840"
+	$todd.origin = "1272 -2560 680"
+	$nate.origin = "1744 -2560 768"
+	$steve.origin = "2296 -2552 856"
+	$preston.origin = "2962 -2265 846"
+	$vince.origin = "3672 -1360 872"
+
+	wait 90
+
+	thread global/bomber.scr::bomb 2015
+	thread global/bomber.scr::bomb 78
+	$ending_point playsound m5l1a_plane
+	wait 3.9
+	$fireD thread spawn_fx models/animate/explosion_bridge.tik
+	$fireD playsound explode_plane1
+	
+	
+	
+	wait 90
+
+	thread global/bomber.scr::bomb 510
+	wait 0.5
+	thread global/bomber.scr::bomb 511
+
+	wait 90
+
+	thread global/bomber.scr::bomb 515
+	wait 0.5
+	thread global/bomber.scr::bomb 514
+end
+	
+
+spawn_fx local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp notsolid
+	local.temp.origin = self.origin
+	local.temp anim start
+	wait 3
+	local.temp remove
+end
+
+
+
+burn:
+	local.player = parm.other
+	parm.other damage $world 1 $world (0 0 0) (0 0 0) (0 0 0) 0 9 0 0
+end
+
+
+Map_Guard:
+
+
+	
+	spawn trigger_multipleall "targetname" "Killah"
+	$Killah.origin = ( 1730.10 -2633.58 -127 ) 
+	$Killah setsize ( -9999 -9999 -1000 ) ( 9999 9999 2 )
+	$Killah setthread die
+	$Killah message "Play fair!"
+end
+
+die:
+	
+	iprintln "*** - Map_Guard Triggered - ***"
+	local.punk = parm.other
+	if!(isalive local.punk)
+	{
+	end
+	}
+	local.punk thread spawn_fx2 models/animate/explosion_bridge.tik 
+end
+
+
+
+spawn_fx2 local.fx:
+	local.temp = spawn script_model model local.fx
+	local.temp.origin = self.origin
+	local.temp.scale = .5
+	local.temp playsound gas_explode1
+	local.temp anim start
+	radiusdamage local.temp 150 150
+	wait 3
+	local.temp remove
+end
+
+
+
+// End some labels
+bombers14-15:
+end
+throughgate:
+end
+bazookathread:
+end
+sneak:
+end
+endlevel:
+end
+secondwave:
+end
+dialogue1:
+end
+thunder:
+end
+bombers10-11:
+end
+secondwavethread:
+end
+locked_gate:
+end
+
+
+
+
+// Cobs
+
