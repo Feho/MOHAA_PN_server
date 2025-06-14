@@ -33,7 +33,7 @@ main:
 	setcvar "g_scoreboardpic" "mohdm1"
 
 	// load support gun sounds
-	// waitthread global/support/support.scr::soundcache
+	waitthread global/support/support.scr::soundcache
 	
 	// call additional stuff for playing this map round based is needed
 	if(level.roundbased)
@@ -94,7 +94,13 @@ main:
 	
 	level waittill spawn
 
+	level.squadmaker_areaname = "in southern France"
 
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
 	
 end
 

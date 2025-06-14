@@ -17,6 +17,21 @@
 // as the torso animation, take the torso animation from the leg animaiton
 // specified in the legs state machine.
 
+//------------------------------------------------------------------
+// jv_map's notes:
+//------------------------------------------------------------------
+// Mike torso extended to use support guns and report weapon raise 
+// events to squadmaker. Includes fixes for landsharking, 'grenade' 
+// crash exploit and teamswitch-on-ladder bug. Currently does not 
+// fix bugs associated with static turret guns. I recommend just 
+// removing these guns (removeclass TurretGun in map script) 
+// because in most cases they cannot be used effectively by players 
+// unless they are exploiting the various bugs.
+//------------------------------------------------------------------
+// If you wish to combine this statefile with another, copy all 
+// sections labelled 'jv_map'.
+//------------------------------------------------------------------
+
 //==============================================================================
 //==============================================================================
 //
@@ -87,11 +102,80 @@ state STAND
 
 		RELOAD_WEAPON			: RELOAD
 	
+		// jv_map
+		// semi auto mg must be a support gun
+		//----------------->
+		ATTACK_SUPPORT					: ATTACK_PRIMARY_BUTTON IS_WEAPONCLASS_ACTIVE "mainhand" "mg" IS_WEAPON_SEMIAUTO "mainhand"
+		//<-----------------
+	
 		CHECK_PRIMARY_ATTACK_SEMIAUTO	: +ATTACK_PRIMARY IS_WEAPON_SEMIAUTO "mainhand" IS_WEAPON_READY_TO_FIRE "mainhand"
 		CHECK_PRIMARY_ATTACK_FULLAUTO	: ATTACK_PRIMARY !IS_WEAPON_SEMIAUTO "mainhand" IS_WEAPON_READY_TO_FIRE "mainhand"
 		CHECK_SECONDARY_ATTACK			: +ATTACK_SECONDARY
+		
+		// jv_map
+		// quick unholster
+		//----------------->
+		QUICK_UNHOLSTER		: !HAS_WEAPON +ATTACK_PRIMARY_BUTTON
+		//<-----------------
 	}
 }
+
+// Custom states by jv_map
+//----------------->
+state QUICK_UNHOLSTER
+{
+	entrycommands
+	{
+		useweaponclass grenade
+		useweaponclass pistol
+		useweaponclass rifle
+		useweaponclass smg
+		useweaponclass mg
+		useweaponclass heavy
+	}
+	
+	states
+	{
+		STAND : default
+	}
+}
+
+state ATTACK_SUPPORT
+{
+	movetype legs
+	
+	entrycommands
+	{
+		exec global/support/shell.scr fire_support_weapon
+	}
+	
+	states
+	{
+		STAND : KILLED
+		
+		// script should force me outta this when needed
+	}
+}
+
+// called by script only
+state ATTACK_SUPPORT_FIRE
+{
+	movetype legs
+	
+	action
+	{
+		mg_stand_fire : default
+	}
+	
+	states
+	{
+		STAND : KILLED
+		
+		// script should force me outta this when needed
+	}
+}
+//<-----------------
+// End of custom states by jv_map
 
 //==============================================================================
 //==============================================================================
@@ -433,7 +517,14 @@ state ATTACK_BAZOOKA_PRIMARY
 		STAND							: KILLED
 //		PAIN							: PAIN
 
-		STAND							: !ATTACK_PRIMARY ANIMDONE_TORSO 
+		// jv_map
+		// comment-out or remove this one
+		//----------------->
+		//STAND							: !ATTACK_PRIMARY ANIMDONE_TORSO
+		// then replace by
+		STAND							: ANIMDONE_TORSO
+		//<-----------------
+		
 		CHECK_PRIMARY_ATTACK_SEMIAUTO	: +ATTACK_PRIMARY IS_WEAPON_READY_TO_FIRE "mainhand"
 	}
 }
@@ -460,7 +551,14 @@ state ATTACK_SHOTGUN_PRIMARY
 		STAND							: KILLED
 //		PAIN							: PAIN
 
-		STAND							: !ATTACK_PRIMARY ANIMDONE_TORSO 
+		// jv_map
+		// comment-out or remove this one
+		//----------------->
+		//STAND							: !ATTACK_PRIMARY ANIMDONE_TORSO
+		// then replace by
+		STAND							: ANIMDONE_TORSO
+		//<-----------------
+		
 		CHECK_PRIMARY_ATTACK_SEMIAUTO	: +ATTACK_PRIMARY IS_WEAPON_READY_TO_FIRE "mainhand"
 	}
 }
@@ -486,6 +584,12 @@ state CHECK_SECONDARY_ATTACK
 //		PAIN					: PAIN
 	
 		STAND					: RELOAD
+		
+		// jv_map
+		// quick holstering of support weapon
+		//----------------->
+		HOLSTER_SUPPORT_WEAPON	: IS_WEAPONCLASS_ACTIVE "mainhand" "mg" IS_WEAPON_SEMIAUTO "mainhand"
+		//<-----------------
 		
 		ATTACK_PISTOL_SECONDARY	: IS_WEAPONCLASS_READY_TO_FIRE "mainhand" "pistol" "secondary"
 		
@@ -522,6 +626,23 @@ state CHECK_SECONDARY_ATTACK
 		STAND					: default
 	}
 }
+
+// quickly holsters the support gun
+// custom state by jv_map
+//----------------->
+state HOLSTER_SUPPORT_WEAPON
+{
+	entrycommands
+	{
+		deactivateweapon mainhand
+	}
+	
+	states
+	{
+		STAND : default
+	}
+}
+//<-----------------
 
 // Pistol whip for silent kills
 state ATTACK_PISTOL_SECONDARY
@@ -998,21 +1119,46 @@ state RAISE_WEAPON
 		exec global/weapontrade.scr
 		//<-----------
 
-		viewmodelanim pullout
+		// moved to script
+		// jv_map
+		//----------------->
+		//viewmodelanim pullout
+		exec global/squadmaker/shell.scr raise_weapon_general
+		//<-----------------
 
 		// just to make sure nothing funky's 
 		// attached that shouldn't be.
 		correctweaponattachments
+		
+		// jv_map
+		//----------------->
+		exec global/support/shell.scr raise_weapon
+		//<-----------------
 	}
 
 	states
 	{
 		RAISE_PISTOL		: IS_NEW_WEAPONCLASS "mainhand" "pistol"
+		
+		// split up rifle and sniper
+		// jv_map
+		//----------------->
+		RAISE_SNIPER		: IS_NEW_WEAPON "mainhand" "Springfield '03 Sniper"
+		RAISE_SNIPER		: IS_NEW_WEAPON "mainhand" "KAR98 - Sniper"
+		//<-----------------
+		
 		RAISE_RIFLE			: IS_NEW_WEAPONCLASS "mainhand" "rifle"
 		RAISE_GRENADE		: IS_NEW_WEAPONCLASS "mainhand" "grenade"
 		RAISE_SMG			: IS_NEW_WEAPONCLASS "mainhand" "smg"
 		RAISE_MG			: IS_NEW_WEAPONCLASS "mainhand" "mg"
 //		RAISE_PISTOL		: IS_NEW_WEAPONCLASS "mainhand" "item" // hold all items like a pistol for now
+
+		// split up heavy and shotgun
+		// jv_map
+		//----------------->
+		RAISE_SHOTTIE		: IS_NEW_WEAPON "mainhand" "Shotgun"
+		//<-----------------
+
 		RAISE_HEAVY			: IS_NEW_WEAPONCLASS "mainhand" "heavy"
 		RAISE_PAPERS		: IS_NEW_WEAPON "mainhand" "Papers"
 		
@@ -1038,9 +1184,48 @@ state RAISE_NOANIM
 //	}
 }
 
+// split up rifle and sniper
+// custom state by jv_map
+//----------------->
+state RAISE_SNIPER
+{
+	movetype legs
+	
+	entrycommands
+	{
+		exec global/squadmaker/shell.scr weapon_raise sniper
+	}
+	
+	action
+	{
+		rifle_crouch_raise	: POSITION_TYPE "crouching"
+		rifle_stand_raise	: default
+	}
+	
+	states
+	{
+		STAND	 			: KILLED
+		
+		STAND	 			: ANIMDONE_TORSO
+		
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT			: +NEW_WEAPON
+	}
+}
+//<-----------------
+// end of custom state by jv_map
+
 state RAISE_RIFLE
 {
 	movetype legs
+	
+	// jv_map
+	//----------------->
+	entrycommands
+	{
+		exec global/squadmaker/shell.scr weapon_raise rifle
+	}
+	//<-----------------
 	
 	action
 	{
@@ -1062,6 +1247,14 @@ state RAISE_RIFLE
 state RAISE_SMG
 {
 	movetype legs
+	
+	// jv_map
+	//----------------->
+	entrycommands
+	{
+		exec global/squadmaker/shell.scr weapon_raise smg
+	}
+	//<-----------------
 	
 	action
 	{
@@ -1091,7 +1284,7 @@ state RAISE_MG
 	//----------------->
 	entrycommands
 	{
-		// exec global/squadmaker/shell.scr weapon_raise mg
+		exec global/squadmaker/shell.scr weapon_raise mg
 		exec global/feho/cadenceBARactive.scr // feho cadence BAR
 		
 		//feho
@@ -1166,14 +1359,56 @@ state RAISE_GRENADE
 	}
 }
 
+// split up heavy and shottie
+// custom state by jv_map
+//----------------->
+state RAISE_SHOTTIE
+{
+	movetype legs
+	
+	entrycommands
+	{
+		exec global/squadmaker/shell.scr weapon_raise shotgun
+	}
+	
+	action
+	{
+		shotgun_crouch_raise	: POSITION_TYPE "crouching"
+		shotgun_stand_raise		: default
+	}
+	
+	states
+	{
+		STAND	 			: KILLED
+		
+		STAND	 			: ANIMDONE_TORSO
+		
+		// allow immediate switching to a different weapon instead
+		RAISE_ABORT			: +NEW_WEAPON
+	}
+}
+//<-----------------
+// end of custom state by jv_map
+
 state RAISE_HEAVY
 {
 	movetype legs
 	
+	// jv_map
+	//----------------->
+	entrycommands
+	{
+		exec global/squadmaker/shell.scr weapon_raise heavy
+	}
+	//<-----------------
+	
 	action
 	{
-		shotgun_crouch_raise	: POSITION_TYPE "crouching" IS_NEW_WEAPON "mainhand" "Shotgun"
-		shotgun_stand_raise		: IS_NEW_WEAPON "mainhand" "Shotgun"
+		// jv_map : remove these
+		//----------------->
+		//shotgun_crouch_raise	: POSITION_TYPE "crouching" IS_NEW_WEAPON "mainhand" "Shotgun"
+		//shotgun_stand_raise	: IS_NEW_WEAPON "mainhand" "Shotgun"
+		//<-----------------
 		
 		bazooka_crouch_raise	: POSITION_TYPE "crouching"
 		bazooka_stand_raise		: default
