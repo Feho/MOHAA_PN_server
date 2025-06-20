@@ -16,20 +16,18 @@ MOHAA's game logic is primarily controlled by `.scr` files. These are text-based
 
 1.  **File Structure:**
     *   Mods are packaged in `.pk3` files (which are essentially ZIP archives).
-    *   Scripts usually reside in a `scripts/` directory within the `.pk3`.
-        *   `scripts/global/`: For scripts intended to be accessible from any map or game mode.
-        *   `scripts/maps/mapname.scr`: For map-specific logic that runs automatically when `mapname` loads.
-        *   Custom subdirectories (e.g., `scripts/global/AIR/`) are common for organization.
-2.  **PakScape:** This is the standard tool for creating and managing `.pk3` files.
+    *   Scripts usually reside in `global/` or `maps/` directories within the `.pk3`.
+        *   `global/`: For scripts intended to be accessible from any map or game mode.
+        *   `maps/mapname.scr`: For map-specific logic that runs automatically when `mapname` loads.
+        *   Custom subdirectories (e.g., `global/<mod_name>/`) are common for organization.
 3.  **Loading Scripts:**
     *   Map-specific scripts (`maps/mapname.scr`) are loaded automatically.
     *   Global scripts can be loaded from `mapname.scr` or other scripts using `exec`, `thread`, or `waitthread`.
-    *   A common practice is to have a central "control" script (like `AIR_Control.scr`) that initializes various modules of your mod.
 
     ```scr
     // Example: in maps/dm/mohdm1.scr
     main:
-        exec global/xyz_Airborne_Mod/global/AIR_Control.scr::init // Initialize the Airborne mod
+        exec global/global/AIR_Control.scr::init // Initialize the Airborne mod
         // ... other map specific logic
     end
     ```
@@ -84,7 +82,7 @@ MOHAA's game logic is primarily controlled by `.scr` files. These are text-based
 *   **Booleans:** Typically represented by `1` (true) and `0` or `NIL` (false).
 *   **NIL:** Represents "nothing" or an uninitialized/non-existent value. Essential for checks: `if (local.my_var == NIL)`.
 *   **Entity References:** As described above.
-*   **Arrays:** See section 3.6.
+*   **Arrays:** See section 3.7.
 
 #### 3.4. Operators
 
@@ -143,7 +141,7 @@ MOHAA's game logic is primarily controlled by `.scr` files. These are text-based
             break
     }
     ```
-*   **`goto_label local.variable:` / `goto label`:** Used for jumping to labels, but can make code hard to follow. Generally, prefer structured loops and conditionals. (Example in `AIR_aa_lib.scr::goto_night` which is atypical).
+*   **`goto_label local.variable:` / `goto label`:** Used for jumping to labels, but can make code hard to follow. Generally, prefer structured loops and conditionals.
 
 #### 3.6. Functions and Threads
 
@@ -193,7 +191,6 @@ MOHAA script uses a flexible array system.
         ( "row2_col1" 1000 (0 0 0) )
     endArray
     ```
-    *Seen in `AIR_ammo.scr` and `AIR_gold.scr`.*
 *   **Accessing Elements:** 1-indexed.
     ```scr
     local.first_val = local.my_array[1] // "string_element"
@@ -211,7 +208,6 @@ MOHAA script uses a flexible array system.
     // To iterate (if keys are somewhat predictable or stored elsewhere):
     // This usually requires knowing the keys or having them in another array.
     ```
-    *The `AIR_Control.scr` heavily uses `level.AIR[...]` this way.*
 
 ### 4. Core MOHAA Modding Concepts
 
@@ -230,11 +226,11 @@ Everything in the game world is an entity.
         *   `$player[local.i] hurt local.damage_amount`
         *   `$player[local.i] give "models/weapons/colt45.tik"`
         *   `$player[local.i] tele local.destination_origin`
-        *   `$player[local.i] bind self.seat[local.f]` (seen in `AIR_Multi_UsePlane.scr`)
+        *   `$player[local.i] bind self.seat[local.f]`
         *   `$player[local.i] unbind`
 *   **World Entity:** `$world`
     *   Controls global map properties.
-    *   Example: `$world farplane_color (0.0 0.0 0.0)` from `AIR_aa_lib.scr`.
+    *   Example: `$world farplane_color (0.0 0.0 0.0)`.
 *   **Scripted Entities:**
     *   `script_model`: Visible model that can be scripted.
         *   `spawn script_model model "path/to/model.tik"`
@@ -251,7 +247,6 @@ Everything in the game world is an entity.
         *   `self waittill trigger`
         *   `parm.other` is the entity that touched it.
     *   `func_beam`: Creates a beam effect.
-        *   Used extensively in `AIR_aa_lib.scr::setup_spot`.
         *   Properties: `.origin`, `endpoint`, `alpha`, `endAlpha`, `scale`, `color`.
 *   **Entity Manipulation:**
     *   `spawn <classname_or_tik_path> <key1> <value1> <key2> <value2> ...`: The fundamental command for creating new entities.
@@ -303,12 +298,12 @@ CVARs store game settings and states.
 
 #### 4.4. HUD (Heads-Up Display)
 
-Scripts can draw custom elements on the player's HUD using `huddraw_` commands. This is done by the server sending `stufftext` commands to clients. `AIR_Control.scr` has a good example of drawing static mod info.
+Scripts can draw custom elements on the player's HUD using `huddraw_` commands.
 
 *   **Structure:**
     *   Each HUD element is identified by an `index` (0-255).
     *   You set properties for an index, then draw it.
-*   **Common Commands (sent via `stufftext` to a player):**
+*   **Common Commands:**
     *   `huddraw_font <index> <fontname>` (e.g., `facfont-20`, `verdana-14`)
     *   `huddraw_align <index> <horizontal_align> <vertical_align>` (e.g., `left top`, `center center`, `right bottom`)
     *   `huddraw_rect <index> <x> <y> <width> <height>` (position and optional size for text or shader box)
@@ -316,16 +311,15 @@ Scripts can draw custom elements on the player's HUD using `huddraw_` commands. 
     *   `huddraw_color <index> <r> <g> <b>` (0.0-1.0 for each component)
     *   `huddraw_alpha <index> <alpha>` (0.0 transparent to 1.0 opaque)
     *   `huddraw_shader <index> "path/to/shader_or_image.tga"` (for drawing images/boxes)
-*   **Clearing:** To remove a HUD element, set its alpha to 0: `huddraw_alpha <index> 0.0`. The `clear_hud` thread in `AIR_Control.scr` demonstrates this.
+*   **Clearing:** To remove a HUD element, set its alpha to 0: `huddraw_alpha <index> 0.0`.
 
 ```scr
-// Example from AIR_Control.scr (simplified, would be inside a loop sending to players)
-local.player stufftext ("huddraw_font 122 \"facfont-20\"")
-local.player stufftext ("huddraw_align 122 \"left\" \"bottom\"")
-local.player stufftext ("huddraw_rect 122 5 -15 100 100")
-local.player stufftext ("huddraw_string 122 (\"AIRborne Mod \" + level.AIR[\"version\"])")
-local.player stufftext ("huddraw_color 122 0.400 0.400 1.000")
-local.player stufftext ("huddraw_alpha 122 1.000")
+huddraw_font 122 "facfont-20"
+huddraw_align 122 "left" "bottom"
+huddraw_rect 122 5 -15 100 100
+huddraw_string 122 ("AIRborne Mod " + level.AIR["version"])
+huddraw_color 122 0.400 0.400 1.000
+huddraw_alpha 122 1.000
 ```
 
 #### 4.5. Sound
@@ -334,7 +328,7 @@ local.player stufftext ("huddraw_alpha 122 1.000")
 *   **`loopsound <sound_alias_or_path>`:** Loops a sound at the entity's origin.
 *   **`stoploopsound`:** Stops a looping sound on an entity.
 *   **`ScriptMaster`:** Used for aliasing sounds and setting their properties (volume, min/max distance, channel). This is crucial for managing sounds effectively, especially for custom sounds not defined in the game's default sound alias files.
-    *   *Example from `AIR_aa_lib.scr::soundz`*:
+    *   *Example*:
         ```scr
         local.master = spawn ScriptMaster
         local.master aliascache air_exp1 sound/weapons/explo/Explo_Bazooka1.wav soundparms 0.6 0.1 0.8 0.4 200 1100 "local" loaded maps "m dm moh obj train "
@@ -363,52 +357,13 @@ local.player stufftext ("huddraw_alpha 122 1.000")
 
 Breaking your mod into multiple script files makes it manageable.
 *   **Utility Scripts:** Create scripts for common tasks (e.g., `strings.scr` for string manipulation, `maths.scr` for math functions).
-*   **Main Library Files:** Group related functionalities (e.g., `AIR_aa_lib.scr` for anti-aircraft features, `AIR_clipping_lib.scr` for map clipping).
-*   **Control Scripts:** A central script (like `AIR_Control.scr`) can initialize and manage different modules of your mod.
-    *   It often uses `level.AIR[...]` as a namespaced way to store settings and states.
-    *   It can register commands that can be called via RCON or in-game chat.
+*   **Main Library Files:** Group related functionalities (e.g., `modname_features_.scr` for mod features).
 
 #### 5.2. State Management
 
 Keeping track of the game's or an entity's state is crucial.
-*   **`level.` variables:** For global game states (e.g., `level.AIR_library_loaded` in `AIR_library.scr`).
-*   **`self.` variables:** For entity-specific states (e.g., `self.seats_taken` in `AIR_Multi_UsePlane.scr`).
-*   **State Files (from examples):** The `global/states/` directory in the provided code suggests a system where player actions trigger scripts that update player-specific state variables (e.g., `self.usingScope`, `self.status`).
-    *   `player_spawn.scr`: Sets initial state when a player spawns.
-    *   `get_weapon.scr`: Updates `self.current_weapon` when the player changes weapons.
-    *   This is a common pattern for tracking player status without relying solely on engine events.
-
-#### 5.3. Custom Game Logic Examples (from provided files)
-
-*   **AA Emplacements (`AIR_aa_lib.scr`):**
-    *   `setup_spot`: Spawns `func_beam` entities to create visual searchlight effects.
-    *   `spot_behaviour_default`: Controls the on/off blinking of these beams.
-    *   `skyexplo_default`: Creates random flak explosions in the sky with sound and radius damage.
-    *   `projectilegen`: Spawns an MG42 (`statweapons/mg42_gun.tik`), hides it, and makes it fire at predefined targets (`local.spots`). This is a clever way to simulate AA fire without visible gunners.
-*   **Player Location System (`AIR_library.scr`):**
-    *   Defines `level.AIR_landmark` arrays for specific maps, containing origin points and names for map locations.
-    *   `findplayer` thread: Takes an origin and determines the "named location" by finding the closest landmark and checking Z-height ranges. This is a purely scripted location system.
-*   **Clipping and Spawn Blocking (`AIR_clipping_lib.scr`, `AIR_spawnblock_lib.scr`):**
-    *   These scripts spawn `script_origin` entities and use `setsize` to define invisible collision boxes.
-    *   `clip_m2l1`: Hardcodes coordinates and sizes for clipping brushes on map m2l1. `enable_clips` then makes them `solid`.
-    *   `spawn_block_trigger`: Creates a small trigger that becomes solid after a player leaves it, preventing others from spawning too close.
-*   **Paradrops and Usable Planes (`AIR_ParaDrop.scr`, `AIR_Multi_UsePlane.scr`):**
-    *   `AIR_ParaDrop.scr::create_drop`: Spawns icons and a trigger. When used, teleports the player to a destination (`local.dest`) and simulates a parachute descent by manipulating `local.player.velocity` and attaching a parachute model.
-    *   `AIR_Multi_UsePlane.scr::setup`: Spawns a trigger, plane icon, and the actual plane model (initially hidden). It also creates "seat" `script_origin` entities parented to the plane.
-        *   `triggered`: When a player uses the trigger, they are bound to an available seat. The script then waits for more players or a timeout.
-        *   `wait_for_departure`: Once ready, the plane model is shown and made to `flypath` along predefined path nodes. Players can then "jump" (similar to paradrop logic).
-*   **Admin and Control System (`AIR_Control.scr`):**
-    *   A central hub for the "Airborne Mod."
-    *   `init`: Loads settings from `AIR_Settings.scr`, registers commands, initializes message systems.
-    *   `add_tocvar` / `get_fromcvar`: A system for saving/loading mod settings to/from a server CVAR (`AIR_sv`), allowing some persistence.
-    *   `apply_setting` / `get_setting`: Functions for other scripts to read and modify global mod settings stored in `level.AIR[...]`.
-    *   `register_cmd` / `cmd_handler`: A system to define custom server commands (e.g., `rcon AIR_cmd balance 1`) that can execute script functions.
-*   **Anti-Camping (`AIR_AntiCamp.scr`):**
-    *   `camper_buster`: A thread run on each player. It periodically checks if the player has stayed within `local.camper_radius` of `local.origin` for longer than `local.camper_time`.
-    *   If camping is detected, various punishments can be applied based on `local.camper_punish`.
-*   **Game Modes (`ctf.scr`, `cnh.scr`, `osok.scr`, `Tow.scr`):**
-    *   These files implement full custom game modes: Capture The Flag, Capture and Hold, One Shot One Kill, and Tug-of-War.
-    *   They demonstrate complex state management, objective handling, team scoring, custom HUDs, and win conditions. For example, `ctf.scr` manages flag entities (`level.alliesflag`, `level.axisflag`), their states (`atbase`, `ground`, `playernameplayer`), and player interactions for capturing and returning flags.
+*   **`level.` variables:** For global game states (e.g., `level.modname_loaded`).
+*   **`self.` variables:** For entity-specific states (e.g., `self.seats_taken`).
 
 ### 6. Debugging and Troubleshooting
 
@@ -453,4 +408,4 @@ Keeping track of the game's or an entity's state is crucial.
 
 ### 8. Conclusion
 
-MOHAA scripting offers a powerful way to customize the game. By understanding the core concepts of entities, threads, variables, and control flow, and by studying existing mods like "Airborne" and "Admin-Pro," you can create a wide array of new gameplay experiences. Remember to start simple, test frequently, and use the server console for debugging. Good luck, and happy modding!
+MOHAA scripting offers a powerful way to customize the game. By understanding the core concepts of entities, threads, variables, and control flow, and by studying existing mods, you can create a wide array of new gameplay experiences. Remember to start simple, test frequently, and use the server console for debugging. Good luck, and happy modding!
