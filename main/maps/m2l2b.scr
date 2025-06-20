@@ -4,7 +4,7 @@
 
 
 main: 
-	local.timelimit = 1
+	local.timelimit = 5
 	setcvar "timelimit" local.timelimit
 	
 	local.min_players = (getcvar "sv_minplayers")
@@ -20,7 +20,6 @@ main:
 	}
 	
 	wait (local.timelimit * 60 - 5)
-	println("local.min_players: " + local.min_players)
 	setcvar "sv_minplayers" local.min_players
 end
 
