@@ -1,0 +1,488 @@
+
+//m4l2
+//map conversion by
+//Viper
+
+main:
+
+removeclass actor
+
+setcvar "g_gametype" "2"
+
+setcvar "g_obj_alliedtext1" "Diverting the Enemy"
+setcvar "g_obj_alliedtext2" " "
+setcvar "g_obj_alliedtext3" "m4l2 conversion"
+setcvar "g_obj_axistext1" "by"
+setcvar "g_obj_axistext2" " "
+setcvar "g_obj_axistext3" "<TWL>ViPER"
+
+setcvar "g_scoreboardpic" "M4L2"
+
+/////////////////
+
+local.allies = spawn info_player_allied
+local.allies.angle = 148
+local.allies.origin = ( -2651 3813 107 )
+
+local.allies = spawn info_player_allied
+local.allies.angle = 89
+local.allies.origin = ( -3567 -2000 82 )
+
+local.allies = spawn info_player_allied
+local.allies.angle = 165
+local.allies.origin = ( -1812 3393 82 )
+
+local.allies = spawn info_player_allied
+local.allies.angle = -90
+local.allies.origin = ( -5765 4781 402 )
+
+local.allies = spawn info_player_allied
+local.allies.angle = 142
+local.allies.origin = ( -4818 2709 423 )
+
+local.allies = spawn info_player_allied
+local.allies.angle = -140
+local.allies.origin = ( 2534 1758 171 )
+
+local.allies = spawn info_player_allied
+local.allies.angle = -160
+local.allies.origin = ( 2439 1594 164 )
+
+////////////////// 
+
+local.axis = spawn info_player_axis
+local.axis.angle = 111
+local.axis.origin = ( -4298 1267 109 )
+
+local.axis = spawn info_player_axis
+local.axis.angle = 25
+local.axis.origin = ( -7346 -2424 82 )
+
+local.axis = spawn info_player_axis
+local.axis.angle = -160
+local.axis.origin = ( -6161 2953 410 )
+
+local.axis = spawn info_player_axis
+local.axis.angle = 139
+local.axis.origin = ( -3918 3500 82 )
+
+local.axis = spawn info_player_axis
+local.axis.angle = 160
+local.axis.origin = ( 290 839 98 )
+
+local.axis = spawn info_player_axis
+local.axis.angle = 61
+local.axis.origin = ( -6017 1147 424 )
+
+local.axis = spawn info_player_axis
+local.axis.angle = 61
+local.axis.origin = ( -4866 2703 419 )
+
+////////////FFA
+//local.deathmatch = spawn info_player_deathmatch origin "3453 3199 262" angle -110
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 148
+local.deathmatch.origin = ( -2651 3813 107 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 89
+local.deathmatch.origin = ( -3567 -2000 82 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 165
+local.deathmatch.origin = ( -1812 3393 82 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = -90
+local.deathmatch.origin = ( -5765 4781 402 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 142
+local.deathmatch.origin = ( -4818 2709 423 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = -140
+local.deathmatch.origin = ( 2534 1758 171 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = -160
+local.deathmatch.origin = ( 2439 1594 164 )
+
+////////////////// 
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 111
+local.deathmatch.origin = ( -4298 1267 109 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 25
+local.deathmatch.origin = ( -7346 -2424 82 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = -160
+local.deathmatch.origin = ( -6161 2953 410 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 139
+local.deathmatch.origin = ( -3918 3500 82 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 160
+local.deathmatch.origin = ( 290 839 98 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 61
+local.deathmatch.origin = ( -6017 1147 424 )
+
+local.deathmatch = spawn info_player_deathmatch
+local.deathmatch.angle = 61
+local.deathmatch.origin = ( -4866 2703 419 )
+
+
+$kar98sniper remove
+$t162 remove
+$t163 remove
+$trainswitch1_pulsating remove
+// $trainswitch1 remove
+$leftgate01 remove
+$rightgate01 remove
+$engine remove
+$car01 remove
+$car02 remove
+$car03 remove
+$car04 remove
+$car05 remove
+$car06 remove
+$trainkill_trigger nottriggerable
+$bunkerdoor1 unlock
+$bunkerdoor2 unlock
+$trainclip remove
+$getawaytruckclip remove
+
+$elevator_switch remove
+
+	// call additional stuff for playing this map round based is needed
+	if(level.roundbased)
+		thread roundbasedthread
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+	
+// exec global/spotlight.scr
+
+level waittill prespawn
+
+exec global/loadout.scr "maps/m4l2.scr"
+exec global/DMprecache.scr
+exec global/jv_sound.scr
+exec global/door_locked.scr
+exec global/shutter.scr
+
+exec global/ambient.scr m4l1
+
+level.script = maps/m4l2.scr
+
+thread global/exploder.scr::main
+thread global/door_locked.scr::lock
+thread global/barrel.scr::explosive_barrel
+
+      	if(int(getcvar "hold") != 0)  
+        {
+	//setup
+	local.o = ( -2015 1160 70 ) // your trigger origin -2085 1160 120
+	local.sa = ( -659 -242 50 )  // your trigger setsize minus -589 -242 -1 
+	local.sb = ( 510 242 60 )  // your trigger setsize plus 589 242 50
+	local.mes[1] = "Capture and hold the Bunker" //global message 1
+	local.mes[2] = "the Bunker is west of the train tunnel" //global message 2
+	local.mes[3] = "Bunker" // "xteam occupies the" local.mes[3]
+	local.mes[4] = "Hold the Bunker"  //objective and title - "Capture and" local.mes[4]
+	local.mes[5] = "by <TWL>ViPER"  //for scoreboard
+	local.mes[6] = "Hold the Bunker" //abv. title for hud
+	local.mes[7] = "at tunnel" //for hud
+	local.tp[1] = 15  //time for point - hold
+	local.tp[2] = 12   //time for point - point mode    (local.tp[4]*local.tp[2]must exceed 60 sec)
+	local.tp[3] = 90  //time for win - imperative mode (minimum 60 sec)
+	local.tp[4] = 20   //points for win - point mode
+	local.tp[5] = 18  //timelimit for point mode (mins//.1 = off)
+	local.tp[6] = 22  //timelimit for imperative mode (mins//.1 = off)
+	local.tp[7] = 15  //timelimit for hold (mins)
+
+	local.cinversion = 15 //reset default
+
+	setcvar cinversion local.cinversion
+
+	}                                    //           Thats it!
+	
+	$world farplane 2000
+	thread fog
+	
+	////////////////////////////
+	level waittill spawn ///////
+	////////////////////////////
+
+	level.squadmaker_areaname = "in the station"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+	
+      	if(int(getcvar "hold") != 0)   
+        {
+	exec global/strategic.scr local.o local.sa local.sb local.mes local.tp
+	thread fix
+	}
+
+	exec global/Strategic_common.scr
+
+local.origin = $spotguy01.origin
+local.angles = $spotguy01.angles
+
+// exec global/spotlight.scr::corona $camptruck "light left" 	// Turn on camptruck coronas
+// exec global/spotlight.scr::corona $camptruck "light right"
+
+$fakecamptruck_spot.origin = ( 7226 1943 -323 )
+
+$radio1 loopsound m4l2_radio
+$radio2 loopsound m4l2_radio
+$radio3 loopsound m4l2_radio
+
+thread trigger_maker_use ( -5454 2089 400 ) ( -5400 2089 350 ) //door
+thread trigger_maker_use ( -5408 2089 400 ) ( -5465 2089 350 ) //door
+thread elevatorprep
+thread elevator_loop
+thread addstuff
+
+end
+
+fog:
+
+	// Decrease gradually the fog during 8 minute
+	local.start_dist = 2000
+	local.end_dist = 13000
+	local.duration = 480 // 8 minutes
+	local.start_time = level.time
+
+	local.current_dist = local.start_dist
+	
+	while (level.time < (local.start_time + local.duration))
+	{
+		local.elapsed_time = level.time - local.start_time
+		// Ensure elapsed_time doesn't exceed duration due to potential timing issues
+		if (local.elapsed_time > local.duration)
+			local.elapsed_time = local.duration
+
+		local.fraction = local.elapsed_time / local.duration
+		local.current_dist = local.start_dist + ((local.end_dist - local.start_dist) * local.fraction)
+		
+		$world farplane local.current_dist
+
+		wait 1 // Update every frame for smoothness
+	}
+	
+	// Ensure the final value is set precisely at the end
+	$world farplane local.end_dist
+end
+
+fix:
+	local.static = spawn script_model
+	local.static model "static/indycrate.tik"
+	local.static.origin = ( -1525 928 114 )
+	local.static.angles = (0 120 0)
+	local.static solid
+	local.static hide
+end
+
+//-----------------------------------------------------------------------------
+
+roundbasedthread:
+
+	// Can specify different scoreboard messages for round based games here.
+
+	level waitTill prespawn
+
+	level waittill spawn
+
+	// set the parameters for this round based match
+	level.dmrespawning = 0 // 1 or 0
+	level.dmroundlimit = 5 // round time limit in minutes
+	level.clockside = kills // set to axis, allies, kills, or draw
+
+	level waittill roundstart
+
+end
+
+trigger_maker_use local.location local.dest: 
+  
+   local.marker = spawn script_model 
+   local.marker model "static/dummy.tik" 
+   local.marker.origin = (local.location) 
+
+   local.trig = spawn trigger_use 
+   local.trig.origin = (local.location) 
+   local.trig setsize ( -1 -20 -20 ) ( 1 20 20 ) 
+   thread teleport2 local.trig local.dest 
+
+end 
+
+teleport2 local.trig local.dest: 
+
+   local.trig waittill trigger
+   local.player = parm.other 
+   local.player tele (local.dest)
+   ///   iprintlnbold_noloc "exit !!"
+   ///   local.trig message "exit !!"
+   local.trig playsound door_wood_close_stop3
+   thread teleport2 local.trig local.dest 
+
+end
+
+addstuff:
+
+	local.fence = spawn script_model
+	local.fence model "static/barbwire_two_post.tik"
+	local.fence.origin = ( 2849 1931 136 )
+	local.fence.angles = ( 0 -150 0 )
+
+	local.fence = spawn script_model
+	local.fence model "static/barbwire_two_post.tik"
+	local.fence.origin = ( 2910 1818 140 )
+	local.fence.angles = ( 0 -150 0 )
+
+	local.fence = spawn script_model
+	local.fence model "static/barbwire_two_post.tik"
+	local.fence.origin = ( 2970 1694 145 )
+	local.fence.angles = ( 0 -150 0 )
+
+	local.fence = spawn script_model
+	local.fence model "static/barbwire_two_post.tik"
+	local.fence.origin = ( 3030 1581 150 )
+	local.fence.angles = ( 0 -150 0 )
+
+	local.fence = spawn script_model
+	local.fence model "static/barbwire_two_post.tik"
+	local.fence.origin = ( 3090 1444 155 )
+	local.fence.angles = ( 0 -150 0 )
+
+/////////////////////////DOOR
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( -5426 2080 385 )
+	local.static.angles = ( 0 90 90 )
+	local.static.scale = 4
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( -5424 2080 385 )
+	local.static.angles = ( 0 90 90 )
+	local.static.scale = 4
+
+	local.static = spawn script_model 
+	local.static model "static/cratelid2.tik" 
+	local.static.origin = ( -5442 2080 385 )
+	local.static.angles = ( 0 90 90 )
+	local.static.scale = 4
+
+
+end
+
+//*********************************************
+// Elevator setup
+//*********************************************
+elevatorprep:
+//*** Gate Position
+	$elevator_gate_1 movedown 70
+//	$elevator_gate_1 waitmove
+	wait 1
+	
+//*** Switch Position
+//	$elevator_switch bind $elevator_cab
+//	$elevator_switch anim off
+	
+//*** Elevator Speeds
+	$elevator_cab time 4
+	$elevator_gate_1 time 0.75
+	$elevator_gate_2 time 0.75
+	
+//*** Elevator Clips
+	$clip1 notsolid
+	$clip2 notsolid
+end
+
+//*********************************************
+// Start looping electric hum sounds
+//*********************************************
+start_electrichums:
+	for (local.i = 1 ; local.i <= $electrichum.size ; local.i ++)
+	{
+		$electrichum[local.i] loopsound electrical_hum2
+	}
+end
+
+//*********************************************
+// Elevator move down
+//*********************************************
+elevator_loop:
+
+		
+	$elevator_movedown_trigger nottriggerable
+//	$elevator_moveup_trigger triggerable
+//	$clip1 solid
+//	$elevator_switch anim turn
+//	$elevator_switch anim waittill animdone
+//	$elevator_switch anim on
+	
+////		$elevator_gate_1 playsound elevator_gate
+		$elevator_gate_1 moveup 70
+		$elevator_gate_1 waitmove
+	wait .5
+////		$elevator_cab playsound elevator_start wait
+		wait .5
+////		$elevator_cab playsound elevator_run
+		$elevator_cab moveto $elevator_way2
+		$elevator_cab waitmove
+	wait .5
+////		$elevator_gate_2 playsound elevator_gate
+		$elevator_gate_2 movedown 70
+		$elevator_gate_2 waitmove
+	
+	$clip2 notsolid
+//	$elevator_switch anim off
+	wait 4
+
+//*********************************************
+// Elevator move up
+//*********************************************
+
+	$elevator_moveup_trigger nottriggerable
+//	$elevator_movedown_trigger triggerable
+//	$clip2 solid
+//	$elevator_switch anim turn
+//	$elevator_switch anim waittill animdone
+//	$elevator_switch anim on
+		
+////		$elevator_gate_2 playsound elevator_gate
+		$elevator_gate_2 moveup 70
+		$elevator_gate_2 waitmove
+	wait .5	
+////		$elevator_cab playsound elevator_start wait
+		wait .5
+////		$elevator_cab playsound elevator_run
+		$elevator_cab moveto $elevator_way1
+		$elevator_cab waitmove
+	wait .5
+////		$elevator_gate_1 playsound elevator_gate
+		$elevator_gate_1 movedown 70
+		$elevator_gate_1 waitmove
+	
+	$clip1 notsolid
+//	$elevator_switch anim off
+	wait 4
+
+goto elevator_loop
+
+
+///////////////////////////////////////////////////////////////////////
