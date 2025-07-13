@@ -1,0 +1,365 @@
+// OMAHA BEACH OBJECTIVE DM
+// BY ADAM "SENN" BELLEFEUIL
+
+main:
+
+	setcvar "g_gametype" "3"
+	setcvar "timelimit" "15"
+	setcvar "fraglimit" "0"
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
+	level waittill prespawn
+
+	exec global/DMprecache.scr
+
+	thread global/minefield.scr::minefield_setup
+
+	$spawn_allied2 disablespawn
+	$spawn_allied3 disablespawn
+
+	$spawn_axis3 disablespawn
+	$spawn_axis4 disablespawn
+
+	$bangalore_nopulse_left hide
+	$bangalore_nopulse_center hide
+	$bangalore_nopulse_right hide
+
+	$world northyaw 270
+
+	$world farplane 7500
+	$world farplane_color (0.675 0.663 0.651)
+
+	level.script = maps/obj/obj_team5.scr
+	exec global/ambient.scr obj_team5
+
+	setcvar "g_obj_alliedtext1" "- Breach the shingle" 
+	setcvar "g_obj_alliedtext2" "- Destroy two 15cm"
+	setcvar "g_obj_alliedtext3" "cannons"
+	setcvar "g_obj_axistext1" "- Prevent Allies from"
+	setcvar "g_obj_axistext2" "taking the beach"
+	setcvar "g_obj_axistext3" ""
+	setcvar "g_scoreboardpic" "objdm5"
+
+	// start random fog
+	exec global/random_fog.scr
+
+	level waittill spawn
+
+	level.squadmaker_areaname = "on Omaha Beach"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	level.bomb_damage = 200
+	level.bomb_explosion_radius = 640
+	level.defusing_team = "axis"
+	level.planting_team = "allies"
+	level.targets_to_destroy = 2
+	level.dmrespawning = 1 // 1 or 0
+	level.dmroundlimit = 15 // round time limit in minutes
+	level.clockside = axis // set to axis, allies, kills, or draw
+
+	level waittill roundstart
+
+	$88mm_explosive1 thread global/obj_dm.scr::bomb_thinker
+	$88mm_explosive2 thread global/obj_dm.scr::bomb_thinker
+
+	$88mm_explosive1 thread axis_win_timer
+	thread allies_win_bomb
+
+	thread bomb1_exploded $88mm_explosive1
+	thread bomb2_exploded $88mm_explosive2
+
+	thread random_explode_setup
+
+	thread shingle_setup
+
+end
+
+
+//*** --------------------------------------------
+//*** "Axis Victory"
+//*** --------------------------------------------
+
+axis_win_timer:
+
+	level waittill axiswin
+
+end
+
+//*** --------------------------------------------
+//*** "Allied Victory"
+//*** --------------------------------------------
+
+allies_win_bomb:
+
+	while(level.targets_destroyed < level.targets_to_destroy)
+		waitframe
+	
+	teamwin allies
+end
+
+
+//*** --------------------------------------------
+//*** "Bomb 1 Exploded"
+//*** --------------------------------------------
+
+bomb1_exploded local.bomb1:
+
+	while (local.bomb1.exploded != 1)
+
+		wait .1
+
+		iprintlnbold "Allies have destroyed the Western Cannon!"
+
+		$spawn_axis2 disablespawn
+		$spawn_axis3 enablespawn
+
+end
+
+
+//*** --------------------------------------------
+//*** "Bomb 2 Exploded"
+//*** --------------------------------------------
+
+bomb2_exploded local.bomb2:
+
+	while (local.bomb2.exploded != 1)
+
+		wait .1	
+
+		iprintlnbold "Allies have destroyed the Eastern Cannon!"
+
+		$spawn_axis2 disablespawn
+		$spawn_axis4 enablespawn
+
+end
+
+
+//*** --------------------------------------------
+//*** "Shingle"
+//*** --------------------------------------------
+
+shingle_setup:
+
+	thread shingle_left_start
+	thread shingle_center_start
+	thread shingle_right_start
+
+end
+
+shingle_left_start:
+
+	$bangalore_trigger_left waittill trigger
+
+	local.player = parm.other
+
+	if (local.player.dmteam != axis)
+	{
+		goto shingle_left
+	}
+
+end
+
+shingle_left:
+
+	$bangalore_left playsound plantbomb1
+	$bangalore_left remove
+	$bangalore_nopulse_left show
+
+	wait 8
+	
+	$bangalore_explosion_left1 anim start
+	$bangalore_explosion_left2 anim start
+	radiusdamage $bangalore_explosion_left2.origin 640 384
+	$bangalore_nopulse_left remove
+	$barbwire_clip_left remove
+	$barbwire_collision_left remove
+	$barbwire_left remove
+	$spawn_axis1 disablespawn
+
+end
+
+shingle_center_start:
+
+	$bangalore_trigger_center waittill trigger
+
+	local.player = parm.other
+
+	if (local.player.dmteam != axis)
+	{
+		goto shingle_center
+	}
+
+end
+
+shingle_center:
+
+	$bangalore_center playsound plantbomb1
+	$bangalore_center remove
+	$bangalore_nopulse_center show
+
+	wait 8
+
+	$bangalore_explosion_center1 anim start
+	$bangalore_explosion_center2 anim start
+	radiusdamage $bangalore_nopulse_center.origin 640 384
+	$bangalore_nopulse_center remove
+	$barbwire_clip_center remove
+	$barbwire_collision_center remove
+	$barbwire_center remove
+	$spawn_axis1 disablespawn
+	$spawn_allied1 disablespawn
+	$spawn_allied2 enablespawn
+
+end
+
+shingle_right_start:
+
+	$bangalore_trigger_right waittill trigger
+
+	local.player = parm.other
+
+	if (local.player.dmteam != axis)
+	{
+		goto shingle_right
+	}
+
+end
+
+shingle_right:
+
+	$bangalore_right playsound plantbomb1
+	$bangalore_right remove
+	$bangalore_nopulse_right show
+
+	wait 8
+	
+	$bangalore_explosion_right1 anim start
+	$bangalore_explosion_right2 anim start
+	radiusdamage $bangalore_nopulse_right.origin 640 384
+	$bangalore_nopulse_right remove
+	$barbwire_clip_right remove
+	$barbwire_collision_right remove
+	$barbwire_right remove
+	$spawn_axis1 disablespawn
+	$spawn_axis2 enablespawn
+	$spawn_allied1 disablespawn
+	$spawn_allied3 enablespawn
+
+end
+
+
+//*** --------------------------------------------
+//*** "Random Beach Explosions"
+//*** --------------------------------------------
+
+random_explode_setup:
+
+	thread random_explode1
+	thread random_explode2
+	thread random_explode3
+	thread random_explode4
+	thread random_explode5
+	thread random_explode6
+	thread random_explode7
+
+end
+
+random_explode1:
+
+	wait (randomfloat 13 + 23)
+
+	$random_explode1_origin playsound arty_leadinmp
+
+	wait 1
+
+	$random_explode1 anim start
+	radiusdamage $random_explode1_origin 256 384
+
+	goto random_explode1
+
+random_explode2:
+
+	wait (randomfloat 7 + 20)
+
+	$random_explode2_origin playsound arty_leadinmp
+
+	wait 1
+
+	$random_explode2 anim start
+	radiusdamage $random_explode2_origin 256 384
+
+	goto random_explode2
+
+random_explode3:
+
+	wait (randomfloat 9 + 18)
+
+	$random_explode3_origin playsound arty_leadinmp
+
+	wait 1
+
+	$random_explode3 anim start
+	radiusdamage $random_explode3_origin 256 384
+
+	goto random_explode3
+
+random_explode4:
+
+	wait (randomfloat 12 + 18)
+
+	$random_explode4_origin playsound arty_leadinmp
+
+	wait 1
+
+	$random_explode4 anim start
+	radiusdamage $random_explode4_origin 256 384
+
+	goto random_explode4
+
+random_explode5:
+
+	wait (randomfloat 15 + 22)
+
+	$random_explode5_origin playsound arty_leadinmp
+
+	wait 1
+
+	$random_explode5 anim start
+	radiusdamage $random_explode5_origin 256 384
+
+	goto random_explode5
+
+random_explode6:
+
+	wait (randomfloat 8 + 15)
+
+	$random_explode6_origin playsound arty_leadinmp
+
+	wait 1
+
+	$random_explode6 anim start
+	radiusdamage $random_explode6_origin 256 384
+
+	goto random_explode6
+
+random_explode7:
+
+	wait (randomfloat 10 + 24)
+
+	$random_explode7_origin playsound arty_leadinmp
+
+	wait 1
+
+	$random_explode7 anim start
+	radiusdamage $random_explode7_origin 256 384
+
+	goto random_explode7
+
+end
