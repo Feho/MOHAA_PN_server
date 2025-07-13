@@ -13,9 +13,9 @@ event_player_spawned:
         local.wpn = waitthread global/feho/utils.scr::get_weapon self
         local.wpnclass = waitthread global/feho/utils.scr::get_wpnclass local.wpn
         
-        if (local.wpnclass == "heavy")
+        if (local.wpnclass == "heavy" || local.wpnclass == "shotgun")
         {
-            // Give the bot a Thompson or MP40 to replace the Bazooka.
+            // Give the bot a Thompson or an MP40.
             self takeall
 
             if (self.dmteam == "axis")
@@ -27,7 +27,7 @@ event_player_spawned:
         wait 1
         if (!self) end
         
-        if (local.wpnclass != "shotgun" && randomint(100) < 90)
+        if (randomint(100) < 90)
         {
             // Increase the spread of the weapon, so that the bots are not too accurate.
             self weaponcommand dual dmbulletspread 40 40 70 70
