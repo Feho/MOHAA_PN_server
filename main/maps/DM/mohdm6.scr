@@ -27,6 +27,9 @@ main:
 	if(level.roundbased)
 		thread roundbasedthread
 
+	// start random fog
+	exec global/random_fog.scr
+
 	level waittill prespawn
 
 	// exec global/ladderspawn.scr ( 1078 590 304 ) 296 wood 90

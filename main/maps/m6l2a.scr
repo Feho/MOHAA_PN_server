@@ -1,12 +1,8 @@
 //
 // M6L2A - The Communications Blackout
-
 //  
 // 
 // 
-
-
-
 
 main: 
 
@@ -59,7 +55,7 @@ tdmtype:
 	setcvar "g_gametype" "2"
 	setcvar "g_gametypestring" "Team-Match"
 	// load support gun sounds
-	// waitthread global/support/support.scr::soundcache
+	waitthread global/support/support.scr::soundcache
 
 	waitthread tdm_spawns
 	
@@ -73,6 +69,9 @@ tdmtype:
 
 	$world farplane 4000
 	$world farplane_color ( .1 .1 .12 )
+	
+	// start random fog
+	exec global/random_fog.scr
 
 	exec global/door_locked.scr
 	exec global/ambient.scr m6l2a
@@ -251,14 +250,14 @@ tdmtype:
 	level waittill spawn
 ////////////////////////	
 	
-	// level.squadmaker_areaname 	= "in the village"
-	// level.squadmaker_config		= "winterwar"
+	level.squadmaker_areaname 	= "in the village"
+	level.squadmaker_config		= "winterwar"
 
-	// start support gunner scripts
-	// exec global/support/support.scr
+	start support gunner scripts
+	exec global/support/support.scr
 
-	// start squadmaker
-	// exec global/squadmaker/squadmaker.scr
+	start squadmaker
+	exec global/squadmaker/squadmaker.scr
 
 	// Spotlight
 	// local.s1 = spawn script_model model miscobj/searchlightbase.tik origin ( -3545 -1007 453)

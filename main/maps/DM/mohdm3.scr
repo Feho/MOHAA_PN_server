@@ -41,10 +41,10 @@ main:
 	// exec global/TNT_DETONATORS.scr::DETONATOR ( 3374.76 -1421.59 65.13 ) ( 0 0 0 )
 		
 	// no fog
-	$world farplane_color ( 0 0.0.5 0.092 )
 	$world farplane 18000
 
-	level.squad_mod = 0
+	// start random fog
+	exec global/random_fog.scr
 
 	//*** Precache Dm Stuff
 	exec global/DMprecache.scr

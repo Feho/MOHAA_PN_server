@@ -67,8 +67,6 @@ local.axis2.angle = 10
 	level waittill prespawn
 	//////////////////////////
 
-	level.squad_mod = 0
-
 	//*** Precache Dm Stuff
 	exec global/DMprecache.scr
 
@@ -76,6 +74,9 @@ local.axis2.angle = 10
 	exec global/ambient.scr obj_team1
 
 	$world farplane 9000
+
+	// start random fog
+	exec global/random_fog.scr
 
 	// exec global/DETONATOR_SOUND.scr
 	// exec global/RB_DETONATORS.scr::DETONATOR ( 2312.07 -430.78 -200 ) ( 0 0 0 )

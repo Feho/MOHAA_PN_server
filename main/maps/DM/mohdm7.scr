@@ -40,7 +40,10 @@ main:
 
 	thread global/AIR_gold.scr::treasure_spawn local.info
 	
-		level waittill spawn
+	// start random fog
+	exec global/random_fog.scr
+
+	level waittill spawn
 
 	level.squadmaker_areaname = "in North Afrika"
 

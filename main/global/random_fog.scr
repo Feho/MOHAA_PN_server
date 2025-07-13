@@ -1,0 +1,105 @@
+// global/random_fog.scr
+//
+// This script provides functionality for creating random fog effects on maps.
+// To use it, simply execute this script from your map's .scr file.
+//
+// Example: exec global/random_fog.scr
+
+main:
+	local.enabled = randomint(2)
+
+	if (level.random_fog_running || !local.enabled) end
+	level.random_fog_running = 1
+
+	// Start a thread that will periodically change the fog
+	thread change_fog_periodically
+end
+
+change_fog_periodically:
+	// Infinite loop to change fog settings at random intervals
+	while(1)
+	{
+		waitthread set_random_fog
+		
+		// Wait for a random duration before changing the fog again
+		local.wait_time = 120 + randomint(360)
+		wait local.wait_time
+	}
+end
+
+set_random_fog:
+	// This thread smoothly transitions to a new, random fog setting.
+
+	// Initialize fog state variables if they don't exist
+	if (level.fog_current_dist == NIL)
+	{
+		// Random starting distance from 1000 to 20000
+		level.fog_current_dist = 1500 + randomint(19000)
+		// level.fog_current_r = 0.1 + randomfloat(0.3) // Random grey starting color
+		// level.fog_current_g = level.fog_current_r
+		// level.fog_current_b = level.fog_current_r
+	}
+
+	local.start_dist = level.fog_current_dist
+	// local.start_r = level.fog_current_r
+	// local.start_g = level.fog_current_g
+	// local.start_b = level.fog_current_b
+
+	// Determine new random fog parameters with wider range
+	// Farplane distance: 800 (very heavy) to 25000 (very light)
+	local.end_dist = 1500 + randomint(24200)
+	
+	// Fog color: realistic shades of grey with slight variation
+	local.grey_value = 0.1 + randomfloat(0.5) // from 0.1 to 0.6
+	// local.end_r = local.grey_value
+	// local.end_g = local.grey_value
+	// local.end_b = local.grey_value
+
+	// Random transition duration between 2 to 6 minutes
+	local.duration = 120 + randomint(240)
+	local.start_time = level.time
+
+	println("                             === Starting fog transition: ===")
+	println("                             === Starting fog transition: ===")
+	println("                             === Starting fog transition: ===")
+	println("  Start Distance: " + local.start_dist)
+	// println("  Start Color: (" + local.start_r + ", " + local.start_g + ", " + local.start_b + ")")
+	println("  End Distance: " + local.end_dist)
+	// println("  End Color: (" + local.end_r + ", " + local.end_g + ", " + local.end_b + ")")
+	println("  Duration: " + local.duration + " seconds")
+	
+	
+	while (level.time < (local.start_time + local.duration))
+	{
+		local.elapsed_time = level.time - local.start_time
+		if (local.elapsed_time > local.duration)
+		{
+			local.elapsed_time = local.duration
+		}
+
+		local.fraction = local.elapsed_time / local.duration
+		
+		// Interpolate distance
+		local.current_dist = local.start_dist + ((local.end_dist - local.start_dist) * local.fraction)
+		$world farplane local.current_dist
+		
+		// Interpolate color
+		// local.current_r = local.start_r + ((local.end_r - local.start_r) * local.fraction)
+		// local.current_g = local.start_g + ((local.end_g - local.start_g) * local.fraction)
+		// local.current_b = local.start_b + ((local.end_b - local.start_b) * local.fraction)
+		
+		// $world farplane_color ( local.current_r local.current_g local.current_b )
+		
+		wait 0.1 // Update frequently for smoothness
+	}
+	
+	// Ensure the final value is set precisely at the end
+	$world farplane local.end_dist
+	// $world farplane_color ( local.end_r local.end_g local.end_b )
+	
+	// Store the new settings for the next transition
+	level.fog_current_dist = local.end_dist
+	level.fog_current_r = local.end_r
+	level.fog_current_g = local.end_g
+	level.fog_current_b = local.end_b
+end
