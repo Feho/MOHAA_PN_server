@@ -53,8 +53,7 @@ tdmtype:
 
 	// exec global/ladderspawn.scr ( -4957 -2669 70 ) 220 wood 0
 	
-	$world farplane color "0.25 0.15 0.1"
-	$world farplane 24000 //7200
+	exec global/random_fog.scr
 
 	exec global/bomber.scr
 	exec global/ambient.scr m4l0
@@ -137,8 +136,7 @@ ffatype:
 
 	// exec global/ladderspawn.scr ( -4957 -2669 70 ) 220 wood 0
 	
-	$world farplane color "0.25 0.15 0.1"
-	$world farplane 24000 //7200
+	exec global/random_fog.scr
 
 	exec global/bomber.scr
 
