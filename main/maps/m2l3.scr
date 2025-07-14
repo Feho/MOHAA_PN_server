@@ -42,25 +42,24 @@ main:
 	
 	setcvar "timelimit" "15"
 	
-
 	exec global/AIR/AIR_Control.scr
 	waitthread settings_init
 	
-	// level.m2l3_setting = "obj" // feho
+	level.m2l3_setting = "obj" // feho
 	
 	switch(level.m2l3_setting)
 	{
-		// case "tdm":
-		// 	waitthread tdm_spawns
-		// 	setcvar "g_obj_alliedtext1" ""
-		// 	setcvar "g_obj_alliedtext2" ""
-		// 	setcvar "g_obj_alliedtext3" ""
-		// 	setcvar "g_obj_axistext1" "Map : M2L3"
-		// 	setcvar "g_obj_axistext2" ""
-		// 	setcvar "g_obj_axistext3" "178.32.28.179:12203 "
-		// 	setcvar "g_gametypestring" "Team Deathmatch"
-		// 	setcvar "g_gametype" "2"
-		// break
+		case "tdm":
+			waitthread tdm_spawns
+			setcvar "g_obj_alliedtext1" ""
+			setcvar "g_obj_alliedtext2" ""
+			setcvar "g_obj_alliedtext3" ""
+			setcvar "g_obj_axistext1" "Map : M2L3"
+			setcvar "g_obj_axistext2" ""
+			setcvar "g_obj_axistext3" "178.32.28.179:12203 "
+			setcvar "g_gametypestring" "Team Deathmatch"
+			setcvar "g_gametype" "2"
+		break
 		case "obj":
 			waitthread tdm_spawns
 			thread setup_obj
@@ -86,7 +85,6 @@ main:
 			setcvar "g_gametype" "4"
 			thread setup_cnh
 		break
-		case "tdm": // Ajout Feho - Pour que le mode tdm soit remplacé par le mode Capture The Flag
 		case "ctf":
 			waitthread tdm_spawns
 			thread global/AIRborne_sounds.scr::victory_only
@@ -116,7 +114,7 @@ main:
  
 	waitthread set_da_stuff_up
 
-	exec global/ladderspawn.scr ( -543 3753 -508) 235 wood -90
+	// exec global/ladderspawn.scr ( -543 3753 -508) 235 wood -90
 
 	local.mur = spawn script_object
 	local.mur.origin = ( -693 2426 -525)
