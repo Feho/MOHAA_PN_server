@@ -7,13 +7,13 @@ main:
 	// Stop self closing doors
 	removeclass rotatingdoor
 
-	local.clone = spawn func_rotatingdoor model "*2" targetname "door2" wait "-1" origin ( -264 534 456 ) angle ( 180 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*3" targetname "door3" wait "-1" origin ( -264 426 456 ) angle ( 180 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*4" targetname "door4" wait "-1" origin ( 712 534 456 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*5" targetname "door5" wait "-1" origin ( 712 426 456 ) angle ( 0 ) alwaysaway "1"
+	// Create initial doors and link pairs
+	waitthread create_door_with_trigger "*2" "door2" ( -264 534 456 ) 180
+	waitthread create_door "*3" "door3" ( -264 426 456 ) 180
+	waitthread create_door_with_trigger "*4" "door4" ( 712 534 456 ) 0
+	waitthread create_door "*5" "door5" ( 712 426 456 ) 0
 	$door2 linkdoor $door3
 	$door4 linkdoor $door5
-	// Stop self closing doors
 
 	// Random client crash fix
 	removeclass PlayerIntermission
@@ -41,30 +41,8 @@ main:
 		
 	level waitTill prespawn
 
-	// Stop self closing doors
-	local.clone = spawn func_rotatingdoor model "*1" targetname "door1" wait "-1" origin ( -482 888 446 ) angle ( 90 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*6" targetname "door6" wait "-1" origin ( 346 1160 110 ) angle ( 270 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*7" targetname "door7" wait "-1" origin ( -8 1354 110 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*8" targetname "door8" wait "-1" origin ( 90 1656 190 ) angle ( 270 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*9" targetname "door9" wait "-1" origin ( 1336 1434 446 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*10" targetname "door10" wait "-1" origin ( 1154 8 318 ) angle ( 270 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*11" targetname "door11" wait "-1" origin ( -1178 264 230 ) angle ( 90 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*12" targetname "door12" wait "-1" origin ( 1336 2106 574 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*13" targetname "door13" wait "-1" origin ( -376 1418 446 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*14" targetname "door14" wait "-1" origin ( 712 1482 446 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*15" targetname "door15" wait "-1" origin ( -792 546 46 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*16" targetname "door16" wait "-1" origin ( 1032 2818 446 ) angle ( 180 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*17" targetname "door17" wait "-1" origin ( -1272 610 230 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*18" targetname "door18" wait "-1" origin ( -1154 888 230 ) angle ( 90 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*19" targetname "door19" wait "-1" origin ( 218 1656 446 ) angle ( 90 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*20" targetname "door20" wait "-1" origin ( 602 1160 446 ) angle ( 90 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*21" targetname "door21" wait "-1" origin ( 994 2984 622 ) angle ( 270 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*22" targetname "door22" wait "-1" origin ( 1302 888 446 ) angle ( 270 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*23" targetname "door23" wait "-1" origin ( 920 770 446 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*24" targetname "door24" wait "-1" origin ( 920 330 446 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*25" targetname "door25" wait "-1" origin ( 1400 666 446 ) angle ( 0 ) alwaysaway "1"
-	local.clone = spawn func_rotatingdoor model "*26" targetname "door26" wait "-1" origin ( 1442 2344 574 ) angle ( 90 ) alwaysaway "1"
-	// Stop self closing doors
+	// Create remaining doors with triggers
+	waitthread setup_all_doors
 
 	//*** Precache Dm Stuff
 	exec global/DMprecache.scr
@@ -101,6 +79,96 @@ main:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+	
+	wait 120
+
+	stuffsrv "say You can lock or unlock doors by holding the use key for 3 seconds. Use it wisely!"
+	
+end
+
+create_door local.model local.targetname local.origin local.angle:
+	
+	local.door = spawn func_rotatingdoor model local.model targetname local.targetname wait "-1" origin local.origin angle ( local.angle ) alwaysaway "1"
+
+end
+
+setup_all_doors:
+	// Door definitions: model, targetname, origin, angle
+	local.doors = makeArray
+		"*1" "door1" ( -482 888 446 ) 90
+		"*6" "door6" ( 346 1160 110 ) 270
+		"*7" "door7" ( -8 1354 110 ) 0
+		"*8" "door8" ( 90 1656 190 ) 270
+		"*9" "door9" ( 1336 1434 446 ) 0
+		"*10" "door10" ( 1154 8 318 ) 270
+		"*11" "door11" ( -1178 264 230 ) 90
+		"*12" "door12" ( 1336 2106 574 ) 0
+		"*13" "door13" ( -376 1418 446 ) 0
+		"*14" "door14" ( 712 1482 446 ) 0
+		"*15" "door15" ( -792 546 46 ) 0
+		"*16" "door16" ( 1032 2818 446 ) 180
+		"*17" "door17" ( -1272 610 230 ) 0
+		"*18" "door18" ( -1154 888 230 ) 90
+		"*19" "door19" ( 218 1656 446 ) 90
+		"*20" "door20" ( 602 1160 446 ) 90
+		"*21" "door21" ( 994 2984 622 ) 270
+		"*22" "door22" ( 1302 888 446 ) 270
+		"*23" "door23" ( 920 770 446 ) 0
+		"*24" "door24" ( 920 330 446 ) 0
+		"*25" "door25" ( 1400 666 446 ) 0
+		"*26" "door26" ( 1442 2344 574 ) 90
+	endArray
+
+	// Create doors and triggers
+	for (local.i = 1; local.i <= local.doors.size; local.i++)
+	{
+		local.doorInfo = local.doors[local.i]
+		thread create_door_with_trigger local.doorInfo[1] local.doorInfo[2] local.doorInfo[3] local.doorInfo[4]
+	}
+end
+
+create_door_with_trigger local.model local.targetname local.origin local.angle:
+
+	// Create door
+	local.door = spawn func_rotatingdoor model local.model targetname local.targetname wait "-1" origin local.origin angle ( local.angle ) alwaysaway "1"
+	
+	// Create trigger at same location
+	local.trigger = waitthread global/AIRborne_prefabs.scr::create_triggeruse local.origin (local.targetname + "_trigger")
+	local.trigger setthread door_trigger
+	local.trigger.door = $(local.targetname)
+
+end
+
+// This thread is used to lock or unlock the door when the player holds the use key.
+door_trigger:
+
+	local.player = parm.other
+
+	if (self.inUse) end
+
+	local.seconds = 3
+
+	if (self.isLocked)
+		local.player iprint ("Door is LOCKED. Hold use key for " + local.seconds + " seconds to unlock.") 1
+
+	self.inUse = 1
+	wait local.seconds
+	self.inUse = 0
+
+	if (!local.player.useheld) end
+
+	if (self.isLocked)
+	{
+		self.door unlock
+		self.isLocked = 0
+		local.player iprint "Door UNLOCKED"
+	}
+	else
+	{
+		self.door lock
+		self.isLocked = 1
+		local.player iprint "Door LOCKED"
+	}
 	
 end
 
