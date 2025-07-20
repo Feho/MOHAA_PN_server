@@ -2,6 +2,7 @@ main:
 
     event_subscribe "player_spawned" event_player_spawned
     event_subscribe "player_killed" event_player_killed
+    event_subscribe "player_damaged" event_player_damaged
 
 end
 
@@ -49,6 +50,46 @@ event_player_killed:
         endArray
 
         thread global/AIR_gold.scr::treasure_spawn local.info
+    }
+
+end
+
+event_player_damaged local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+
+    local.left_foot = 9
+    local.right_foot = 10
+    local.lower_left_leg = 13
+    local.lower_right_leg = 14
+    local.upper_left_leg = 18
+    local.upper_right_leg = 17
+    local.general = -1
+
+    // Check if the player was hit in the legs or feet
+    if (local.location == local.left_foot || local.location == local.right_foot ||
+        local.location == local.lower_left_leg || local.location == local.lower_right_leg ||
+        local.location == local.upper_left_leg || local.location == local.upper_right_leg ||
+        local.location == local.general)
+    {
+        // Slow the player down for 5 seconds
+        local.start_speed = 0.3
+        local.end_speed = 0.85
+        local.duration = 5
+        local.wait_time = 0.1
+        
+        self weaponcommand dual dmmovementspeed local.current_speed
+        local.steps = local.duration / local.wait_time
+        local.speed_increment = (local.end_speed - local.start_speed) / local.steps
+        local.current_speed = local.start_speed
+        
+        for (local.i = 0; local.i < local.steps; local.i++)
+        {
+            wait local.wait_time
+            local.current_speed += local.speed_increment
+            
+            if (!self || !isAlive self) end
+            
+            self weaponcommand dual dmmovementspeed local.current_speed
+        }
     }
 
 end
