@@ -73,7 +73,7 @@ event_player_damaged local.attacker local.damage local.inflictor local.position 
         // Slow the player down for 5 seconds
         local.start_speed = 0.3
         local.end_speed = 0.85
-        local.duration = 5
+        local.duration = 3
         local.wait_time = 0.1
         
         self weaponcommand dual dmmovementspeed local.current_speed
