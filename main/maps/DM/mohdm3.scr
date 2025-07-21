@@ -99,6 +99,10 @@ main:
 	}
 	//<-----------
 
+	// Random Passage Blocking - Feho
+	thread spawn_random_blockage
+	//<-----------
+
 
 	
 	// Tanks & Jeeps Base Assault
@@ -289,3 +293,55 @@ setupobj1:
 end
 
 level waittill roundstart
+
+//-----------------------------------------------------------------------------
+
+spawn_random_blockage:
+
+	// Define strategic blockage locations based on map analysis
+	local.blockage_locations = makeArray
+		// Lower Bridge Passage - main tunnel under central bridge
+		( 2500 -1500 -55 ) ( 0 90 0 ) "Lower Bridge Passage"
+		
+		// Central Tower Main Door - ground floor entrance
+		( 3000 -1200 8 ) ( 0 45 0 ) "Central Tower Door"
+		
+		// Side Catwalk Connection - narrow bridge between structures  
+		( 2000 -2000 50 ) ( 0 0 0 ) "Side Catwalk"
+		
+		// Allied Spawn Building Exit - main ground floor exit
+		( 1200 -800 -70 ) ( 0 180 0 ) "Allied Spawn Exit"
+		
+		// Axis Spawn Building Exit - main ground floor exit
+		( 4200 -3200 50 ) ( 0 0 0 ) "Axis Spawn Exit"
+	endArray
+
+	// Randomly select one blockage location (5 locations total)
+	local.selected_index = (randomint(5) * 3) + 1 // Each location has 3 elements (origin, angles, name)
+	
+	local.blockage_origin = local.blockage_locations[local.selected_index]
+	local.blockage_angles = local.blockage_locations[local.selected_index + 1] 
+	local.blockage_name = local.blockage_locations[local.selected_index + 2]
+
+	// Array of vehicle models to randomly choose from
+	local.vehicle_models = makeArray
+		"models/vehicles/tigertank.tik"
+		"models/vehicles/shermantank.tik" 
+		"models/vehicles/opeltruck.tik"
+	endArray
+	
+	// Randomly select vehicle model
+	local.vehicle_model = local.vehicle_models[randomint(3) + 1]
+
+	// Spawn the blockage entity
+	spawn script_model "model" local.vehicle_model "targetname" "passage_blockage"
+	$passage_blockage.origin = local.blockage_origin
+	$passage_blockage.angles = local.blockage_angles
+	$passage_blockage solid
+	$passage_blockage notarget
+	
+	// Print notification to all players
+	iprintlnbold ("Passage blocked: " + local.blockage_name)
+	println ("Remagen: Spawned blockage at " + local.blockage_name + " using " + local.vehicle_model)
+
+end
