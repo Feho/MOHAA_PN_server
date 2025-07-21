@@ -337,6 +337,7 @@ spawn_random_blockage:
 	spawn script_model "model" local.vehicle_model "targetname" "passage_blockage"
 	$passage_blockage.origin = local.blockage_origin
 	$passage_blockage.angles = local.blockage_angles
+	$passage_blockage setsize ( -200 -200 -50 ) ( 200 200 200 )
 	$passage_blockage solid
 	$passage_blockage notarget
 	
