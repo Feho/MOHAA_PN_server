@@ -9,6 +9,15 @@
    ! Important
 ====================================================
 
+2025
+~Feho (Copilot Implementation)
++ maps/DM/mohdm3.scr : Random Passage Blocking System for Remagen
+                      - Randomly blocks one of 5 strategic locations each round
+                      - Uses vehicle models (Tiger Tank, Sherman Tank, Opel Truck)
+                      - Optional destructible mechanics (600 health, can be destroyed)
+                      - Locations: Lower Bridge, Central Tower, Side Bridge, Allied/Axis Compounds
+                      - Enhances gameplay variety and strategic depth
+
 24/06/2013
 ~Feho
 * global/TNT_DETONATORS.scr : - Explosif appartient maintenant au détonateur et non au joueur
