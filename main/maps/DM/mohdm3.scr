@@ -300,20 +300,20 @@ spawn_random_blockage:
 
 	// Define strategic blockage locations based on map analysis
 	local.blockage_locations = makeArray
-		// Lower Bridge Passage - main tunnel under central bridge
-		( 2500 -1500 -55 ) ( 0 90 0 ) "Lower Bridge Passage"
+		// Lower Bridge Passage - between the two bomb locations
+		( 2470 -1181 -55 ) ( 0 90 0 ) "Lower Bridge Passage"
 		
-		// Central Tower Main Door - ground floor entrance
-		( 3000 -1200 8 ) ( 0 45 0 ) "Central Tower Door"
+		// Central area near first radio
+		( 1200 200 8 ) ( 0 45 0 ) "Central Tower Area"
 		
-		// Side Catwalk Connection - narrow bridge between structures  
-		( 2000 -2000 50 ) ( 0 0 0 ) "Side Catwalk"
+		// Side passage near second bomb location  
+		( 2816 -1000 -55 ) ( 0 0 0 ) "Side Bridge"
 		
-		// Allied Spawn Building Exit - main ground floor exit
-		( 1200 -800 -70 ) ( 0 180 0 ) "Allied Spawn Exit"
+		// Near fake door area - Allied side
+		( 3897 -2300 50 ) ( 0 180 0 ) "Allied Compound"
 		
-		// Axis Spawn Building Exit - main ground floor exit
-		( 4200 -3200 50 ) ( 0 0 0 ) "Axis Spawn Exit"
+		// Near second radio - Axis side
+		( 4500 -3158 250 ) ( 0 0 0 ) "Axis Tower"
 	endArray
 
 	// Randomly select one blockage location (5 locations total)
@@ -341,8 +341,45 @@ spawn_random_blockage:
 	$passage_blockage solid
 	$passage_blockage notarget
 	
+	// Optional: Make blockage destructible (uncomment next line to enable)
+	// thread make_blockage_destructible $passage_blockage
+	
 	// Print notification to all players
 	iprintlnbold ("Passage blocked: " + local.blockage_name)
 	println ("Remagen: Spawned blockage at " + local.blockage_name + " using " + local.vehicle_model)
+
+end
+
+//-----------------------------------------------------------------------------
+
+make_blockage_destructible local.blockage:
+
+	// Set health for the blockage (equivalent to 3 satchel charges)
+	local.blockage.health = 600
+	local.blockage.max_health = 600
+	
+	// Make it targetable for damage
+	local.blockage target
+	
+	// Monitor health until destroyed
+	while (local.blockage.health > 0 && local.blockage != NIL)
+	{
+		waitframe
+		
+		// Check if blockage has taken damage
+		if (local.blockage.health <= 0)
+		{
+			// Explosion effect
+			local.blockage playsound grenade_explode
+			
+			// Remove the blockage
+			local.blockage remove
+			
+			// Notify players
+			iprintlnbold "Blockage destroyed! Passage is now clear."
+			println "Remagen: Blockage destroyed by players"
+			break
+		}
+	}
 
 end
