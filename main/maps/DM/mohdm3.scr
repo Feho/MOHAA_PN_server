@@ -317,11 +317,11 @@ spawn_random_blockage:
 	endArray
 
 	// Randomly select one blockage location (5 locations total)
-	local.selected_index = (randomint(5) * 3) + 1 // Each location has 3 elements (origin, angles, name)
+	local.selected_index = randomint(5) + 1
 	
-	local.blockage_origin = local.blockage_locations[local.selected_index]
-	local.blockage_angles = local.blockage_locations[local.selected_index + 1] 
-	local.blockage_name = local.blockage_locations[local.selected_index + 2]
+	local.blockage_origin = local.blockage_locations[local.selected_index][1]
+	local.blockage_angles = local.blockage_locations[local.selected_index][2]
+	local.blockage_name = local.blockage_locations[local.selected_index][3]
 
 	// Array of vehicle models to randomly choose from
 	local.vehicle_models = makeArray
@@ -331,18 +331,18 @@ spawn_random_blockage:
 	endArray
 	
 	// Randomly select vehicle model
-	local.vehicle_model = local.vehicle_models[randomint(3) + 1]
+	local.vehicle_model = local.vehicle_models[randomint(3) + 1][1]
 
 	// Spawn the blockage entity
-	spawn script_model "model" local.vehicle_model "targetname" "passage_blockage"
+	spawn script_model model local.vehicle_model "targetname" "passage_blockage"
 	$passage_blockage.origin = local.blockage_origin
 	$passage_blockage.angles = local.blockage_angles
-	$passage_blockage setsize ( -200 -200 -50 ) ( 200 200 200 )
+	// $passage_blockage setsize ( -200 -200 -50 ) ( 200 200 200 )
 	$passage_blockage solid
-	$passage_blockage notarget
+	// $passage_blockage notarget
 	
 	// Optional: Make blockage destructible (uncomment next line to enable)
-	// thread make_blockage_destructible $passage_blockage
+	thread make_blockage_destructible $passage_blockage
 	
 	// Print notification to all players
 	iprintlnbold ("Passage blocked: " + local.blockage_name)
@@ -359,7 +359,7 @@ make_blockage_destructible local.blockage:
 	local.blockage.max_health = 600
 	
 	// Make it targetable for damage
-	local.blockage target
+	local.blockage takedamage
 	
 	// Monitor health until destroyed
 	while (local.blockage.health > 0 && local.blockage != NIL)
