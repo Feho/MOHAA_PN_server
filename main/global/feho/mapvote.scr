@@ -49,7 +49,7 @@ monitor_round_timer:
             goto monitor_round_timer
         }
         
-        local.timelimit_seconds = local.timelimit * 60
+        local.timelimit_seconds = int(local.timelimit) * 60
         
         // Calculate time remaining (using simple approach)
         // In MOHAA, level.time appears to be game time in seconds since round start
@@ -287,7 +287,7 @@ end
 end_vote_when_round_ends:
     // Wait for round to end, then tally and apply results
     local.timelimit = getcvar "timelimit"
-    local.timelimit_seconds = local.timelimit * 60
+    local.timelimit_seconds = int(local.timelimit) * 60
     
     // Wait until round actually ends (or close to ending)
     while (level.time > 0 && level.time < (local.timelimit_seconds - 5))
