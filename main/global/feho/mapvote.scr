@@ -1,0 +1,271 @@
+/*
+Map Voting System for MOHAA PN Server
+Created by Copilot for issue #3
+
+This script implements an end-of-round map voting system that allows players
+to vote between the next map in rotation and a random alternative.
+
+Features:
+- Triggers voting 60 seconds before round end
+- Players vote by typing '1' or '2' in chat
+- Prevents duplicate voting per player
+- Announces results and sets nextmap cvar
+- Handles edge cases (ties, no votes, small map lists)
+*/
+
+main:
+    // Initialize the map voting system
+    if (level.mapvote_initialized == 1)
+        end
+    
+    level.mapvote_initialized = 1
+    level.voting_active = 0
+    level.vote_map1_tally = 0
+    level.vote_map2_tally = 0
+    level.vote_option1 = ""
+    level.vote_option2 = ""
+    
+    // Subscribe to player text messages for vote handling
+    event_subscribe "player_textMessage" event_player_textMessage
+    
+    // Start the round timer monitoring thread
+    thread monitor_round_timer
+    
+end
+
+monitor_round_timer:
+    // Monitor the round timer and trigger voting when appropriate
+    while (1)
+    {
+        // Check if we're in a timed game mode
+        local.timelimit = getcvar "timelimit"
+        if (local.timelimit == 0 || local.timelimit == "0")
+        {
+            // No time limit, skip voting
+            wait 30
+            goto monitor_round_timer
+        }
+        
+        local.timelimit_seconds = local.timelimit * 60
+        
+        // Calculate time remaining (using simple approach)
+        // In MOHAA, level.time appears to be game time in seconds since round start
+        if (level.time > 0)
+        {
+            local.time_remaining = local.timelimit_seconds - level.time
+            
+            // Trigger voting at 60 seconds remaining (with a small buffer to avoid multiple triggers)
+            if (local.time_remaining <= 61 && local.time_remaining >= 59 && level.voting_active == 0)
+            {
+                thread start_map_vote
+            }
+            
+            // Stop monitoring if round is over
+            if (local.time_remaining <= 0)
+            {
+                wait 10  // Wait for next round
+                level.voting_active = 0  // Reset for next round
+            }
+        }
+        
+        wait 2  // Check every 2 seconds
+    }
+end
+
+start_map_vote:
+    // Start the map voting process
+    level.voting_active = 1
+    level.vote_map1_tally = 0
+    level.vote_map2_tally = 0
+    
+    // Parse the map list and determine options
+    local.maplist = getcvar "sv_maplist"
+    local.current_map = getcvar "mapname"
+    
+    local.maps = waitthread parse_maplist local.maplist
+    
+    if (local.maps.size < 2)
+    {
+        // Not enough maps for voting, end early
+        level.voting_active = 0
+        stuffsrv "say Map voting disabled: Not enough maps in rotation"
+        end
+    }
+    
+    local.options = waitthread determine_vote_options local.maps local.current_map
+    level.vote_option1 = local.options[1]
+    level.vote_option2 = local.options[2]
+    
+    // Clear previous player votes
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+        if (local.p)
+        {
+            local.p.hasVoted = 0
+        }
+    }
+    
+    // Announce the vote
+    stuffsrv "say ==================================="
+    stuffsrv "say MAP VOTE - Time remaining: 60 seconds"
+    stuffsrv ("say Option 1: " + level.vote_option1 + " (Type '1')")
+    stuffsrv ("say Option 2: " + level.vote_option2 + " (Type '2')")
+    stuffsrv "say ==================================="
+    
+    // Wait for the round to end, then tally votes
+    thread end_vote_when_round_ends
+end
+
+parse_maplist local.maplist:
+    // Parse space-separated map list into an array using strings.scr utility
+    local.result = waitthread global/strings.scr::split_line local.maplist 0 " "
+    
+    // split_line returns: [1] = array of words, [2] = word count, [3] = full string
+    local.maps = local.result[1]
+    
+end local.maps
+
+determine_vote_options local.maps local.current_map:
+    // Determine the two voting options
+    local.options = NIL
+    
+    // Find current map index in the rotation
+    local.current_index = -1
+    for (local.i = 1; local.i <= local.maps.size; local.i++)
+    {
+        if (local.maps[local.i] == local.current_map)
+        {
+            local.current_index = local.i
+            break
+        }
+    }
+    
+    // Option 1: Next map in rotation
+    if (local.current_index >= 1 && local.current_index < local.maps.size)
+    {
+        local.options[1] = local.maps[local.current_index + 1]
+    }
+    else
+    {
+        // Wrap around to first map
+        local.options[1] = local.maps[1]
+    }
+    
+    // Option 2: Random map (excluding current and option 1)
+    local.available_maps = NIL
+    local.available_count = 0
+    
+    for (local.i = 1; local.i <= local.maps.size; local.i++)
+    {
+        local.map = local.maps[local.i]
+        if (local.map != local.current_map && local.map != local.options[1])
+        {
+            local.available_count++
+            local.available_maps[local.available_count] = local.map
+        }
+    }
+    
+    if (local.available_count > 0)
+    {
+        local.random_index = randomint(local.available_count) + 1
+        local.options[2] = local.available_maps[local.random_index]
+    }
+    else
+    {
+        // Fallback: use first map if no alternatives available
+        local.options[2] = local.maps[1]
+    }
+    
+end local.options
+
+event_player_textMessage local.text local.is_team:
+    // Handle player vote messages
+    local.player = self
+    
+    if (level.voting_active != 1)
+        end
+    
+    if (!local.player || local.player.hasVoted == 1)
+        end
+    
+    // Check for valid vote
+    if (local.text == "1")
+    {
+        level.vote_map1_tally++
+        local.player.hasVoted = 1
+        local.player iprint ("Vote recorded for: " + level.vote_option1)
+    }
+    else if (local.text == "2")
+    {
+        level.vote_map2_tally++
+        local.player.hasVoted = 1
+        local.player iprint ("Vote recorded for: " + level.vote_option2)
+    }
+    
+end
+
+end_vote_when_round_ends:
+    // Wait for round to end, then tally and apply results
+    local.timelimit = getcvar "timelimit"
+    local.timelimit_seconds = local.timelimit * 60
+    
+    // Wait until round actually ends (or close to ending)
+    while (level.time > 0 && level.time < (local.timelimit_seconds - 5))
+    {
+        wait 2
+    }
+    
+    // Wait a bit more to ensure we're at the end
+    wait 5
+    
+    // Tally votes and announce results
+    stuffsrv "say ==================================="
+    stuffsrv "say MAP VOTE RESULTS:"
+    stuffsrv ("say " + level.vote_option1 + ": " + level.vote_map1_tally + " votes")
+    stuffsrv ("say " + level.vote_option2 + ": " + level.vote_map2_tally + " votes")
+    
+    local.winning_map = ""
+    
+    if (level.vote_map1_tally > level.vote_map2_tally)
+    {
+        local.winning_map = level.vote_option1
+        stuffsrv ("say WINNER: " + level.vote_option1)
+    }
+    else if (level.vote_map2_tally > level.vote_map1_tally)
+    {
+        local.winning_map = level.vote_option2
+        stuffsrv ("say WINNER: " + level.vote_option2)
+    }
+    else
+    {
+        // Tie or no votes - use default (option 1)
+        local.winning_map = level.vote_option1
+        if (level.vote_map1_tally == 0 && level.vote_map2_tally == 0)
+        {
+            stuffsrv "say No votes received - using default map rotation"
+        }
+        else
+        {
+            stuffsrv "say Vote tied - using default map rotation"
+        }
+        stuffsrv ("say Next map: " + level.vote_option1)
+    }
+    
+    stuffsrv "say ==================================="
+    
+    // Set the nextmap cvar if we have a winner from voting
+    if (local.winning_map != "")
+    {
+        setcvar "nextmap" local.winning_map
+        stuffsrv ("say Server setting next map to: " + local.winning_map)
+    }
+    
+    // Reset voting state
+    level.voting_active = 0
+    level.vote_map1_tally = 0
+    level.vote_map2_tally = 0
+    level.vote_option1 = ""
+    level.vote_option2 = ""
+    
+end
