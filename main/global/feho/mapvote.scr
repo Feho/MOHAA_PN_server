@@ -31,6 +31,9 @@ main:
     // Start the round timer monitoring thread
     thread monitor_round_timer
     
+    // Announce system is loaded (optional debug message)
+    // println "MapVote: System initialized"
+    
 end
 
 monitor_round_timer:
@@ -82,19 +85,32 @@ start_map_vote:
     local.maplist = getcvar "sv_maplist"
     local.current_map = getcvar "mapname"
     
+    // Debug output (can be disabled in production)
+    // println ("MapVote: Current map: " + local.current_map)
+    // println ("MapVote: Map list: " + local.maplist)
+    
     local.maps = waitthread parse_maplist local.maplist
     
-    if (local.maps.size < 2)
+    if (!local.maps || local.maps.size < 2)
     {
         // Not enough maps for voting, end early
         level.voting_active = 0
         stuffsrv "say Map voting disabled: Not enough maps in rotation"
+        // println ("MapVote: Insufficient maps for voting")
         end
     }
     
     local.options = waitthread determine_vote_options local.maps local.current_map
     level.vote_option1 = local.options[1]
     level.vote_option2 = local.options[2]
+    
+    // Validate options exist
+    if (level.vote_option1 == "" || level.vote_option2 == "")
+    {
+        level.voting_active = 0
+        stuffsrv "say Map voting error: Could not determine vote options"
+        end
+    }
     
     // Clear previous player votes
     for (local.i = 1; local.i <= $player.size; local.i++)
@@ -115,6 +131,25 @@ start_map_vote:
     
     // Wait for the round to end, then tally votes
     thread end_vote_when_round_ends
+    
+    // Send periodic reminders during voting
+    thread send_vote_reminders
+end
+
+send_vote_reminders:
+    // Send reminders every 20 seconds during voting
+    local.reminder_count = 0
+    
+    while (level.voting_active == 1 && local.reminder_count < 3)
+    {
+        wait 20
+        if (level.voting_active == 1)
+        {
+            local.reminder_count++
+            stuffsrv ("say MAP VOTE: " + level.vote_option1 + " ('1') vs " + level.vote_option2 + " ('2')")
+            stuffsrv ("say Current votes: " + level.vote_map1_tally + " vs " + level.vote_map2_tally)
+        }
+    }
 end
 
 parse_maplist local.maplist:
@@ -146,10 +181,22 @@ determine_vote_options local.maps local.current_map:
     {
         local.options[1] = local.maps[local.current_index + 1]
     }
-    else
+    else if (local.current_index == local.maps.size)
     {
         // Wrap around to first map
         local.options[1] = local.maps[1]
+    }
+    else
+    {
+        // Current map not found in list, use second map if available
+        if (local.maps.size >= 2)
+        {
+            local.options[1] = local.maps[2]
+        }
+        else
+        {
+            local.options[1] = local.maps[1]
+        }
     }
     
     // Option 2: Random map (excluding current and option 1)
@@ -174,7 +221,19 @@ determine_vote_options local.maps local.current_map:
     else
     {
         // Fallback: use first map if no alternatives available
-        local.options[2] = local.maps[1]
+        if (local.maps.size >= 1 && local.maps[1] != local.options[1])
+        {
+            local.options[2] = local.maps[1]
+        }
+        else if (local.maps.size >= 3)
+        {
+            local.options[2] = local.maps[3]
+        }
+        else
+        {
+            // Last resort: duplicate option 1 but with different label
+            local.options[2] = local.options[1]
+        }
     }
     
 end local.options
@@ -186,8 +245,14 @@ event_player_textMessage local.text local.is_team:
     if (level.voting_active != 1)
         end
     
-    if (!local.player || local.player.hasVoted == 1)
+    if (!local.player)
         end
+        
+    if (local.player.hasVoted == 1)
+    {
+        local.player iprint "You have already voted!"
+        end
+    }
     
     // Check for valid vote
     if (local.text == "1")
@@ -195,12 +260,26 @@ event_player_textMessage local.text local.is_team:
         level.vote_map1_tally++
         local.player.hasVoted = 1
         local.player iprint ("Vote recorded for: " + level.vote_option1)
+        
+        // Optional: Announce vote count update
+        // stuffsrv ("say " + (netname local.player) + " voted for " + level.vote_option1)
     }
     else if (local.text == "2")
     {
         level.vote_map2_tally++
         local.player.hasVoted = 1
         local.player iprint ("Vote recorded for: " + level.vote_option2)
+        
+        // Optional: Announce vote count update  
+        // stuffsrv ("say " + (netname local.player) + " voted for " + level.vote_option2)
+    }
+    else if (local.text == "vote" || local.text == "mapvote")
+    {
+        // Player asking for vote info
+        local.player iprint "=== CURRENT MAP VOTE ==="
+        local.player iprint ("Option 1: " + level.vote_option1 + " (Type '1')")
+        local.player iprint ("Option 2: " + level.vote_option2 + " (Type '2')")
+        local.player iprint ("Current votes: " + level.vote_map1_tally + " vs " + level.vote_map2_tally)
     }
     
 end
