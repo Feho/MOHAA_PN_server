@@ -4,20 +4,7 @@
 
 main:
 	
-	// FFA ? -> TDM
-	// TDM ? -> FFA
-	if ((getcvar("g_gametype") == "1"))
-	{
-		setcvar "g_gametype" "2"
-		setcvar "g_gametypestring" "Team-Match"
-	}
-	else if ((getcvar("g_gametype") == "2"))
-	{
-		setcvar "g_gametype" "1"
-		setcvar "g_gametypestring" "Free-For-All"
-	}
-
-	setcvar "timelimit" "20"
+	setcvar "timelimit" "15"
 	setcvar "fraglimit" "0"
 
 	// set scoreboard messages
