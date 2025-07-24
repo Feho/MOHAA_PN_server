@@ -8,12 +8,12 @@ end
 
 event_player_spawned:
 
+    wait 1.5
+    local.wpn = waitthread global/feho/utils.scr::get_weapon self
+    local.wpnclass = waitthread global/feho/utils.scr::get_wpnclass local.wpn
+        
     if (isBot self)
     {
-        wait 2
-        local.wpn = waitthread global/feho/utils.scr::get_weapon self
-        local.wpnclass = waitthread global/feho/utils.scr::get_wpnclass local.wpn
-        
         if (local.wpnclass == "heavy" || local.wpnclass == "shotgun")
         {
             // Give the bot a Thompson or an MP40.
@@ -34,6 +34,15 @@ event_player_spawned:
             self weaponcommand dual dmbulletspread 40 40 70 70
             self weaponcommand dual dmbulletdamage 30
         }
+        
+        end
+    }
+    
+    if (local.wpnclass == "shotgun")
+    {
+        // Replace the weapon with a silenced pistol
+        self take weapons/shotgun.tik
+        self giveweapon "models/weapons/silencedpistol.tik"
     }
 
 end
