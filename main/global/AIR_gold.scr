@@ -40,7 +40,7 @@ Webs: 	www.mods-r-us.net | www.mohaairborne.co.cc
 // as many entries as you want.:
 // 
 // 	local.info = makeArray
-// 	( origin1 ) ( angles1 ) "bonus1" (0 or 1) // 1 row for 1 goldbox
+// 	( origin1 ) ( angles1 ) "bonus1" (0 or 1) 120 // 1 row for 1 goldbox
 //
 //  	endArray
 //
@@ -75,6 +75,9 @@ treasure_spawn local.info:
 
 		if (local.info[local.i][4] == NIL)
 			local.info[local.i][4] = 1
+
+		if (local.info[local.i].size >= 5 && local.info[local.i][5] == NIL)
+			local.info[local.i][5] = 240
 	}
 	
 	if (local.terminate == 1)
@@ -95,6 +98,12 @@ treasure_spawn local.info:
 		level.AIR_goldboxs[local.f].origin = local.info[local.a][1]
 		level.AIR_goldboxs[local.f].bonus = local.info[local.a][3]
 		level.AIR_goldboxs[local.f].should_respawn = local.info[local.a][4]
+
+		if (local.info[local.a].size >= 5)
+			level.AIR_goldboxs[local.f].respawn_delay = local.info[local.a][5]
+		else
+			level.AIR_goldboxs[local.f].respawn_delay = 240
+
 		level.AIR_goldboxs[local.f] setsize ( -35 -35 -20 ) ( 35 35 40 )
 		level.AIR_goldboxs[local.f] setthread global/AIR_gold.scr::treasure_tr
 
@@ -143,7 +152,7 @@ spawn_random_treasure:
 	wait 60 // So the player doesn't get the treasure right away
 
 	local.info = makeArray
-		( local.origin ) ( 0 0 0 ) "random" 1
+		( local.origin ) ( 0 0 0 ) "random" 1 240
  	endArray
 
 	thread treasure_spawn local.info
@@ -345,7 +354,7 @@ treasure_tr:
 
 	if (self.should_respawn == 1)
 	{
-		wait 240 // 4 minutes before respawning the gold
+		wait self.respawn_delay
 		self triggerable
 		self.gold show
 	}
