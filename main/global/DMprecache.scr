@@ -181,3 +181,6 @@ level waittill spawn
 
 exec global/feho/voices.scr
 exec global/feho/messages.scr
+
+// Initialize map voting system
+exec global/feho/mapvote.scr
