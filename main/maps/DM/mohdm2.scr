@@ -40,10 +40,28 @@ main:
 	// exec global/TNT_DETONATORS.scr::DETONATOR ( -1010.99 -727.24 40.13 ) ( 0 0 0 )
 
 	local.info = makeArray
-		( -253 -3251 -39 ) ( 0 0 0 ) "random" 1
+		( -253 -3251 -39 ) ( 0 0 0 ) "random" 1 240
+		// Church -->
+		( -540 289 41 ) ( 0 0 0 ) "random" 1 60
+		( -338 187 41 ) ( 0 0 0 ) "random" 1 60
+		( -437 185 41 ) ( 0 0 0 ) "random" 1 60
+		( -564 178 41 ) ( 0 0 0 ) "random" 1 60
+		( -961 293 41 ) ( 0 0 0 ) "random" 1 60
+		( -1095 112 41 ) ( 0 0 0 ) "random" 1 60
+		( -1097 -17 41 ) ( 0 0 0 ) "random" 1 60
+		( -905 1 41 ) ( 0 0 0 ) "random" 1 60
+		( -1086 -146 41 ) ( 0 0 0 ) "random" 1 60
+		( -521 -123 41 ) ( 0 0 0 ) "random" 1 60
+		( -285 -101 41 ) ( 0 0 0 ) "random" 1 60
+		( -512 0 41 ) ( 0 0 0 ) "random" 1 60
+		( -259 -474 41 ) ( 0 0 0 ) "random" 1 60
+		( -407 -466 41 ) ( 0 0 0 ) "random" 1 60
+		// <-- Church
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info
+
+	//thread global/AIRborne_prefabs.scr::create_post ( -253 -3251 -39 ) ( 0 0 0 )
 	
 	//$world farplane 14000
 
