@@ -8,7 +8,7 @@ end
 
 event_player_spawned:
 
-    wait 1.5
+    wait 1
     local.wpn = waitthread global/feho/utils.scr::get_weapon self
     local.wpnclass = waitthread global/feho/utils.scr::get_wpnclass local.wpn
         
