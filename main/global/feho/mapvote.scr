@@ -123,11 +123,13 @@ start_map_vote:
     }
     
     // Announce the vote
-    stuffsrv "say ==================================="
+    wait 0.1
     stuffsrv "say MAP VOTE - Time remaining: 60 seconds"
+    wait 0.1
     stuffsrv ("say Option 1: " + level.vote_option1 + " (Type '1')")
+    wait 0.1
     stuffsrv ("say Option 2: " + level.vote_option2 + " (Type '2')")
-    stuffsrv "say ==================================="
+    wait 0.1
     
     // Wait for the round to end, then tally votes
     thread end_vote_when_round_ends
@@ -146,7 +148,8 @@ send_vote_reminders:
         if (level.voting_active == 1)
         {
             local.reminder_count++
-            stuffsrv ("say MAP VOTE: " + level.vote_option1 + " ('1') vs " + level.vote_option2 + " ('2')")
+            stuffsrv ("say MAP VOTE: " + level.vote_option1 + " (1) vs " + level.vote_option2 + " (2)")
+	    wait 0.1
             stuffsrv ("say Current votes: " + level.vote_map1_tally + " vs " + level.vote_map2_tally)
         }
     }
@@ -296,13 +299,16 @@ end_vote_when_round_ends:
     }
     
     // Wait a bit more to ensure we're at the end
-    wait 5
+    // wait 5
     
     // Tally votes and announce results
-    stuffsrv "say ==================================="
+    wait 0.1
     stuffsrv "say MAP VOTE RESULTS:"
+    wait 0.1
     stuffsrv ("say " + level.vote_option1 + ": " + level.vote_map1_tally + " votes")
+    wait 0.1
     stuffsrv ("say " + level.vote_option2 + ": " + level.vote_map2_tally + " votes")
+    wait 0.1
     
     local.winning_map = ""
     
@@ -328,16 +334,18 @@ end_vote_when_round_ends:
         {
             stuffsrv "say Vote tied - using default map rotation"
         }
+        wait 0.1
         stuffsrv ("say Next map: " + level.vote_option1)
     }
     
-    stuffsrv "say ==================================="
+    wait 0.1
     
     // Set the nextmap cvar if we have a winner from voting
     if (local.winning_map != "")
     {
         setcvar "nextmap" local.winning_map
-        stuffsrv ("say Server setting next map to: " + local.winning_map)
+        wait 0.1
+        // stuffsrv ("say Server setting next map to: " + local.winning_map)
     }
     
     // Reset voting state
