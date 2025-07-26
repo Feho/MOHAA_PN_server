@@ -51,6 +51,7 @@ tdmtype:
 	level waittill spawn
 
 	level.squadmaker_areaname = "leading the way"
+	level.squadmaker_config = "afrika"
 
 	// start support gunner scripts
 	exec global/support/support.scr

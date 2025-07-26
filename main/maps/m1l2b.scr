@@ -70,6 +70,7 @@ tdmtype:
 	local.mur solid	level waittill spawn
 
 	level.squadmaker_areaname = "sabotaging the motorpool"
+	level.squadmaker_config = "afrika"
 
 	// start support gunner scripts
 	exec global/support/support.scr
@@ -83,9 +84,6 @@ tdmtype:
 	thread messages
 	thread eventeams
 	thread spawnswitch
-
-	// level.squadmaker_config		= "afrika"
-
 
 	level.clockside = kills
 
