@@ -32,8 +32,8 @@ main:
 end
 
 init_squad_system:
-    level.squad_max_squads_per_team = 4
-    level.squad_max_players_per_squad = 3
+    level.squad_max_squads_per_team = 6
+    level.squad_max_players_per_squad = 4
     level.squad_leader_pos_history_count = 20
     level.squad_leader_pos_update_distance = 64.0 // Use float for distance checks
     level.squad_leader_pos_update_interval = 0.5 // Seconds
