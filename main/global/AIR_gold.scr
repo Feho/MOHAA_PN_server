@@ -202,6 +202,7 @@ treasure_tr:
 			"grenade"
 			"grenadeXXL"
 			"weapon"
+			"mg"
 			"allweapon"
 			"zooka"
 			"shotgun"
@@ -293,12 +294,20 @@ treasure_tr:
 		break
 		case "weapon":
 			local.weapon = waitthread global/AIR_gold.scr::random_weapon
-			local.picky = randomint(local.weapon.size)
-			if (local.picky == 0)
-				local.picky++
-
+			local.picky = randomint(local.weapon.size) + 1
 			local.p item local.weapon[local.picky][1]
 			local.p iprint ("You have received the " + local.weapon[local.picky][2]) 1
+		break
+		case "mg":
+			if (local.p.dmteam == "axis")
+			{
+				local.p item "models/weapons/mp44.tik"
+			}
+			else
+			{
+				local.p item "models/weapons/bar.tik"
+			}
+			local.p iprint ("You have received a Machine Gun!") 1
 		break
 		case "allweapon":
 			local.p item "models/weapons/m1_garand.tik"
@@ -460,9 +469,9 @@ random_weapon:
 		"models/weapons/mp44.tik"			"StG44"
 		"models/weapons/thompsonsmg.tik"		"Thompson SMG"
 		"models/weapons/mp40.tik"			"MP40"
-		"models/weapons/colt45.tik"			"Colt 45"
+		// "models/weapons/colt45.tik"			"Colt 45"
 		"models/weapons/silencedpistol.tik"		"Silenced Pistol"
-		"models/weapons/p38.tik"			"P38"
+		// "models/weapons/p38.tik"			"P38"
 
 	endArray
 
