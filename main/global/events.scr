@@ -14,7 +14,9 @@ event_player_spawned:
         
     if (isBot self)
     {
-        if (local.wpnclass == "heavy" || local.wpnclass == "shotgun")
+        local.is_art_of_war = (level.squadmaker_config == "art_of_war")
+
+        if (local.wpnclass == "heavy" || local.wpnclass == "shotgun" || local.is_art_of_war)
         {
             // Give the bot a Thompson or an MP40.
             self takeall
