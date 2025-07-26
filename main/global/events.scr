@@ -80,10 +80,10 @@ event_player_damaged local.attacker local.damage local.inflictor local.position 
         local.duration = 3
         local.wait_time = 0.1
         
+        local.current_speed = local.start_speed
         self weaponcommand dual dmmovementspeed local.current_speed
         local.steps = local.duration / local.wait_time
         local.speed_increment = (local.end_speed - local.start_speed) / local.steps
-        local.current_speed = local.start_speed
         
         for (local.i = 0; local.i < local.steps; local.i++)
         {
