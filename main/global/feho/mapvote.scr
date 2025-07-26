@@ -280,8 +280,8 @@ event_player_textMessage local.text local.is_team:
     {
         // Player asking for vote info
         local.player iprint "=== CURRENT MAP VOTE ==="
-        local.player iprint ("Option 1: " + level.vote_option1 + " (Type '1')")
-        local.player iprint ("Option 2: " + level.vote_option2 + " (Type '2')")
+        local.player iprint (level.vote_option1 + " (Type '1')")
+        local.player iprint (level.vote_option2 + " (Type '2')")
         local.player iprint ("Current votes: " + level.vote_map1_tally + " vs " + level.vote_map2_tally)
     }
     
