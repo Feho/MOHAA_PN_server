@@ -18,13 +18,13 @@ event_player_spawned:
 
         if (local.wpnclass == "heavy" || local.wpnclass == "shotgun" || local.is_art_of_war)
         {
-            // Give the bot a Thompson or an MP40.
+            // Give the bot a rifle
             self takeall
 
             if (self.dmteam == "axis")
-                self giveweapon "models/weapons/mp40.tik"
+                self giveweapon "models/weapons/kar98.tik"
             else
-                self giveweapon "models/weapons/thompsonsmg.tik"
+                self giveweapon "models/weapons/m1_garand.tik"
         }
 
         wait 1
