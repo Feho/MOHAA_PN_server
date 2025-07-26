@@ -35,8 +35,14 @@ local.a = makeArray // don't change this line
 	rifleman		"Private"				rifle
 	rifleman		"Private"				rifle
 	rifleman		"Private"				rifle
-	rifleman		"Private"				rifle
-	rifleman		"Private"				rifle
+	smg				"Private"				smg
+	smg				"Private"				smg
+	smg				"Private"				smg
+	sniper			"Sniper"				sniper
+	sniper			"Sniper"				sniper
+	sniper			"Sniper"				sniper
+	sniper			"Sniper"				sniper
+	shotgun			"Hunter"				shotgun
 
 //----------------------------
 // end squad definition

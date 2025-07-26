@@ -49,6 +49,7 @@ main:
 	level waittill spawn
 
 	level.squadmaker_areaname = "in the snowy park"
+	level.squadmaker_config = "winterwar"
 
 	// start support gunner scripts
 	exec global/support/support.scr

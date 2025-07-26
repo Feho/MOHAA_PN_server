@@ -30,13 +30,19 @@ local.a = makeArray // don't change this line
 // 	loadout			name					associated with primary weapon
 //------------------------------------------------------------------------
 	smg				"Hauptfeldwebel"		smg
-	mg				"Unteroffizier"			mg
-	mg				"Obergefreiter"			mg
+	smg				"Unteroffizier"			smg
+	smg				"Obergefreiter"			smg
+	smg				"Obergefreiter"			smg
 	support			"Oberschutze"			heavy
 	rifleman		"Schutze"				rifle
 	rifleman		"Schutze"				rifle
 	rifleman		"Schutze"				rifle
 	rifleman		"Schutze"				rifle
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	sniper			"Heckenschutze"			sniper
+	shotgun			"Hunter"				shotgun
 
 //----------------------------
 // end squad definition

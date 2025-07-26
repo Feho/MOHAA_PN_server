@@ -56,8 +56,9 @@ loadout_allies local.type:
 			
 			// *blegh*, but in case someone wants them :/
 		shotgun:
-			self give models/weapons/shotgun.tik
-			self useweaponclass heavy
+			// self give models/weapons/shotgun.tik
+			self give models/weapons/silencedpistol.tik
+			self useweaponclass pistol
 		
 			local.pistol 	= 0
 			local.grenades 	= 2
@@ -157,8 +158,9 @@ loadout_axis local.type:
 			
 		// *blegh*, but in case someone wants them :/
 		shotgun:
-			self give models/weapons/shotgun.tik
-			self useweaponclass heavy
+			// self give models/weapons/shotgun.tik
+			self give models/weapons/silencedpistol.tik
+			self useweaponclass pistol
 		
 			local.pistol 	= 0
 			local.grenades 	= 2

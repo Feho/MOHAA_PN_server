@@ -8,7 +8,7 @@ end
 
 event_player_spawned:
 
-    wait 1
+    wait 0.301
     local.wpn = waitthread global/feho/utils.scr::get_weapon self
     local.wpnclass = waitthread global/feho/utils.scr::get_wpnclass local.wpn
         
@@ -36,13 +36,6 @@ event_player_spawned:
         }
         
         end
-    }
-    
-    if (local.wpnclass == "shotgun")
-    {
-        // Replace the weapon with a silenced pistol
-        self take weapons/shotgun.tik
-        self giveweapon "models/weapons/silencedpistol.tik"
     }
 
 end
