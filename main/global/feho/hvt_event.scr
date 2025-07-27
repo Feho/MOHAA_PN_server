@@ -75,10 +75,8 @@ trigger_hvt_event:
         level.hvt_event_active = 1
         
         // Announce the event
-        wait 1
         println ("^1-- HIGH-VALUE TARGETS IDENTIFIED --")
         iprintlnbold("-- HIGH-VALUE TARGETS IDENTIFIED --")
-        wait 2
         
         if (level.allied_hvt_player != NIL)
         {
@@ -94,7 +92,6 @@ trigger_hvt_event:
             iprintlnbold("Axis HVT: " + local.axis_name + " (Score: " + level.axis_hvt_score + ")")
         }
         
-        wait 2
         local.bonus_points = getcvar "g_hvt_bonus"
         if (local.bonus_points == NIL) local.bonus_points = 10
         iprintlnbold("Kill the enemy HVT for a +" + local.bonus_points + " point bonus!")
@@ -141,14 +138,37 @@ select_hvts:
     {
         level.allied_hvt_player = local.allied_top_player
         level.allied_hvt_score = local.allied_top_score
+        local.allied_top_player thread set_avatar
     }
     
     if (local.axis_top_score > 0)
     {
         level.axis_hvt_player = local.axis_top_player
         level.axis_hvt_score = local.axis_top_score
+        local.axis_top_player thread set_avatar
     }
     
+end
+
+set_avatar:
+
+	local.avatar = spawn func_beam
+	local.avatar shader ("textures/hud/" + self.dmteam + ".tga") 
+	local.avatar.origin = self gettagposition "Bip01 Head" + ( 0 0 20 )
+	local.avatar color ( 1.0 1.0 1.0 )
+	local.avatar scale 10
+	local.avatar numsegments 1
+	local.avatar activate
+
+	while (self && (self == level.allied_hvt_player || self == level.axis_hvt_player))
+	{
+		waitframe
+		local.avatar.origin = self gettagposition "Bip01 Head" + ( 0 0 20 )
+		local.avatar endpoint ( local.avatar.origin + ( 0 0 30) )
+	}
+    
+    local.avatar remove
+
 end
 
 event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
