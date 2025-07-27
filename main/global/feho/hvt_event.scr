@@ -24,6 +24,7 @@ main:
     // Subscribe to events
     event_subscribe "player_killed" event_player_killed
     event_subscribe "player_disconnecting" event_player_disconnecting
+    event_subscribe "player_spawned" event_player_spawned
     
     // Start monitoring thread
     thread hvt_monitor_thread
@@ -219,6 +220,36 @@ event_player_disconnecting:
     }
     
     // Check if all HVTs are gone
+    if (level.hvt_event_active == 1 && level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
+    {
+        stuffsrv "say ^3All HVTs are gone. Event concluded."
+        level.hvt_event_active = 0
+    }
+    
+end
+
+event_player_spawned:
+    // Check if a spawning player was an HVT and may have switched teams
+    if (level.hvt_event_active != 1)
+        end
+        
+    local.player = self
+    
+    // Check if this player was an HVT but is now on a different team
+    if (local.player == level.allied_hvt_player && local.player.dmteam != "allies")
+    {
+        level.allied_hvt_player = NIL
+        local.player_name = netname local.player
+        stuffsrv "say ^2" + local.player_name + " ^7switched teams. The Allied HVT is no longer active."
+    }
+    else if (local.player == level.axis_hvt_player && local.player.dmteam != "axis")
+    {
+        level.axis_hvt_player = NIL
+        local.player_name = netname local.player
+        stuffsrv "say ^1" + local.player_name + " ^7switched teams. The Axis HVT is no longer active."
+    }
+    
+    // Check if all HVTs are gone due to team switches
     if (level.hvt_event_active == 1 && level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
     {
         stuffsrv "say ^3All HVTs are gone. Event concluded."
