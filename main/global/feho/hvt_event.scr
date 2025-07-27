@@ -82,14 +82,14 @@ trigger_hvt_event:
         {
             local.allied_name = netname level.allied_hvt_player
             println ("^2Allied HVT: ^7" + local.allied_name + " ^7(Score: " + level.allied_hvt_score + ")")
-            iprintlnbold("Allied HVT: " + local.allied_name + " (Score: " + level.allied_hvt_score + ")")
+            iprintlnbold("Allied HVT: " + local.allied_name)
         }
         
         if (level.axis_hvt_player != NIL)
         {
             local.axis_name = netname level.axis_hvt_player
             println ("^1Axis HVT: ^7" + local.axis_name + " ^7(Score: " + level.axis_hvt_score + ")")
-            iprintlnbold("Axis HVT: " + local.axis_name + " (Score: " + level.axis_hvt_score + ")")
+            iprintlnbold("Axis HVT: " + local.axis_name)
         }
         
         local.bonus_points = getcvar "g_hvt_bonus"
