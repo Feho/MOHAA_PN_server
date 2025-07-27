@@ -126,9 +126,9 @@ start_map_vote:
     wait 0.1
     stuffsrv "say MAP VOTE - Time remaining: 60 seconds"
     wait 0.1
-    stuffsrv ("say Option 1: " + level.vote_option1 + " (Type '1')")
+    stuffsrv ("say " + level.vote_option1 + " (Type '1')")
     wait 0.1
-    stuffsrv ("say Option 2: " + level.vote_option2 + " (Type '2')")
+    stuffsrv ("say " + level.vote_option2 + " (Type '2')")
     wait 0.1
     
     // Wait for the round to end, then tally votes
