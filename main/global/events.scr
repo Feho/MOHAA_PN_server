@@ -4,6 +4,9 @@ main:
     event_subscribe "player_killed" event_player_killed
     event_subscribe "player_damaged" event_player_damaged
     
+    // Initialize HVT Event System
+    exec global/feho/hvt_event.scr
+    
 end
 
 event_player_spawned:

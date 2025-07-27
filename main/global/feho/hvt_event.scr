@@ -1,0 +1,228 @@
+/*
+High-Value Target (HVT) Event System for MOHAA Server
+
+This script implements a mid-match event where the top-scoring players
+on each team become High-Value Targets. Killing an enemy HVT grants
+bonus points and creates dynamic gameplay moments.
+
+Created for issue #5 - [Feature] Implement Mid-Match "High-Value Target" (HVT) Event
+*/
+
+main:
+    // Initialize HVT system
+    if (level.hvt_system_initialized == 1)
+        end
+        
+    level.hvt_system_initialized = 1
+    level.hvt_event_triggered = 0
+    level.hvt_event_active = 0
+    level.allied_hvt_player = NIL
+    level.axis_hvt_player = NIL
+    level.allied_hvt_score = 0
+    level.axis_hvt_score = 0
+    
+    // Subscribe to events
+    event_subscribe "player_killed" event_player_killed
+    event_subscribe "player_disconnecting" event_player_disconnecting
+    
+    // Start monitoring thread
+    thread hvt_monitor_thread
+    
+end
+
+hvt_monitor_thread:
+    // Wait for level to be ready
+    level waitTill prespawn
+    wait 5
+    
+    // Get timelimit from cvar (in minutes)
+    local.timelimit_minutes = getcvar "timelimit"
+    if (local.timelimit_minutes == NIL || local.timelimit_minutes <= 0)
+    {
+        // Default to 15 minutes if not set
+        local.timelimit_minutes = 15
+    }
+    
+    // Convert to seconds
+    local.timelimit_seconds = local.timelimit_minutes * 60
+    
+    // Calculate trigger window (30% to 70% of match time)
+    local.trigger_start = local.timelimit_seconds * 0.3
+    local.trigger_end = local.timelimit_seconds * 0.7
+    
+    // Random time within the window
+    local.trigger_time = local.trigger_start + ((randomfloat 1) * (local.trigger_end - local.trigger_start))
+    
+    // Monitor time until trigger point
+    while (level.hvt_event_triggered == 0)
+    {
+        if (level.time >= local.trigger_time)
+        {
+            thread trigger_hvt_event
+            level.hvt_event_triggered = 1
+        }
+        
+        wait 5  // Check every 5 seconds
+    }
+    
+end
+
+trigger_hvt_event:
+    // Select HVTs
+    waitthread select_hvts
+    
+    // Only proceed if we have at least one HVT
+    if (level.allied_hvt_player != NIL || level.axis_hvt_player != NIL)
+    {
+        level.hvt_event_active = 1
+        
+        // Announce the event
+        wait 1
+        stuffsrv "say ^1-- HIGH-VALUE TARGETS IDENTIFIED --"
+        wait 2
+        
+        if (level.allied_hvt_player != NIL)
+        {
+            local.allied_name = netname level.allied_hvt_player
+            stuffsrv "say ^2Allied HVT: ^7" + local.allied_name + " ^7(Score: " + level.allied_hvt_score + ")"
+        }
+        
+        if (level.axis_hvt_player != NIL)
+        {
+            local.axis_name = netname level.axis_hvt_player
+            stuffsrv "say ^1Axis HVT: ^7" + local.axis_name + " ^7(Score: " + level.axis_hvt_score + ")"
+        }
+        
+        wait 2
+        local.bonus_points = getcvar "g_hvt_bonus"
+        if (local.bonus_points == NIL) local.bonus_points = 10
+        stuffsrv "say ^3Kill the enemy HVT for a +" + local.bonus_points + " point bonus!"
+    }
+    
+end
+
+select_hvts:
+    local.allied_top_player = NIL
+    local.allied_top_score = -1
+    local.axis_top_player = NIL
+    local.axis_top_score = -1
+    
+    // Iterate through all players to find top scorers
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        
+        if (local.player != NIL && isalive local.player && local.player.dmteam != "spectator")
+        {
+            local.player_score = local.player getkills
+            
+            if (local.player.dmteam == "allies")
+            {
+                if (local.player_score > local.allied_top_score)
+                {
+                    local.allied_top_player = local.player
+                    local.allied_top_score = local.player_score
+                }
+            }
+            else if (local.player.dmteam == "axis")
+            {
+                if (local.player_score > local.axis_top_score)
+                {
+                    local.axis_top_player = local.player
+                    local.axis_top_score = local.player_score
+                }
+            }
+        }
+    }
+    
+    // Only set HVTs if they have a positive score
+    if (local.allied_top_score > 0)
+    {
+        level.allied_hvt_player = local.allied_top_player
+        level.allied_hvt_score = local.allied_top_score
+    }
+    
+    if (local.axis_top_score > 0)
+    {
+        level.axis_hvt_player = local.axis_top_player
+        level.axis_hvt_score = local.axis_top_score
+    }
+    
+end
+
+event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+    // Only process if HVT event is active
+    if (level.hvt_event_active != 1)
+        end
+        
+    // Check if victim is an HVT
+    local.victim = self
+    local.is_hvt_kill = 0
+    local.hvt_team = ""
+    
+    if (local.victim == level.allied_hvt_player)
+    {
+        local.is_hvt_kill = 1
+        local.hvt_team = "Allied"
+        level.allied_hvt_player = NIL  // Clear the HVT status
+    }
+    else if (local.victim == level.axis_hvt_player)
+    {
+        local.is_hvt_kill = 1
+        local.hvt_team = "Axis"
+        level.axis_hvt_player = NIL  // Clear the HVT status
+    }
+    
+    // If this was an HVT kill, process the reward
+    if (local.is_hvt_kill == 1 && local.attacker != NIL)
+    {
+        // Validate it's not suicide or teamkill
+        if (local.attacker != local.victim && local.attacker.dmteam != local.victim.dmteam)
+        {
+            // Award bonus points
+            local.bonus_points = getcvar "g_hvt_bonus"
+            if (local.bonus_points == NIL) local.bonus_points = 10
+            
+            local.attacker addkills local.bonus_points
+            
+            // Announce the elimination
+            local.attacker_name = netname local.attacker
+            local.victim_name = netname local.victim
+            
+            stuffsrv "say ^2" + local.attacker_name + " ^7has eliminated the " + local.hvt_team + " HVT ^1" + local.victim_name + "^7! (+" + local.bonus_points + " points)"
+            
+            // Check if all HVTs are eliminated
+            if (level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
+            {
+                wait 2
+                stuffsrv "say ^3All HVTs eliminated! Event concluded."
+                level.hvt_event_active = 0
+            }
+        }
+    }
+    
+end
+
+event_player_disconnecting:
+    // Check if disconnecting player is an HVT
+    if (self == level.allied_hvt_player)
+    {
+        level.allied_hvt_player = NIL
+        local.player_name = netname self
+        stuffsrv "say ^2" + local.player_name + " ^7has gone AWOL. The Allied HVT is no longer active."
+    }
+    else if (self == level.axis_hvt_player)
+    {
+        level.axis_hvt_player = NIL
+        local.player_name = netname self
+        stuffsrv "say ^1" + local.player_name + " ^7has gone AWOL. The Axis HVT is no longer active."
+    }
+    
+    // Check if all HVTs are gone
+    if (level.hvt_event_active == 1 && level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
+    {
+        stuffsrv "say ^3All HVTs are gone. Event concluded."
+        level.hvt_event_active = 0
+    }
+    
+end
