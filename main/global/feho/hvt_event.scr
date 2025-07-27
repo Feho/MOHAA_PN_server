@@ -12,7 +12,7 @@ main:
     // Initialize HVT system
     if (level.hvt_system_initialized == 1)
         end
-        
+
     level.hvt_system_initialized = 1
     level.hvt_event_triggered = 0
     level.hvt_event_active = 0
@@ -32,12 +32,9 @@ main:
 end
 
 hvt_monitor_thread:
-    // Wait for level to be ready
-    level waitTill prespawn
-    wait 5
-    
+
     // Get timelimit from cvar (in minutes)
-    local.timelimit_minutes = getcvar "timelimit"
+    local.timelimit_minutes = int(getcvar "timelimit")
     if (local.timelimit_minutes == NIL || local.timelimit_minutes <= 0)
     {
         // Default to 15 minutes if not set
@@ -79,25 +76,28 @@ trigger_hvt_event:
         
         // Announce the event
         wait 1
-        stuffsrv "say ^1-- HIGH-VALUE TARGETS IDENTIFIED --"
+        println ("^1-- HIGH-VALUE TARGETS IDENTIFIED --")
+        iprintlnbold("-- HIGH-VALUE TARGETS IDENTIFIED --")
         wait 2
         
         if (level.allied_hvt_player != NIL)
         {
             local.allied_name = netname level.allied_hvt_player
-            stuffsrv "say ^2Allied HVT: ^7" + local.allied_name + " ^7(Score: " + level.allied_hvt_score + ")"
+            println ("^2Allied HVT: ^7" + local.allied_name + " ^7(Score: " + level.allied_hvt_score + ")")
+            iprintlnbold("Allied HVT: " + local.allied_name + " (Score: " + level.allied_hvt_score + ")")
         }
         
         if (level.axis_hvt_player != NIL)
         {
             local.axis_name = netname level.axis_hvt_player
-            stuffsrv "say ^1Axis HVT: ^7" + local.axis_name + " ^7(Score: " + level.axis_hvt_score + ")"
+            println ("^1Axis HVT: ^7" + local.axis_name + " ^7(Score: " + level.axis_hvt_score + ")")
+            iprintlnbold("Axis HVT: " + local.axis_name + " (Score: " + level.axis_hvt_score + ")")
         }
         
         wait 2
         local.bonus_points = getcvar "g_hvt_bonus"
         if (local.bonus_points == NIL) local.bonus_points = 10
-        stuffsrv "say ^3Kill the enemy HVT for a +" + local.bonus_points + " point bonus!"
+        iprintlnbold("Kill the enemy HVT for a +" + local.bonus_points + " point bonus!")
     }
     
 end
@@ -155,7 +155,7 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
     // Only process if HVT event is active
     if (level.hvt_event_active != 1)
         end
-        
+
     // Check if victim is an HVT
     local.victim = self
     local.is_hvt_kill = 0
@@ -189,14 +189,16 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
             // Announce the elimination
             local.attacker_name = netname local.attacker
             local.victim_name = netname local.victim
-            
-            stuffsrv "say ^2" + local.attacker_name + " ^7has eliminated the " + local.hvt_team + " HVT ^1" + local.victim_name + "^7! (+" + local.bonus_points + " points)"
-            
+
+            println ("^2" + local.attacker_name + " ^7has eliminated the " + local.hvt_team + " HVT ^1" + local.victim_name + "^7! (+" + local.bonus_points + " points)")
+            iprintlnbold(local.attacker_name + " has eliminated the " + local.hvt_team + " HVT " + local.victim_name + "! (+" + local.bonus_points + " points)")
+
             // Check if all HVTs are eliminated
             if (level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
             {
                 wait 2
-                stuffsrv "say ^3All HVTs eliminated! Event concluded."
+                println ("^3All HVTs eliminated! Event concluded.")
+                iprintlnbold("All HVTs eliminated! Event concluded.")
                 level.hvt_event_active = 0
             }
         }
@@ -210,19 +212,22 @@ event_player_disconnecting:
     {
         level.allied_hvt_player = NIL
         local.player_name = netname self
-        stuffsrv "say ^2" + local.player_name + " ^7has gone AWOL. The Allied HVT is no longer active."
+        println ("^2" + local.player_name + " ^7has gone AWOL. The Allied HVT is no longer active.")
+        iprintlnbold(local.player_name + " has gone AWOL. The Allied HVT is no longer active.")
     }
     else if (self == level.axis_hvt_player)
     {
         level.axis_hvt_player = NIL
         local.player_name = netname self
-        stuffsrv "say ^1" + local.player_name + " ^7has gone AWOL. The Axis HVT is no longer active."
+        println ("^1" + local.player_name + " ^7has gone AWOL. The Axis HVT is no longer active.")
+        iprintlnbold(local.player_name + " has gone AWOL. The Axis HVT is no longer active.")
     }
     
     // Check if all HVTs are gone
     if (level.hvt_event_active == 1 && level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
     {
-        stuffsrv "say ^3All HVTs are gone. Event concluded."
+        println ("^3All HVTs are gone. Event concluded.")
+        iprintlnbold("All HVTs are gone. Event concluded.")
         level.hvt_event_active = 0
     }
     
@@ -240,19 +245,22 @@ event_player_spawned:
     {
         level.allied_hvt_player = NIL
         local.player_name = netname local.player
-        stuffsrv "say ^2" + local.player_name + " ^7switched teams. The Allied HVT is no longer active."
+        println ("^2" + local.player_name + " ^7switched teams. The Allied HVT is no longer active.")
+        iprintlnbold(local.player_name + " switched teams. The Allied HVT is no longer active.")
     }
     else if (local.player == level.axis_hvt_player && local.player.dmteam != "axis")
     {
         level.axis_hvt_player = NIL
         local.player_name = netname local.player
-        stuffsrv "say ^1" + local.player_name + " ^7switched teams. The Axis HVT is no longer active."
+        println ("^1" + local.player_name + " ^7switched teams. The Axis HVT is no longer active.")
+        iprintlnbold(local.player_name + " switched teams. The Axis HVT is no longer active.")
     }
     
     // Check if all HVTs are gone due to team switches
     if (level.hvt_event_active == 1 && level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
     {
-        stuffsrv "say ^3All HVTs are gone. Event concluded."
+        println ("^3All HVTs are gone. Event concluded.")
+        iprintlnbold("All HVTs are gone. Event concluded.")
         level.hvt_event_active = 0
     }
     
