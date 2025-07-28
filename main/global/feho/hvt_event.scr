@@ -73,6 +73,7 @@ trigger_hvt_event:
     if (level.allied_hvt_player != NIL || level.axis_hvt_player != NIL)
     {
         level.hvt_event_active = 1
+        thread update_hvt_hud
         
         // Announce the event
         println ("^1-- HIGH-VALUE TARGETS IDENTIFIED --")
@@ -139,6 +140,7 @@ select_hvts:
         level.allied_hvt_player = local.allied_top_player
         level.allied_hvt_score = local.allied_top_score
         local.allied_top_player thread set_avatar
+        local.allied_top_player thread hvt_regenerate
     }
     
     if (local.axis_top_score > 0)
@@ -146,8 +148,17 @@ select_hvts:
         level.axis_hvt_player = local.axis_top_player
         level.axis_hvt_score = local.axis_top_score
         local.axis_top_player thread set_avatar
+        local.axis_top_player thread hvt_regenerate
     }
     
+end
+
+hvt_regenerate:
+    while (self && (self == level.allied_hvt_player || self == level.axis_hvt_player) && self.health > 0 && self.health < 100)
+    {
+        self.health += 5
+        wait 2
+    }
 end
 
 set_avatar:
@@ -169,6 +180,53 @@ set_avatar:
     
     local.avatar remove
 
+end
+
+update_hvt_hud:
+    local.hud_index_base = 160 // Using a different base index to avoid conflicts with squad HUD
+    local.hud_y_pos = 20
+    local.hud_x_pos = 20
+
+    // Set static properties once for the Allied HVT element
+    huddraw_font (local.hud_index_base + 1) "default"
+    huddraw_align (local.hud_index_base + 1) "left" "top"
+    huddraw_rect (local.hud_index_base + 1) local.hud_x_pos local.hud_y_pos 0 0
+    huddraw_color (local.hud_index_base + 1) 0.5 0.5 1 1 // Blue
+
+    // Set static properties once for the Axis HVT element
+    huddraw_font (local.hud_index_base + 2) "default"
+    huddraw_align (local.hud_index_base + 2) "left" "top"
+    huddraw_rect (local.hud_index_base + 2) local.hud_x_pos (local.hud_y_pos + 15) 0 0
+    huddraw_color (local.hud_index_base + 2) 1 0.5 0.5 1 // Red
+
+    while (level.hvt_event_active == 1)
+    {
+        // --- Update Allied HVT ---
+        local.allied_hvt_name = ""
+        if (level.allied_hvt_player != NIL) {
+            local.allied_hvt_name = netname level.allied_hvt_player
+        } else {
+            local.allied_hvt_name = "[ELIMINATED]"
+        }
+        huddraw_string (local.hud_index_base + 1) ("ALLIED HVT: " + local.allied_hvt_name)
+        huddraw_alpha (local.hud_index_base + 1) 1.0
+
+        // --- Update Axis HVT ---
+        local.axis_hvt_name = ""
+        if (level.axis_hvt_player != NIL) {
+            local.axis_hvt_name = netname level.axis_hvt_player
+        } else {
+            local.axis_hvt_name = "[ELIMINATED]"
+        }
+        huddraw_string (local.hud_index_base + 2) ("AXIS HVT: " + local.axis_hvt_name)
+        huddraw_alpha (local.hud_index_base + 2) 1.0
+
+        wait 1
+    }
+
+    // --- Cleanup HUD ---
+    huddraw_alpha (local.hud_index_base + 1) 0.0
+    huddraw_alpha (local.hud_index_base + 2) 0.0
 end
 
 event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
