@@ -271,7 +271,7 @@ handle_player_leaving_squad local.player:
         end
 
     local.player_entnum = local.player.entnum
-    local.squad_info = level.player_squad_info[local.player_entnum]
+    local.squad_info = level.player_squad_info[local.player.entnum]
     local.team_idx = local.squad_info["team_idx"]
     local.squad_idx = local.squad_info["squad_idx"]
 
@@ -309,7 +309,7 @@ handle_player_leaving_squad local.player:
         }
     }
     
-    level.player_squad_info[local.player_entnum] = NIL
+    level.player_squad_info[local.player.entnum] = NIL
 end
 
 get_valid_spawn_pos_near_leader local.leader_entity:
@@ -432,6 +432,8 @@ event_player_spawned:
     local.player_squad_data = level.player_squad_info[local.player.entnum]
     if (local.player_squad_data == NIL) { end } // Should not happen if assignment worked
 
+    thread update_squad_hud local.player
+
     local.squad_team_idx = local.player_squad_data["team_idx"]
     local.squad_idx = local.player_squad_data["squad_idx"]
     local.squad_leader = level.squad_leaders[local.squad_team_idx][local.squad_idx]
@@ -489,7 +491,7 @@ event_player_killed:
     //println("Squad Mod: Player " + netname local.player + " killed.")
 
     local.player_entnum = local.player.entnum
-    local.squad_info = level.player_squad_info[local.player_entnum]
+    local.squad_info = level.player_squad_info[local.player.entnum]
     // Player might have disconnected right before kill event, squad_info could be NIL
     if (local.squad_info == NIL) 
     {
@@ -538,4 +540,91 @@ reset:
     level.squad_leaders = NIL
     level.player_squad_info = NIL
     level.squad_leader_positions = NIL
+end
+
+update_squad_hud local.player:
+    local.hud_index_base = 150 // Fixed base index for all players
+    local.hud_y_pos = 380
+    local.hud_x_pos = 40
+    local.team = local.player.dmteam
+
+    while (local.player && local.player.dmteam == local.team && level.player_squad_info[local.player.entnum] != NIL)
+    {
+        local.squad_info = level.player_squad_info[local.player.entnum]
+        local.team_idx = local.squad_info["team_idx"]
+        local.squad_idx = local.squad_info["squad_idx"]
+        local.squad_members = level.squads[local.team_idx][local.squad_idx]
+        local.squad_leader = level.squad_leaders[local.team_idx][local.squad_idx]
+
+        if (local.squad_members == NIL)
+        {
+            thread cleanup_squad_hud local.player local.hud_index_base
+            wait 0.5
+            continue;
+        }
+
+        // --- Draw HUD Title ---
+        local.title_index = local.hud_index_base
+        ihuddraw_font local.player local.title_index "default"
+        ihuddraw_align local.player local.title_index "left" "top"
+        ihuddraw_rect local.player local.title_index local.hud_x_pos local.hud_y_pos 0 0
+        ihuddraw_color local.player local.title_index 0.8 0.8 0.8
+        ihuddraw_string local.player local.title_index "SQUAD"
+        ihuddraw_alpha local.player local.title_index 1.0
+
+        local.current_y = local.hud_y_pos + 20
+
+        // --- Draw Squad Members ---
+        for (local.i = 1; local.i <= local.squad_members.size; local.i++)
+        {
+            local.member = local.squad_members[local.i]
+            if (local.member == NIL) continue;
+
+            local.member_index = local.hud_index_base + local.i
+            local.display_name = netname local.member
+
+            if (local.member == local.squad_leader) {
+                local.display_name = "[L] " + local.display_name
+            }
+
+            local.status_text = ""
+
+            if (local.member.isAlive) {
+                local.status_text = " - " + int(local.member.health) + " HP"
+                ihuddraw_color local.player local.member_index 0.5 1 0.5
+            } else {
+                local.status_text = " - (DEAD)"
+                ihuddraw_color local.player local.member_index 1 0.5 0.5
+            }
+
+            ihuddraw_font local.player local.member_index "default"
+            ihuddraw_align local.player local.member_index "left" "top"
+            ihuddraw_rect local.player local.member_index local.hud_x_pos local.current_y 0 0
+            ihuddraw_string local.player local.member_index (local.display_name + local.status_text)
+            ihuddraw_alpha local.player local.member_index 1.0
+
+            local.current_y += 15
+        }
+
+        // --- Cleanup unused HUD elements if squad size shrinks ---
+        for (local.i = local.squad_members.size + 1; local.i <= level.squad_max_players_per_squad; local.i++)
+        {
+             ihuddraw_alpha local.player (local.hud_index_base + local.i) 0.0
+        }
+
+        wait 0.5
+    }
+
+    // --- Cleanup all HUD elements when loop ends ---
+    thread cleanup_squad_hud local.player local.hud_index_base
+end
+
+cleanup_squad_hud local.player local.hud_index_base:
+    if (!local.player) end
+
+    // Clear title + 4 potential members
+    for (local.i = 0; local.i <= level.squad_max_players_per_squad; local.i++)
+    {
+        ihuddraw_alpha local.player (local.hud_index_base + local.i) 0.0
+    }
 end
