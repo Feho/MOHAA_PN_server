@@ -164,6 +164,6 @@ spawn_supply_crates:
 
 	thread global/AIR_gold.scr::treasure_spawn local.info
 	
-	stuffsrv "say Supply crates have been dropped in the church. Get them before the enemy does!"
+	iprintlnbold "Supply crates have been dropped in the church. Get them before the enemy does!"
 
 end
