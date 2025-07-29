@@ -93,8 +93,8 @@ trigger_hvt_event:
             iprintlnbold("Axis HVT: " + local.axis_name)
         }
         
-        local.bonus_points = getcvar "g_hvt_bonus"
-        if (local.bonus_points == NIL) local.bonus_points = 10
+        local.bonus_points = int(getcvar "g_hvt_bonus")
+        if (local.bonus_points == 0) local.bonus_points = 10
         iprintlnbold("Kill the enemy HVT for a +" + local.bonus_points + " point bonus!")
     }
     
@@ -156,7 +156,7 @@ end
 hvt_regenerate:
     while (self && (self == level.allied_hvt_player || self == level.axis_hvt_player) && self.health > 0 && self.health < 100)
     {
-        self.health += 5
+        self healthonly (self.health + 10)
         wait 2
     }
 end
@@ -184,7 +184,7 @@ end
 
 update_hvt_hud:
     local.hud_index_base = 160 // Using a different base index to avoid conflicts with squad HUD
-    local.hud_y_pos = 20
+    local.hud_y_pos = 260
     local.hud_x_pos = 20
 
     // Set static properties once for the Allied HVT element
@@ -203,8 +203,8 @@ update_hvt_hud:
     {
         // --- Update Allied HVT ---
         local.allied_hvt_name = ""
-        if (level.allied_hvt_player != NIL) {
-            local.allied_hvt_name = netname level.allied_hvt_player
+        if (level.allied_hvt_player) {
+            local.allied_hvt_name = (netname level.allied_hvt_player + " [" + int(level.allied_hvt_player.health) + " HP]")
         } else {
             local.allied_hvt_name = "[ELIMINATED]"
         }
@@ -213,8 +213,8 @@ update_hvt_hud:
 
         // --- Update Axis HVT ---
         local.axis_hvt_name = ""
-        if (level.axis_hvt_player != NIL) {
-            local.axis_hvt_name = netname level.axis_hvt_player
+        if (level.axis_hvt_player) {
+            local.axis_hvt_name = (netname level.axis_hvt_player + " [" + int(level.axis_hvt_player.health) + " HP]")
         } else {
             local.axis_hvt_name = "[ELIMINATED]"
         }
@@ -259,9 +259,9 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
         if (local.attacker != local.victim && local.attacker.dmteam != local.victim.dmteam)
         {
             // Award bonus points
-            local.bonus_points = getcvar "g_hvt_bonus"
-            if (local.bonus_points == NIL) local.bonus_points = 10
-            
+            local.bonus_points = int(getcvar "g_hvt_bonus")
+            if (local.bonus_points == 0) local.bonus_points = 10
+
             local.attacker addkills local.bonus_points
             
             // Announce the elimination
