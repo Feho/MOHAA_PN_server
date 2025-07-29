@@ -546,8 +546,9 @@ update_squad_hud local.player:
     local.hud_index_base = 150 // Fixed base index for all players
     local.hud_y_pos = 380
     local.hud_x_pos = 40
+    local.team = local.player.dmteam
 
-    while (local.player && local.player.isAlive && level.player_squad_info[local.player.entnum] != NIL)
+    while (local.player && local.player.dmteam == local.team && level.player_squad_info[local.player.entnum] != NIL)
     {
         local.squad_info = level.player_squad_info[local.player.entnum]
         local.team_idx = local.squad_info["team_idx"]
