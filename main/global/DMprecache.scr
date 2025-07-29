@@ -184,3 +184,6 @@ exec global/feho/messages.scr
 
 // Initialize map voting system
 exec global/feho/mapvote.scr
+
+// Initialize HVT Event System
+exec global/feho/hvt_event.scr

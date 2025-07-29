@@ -13,8 +13,16 @@
 *   **What it is:** Players spawn with a realistic combat load (e.g., 3-4 clips for their primary weapon) instead of maximum ammo. To get more, they must go to designated, static "Ammo Crate" locations on the map. This can be implemented with scripting that creates invisible "trigger zones."
 *   **Why it helps players stay:** **Strategic Depth.** This one change transforms the game. It curbs mindless spamming and makes every bullet count. It creates new map objectives (controlling ammo points), encourages teamwork (covering a teammate who is resupplying), and makes scavenging weapons from fallen enemies a viable, desperate tactic.
 
-### Mid-Match "High-Value Target" (HVT) Event
-*   **What it is:** A server-side event that triggers automatically once per match. The server identifies the top-scoring player on each team and announces them as the HVT. Killing the enemy's HVT awards a significant point bonus (e.g., +5 or +10 points) to the team.
+### Mid-Match "High-Value Target" (HVT) Event ✅ IMPLEMENTED
+*   **What it is:** A server-side event that triggers automatically once per match (between 30-70% of match time). The server identifies the top-scoring player on each team and announces them as the HVT. Killing the enemy's HVT awards a significant point bonus (configurable via `g_hvt_bonus`, default: +10 points).
+*   **How it works:** 
+    - Triggers once per match at a random time within 30-70% of the `timelimit`
+    - Selects the highest-scoring player on each team (Allied/Axis) as HVTs
+    - Announces the event and HVT identities to all players
+    - Awards bonus points when an enemy team kills an HVT
+    - Handles edge cases: player disconnections, team switching, ties
+    - Event concludes when all HVTs are eliminated or match ends
+*   **Configuration:** Set `g_hvt_bonus` in `server.cfg` to adjust bonus points
 *   **Why it helps players stay:** **Dynamic Objectives.** It breaks up the monotony of TDM and creates a temporary, player-driven objective. Teams will shift their focus to either protect their own HVT or hunt down the enemy's, leading to dramatic and memorable moments.
 
 ### Simple, Session-Based Stat Tracking

@@ -9,6 +9,17 @@
    ! Important
 ====================================================
 
+2024/01/XX
+~Copilot
++ global/feho/hvt_event.scr : Nouveau système d'événement "High-Value Target" (HVT)
+                              - Se déclenche une fois par match entre 30% et 70% du temps de match
+                              - Identifie les meilleurs joueurs de chaque équipe comme HVT
+                              - Bonus de points configurable pour éliminer un HVT ennemi (défaut: +10)
+                              - Gère les déconnexions et changements d'équipe
+                              - Annonces serveur avec messages colorés
+* server.cfg : + seta g_hvt_bonus 10 (points bonus pour élimination HVT)
+* global/events.scr : + exec global/feho/hvt_event.scr (intégration du système HVT)
+
 24/06/2013
 ~Feho
 * global/TNT_DETONATORS.scr : - Explosif appartient maintenant au détonateur et non au joueur
