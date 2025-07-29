@@ -154,7 +154,7 @@ select_hvts:
 end
 
 hvt_regenerate:
-    while (self && (self == level.allied_hvt_player || self == level.axis_hvt_player) && self.health > 0 && self.health < 100)
+    while (self && (self == level.allied_hvt_player || self == level.axis_hvt_player))
     {
         self healthonly (self.health + 10)
         wait 2
