@@ -185,7 +185,7 @@ end
 update_hvt_hud:
     local.hud_index_base = 160 // Using a different base index to avoid conflicts with squad HUD
     local.hud_y_pos = 260
-    local.hud_x_pos = 20
+    local.hud_x_pos = 30
 
     // Set static properties once for the Allied HVT element
     huddraw_font (local.hud_index_base + 1) "default"
