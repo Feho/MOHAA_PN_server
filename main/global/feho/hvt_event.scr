@@ -191,19 +191,19 @@ update_hvt_hud:
     huddraw_align (local.hud_index_base) "left" "top"
     huddraw_rect (local.hud_index_base) local.hud_x_pos local.hud_y_pos 0 0
     huddraw_color (local.hud_index_base) 1 1 1 1 // White
-    huddraw_string (local.hud_index_base) "High-Value Targets"
+    huddraw_string (local.hud_index_base) "HIGH-VALUE TARGETS"
     huddraw_alpha (local.hud_index_base) 1.0
 
     // Set static properties once for the Allied HVT element
     huddraw_font (local.hud_index_base + 1) "default"
     huddraw_align (local.hud_index_base + 1) "left" "top"
-    huddraw_rect (local.hud_index_base + 1) local.hud_x_pos (local.hud_y_pos + 15) 0 0
+    huddraw_rect (local.hud_index_base + 1) local.hud_x_pos (local.hud_y_pos + 20) 0 0
     huddraw_color (local.hud_index_base + 1) 0.5 0.5 1 1 // Blue
 
     // Set static properties once for the Axis HVT element
     huddraw_font (local.hud_index_base + 2) "default"
     huddraw_align (local.hud_index_base + 2) "left" "top"
-    huddraw_rect (local.hud_index_base + 2) local.hud_x_pos (local.hud_y_pos + 30) 0 0
+    huddraw_rect (local.hud_index_base + 2) local.hud_x_pos (local.hud_y_pos + 35) 0 0
     huddraw_color (local.hud_index_base + 2) 1 0.5 0.5 1 // Red
 
     while (level.hvt_event_active == 1)
