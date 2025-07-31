@@ -20,15 +20,15 @@ main:
     level.axis_hvt_player = NIL
     level.allied_hvt_score = 0
     level.axis_hvt_score = 0
-    
+
     // Subscribe to events
     event_subscribe "player_killed" event_player_killed
     event_subscribe "player_disconnecting" event_player_disconnecting
     event_subscribe "player_spawned" event_player_spawned
-    
+
     // Start monitoring thread
     thread hvt_monitor_thread
-    
+
 end
 
 hvt_monitor_thread:
@@ -40,17 +40,17 @@ hvt_monitor_thread:
         // Default to 15 minutes if not set
         local.timelimit_minutes = 15
     }
-    
+
     // Convert to seconds
     local.timelimit_seconds = local.timelimit_minutes * 60
-    
+
     // Calculate trigger window (30% to 70% of match time)
     local.trigger_start = local.timelimit_seconds * 0.3
     local.trigger_end = local.timelimit_seconds * 0.7
-    
+
     // Random time within the window
     local.trigger_time = local.trigger_start + ((randomfloat 1) * (local.trigger_end - local.trigger_start))
-    
+
     // Monitor time until trigger point
     while (level.hvt_event_triggered == 0)
     {
@@ -59,45 +59,45 @@ hvt_monitor_thread:
             thread trigger_hvt_event
             level.hvt_event_triggered = 1
         }
-        
+
         wait 5  // Check every 5 seconds
     }
-    
+
 end
 
 trigger_hvt_event:
     // Select HVTs
     waitthread select_hvts
-    
+
     // Only proceed if we have at least one HVT
     if (level.allied_hvt_player != NIL || level.axis_hvt_player != NIL)
     {
         level.hvt_event_active = 1
         thread update_hvt_hud
-        
+
         // Announce the event
         println ("^1-- HIGH-VALUE TARGETS IDENTIFIED --")
         iprintlnbold("-- HIGH-VALUE TARGETS IDENTIFIED --")
-        
+
         if (level.allied_hvt_player != NIL)
         {
             local.allied_name = netname level.allied_hvt_player
             println ("^2Allied HVT: ^7" + local.allied_name + " ^7(Score: " + level.allied_hvt_score + ")")
             iprintlnbold("Allied HVT: " + local.allied_name)
         }
-        
+
         if (level.axis_hvt_player != NIL)
         {
             local.axis_name = netname level.axis_hvt_player
             println ("^1Axis HVT: ^7" + local.axis_name + " ^7(Score: " + level.axis_hvt_score + ")")
             iprintlnbold("Axis HVT: " + local.axis_name)
         }
-        
+
         local.bonus_points = int(getcvar "g_hvt_bonus")
         if (local.bonus_points == 0) local.bonus_points = 10
         iprintlnbold("Kill the enemy HVT for a +" + local.bonus_points + " point bonus!")
     }
-    
+
 end
 
 select_hvts:
@@ -105,16 +105,16 @@ select_hvts:
     local.allied_top_score = -1
     local.axis_top_player = NIL
     local.axis_top_score = -1
-    
+
     // Iterate through all players to find top scorers
     for (local.i = 1; local.i <= $player.size; local.i++)
     {
         local.player = $player[local.i]
-        
+
         if (local.player != NIL && isalive local.player && local.player.dmteam != "spectator")
         {
             local.player_score = local.player getkills
-            
+
             if (local.player.dmteam == "allies")
             {
                 if (local.player_score > local.allied_top_score)
@@ -133,7 +133,7 @@ select_hvts:
             }
         }
     }
-    
+
     // Only set HVTs if they have a positive score
     if (local.allied_top_score > 0)
     {
@@ -142,7 +142,7 @@ select_hvts:
         local.allied_top_player thread set_avatar
         local.allied_top_player thread hvt_regenerate
     }
-    
+
     if (local.axis_top_score > 0)
     {
         level.axis_hvt_player = local.axis_top_player
@@ -150,7 +150,7 @@ select_hvts:
         local.axis_top_player thread set_avatar
         local.axis_top_player thread hvt_regenerate
     }
-    
+
 end
 
 hvt_regenerate:
@@ -163,21 +163,21 @@ end
 
 set_avatar:
 
-	local.avatar = spawn func_beam
-	local.avatar shader ("textures/hud/" + self.dmteam + ".tga") 
-	local.avatar.origin = self gettagposition "Bip01 Head" + ( 0 0 20 )
-	local.avatar color ( 1.0 1.0 1.0 )
-	local.avatar scale 10
-	local.avatar numsegments 1
-	local.avatar activate
+    local.avatar = spawn func_beam
+    local.avatar shader ("textures/hud/" + self.dmteam + ".tga") 
+    local.avatar.origin = self gettagposition "Bip01 Head" + ( 0 0 20 )
+    local.avatar color ( 1.0 1.0 1.0 )
+    local.avatar scale 10
+    local.avatar numsegments 1
+    local.avatar activate
 
-	while (self && (self == level.allied_hvt_player || self == level.axis_hvt_player))
-	{
-		waitframe
-		local.avatar.origin = self gettagposition "Bip01 Head" + ( 0 0 20 )
-		local.avatar endpoint ( local.avatar.origin + ( 0 0 30) )
-	}
-    
+    while (self && (self == level.allied_hvt_player || self == level.axis_hvt_player))
+    {
+        waitframe
+        local.avatar.origin = self gettagposition "Bip01 Head" + ( 0 0 20 )
+        local.avatar endpoint ( local.avatar.origin + ( 0 0 30) )
+    }
+
     local.avatar remove
 
 end
@@ -187,16 +187,23 @@ update_hvt_hud:
     local.hud_y_pos = 260
     local.hud_x_pos = 30
 
+    huddraw_font (local.hud_index_base) "default"
+    huddraw_align (local.hud_index_base) "left" "top"
+    huddraw_rect (local.hud_index_base) local.hud_x_pos local.hud_y_pos 0 0
+    huddraw_color (local.hud_index_base) 1 1 1 1 // White
+    huddraw_string (local.hud_index_base) "High-Value Targets"
+    huddraw_alpha (local.hud_index_base) 1.0
+
     // Set static properties once for the Allied HVT element
     huddraw_font (local.hud_index_base + 1) "default"
     huddraw_align (local.hud_index_base + 1) "left" "top"
-    huddraw_rect (local.hud_index_base + 1) local.hud_x_pos local.hud_y_pos 0 0
+    huddraw_rect (local.hud_index_base + 1) local.hud_x_pos (local.hud_y_pos + 15) 0 0
     huddraw_color (local.hud_index_base + 1) 0.5 0.5 1 1 // Blue
 
     // Set static properties once for the Axis HVT element
     huddraw_font (local.hud_index_base + 2) "default"
     huddraw_align (local.hud_index_base + 2) "left" "top"
-    huddraw_rect (local.hud_index_base + 2) local.hud_x_pos (local.hud_y_pos + 15) 0 0
+    huddraw_rect (local.hud_index_base + 2) local.hud_x_pos (local.hud_y_pos + 30) 0 0
     huddraw_color (local.hud_index_base + 2) 1 0.5 0.5 1 // Red
 
     while (level.hvt_event_active == 1)
@@ -208,7 +215,7 @@ update_hvt_hud:
         } else {
             local.allied_hvt_name = "[ELIMINATED]"
         }
-        huddraw_string (local.hud_index_base + 1) ("ALLIED HVT: " + local.allied_hvt_name)
+        huddraw_string (local.hud_index_base + 1) local.allied_hvt_name
         huddraw_alpha (local.hud_index_base + 1) 1.0
 
         // --- Update Axis HVT ---
@@ -218,13 +225,16 @@ update_hvt_hud:
         } else {
             local.axis_hvt_name = "[ELIMINATED]"
         }
-        huddraw_string (local.hud_index_base + 2) ("AXIS HVT: " + local.axis_hvt_name)
+        huddraw_string (local.hud_index_base + 2) local.axis_hvt_name
         huddraw_alpha (local.hud_index_base + 2) 1.0
 
         wait 1
     }
 
+    wait 5
+
     // --- Cleanup HUD ---
+    huddraw_alpha (local.hud_index_base) 0.0
     huddraw_alpha (local.hud_index_base + 1) 0.0
     huddraw_alpha (local.hud_index_base + 2) 0.0
 end
@@ -238,7 +248,7 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
     local.victim = self
     local.is_hvt_kill = 0
     local.hvt_team = ""
-    
+
     if (local.victim == level.allied_hvt_player)
     {
         local.is_hvt_kill = 1
@@ -251,7 +261,7 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
         local.hvt_team = "Axis"
         level.axis_hvt_player = NIL  // Clear the HVT status
     }
-    
+
     // If this was an HVT kill, process the reward
     if (local.is_hvt_kill == 1 && local.attacker != NIL)
     {
@@ -263,7 +273,7 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
             if (local.bonus_points == 0) local.bonus_points = 10
 
             local.attacker addkills local.bonus_points
-            
+
             // Announce the elimination
             local.attacker_name = netname local.attacker
             local.victim_name = netname local.victim
@@ -281,7 +291,7 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
             }
         }
     }
-    
+
 end
 
 event_player_disconnecting:
@@ -300,7 +310,7 @@ event_player_disconnecting:
         println ("^1" + local.player_name + " ^7has gone AWOL. The Axis HVT is no longer active.")
         iprintlnbold(local.player_name + " has gone AWOL. The Axis HVT is no longer active.")
     }
-    
+
     // Check if all HVTs are gone
     if (level.hvt_event_active == 1 && level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
     {
@@ -308,16 +318,16 @@ event_player_disconnecting:
         iprintlnbold("All HVTs are gone. Event concluded.")
         level.hvt_event_active = 0
     }
-    
+
 end
 
 event_player_spawned:
     // Check if a spawning player was an HVT and may have switched teams
     if (level.hvt_event_active != 1)
         end
-        
+
     local.player = self
-    
+
     // Check if this player was an HVT but is now on a different team
     if (local.player == level.allied_hvt_player && local.player.dmteam != "allies")
     {
@@ -333,7 +343,7 @@ event_player_spawned:
         println ("^1" + local.player_name + " ^7switched teams. The Axis HVT is no longer active.")
         iprintlnbold(local.player_name + " switched teams. The Axis HVT is no longer active.")
     }
-    
+
     // Check if all HVTs are gone due to team switches
     if (level.hvt_event_active == 1 && level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
     {
@@ -341,5 +351,5 @@ event_player_spawned:
         iprintlnbold("All HVTs are gone. Event concluded.")
         level.hvt_event_active = 0
     }
-    
+
 end
