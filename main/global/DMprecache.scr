@@ -176,6 +176,7 @@ cache models/statweapons/mg42_bipod_nonstatic.tik
 exec global/events.scr
 // exec global/AIR_view.scr
 exec global/feho/squad.scr
+exec global/feho/antinoob.scr
 
 level waittill spawn
 
