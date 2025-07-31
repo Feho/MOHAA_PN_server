@@ -20,7 +20,7 @@ noob:
 
 		waitthread convertID15
 		wait .5
-		$player[level.who] weaponcommand dual dmbulletspread 20 20 60 60
+		$player[level.who] weaponcommand dual dmbulletspread 40 40 80 80
 		println ("ANTI CHEAT: The weapon accuracy of " + netname $player[level.who] + " has been reduced.")
 		wait 5
 
