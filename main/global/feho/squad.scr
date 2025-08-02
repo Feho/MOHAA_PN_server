@@ -185,7 +185,6 @@ assign_player_to_squad local.player:
             
             thread start_leader_position_tracking local.player
             //println("Squad Mod: Player " + netname local.player + " created and leads squad " + local.s_idx + " on team " + local.player_team_idx)
-            local.player iprint ("You are now the leader of squad " + local.s_idx)
             end local.player
         }
         else if (level.squads[local.player_team_idx][local.s_idx].size < level.squad_max_players_per_squad)
@@ -195,7 +194,6 @@ assign_player_to_squad local.player:
             level.player_squad_info[local.player.entnum]["team_idx"] = local.player_team_idx
             level.player_squad_info[local.player.entnum]["squad_idx"] = local.s_idx
             //println("Squad Mod: Player " + netname local.player + " joined squad " + local.s_idx + " on team " + local.player_team_idx)
-            local.player iprint ("You joined squad " + local.s_idx)
             end local.player
         }
     }
