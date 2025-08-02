@@ -254,16 +254,6 @@ promote_new_squad_leader local.team_idx local.squad_idx:
     level.squad_leaders[local.team_idx][local.squad_idx] = local.new_leader
     thread start_leader_position_tracking local.new_leader
     //println("Squad Mod: " + netname local.new_leader + " is the new leader of squad " + local.squad_idx + " on team " + local.team_idx)
-
-    // Notify squad members
-    for (local.i = 1; local.i <= local.current_squad_array.size; local.i++)
-    {
-        local.member = local.current_squad_array[local.i]
-        if (local.member != NIL)
-        {
-            local.member iprint (netname local.new_leader + " is now your squad leader.")
-        }
-    }
 end
 
 handle_player_leaving_squad local.player:
