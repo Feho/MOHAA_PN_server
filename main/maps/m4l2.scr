@@ -20,63 +20,39 @@ setcvar "g_scoreboardpic" "M4L2"
 
 /////////////////
 
-local.allies = spawn info_player_allied
-local.allies.angle = 148
-local.allies.origin = ( -2651 3813 107 )
-
-local.allies = spawn info_player_allied
-local.allies.angle = 89
-local.allies.origin = ( -3567 -2000 82 )
-
-local.allies = spawn info_player_allied
-local.allies.angle = 165
-local.allies.origin = ( -1812 3393 82 )
-
-local.allies = spawn info_player_allied
-local.allies.angle = -90
-local.allies.origin = ( -5765 4781 402 )
-
-local.allies = spawn info_player_allied
-local.allies.angle = 142
-local.allies.origin = ( -4818 2709 423 )
-
-local.allies = spawn info_player_allied
-local.allies.angle = -140
-local.allies.origin = ( 2534 1758 171 )
-
-local.allies = spawn info_player_allied
-local.allies.angle = -160
-local.allies.origin = ( 2439 1594 164 )
+spawn info_player_allied "origin" "-3932.089 3508.853 0.125" "angle" "143.075" "targetname" "A1"
+spawn info_player_allied "origin" "-4702.385 3504.103 0.125" "angle" "153.677" "targetname" "A2"
+spawn info_player_allied "origin" "-5436.472 4364.783 0.125" "angle" "245.281" "targetname" "A3"
+spawn info_player_allied "origin" "-5680.581 3842.953 0.125" "angle" "179.632" "targetname" "A4"
+spawn info_player_allied "origin" "-7055.063 4315.985 0.125" "angle" "316.011" "targetname" "A5"
+spawn info_player_allied "origin" "-7620.041 3701.099 0.125" "angle" "2.406" "targetname" "A6"
+spawn info_player_allied "origin" "-6080.894 3261.110 112.125" "angle" "149.134" "targetname" "A7"
+spawn info_player_allied "origin" "-6742.670 3088.171 288.125" "angle" "270.807" "targetname" "A8"
+spawn info_player_allied "origin" "-6658.795 1762.604 320.125" "angle" "40.589" "targetname" "A9"
+spawn info_player_allied "origin" "-5809.449 1361.942 320.125" "angle" "89.544" "targetname" "A10"
+spawn info_player_allied "origin" "-6017.989 1399.592 380.125" "angle" "89.324" "targetname" "A11"
+spawn info_player_allied "origin" "-4744.063 2695.463 343.734" "angle" "142.103" "targetname" "A12"
+spawn info_player_allied "origin" "-4660.310 2824.883 334.898" "angle" "181.796" "targetname" "A13"
+spawn info_player_allied "origin" "-5774.222 4805.139 320.125" "angle" "268.176" "targetname" "A14"
+spawn info_player_allied "origin" "-6607.257 4812.134 320.998" "angle" "302.673" "targetname" "A15"
 
 ////////////////// 
 
-local.axis = spawn info_player_axis
-local.axis.angle = 111
-local.axis.origin = ( -4298 1267 109 )
-
-local.axis = spawn info_player_axis
-local.axis.angle = 25
-local.axis.origin = ( -7346 -2424 82 )
-
-local.axis = spawn info_player_axis
-local.axis.angle = -160
-local.axis.origin = ( -6161 2953 410 )
-
-local.axis = spawn info_player_axis
-local.axis.angle = 139
-local.axis.origin = ( -3918 3500 82 )
-
-local.axis = spawn info_player_axis
-local.axis.angle = 160
-local.axis.origin = ( 290 839 98 )
-
-local.axis = spawn info_player_axis
-local.axis.angle = 61
-local.axis.origin = ( -6017 1147 424 )
-
-local.axis = spawn info_player_axis
-local.axis.angle = 61
-local.axis.origin = ( -4866 2703 419 )
+spawn info_player_axis "origin" "-2515.134 4053.802 410.856" "angle" "193.184" "targetname" "X1"
+spawn info_player_axis "origin" "-5585.351 4449.998 0.125" "angle" "305.134" "targetname" "X2"
+spawn info_player_axis "origin" "-6185.291 4337.475 0.125" "angle" "267.281" "targetname" "X3"
+spawn info_player_axis "origin" "-7466.095 4096.857 0.125" "angle" "287.688" "targetname" "X4"
+spawn info_player_axis "origin" "-7618.550 3603.439 1.125" "angle" "0.153" "targetname" "X5"
+spawn info_player_axis "origin" "-7061.907 2576.661 288.125" "angle" "52.174" "targetname" "X6"
+spawn info_player_axis "origin" "-5605.133 1158.966 376.125" "angle" "122.866" "targetname" "X7"
+spawn info_player_axis "origin" "-5806.789 1179.826 376.125" "angle" "90.747" "targetname" "X8"
+spawn info_player_axis "origin" "-6005.214 1172.929 376.125" "angle" "54.190" "targetname" "X9"
+spawn info_player_axis "origin" "-6704.944 1727.713 320.125" "angle" "24.664" "targetname" "X10"
+spawn info_player_axis "origin" "-6684.596 1883.181 320.125" "angle" "7.361" "targetname" "X11"
+spawn info_player_axis "origin" "-5849.040 4815.187 320.125" "angle" "270.027" "targetname" "X12"
+spawn info_player_axis "origin" "-5929.081 4795.576 320.125" "angle" "277.053" "targetname" "X13"
+spawn info_player_axis "origin" "-5429.327 3865.403 392.125" "angle" "197.996" "targetname" "X14"
+spawn info_player_axis "origin" "-6110.662 3172.831 328.125" "angle" "223.808" "targetname" "X15"
 
 ////////////FFA
 //local.deathmatch = spawn info_player_deathmatch origin "3453 3199 262" angle -110
@@ -171,51 +147,50 @@ $elevator_switch remove
 	
 // exec global/spotlight.scr
 
-level waittill prespawn
+	level waittill prespawn
 
-exec global/loadout.scr "maps/m4l2.scr"
-exec global/DMprecache.scr
-exec global/jv_sound.scr
-exec global/door_locked.scr
-exec global/shutter.scr
+	exec global/loadout.scr "maps/m4l2.scr"
+	exec global/DMprecache.scr
+	exec global/jv_sound.scr
+	exec global/door_locked.scr
+	exec global/shutter.scr
 
-exec global/ambient.scr m4l1
+	exec global/ambient.scr m4l1
 
-level.script = maps/m4l2.scr
+	level.script = maps/m4l2.scr
 
-thread global/exploder.scr::main
-thread global/door_locked.scr::lock
-thread global/barrel.scr::explosive_barrel
+	thread global/exploder.scr::main
+	thread global/door_locked.scr::lock
+	thread global/barrel.scr::explosive_barrel
 
-      	if(int(getcvar "hold") != 0)  
-        {
-	//setup
-	local.o = ( -2015 1160 70 ) // your trigger origin -2085 1160 120
-	local.sa = ( -659 -242 50 )  // your trigger setsize minus -589 -242 -1 
-	local.sb = ( 510 242 60 )  // your trigger setsize plus 589 242 50
-	local.mes[1] = "Capture and hold the Bunker" //global message 1
-	local.mes[2] = "the Bunker is west of the train tunnel" //global message 2
-	local.mes[3] = "Bunker" // "xteam occupies the" local.mes[3]
-	local.mes[4] = "Hold the Bunker"  //objective and title - "Capture and" local.mes[4]
-	local.mes[5] = "by <TWL>ViPER"  //for scoreboard
-	local.mes[6] = "Hold the Bunker" //abv. title for hud
-	local.mes[7] = "at tunnel" //for hud
-	local.tp[1] = 15  //time for point - hold
-	local.tp[2] = 12   //time for point - point mode    (local.tp[4]*local.tp[2]must exceed 60 sec)
-	local.tp[3] = 90  //time for win - imperative mode (minimum 60 sec)
-	local.tp[4] = 20   //points for win - point mode
-	local.tp[5] = 18  //timelimit for point mode (mins//.1 = off)
-	local.tp[6] = 22  //timelimit for imperative mode (mins//.1 = off)
-	local.tp[7] = 15  //timelimit for hold (mins)
+	if(int(getcvar "hold") != 0)  
+	{
+		//setup
+		local.o = ( -2015 1160 70 ) // your trigger origin -2085 1160 120
+		local.sa = ( -659 -242 50 )  // your trigger setsize minus -589 -242 -1 
+		local.sb = ( 510 242 60 )  // your trigger setsize plus 589 242 50
+		local.mes[1] = "Capture and hold the Bunker" //global message 1
+		local.mes[2] = "the Bunker is west of the train tunnel" //global message 2
+		local.mes[3] = "Bunker" // "xteam occupies the" local.mes[3]
+		local.mes[4] = "Hold the Bunker"  //objective and title - "Capture and" local.mes[4]
+		local.mes[5] = "by <TWL>ViPER"  //for scoreboard
+		local.mes[6] = "Hold the Bunker" //abv. title for hud
+		local.mes[7] = "at tunnel" //for hud
+		local.tp[1] = 15  //time for point - hold
+		local.tp[2] = 12   //time for point - point mode    (local.tp[4]*local.tp[2]must exceed 60 sec)
+		local.tp[3] = 90  //time for win - imperative mode (minimum 60 sec)
+		local.tp[4] = 20   //points for win - point mode
+		local.tp[5] = 18  //timelimit for point mode (mins//.1 = off)
+		local.tp[6] = 22  //timelimit for imperative mode (mins//.1 = off)
+		local.tp[7] = 15  //timelimit for hold (mins)
 
-	local.cinversion = 15 //reset default
+		local.cinversion = 15 //reset default
 
-	setcvar cinversion local.cinversion
-
+		setcvar cinversion local.cinversion
 	}                                    //           Thats it!
 	
-	$world farplane 2000
-	thread fog
+	//$world farplane 2000
+	exec global/random_fog.scr
 	
 	////////////////////////////
 	level waittill spawn ///////
@@ -229,10 +204,10 @@ thread global/barrel.scr::explosive_barrel
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
 	
-      	if(int(getcvar "hold") != 0)   
-        {
-	exec global/strategic.scr local.o local.sa local.sb local.mes local.tp
-	thread fix
+	if(int(getcvar "hold") != 0)   
+	{
+		exec global/strategic.scr local.o local.sa local.sb local.mes local.tp
+		thread fix
 	}
 
 	exec global/Strategic_common.scr
@@ -255,35 +230,6 @@ thread elevatorprep
 thread elevator_loop
 thread addstuff
 
-end
-
-fog:
-
-	// Decrease gradually the fog during 8 minute
-	local.start_dist = 2000
-	local.end_dist = 13000
-	local.duration = 480 // 8 minutes
-	local.start_time = level.time
-
-	local.current_dist = local.start_dist
-	
-	while (level.time < (local.start_time + local.duration))
-	{
-		local.elapsed_time = level.time - local.start_time
-		// Ensure elapsed_time doesn't exceed duration due to potential timing issues
-		if (local.elapsed_time > local.duration)
-			local.elapsed_time = local.duration
-
-		local.fraction = local.elapsed_time / local.duration
-		local.current_dist = local.start_dist + ((local.end_dist - local.start_dist) * local.fraction)
-		
-		$world farplane local.current_dist
-
-		wait 1 // Update every frame for smoothness
-	}
-	
-	// Ensure the final value is set precisely at the end
-	$world farplane local.end_dist
 end
 
 fix:
