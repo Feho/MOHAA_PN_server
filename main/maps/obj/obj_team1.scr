@@ -186,7 +186,7 @@ local.axis2.angle = 10
 
 	// set the parameters for this round based match
 	level.dmrespawning = 1 // 1 or 0
-	level.dmroundlimit = 8 // round time limit in minutes
+	level.dmroundlimit = 15 // round time limit in minutes
 	level.clockside = axis // set to axis, allies, kills, or draw
 
 	//////////////////////////

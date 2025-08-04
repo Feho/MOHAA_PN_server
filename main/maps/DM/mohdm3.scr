@@ -23,7 +23,7 @@ main:
 	
 	setcvar "g_gametype" "3"
 	setcvar "fraglimit" "3"
-	setcvar "timelimit" "10"
+	setcvar "timelimit" "15"
 
 	// call additional stuff for playing this map round based is needed
 	if(level.roundbased)
@@ -129,7 +129,7 @@ main:
 
 	// set the parameters for this round/wave based match
 	level.dmrespawning = 1 // 1 **wave based** or 0 **round based**
-	level.dmroundlimit = 7 // round time limit in minutes
+	level.dmroundlimit = 15 // round time limit in minutes
 
 	//level waittill roundstart
 

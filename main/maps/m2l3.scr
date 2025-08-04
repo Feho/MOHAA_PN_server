@@ -231,7 +231,7 @@ setup_obj:
 
 		// set the parameters for this round based match
 	level.dmrespawning = 1 // 1 or 0
-	level.dmroundlimit = 8 // round time limit in minutes
+	level.dmroundlimit = 15 // round time limit in minutes
 	
 	local.array = makeArray
 	"shoot_radio" 1200 ( -1015 5880 -202 ) ( 0 0 0 ) "axis" 
