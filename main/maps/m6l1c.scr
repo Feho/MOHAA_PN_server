@@ -412,7 +412,7 @@ end
 // initiate Stage 2
 Stage_2:
 
-	exec global/feho/squad.scr::reset_squad_mod
+	waitthread global/feho/squad.scr::reset_squad_mod
 
 	$X1 disablespawn
 	$X2 disablespawn

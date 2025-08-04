@@ -6,7 +6,6 @@
 main: 
 
 	setcvar "g_gametype" "2"
-	level.squad_mod = 0
 	//setcvar "developer" "0" // temporaire
 	
 	if((getcvar("g_gametype") == "1")) 
@@ -343,7 +342,7 @@ Stage_Timer:
 
 	wait 580
 	
-	// exec global/feho/squad.scr::reset
+	waitthread global/feho/squad.scr::reset
 
 	// Initiate Stage 2
 	

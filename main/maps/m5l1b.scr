@@ -9,7 +9,6 @@
 main: 
 	
 	setcvar "g_gametype" "2"
-	level.squad_mod = 0
 	
 	if((getcvar("g_gametype") == "1")) 
 	{
@@ -284,7 +283,7 @@ Stage_Timer:
 
 	wait 580
 
-	// exec global/feho/squad.scr::reset
+	waitthread global/feho/squad.scr::reset
 
 	// Initiate Stage 2
 	level.m5l1b_stage2 = 1

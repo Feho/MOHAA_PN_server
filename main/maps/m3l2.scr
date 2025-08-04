@@ -7,7 +7,6 @@
 main: 
 
 	setcvar "g_gametype" "2"
-	level.squad_mod = 0
 	
 	if((getcvar("g_gametype") == "1")) 
 	{
@@ -466,7 +465,7 @@ Stage_Timer:
 
 	wait 470
 
-	// exec global/feho/squad.scr::reset
+	waitthread global/feho/squad.scr::reset
 
 	// huh? 2 more panzers? :P
 	$scene5_dead_panzer.origin = ( 2531.92 -3872.92 -199.88 )	
@@ -558,7 +557,7 @@ Stage_Timer:
 
 	wait 230
 
-	exec global/feho/squad.scr::reset
+	waitthread global/feho/squad.scr::reset
 
 	$XX1 disablespawn
 	$XX2 disablespawn
