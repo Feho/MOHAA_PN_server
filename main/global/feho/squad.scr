@@ -26,6 +26,7 @@ main:
     thread monitor_squads
 
     event_subscribe "player_spawned" event_player_spawned
+    event_subscribe "player_damaged" event_player_damaged
     event_subscribe "player_killed" event_player_killed
     event_subscribe "player_disconnecting" event_player_disconnecting
     //println "Squad Mod Subscribed to Events."
@@ -311,7 +312,7 @@ handle_player_leaving_squad local.player:
 end
 
 get_valid_spawn_pos_near_leader local.leader_entity:
-    if (local.leader_entity == NIL || !local.leader_entity.isAlive)
+    if (local.leader_entity == NIL || !local.leader_entity.isAlive || local.leader_entity.is_under_fire)
         end NIL
 
     local.pos_history = level.squad_leader_positions[local.leader_entity.entnum]
@@ -477,6 +478,29 @@ event_player_spawned:
         }
         wait 0.1
     }
+end
+
+event_player_damaged:
+
+    local.squad_info = level.player_squad_info[self.entnum]
+    local.team_idx = local.squad_info["team_idx"]
+    local.squad_idx = local.squad_info["squad_idx"]
+
+    if (level.squad_leaders[local.team_idx][local.squad_idx] != self)
+        end
+
+    self.is_under_fire = 1
+    self.is_under_fire_expiration = level.time + 4
+    println("^3Player " + netname self + " is under fire!")
+
+    while (level.time < self.is_under_fire_expiration)
+    {
+        wait 0.1
+    }
+
+    if (self)
+        self.is_under_fire = 0
+
 end
 
 event_player_killed:
