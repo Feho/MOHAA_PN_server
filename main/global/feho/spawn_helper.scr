@@ -1,0 +1,69 @@
+main:
+
+    if (level.spawn_helper == 1 || (getcvar "spawn_helper") != 1)
+        end
+    
+    level.spawn_helper = 1
+
+    thread spawn_helper
+
+end
+
+spawn_helper:
+
+	while ($player.size == 0) wait 1
+
+	println("^7----------------------------------- Spawn Helper Initialized -----------------------------------------")
+
+	if ($player[1].dmteam == "allies")
+	{
+		local.letter = "A"
+		local.team = "allied"
+	}
+	else
+	{
+		local.letter = "X"
+		local.team = "axis"
+	}
+
+	local.number = 1
+
+	while (1)
+	{
+		waitframe
+		
+		if ($player[1].useheld && $player[1].fireheld != 1)
+		{
+			local.origin = $player[1].origin
+			local.angle = $player[1].angle
+			println("spawn info_player_" + local.team + " \"origin\" \"" + local.origin + "\" \"angle\" \"" + (local.angle) + "\" \"targetname\" \"" + (local.letter + local.number) + "\"")
+			local.number++
+			
+			if (local.letter == "A")
+			{
+				local.model = "player/allied_airborne.tik"
+				local.light = ( 0.4 0.4 1.0 )
+			}
+			else
+			{
+				local.model = "player/german_waffenss_shutze.tik"
+				local.light = ( 1.0 0.4 0.4 )
+			}
+
+			local.dummy = spawn script_model model local.model
+			local.dummy.origin = local.origin
+			local.dummy.angle = local.angle
+			local.dummy light local.light[0] local.light[1] local.light[2] 60
+			local.dummy notsolid
+
+			wait 1
+		}
+		
+		// if ($player[1].fireheld)
+		// {
+		// 	thread global/AIR_spawnblock_lib.scr::show_spawns "allies"
+		// 	thread global/AIR_spawnblock_lib.scr::show_spawns "axis"
+		// }
+	}
+
+end
