@@ -230,16 +230,17 @@ promote_new_squad_leader local.team_idx local.squad_idx:
                 local.living_members[1] = local.member
             else
                 local.living_members[local.living_members.size + 1] = local.member
+
+            if (!isBot local.member)
+            {
+                if (local.living_humans == NIL)
+                    local.living_humans[1] = local.member
+                else
+                    local.living_humans[local.living_humans.size + 1] = local.member
+            }
         }
     }
     
-    //println("Squad Mod: Living members count: " + local.living_members.size)
-    //println("Squad Mod: Living members: ")
-    for (local.i = 1; local.i <= local.living_members.size; local.i++)
-    {
-        //println("Squad Mod: " + netname local.living_members[local.i])
-    }
-
     if (local.living_members.size <= 0)
     {
         level.squad_leaders[local.team_idx][local.squad_idx] = NIL
@@ -247,8 +248,17 @@ promote_new_squad_leader local.team_idx local.squad_idx:
         end
     }
 
-    local.random_idx = (randomint(local.living_members.size) + 1) // randomint(max) is 0 to max. size-1 means 0 to size-1. +1 means 1 to size.
-    local.new_leader = local.living_members[local.random_idx]
+    if (local.living_humans.size > 0)
+    {
+        local.random_idx = (randomint(local.living_humans.size) + 1)
+        local.new_leader = local.living_humans[local.random_idx]
+    }
+    else
+    {
+        local.random_idx = (randomint(local.living_members.size) + 1)
+        local.new_leader = local.living_members[local.random_idx]
+    }
+
     level.squad_leaders[local.team_idx][local.squad_idx] = local.new_leader
     thread start_leader_position_tracking local.new_leader
     //println("Squad Mod: " + netname local.new_leader + " is the new leader of squad " + local.squad_idx + " on team " + local.team_idx)
