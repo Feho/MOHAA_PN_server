@@ -340,7 +340,8 @@ Stage_Timer:
 	local.messagetosay = "S T A G E  1"
 	thread scrollMsg local.messagetosay
 
-	wait 580
+    local.timelimit_minutes = int(getcvar "timelimit")
+	wait (local.timelimit_minutes * 60 * 0.5)
 	
 	waitthread global/feho/squad.scr::reset
 
@@ -427,7 +428,13 @@ Stage_Timer:
 	$AA14 enablespawn
 	$AA15 enablespawn
 
-	$player respawn
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.player = $player[local.i]
+
+		if (local.player.isAlive)
+			local.player respawn
+	}
 
 	wait 5
 

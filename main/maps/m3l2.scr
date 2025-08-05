@@ -463,7 +463,8 @@ Stage_Timer:
 	local.messagetosay = "S T A G E  1 ... F A R M H O U S E  A S S A U L T"
 	thread scrollMsg local.messagetosay
 
-	wait 470
+    local.timelimit_minutes = int(getcvar "timelimit")
+	wait (local.timelimit_minutes * 60 * 0.4)
 
 	waitthread global/feho/squad.scr::reset
 
@@ -541,7 +542,14 @@ Stage_Timer:
 	$AA14 enablespawn
 	$AA15 enablespawn
 
-	$player respawn
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.player = $player[local.i]
+
+		if (local.player.isAlive)
+			local.player respawn
+	}
+
 	local.messagetosay = "S T A G E  2 ... R A D A R  A S S A U L T"
 	thread scrollMsg local.messagetosay
 
@@ -555,7 +563,7 @@ Stage_Timer:
 	// wait 1
 	// $bomberplane2 playsound m3l2_second_airstrike
 
-	wait 230
+	wait (local.timelimit_minutes * 60 * 0.2)
 
 	waitthread global/feho/squad.scr::reset
 
@@ -633,7 +641,13 @@ Stage_Timer:
 	$scene5_dead_panzer thread setup_dead_panzer
 	$scene5_dead_panzer2 thread setup_dead_panzer
 
-	$player respawn
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.player = $player[local.i]
+
+		if (local.player.isAlive)
+			local.player respawn
+	}
 
 	local.messagetosay = "S T A G E  3 ... C L O S E - C O M B A T"
 	thread scrollMsg local.messagetosay

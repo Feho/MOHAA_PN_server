@@ -1,6 +1,5 @@
 //
 // M5L1B - Sniper's Last Stand - City Hall
-
 //
 // 
 // 
@@ -37,7 +36,7 @@ tdmtype:
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
 
 	setcvar "g_gametype" "2"
-	setcvar "g_gametypestring" "** Airborne-Mod **"
+	setcvar "g_gametypestring" "Team-Match"
 	
 	setcvar "timelimit" "20"
 
@@ -281,7 +280,8 @@ Stage_Timer:
 	local.messagetosay = "S T A G E  1 - P U S H  TO  C I T Y  H A L L "
 	thread scrollMsg local.messagetosay
 
-	wait 580
+    local.timelimit_minutes = int(getcvar "timelimit")
+	wait (local.timelimit_minutes * 60 * 0.5)
 
 	waitthread global/feho/squad.scr::reset
 
@@ -355,7 +355,13 @@ Stage_Timer:
 	// Relocate this blocker to stop Allies going towards old start area
 	$blocker2.origin = ( -2205.54 -1998.62 341.56 )
 
-	$player respawn
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.player = $player[local.i]
+
+		if (local.player.isAlive)
+			local.player respawn
+	}
 
 	wait 5
 
