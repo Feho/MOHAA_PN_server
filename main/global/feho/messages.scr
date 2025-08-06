@@ -12,6 +12,4 @@ main:
 	stuffsrv "say Right-click with grenade = smoke grenade"
 	wait 10
 	stuffsrv "say Right-click with rifle = grenade launcher"
-	wait 10
-	stuffsrv "say Choose the Bazooka to get a machine gun!"
 end
