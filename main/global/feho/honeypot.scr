@@ -1,0 +1,79 @@
+// Honeypot script to detect cheaters with aimbot.
+// The idea is to add a bot named "Honeypot" to the server, make it invisible,
+// place it in a location where legitimate players would not normally look,
+// and then check if any player shoots at it. If they do, they are likely using an aimbot.
+
+main:
+
+    if (level.honeypot_enabled == 1 || (getcvar "f_honeypot") != 1) end
+
+    level.honeypot_enabled = 1
+
+    event_subscribe "player_damaged" event_player_damaged
+
+    wait (5 + randomint(2))
+
+    stuffsrv "sv_numbots 0"
+    wait 0.5
+    stuffsrv "addbot 1 Honeypot"
+
+    wait 4
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+
+        if (isBot local.player && (netname local.player) == "Honeypot")
+        {
+            local.player.is_honeypot = 1
+            local.player hide
+            local.player notsolid
+            local.player weaponcommand dual dmbulletcount 0
+            local.player weaponcommand dual dmmovementspeed 0
+            local.player health 2000
+
+            local.maplocation["dm/mohdm1"] = ( 0 0 0 )
+            local.maplocation["dm/mohdm2"] = ( -253 -3251 281 )
+            local.maplocation["dm/mohdm3"] = ( 0 0 0 )
+
+            local.map = getcvar "mapname"
+            local.origin = local.maplocation[local.map]
+
+            if (!local.origin)
+            {
+                println("^3Honeypot bot origin not defined for map: " + local.map);
+                end
+            }
+
+            local.player tele local.origin
+            println("^3Honeypot bot spawned at: " + local.origin);
+
+            end
+        }
+    }
+end
+
+event_player_damaged local.attacker:
+
+    if (self.is_honeypot)
+    {
+        println("^3Honeypot bot damaged by " + (netname local.attacker) + ". Possible aimbot detected!");
+        thread handle_cheater local.attacker
+    }
+
+end
+
+handle_cheater local.player:
+
+    if (local.player.is_cheater == 1) end
+
+    local.player.is_cheater = 1
+
+    while (local.player)
+    {
+        // Reduce the weapon accuracy of the player
+        local.player weaponcommand dual dmbulletspread 60 60 80 80
+        wait 3
+    }
+
+end

@@ -374,6 +374,9 @@ end 1
 
 event_player_spawned:
     local.player = self
+
+    if (isBot local.player && (netname local.player) == "Honeypot") end
+
     local.player_team_name = local.player.dmteam
     local.current_player_team_idx = waitthread get_team_idx_internal local.player_team_name
     //println("Squad Mod: Player " + netname local.player + " spawned on team " + local.current_player_team_idx)
@@ -483,6 +486,9 @@ end
 event_player_damaged:
 
     local.squad_info = level.player_squad_info[self.entnum]
+
+    if (!local.squad_info) end
+
     local.team_idx = local.squad_info["team_idx"]
     local.squad_idx = local.squad_info["squad_idx"]
 
