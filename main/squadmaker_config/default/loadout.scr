@@ -159,6 +159,13 @@ loadout_axis local.type:
 		// *blegh*, but in case someone wants them :/
 		shotgun:
 			// self give models/weapons/shotgun.tik
+			
+			// Let's turn him into a spy
+			if (self.dmteam == "allies")
+				self model models/player/allied_sas.tik
+			else
+				self model models/player/german_waffenss_officer.tik
+
 			self give models/weapons/silencedpistol.tik
 			self useweaponclass pistol
 		
