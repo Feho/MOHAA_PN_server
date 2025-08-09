@@ -5,7 +5,7 @@
 
 main: 
 
-	setcvar "g_gametype" "1"
+	setcvar "g_gametype" "2"
 	setcvar "timelimit" "15"
 
 	if((getcvar("g_gametype") == "1")) 
