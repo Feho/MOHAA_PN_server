@@ -60,6 +60,7 @@ monitor_round_timer:
             // Trigger voting at 60 seconds remaining (with a small buffer to avoid multiple triggers)
             if (local.time_remaining <= 61 && local.time_remaining >= 59 && level.voting_active == 0)
             {
+                if ((getcvar "nextmap") != "") end
                 thread start_map_vote
             }
             
