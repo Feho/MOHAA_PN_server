@@ -152,8 +152,18 @@ door_trigger:
 		local.player iprint ("Door is LOCKED. Hold use key for " + local.seconds + " seconds to unlock.") 1
 
 	self.inUse = 1
-	wait local.seconds
+
+	while (local.player.useheld && local.seconds > 0)
+	{
+		if (local.seconds == 2.5)
+			local.player stopwatch (local.seconds + 1) // +1 to prevent the stopwatch from disappearing too early
+
+		wait 0.5
+		local.seconds -= 0.5
+	}
+
 	self.inUse = 0
+	local.player stopwatch 0
 
 	if (!local.player.useheld) end
 
