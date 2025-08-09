@@ -65,7 +65,7 @@ local.a = makeArray // don't change this line
 	mg				"Light machine gunner"		mg
 	mg				"Light machine gunner"		mg
 	mg				"Light machine gunner"		mg
-	shotgun			"Hunter"					shotgun
+	shotgun			"Spy"					shotgun
 	support			"Support gunner"			heavy
 
 
