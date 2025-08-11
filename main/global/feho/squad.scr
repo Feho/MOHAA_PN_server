@@ -441,15 +441,15 @@ event_player_spawned:
     {
         wait randomfloat(0.5)
 
+        // Wait for any existing lock on this leader to be released.
         while (level.lock[local.squad_leader.entnum] == 1)
         {
             println("Squad Mod: Waiting for lock on squad leader " + netname local.squad_leader + " to be released.")
             wait 0.1
         }
 
-        level.lock[local.squad_leader.entnum] = 1 // Lock to prevent concurrent access
+        level.lock[local.squad_leader.entnum] = 1 // Lock to prevent concurrent access from other squad members.
         local.spawn_pos = waitthread get_valid_spawn_pos_near_leader local.squad_leader
-        level.lock[local.squad_leader.entnum] = 0 // Unlock after getting position
 
         if (local.spawn_pos != NIL)
         {
@@ -462,6 +462,8 @@ event_player_spawned:
         {
             //println("Squad Mod: No valid spawn position near leader for " + netname local.player + ". Spawning normally.")
         }
+
+        level.lock[local.squad_leader.entnum] = 0 // Unlock AFTER teleporting to prevent race conditions.
     }
     else if (!local.squad_leader)
     {
@@ -570,6 +572,19 @@ update_squad_hud local.player:
     local.hud_x_pos = 30
     local.team = local.player.dmteam
 
+    // --- Caching variables to prevent unnecessary HUD updates ---
+    local.cached_hud_strings = NIL
+    local.cached_member_count = 0
+
+    // --- Draw HUD Title (it's static, so we draw it once) ---
+    local.title_index = local.hud_index_base
+    ihuddraw_font local.player local.title_index "default"
+    ihuddraw_align local.player local.title_index "left" "top"
+    ihuddraw_rect local.player local.title_index local.hud_x_pos local.hud_y_pos 0 0
+    ihuddraw_color local.player local.title_index 0.8 0.8 0.8
+    ihuddraw_string local.player local.title_index "SQUAD"
+    ihuddraw_alpha local.player local.title_index 1.0
+
     while (local.player && local.player.dmteam == local.team && level.player_squad_info[local.player.entnum] != NIL)
     {
         local.squad_info = level.player_squad_info[local.player.entnum]
@@ -585,18 +600,7 @@ update_squad_hud local.player:
             continue;
         }
 
-        // --- Draw HUD Title ---
-        local.title_index = local.hud_index_base
-        ihuddraw_font local.player local.title_index "default"
-        ihuddraw_align local.player local.title_index "left" "top"
-        ihuddraw_rect local.player local.title_index local.hud_x_pos local.hud_y_pos 0 0
-        ihuddraw_color local.player local.title_index 0.8 0.8 0.8
-        ihuddraw_string local.player local.title_index "SQUAD"
-        ihuddraw_alpha local.player local.title_index 1.0
-
-        local.current_y = local.hud_y_pos + 20
-
-        // --- Draw Squad Members ---
+        // --- Update Squad Members (only if changed) ---
         for (local.i = 1; local.i <= local.squad_members.size; local.i++)
         {
             local.member = local.squad_members[local.i]
@@ -610,29 +614,43 @@ update_squad_hud local.player:
             }
 
             local.status_text = ""
-
             if (local.member.isAlive) {
                 local.status_text = " - " + int(local.member.health) + " HP"
-                ihuddraw_color local.player local.member_index 0.5 1 0.5
             } else {
                 local.status_text = " - (DEAD)"
-                ihuddraw_color local.player local.member_index 1 0.5 0.5
             }
+            local.final_string = local.display_name + local.status_text
 
-            ihuddraw_font local.player local.member_index "default"
-            ihuddraw_align local.player local.member_index "left" "top"
-            ihuddraw_rect local.player local.member_index local.hud_x_pos local.current_y 0 0
-            ihuddraw_string local.player local.member_index (local.display_name + local.status_text)
-            ihuddraw_alpha local.player local.member_index 1.0
+            // If the cached string is different, update the HUD for that member
+            if (local.cached_hud_strings[local.i] != local.final_string)
+            {
+                local.y_pos = local.hud_y_pos + 20 + (15 * (local.i - 1))
+                ihuddraw_font local.player local.member_index "default"
+                ihuddraw_align local.player local.member_index "left" "top"
+                ihuddraw_rect local.player local.member_index local.hud_x_pos local.y_pos 0 0
+                ihuddraw_string local.player local.member_index local.final_string
+                ihuddraw_alpha local.player local.member_index 1.0
 
-            local.current_y += 15
+                if (local.member.isAlive) {
+                    ihuddraw_color local.player local.member_index 0.5 1 0.5
+                } else {
+                    ihuddraw_color local.player local.member_index 1 0.5 0.5
+                }
+                
+                local.cached_hud_strings[local.i] = local.final_string
+            }
         }
 
-        // --- Cleanup unused HUD elements if squad size shrinks ---
-        for (local.i = local.squad_members.size + 1; local.i <= level.squad_max_players_per_squad; local.i++)
+        // --- Cleanup HUD elements if squad size shrinks ---
+        if (local.cached_member_count > local.squad_members.size)
         {
-             ihuddraw_alpha local.player (local.hud_index_base + local.i) 0.0
+            for (local.i = local.squad_members.size + 1; local.i <= local.cached_member_count; local.i++)
+            {
+                 ihuddraw_alpha local.player (local.hud_index_base + local.i) 0.0
+                 local.cached_hud_strings[local.i] = NIL
+            }
         }
+        local.cached_member_count = local.squad_members.size
 
         wait 0.5
     }
