@@ -182,7 +182,7 @@ tdmtype:
 	local.mur = spawn script_object
 	local.mur.origin = ( -3444 -3674 -4)
 	local.mur.angle = -115
-	local.mur setsize ( -1 -481 -96) ( 1 10 1000)
+	local.mur setsize ( -1 -561 -96) ( 1 10 1000)
 	local.mur solid
 
 	
