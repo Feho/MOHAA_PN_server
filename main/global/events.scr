@@ -33,7 +33,7 @@ event_player_spawned:
         if (randomint(100) < 90)
         {
             // Increase the spread of the weapon, so that the bots are not too accurate.
-            self weaponcommand dual dmbulletspread 40 40 70 70
+            // self weaponcommand dual dmbulletspread 40 40 70 70
             self weaponcommand dual dmbulletdamage 30
         }
         
