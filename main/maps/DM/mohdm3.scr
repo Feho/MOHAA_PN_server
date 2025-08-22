@@ -22,7 +22,7 @@ main:
 	waitthread global/support/support.scr::soundcache
 	
 	setcvar "g_gametype" "3"
-	setcvar "fraglimit" "3"
+	setcvar "fraglimit" "1"
 	setcvar "timelimit" "15"
 
 	// call additional stuff for playing this map round based is needed

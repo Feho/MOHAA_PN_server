@@ -19,7 +19,7 @@ main:
 	setcvar "g_gametype" "4"
 	
 	setcvar "timelimit" "15"
-	setcvar "fraglimit" "3"
+	setcvar "fraglimit" "1"
 	
 	setcvar "g_gametypestring" "Search & Destroy"
 	
