@@ -24,6 +24,8 @@ main:
 	if(level.roundbased)
 		thread roundbasedthread
 
+	spawn info_player_axis "origin" "-708 553 585" "angle" "166"
+
 	level waittill prespawn
 	
 	//*** Precache Dm Stuff
