@@ -110,23 +110,23 @@ end
 
 tdm_spawns:
 
-	spawn info_player_axis "origin" "-4810.55 117.57 367.14" "angle" "94"
-	spawn info_player_axis "origin" "-5285.71 -1.71 379.33" "angle" "22"
-	spawn info_player_axis "origin" "-5658.79 154.61 380.13" "angle" "-18"
-	spawn info_player_axis "origin" "-5939.29 285.28 376.16" "angle" "-5"
-	spawn info_player_axis "origin" "-6046.07 493.07 376.16" "angle" "-20"
+	spawn info_player_axis "origin" "-4810.55 117.57 367.14" "angle" "94" "targetname" "X1"
+	spawn info_player_axis "origin" "-5285.71 -1.71 379.33" "angle" "22" "targetname" "X2"
+	spawn info_player_axis "origin" "-5658.79 154.61 380.13" "angle" "-18" "targetname" "X3"
+	spawn info_player_axis "origin" "-5939.29 285.28 376.16" "angle" "-5" "targetname" "X4"
+	spawn info_player_axis "origin" "-6046.07 493.07 376.16" "angle" "-20" "targetname" "X5"
 
-	spawn info_player_axis "origin" "-5619.96 784.88 376.16" "angle" "-83"
-	spawn info_player_axis "origin" "-5976.12 969.85 390.08" "angle" "-77"
-	spawn info_player_axis "origin" "-5914.88 1329.26 422.52" "angle" "-92"
-	spawn info_player_axis "origin" "-4493.78 1040.88 460.13" "angle" "-157"
-	spawn info_player_axis "origin" "-4848.88 1104.76 460.13" "angle" "-40"
+	spawn info_player_axis "origin" "-5619.96 784.88 376.16" "angle" "-83" "targetname" "X6"
+	spawn info_player_axis "origin" "-5976.12 969.85 390.08" "angle" "-77" "targetname" "X7"
+	spawn info_player_axis "origin" "-5914.88 1329.26 422.52" "angle" "-92" "targetname" "X8"
+	spawn info_player_axis "origin" "-6574 2430 438" "angle" "-87" "targetname" "X9"
+	spawn info_player_axis "origin" "-6940 2457 438" "angle" "-49" "targetname" "X10"
 
-	spawn info_player_axis "origin" "-3490.93 550.29 459.16" "angle" "-161"
-	spawn info_player_axis "origin" "-5059.30 -1.21 376.32" "angle" "61"
-	spawn info_player_axis "origin" "-5754.50 773.62 376.29" "angle" "-69"
-	spawn info_player_axis "origin" "-4839.72 1147.18 460.13" "angle" "-51"
-	spawn info_player_axis "origin" "-4848.56 987.52 460.13" "angle" "-1"
+	spawn info_player_axis "origin" "-3490.93 550.29 459.16" "angle" "-161" "targetname" "X11"
+	spawn info_player_axis "origin" "-5059.30 -1.21 376.32" "angle" "61" "targetname" "X12"
+	spawn info_player_axis "origin" "-5754.50 773.62 376.29" "angle" "-69" "targetname" "X13"
+	spawn info_player_axis "origin" "-6899 2152 438" "angle" "-43" "targetname" "X14"
+	spawn info_player_axis "origin" "-5985 1839 438" "angle" "180" "targetname" "X15"
 
 
 	spawn info_player_allied "origin" "-2119.09 -2966.51 47.65" "angle" "177"
