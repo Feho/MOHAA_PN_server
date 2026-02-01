@@ -270,6 +270,9 @@ end local.right
 // 
 Left local.pos local.string:
 
+	if (local.string.size <= local.pos)
+		end local.string
+
 	local.pos--
 	local.left = ""
 	for(local.i = 0; local.i <=  local.pos; local.i++)

@@ -1,0 +1,340 @@
+/*
+Bot Count Control System for MOHAA PN Server
+Created for issue #9
+
+This script allows players to control bot count via chat commands.
+- Solo players (1-2 humans) can adjust bots freely
+- 3+ human players triggers a vote
+
+Commands:
+- "bots" - Show current bot count and available commands
+- "bots N" - Set to exactly N bots
+- "bots +N" - Add N bots
+- "bots -N" - Remove N bots
+*/
+
+main:
+    // Guard against re-initialization
+    if (level.botcount_initialized == 1)
+        end
+
+    level.botcount_initialized = 1
+    level.botcount_last_change = 0
+    level.botcount_cooldown = 30
+
+    // Vote state
+    level.botvote_active = 0
+    level.botvote_target = 0
+    level.botvote_yes = 0
+    level.botvote_no = 0
+    level.botvote_requester = ""
+
+    // Subscribe to player text messages
+    event_subscribe "player_textMessage" event_player_textMessage
+
+    // Subscribe to player spawn for welcome message
+    event_subscribe "player_spawned" event_player_spawned
+
+end
+
+event_player_spawned:
+    local.player = self
+
+    if (!local.player || isBot local.player)
+        end
+
+    // Only show once per player session
+    if (local.player.botcount_welcomed == 1)
+        end
+
+    local.player.botcount_welcomed = 1
+
+    // Small delay so it doesn't get lost in spawn messages
+    wait 3
+    local.player iprint "Tip: Type 'bots <count>' in chat to adjust bot count (e.g. 'bots 4')"
+end
+
+event_player_textMessage local.text local.is_team:
+
+    local.player = self
+
+    if (!local.player)
+        end
+
+    // Handle vote responses if a vote is active
+    if (level.botvote_active == 1)
+    {
+        if (local.text == "yes")
+        {
+            if (local.player.botvote_voted == 1)
+            {
+                local.player iprint "You have already voted!"
+                end
+            }
+            level.botvote_yes++
+            local.player.botvote_voted = 1
+            local.player iprint "Vote recorded: YES"
+            end
+        }
+        else if (local.text == "no")
+        {
+            if (local.player.botvote_voted == 1)
+            {
+                local.player iprint "You have already voted!"
+                end
+            }
+            level.botvote_no++
+            local.player.botvote_voted = 1
+            local.player iprint "Vote recorded: NO"
+            end
+        }
+    }
+
+    // Check if message starts with "bots"
+    if (local.text == "bots")
+    {
+        println("^3BOTCOUNT command detected: " + local.text)
+        waitthread show_bot_status local.player
+        end
+    }
+    
+    // Check for "bots " prefix (with parameter)
+    // Need at least 5 chars for "bots " prefix
+    if (local.text.size < 5)
+        end
+
+    local.prefix = waitthread global/strings.scr::Left 5 local.text
+    
+    if (local.prefix != "bots ")
+        end
+        
+    println("^3BOTCOUNT command detected: " + local.text)
+
+    // Extract the parameter after "bots "
+    local.param = waitthread global/strings.scr::Right (local.text.size - 5) local.text
+    
+    println("^3BOTCOUNT parameter: " + local.param)
+
+    if (local.param == "" || local.param == NIL)
+    {
+        waitthread show_bot_status local.player
+        end
+    }
+
+    // Parse the parameter
+    local.current_bots = int(getcvar "sv_minPlayers")
+    local.target = 0
+    local.first_char = local.param[0]
+
+    if (local.first_char == "+")
+    {
+        // Relative increase: bots +N
+        local.num_str = waitthread global/strings.scr::Right (local.param.size - 1) local.param
+        local.delta = int(local.num_str)
+        local.target = local.current_bots + local.delta
+    }
+    else if (local.first_char == "-")
+    {
+        // Relative decrease: bots -N
+        local.num_str = waitthread global/strings.scr::Right (local.param.size - 1) local.param
+        local.delta = int(local.num_str)
+        local.target = local.current_bots - local.delta
+    }
+    else
+    {
+        // Absolute value: bots N
+        local.target = int(local.param)
+    }
+    
+    println("^3BOTCOUNT target bots: " + local.target)
+
+    // Request the change
+    waitthread request_bot_change local.player local.target
+
+end
+
+show_bot_status local.player:
+    local.current_bots = getcvar "sv_minPlayers"
+    local.max_clients = int(getcvar "sv_maxclients")
+    local.human_count = waitthread count_human_players
+    local.max_bots = local.max_clients - local.human_count
+
+    local.player iprint "=== BOT COUNT ==="
+    local.player iprint ("Current: " + local.current_bots + " bots (max: " + local.max_bots + ")")
+    local.player iprint "Commands: bots N | bots +N | bots -N"
+
+    if (level.botvote_active == 1)
+    {
+        local.player iprint ("Vote in progress for " + level.botvote_target + " bots")
+        local.player iprint ("Yes: " + level.botvote_yes + " | No: " + level.botvote_no)
+    }
+end
+
+request_bot_change local.player local.target:
+    // Count human players
+    local.human_count = waitthread count_human_players
+
+    // Validate bounds
+    local.max_clients = int(getcvar "sv_maxclients")
+    local.max_bots = local.max_clients - local.human_count
+    
+    println("^3BOTCOUNT request change: target=" + local.target + " human_count=" + local.human_count + " max_bots=" + local.max_bots)
+
+    if (local.target < 0)
+        local.target = 0
+
+    if (local.target > local.max_bots)
+    {
+        local.player iprint ("Maximum bots allowed: " + local.max_bots)
+        local.target = local.max_bots
+    }
+
+    // Check if vote is already in progress
+    if (level.botvote_active == 1)
+    {
+        local.player iprint "A bot count vote is already in progress!"
+        end
+    }
+
+    // If 1-2 humans, apply directly
+    if (local.human_count <= 2)
+    {
+        waitthread apply_bot_change local.player local.target
+    }
+    else
+    {
+        // 3+ humans requires a vote
+        waitthread start_bot_vote local.player local.target
+    }
+end
+
+apply_bot_change local.player local.target:
+    // Check cooldown
+    local.time_since_change = level.time - level.botcount_last_change
+
+    if (level.botcount_last_change > 0 && local.time_since_change < level.botcount_cooldown)
+    {
+        local.remaining = int(level.botcount_cooldown - local.time_since_change)
+        local.player iprint ("Cooldown: wait " + local.remaining + " seconds")
+        end
+    }
+
+    // Apply the change
+    local.current_bots = int(getcvar "sv_minPlayers")
+    setcvar "sv_minPlayers" local.target
+    level.botcount_last_change = level.time
+
+    // Announce to all players
+    wait 0.1
+    stuffsrv ("say Bot count changed: " + local.current_bots + " -> " + local.target + " (by " + (netname local.player) + ")")
+    println("^3BOTCOUNT applied change: " + local.current_bots + " -> " + local.target + " (by " + (netname local.player) + ")")
+end
+
+start_bot_vote local.player local.target:
+    level.botvote_active = 1
+    level.botvote_target = local.target
+    level.botvote_yes = 0
+    level.botvote_no = 0
+    level.botvote_requester = netname local.player
+
+    // Clear previous player votes
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+        if (local.p)
+        {
+            local.p.botvote_voted = 0
+        }
+    }
+
+    // Announce the vote
+    local.current_bots = getcvar "sv_minPlayers"
+    wait 0.1
+    stuffsrv ("say BOT VOTE: Change from " + local.current_bots + " to " + local.target + " bots")
+    wait 0.1
+    stuffsrv ("say Requested by " + level.botvote_requester + " - Type 'yes' or 'no' to vote (30s)")
+
+    // Start vote timer
+    thread end_bot_vote local.player
+end
+
+end_bot_vote local.player:
+    // Wait 30 seconds for voting
+    wait 30
+
+    // Tally votes
+    wait 0.1
+    stuffsrv ("say BOT VOTE RESULTS: Yes=" + level.botvote_yes + " No=" + level.botvote_no)
+    wait 0.1
+
+    // Apply if yes > no, or if no votes cast (accept by default)
+    if (level.botvote_yes > level.botvote_no)
+    {
+        stuffsrv "say Vote PASSED - Changing bot count"
+        wait 0.1
+
+        // Re-validate bounds before applying
+        local.human_count = waitthread count_human_players
+        local.max_clients = int(getcvar "sv_maxclients")
+        local.max_bots = local.max_clients - local.human_count
+        local.target = level.botvote_target
+
+        if (local.target > local.max_bots)
+            local.target = local.max_bots
+        if (local.target < 0)
+            local.target = 0
+
+        local.current_bots = int(getcvar "sv_minPlayers")
+        setcvar "sv_minPlayers" local.target
+        level.botcount_last_change = level.time
+
+        stuffsrv ("say Bot count: " + local.current_bots + " -> " + local.target)
+    }
+    else if (level.botvote_yes == 0 && level.botvote_no == 0)
+    {
+        stuffsrv "say No votes received - Request accepted by default"
+        wait 0.1
+
+        // Re-validate bounds before applying
+        local.human_count = waitthread count_human_players
+        local.max_clients = int(getcvar "sv_maxclients")
+        local.max_bots = local.max_clients - local.human_count
+        local.target = level.botvote_target
+
+        if (local.target > local.max_bots)
+            local.target = local.max_bots
+        if (local.target < 0)
+            local.target = 0
+
+        local.current_bots = int(getcvar "sv_minPlayers")
+        setcvar "sv_minPlayers" local.target
+        level.botcount_last_change = level.time
+
+        stuffsrv ("say Bot count: " + local.current_bots + " -> " + local.target)
+    }
+    else
+    {
+        stuffsrv "say Vote FAILED - Bot count unchanged"
+    }
+
+    // Reset vote state
+    level.botvote_active = 0
+    level.botvote_target = 0
+    level.botvote_yes = 0
+    level.botvote_no = 0
+    level.botvote_requester = ""
+end
+
+count_human_players:
+    local.count = 0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+        if (local.p && !isBot local.p)
+        {
+            local.count++
+        }
+    }
+
+end local.count
