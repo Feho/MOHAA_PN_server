@@ -452,6 +452,7 @@ end
 event_player_damaged:
 
     local.squad_info = level.player_squad_info[self.entnum]
+    if (!local.squad_info) end
     local.team_idx = local.squad_info["team_idx"]
     local.squad_idx = local.squad_info["squad_idx"]
 
