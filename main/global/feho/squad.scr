@@ -91,6 +91,20 @@ min_val local.a local.b:
         end local.a
 end local.b
 
+// ============================================================================
+// PREDICATES - Used with array_filter callback pattern
+// ============================================================================
+
+// Check if an entity is alive (used by array_filter in promote_new_squad_leader)
+is_alive local.entity:
+end (local.entity != NIL && local.entity.isAlive == 1)
+
+// Check if entity is alive and not a bot (prefer humans as squad leaders)
+is_living_human local.entity:
+end (local.entity != NIL && local.entity.isAlive == 1 && !isBot local.entity)
+
+// ============================================================================
+
 start_leader_position_tracking local.leader_entity:
     if (local.leader_entity == NIL)
         end
@@ -218,46 +232,25 @@ promote_new_squad_leader local.team_idx local.squad_idx:
         end
     }
 
-    // Find a living member to promote
-    //println("Squad Mod: current_squad_array size: " + local.current_squad_array.size)
-    for (local.i = 1; local.i <= local.current_squad_array.size; local.i++)
-    {
-        local.member = local.current_squad_array[local.i]
-        //println("Squad Mod: Checking member " + netname local.member + " (alive: " + local.member.isAlive + ")")
+    // Filter for living members and living humans
+    local.living_members = waitthread global/feho/utils.scr::array_filter local.current_squad_array is_alive
+    local.living_humans = waitthread global/feho/utils.scr::array_filter local.current_squad_array is_living_human
 
-        if (local.member != NIL && local.member.isAlive)
-        {
-            if (local.living_members == NIL)
-                local.living_members[1] = local.member
-            else
-                local.living_members[local.living_members.size + 1] = local.member
-
-            if (!isBot local.member)
-            {
-                if (local.living_humans == NIL)
-                    local.living_humans[1] = local.member
-                else
-                    local.living_humans[local.living_humans.size + 1] = local.member
-            }
-        }
-    }
-    
-    if (local.living_members.size <= 0)
+    if (local.living_members == NIL || local.living_members.size <= 0)
     {
         level.squad_leaders[local.team_idx][local.squad_idx] = NIL
         //println("Squad Mod: Squad " + local.squad_idx + " on team " + local.team_idx + " has no living members. No new leader.")
         end
     }
 
-    if (local.living_humans.size > 0)
+    // Prefer human players as leaders, fall back to bots
+    if (local.living_humans != NIL && local.living_humans.size > 0)
     {
-        local.random_idx = (randomint(local.living_humans.size) + 1)
-        local.new_leader = local.living_humans[local.random_idx]
+        local.new_leader = waitthread global/feho/utils.scr::array_random local.living_humans
     }
     else
     {
-        local.random_idx = (randomint(local.living_members.size) + 1)
-        local.new_leader = local.living_members[local.random_idx]
+        local.new_leader = waitthread global/feho/utils.scr::array_random local.living_members
     }
 
     level.squad_leaders[local.team_idx][local.squad_idx] = local.new_leader
@@ -269,7 +262,6 @@ handle_player_leaving_squad local.player:
     if (local.player == NIL || level.player_squad_info[local.player.entnum] == NIL)
         end
 
-    local.player_entnum = local.player.entnum
     local.squad_info = level.player_squad_info[local.player.entnum]
     local.team_idx = local.squad_info["team_idx"]
     local.squad_idx = local.squad_info["squad_idx"]
@@ -287,27 +279,17 @@ handle_player_leaving_squad local.player:
     local.current_squad_array = level.squads[local.team_idx][local.squad_idx]
     if (local.current_squad_array != NIL)
     {
-        for (local.i = 1; local.i <= local.current_squad_array.size; local.i++)
-        {
-            if (local.current_squad_array[local.i] != local.player)
-            {
-                if (local.new_squad_list == NIL)
-                    local.new_squad_list[1] = local.current_squad_array[local.i]
-                else
-                    local.new_squad_list[local.new_squad_list.size + 1] = local.current_squad_array[local.i]
-            }
-        }
-
+        local.new_squad_list = waitthread global/feho/utils.scr::array_remove local.current_squad_array local.player
         level.squads[local.team_idx][local.squad_idx] = local.new_squad_list
 
-        if (local.new_squad_list.size <= 0)
+        if (local.new_squad_list == NIL || local.new_squad_list.size <= 0)
         {
             level.squads[local.team_idx][local.squad_idx] = NIL // Mark squad as empty
             level.squad_leaders[local.team_idx][local.squad_idx] = NIL // No leader if squad is empty
             //println("Squad Mod: Squad " + local.squad_idx + " on team " + local.team_idx + " is now empty.")
         }
     }
-    
+
     level.player_squad_info[local.player.entnum] = NIL
 end
 
@@ -342,21 +324,6 @@ get_valid_spawn_pos_near_leader local.leader_entity:
     
     //println("Squad Mod: Valid spawn position found at " + local.base_pos)
     
-    // Add a small random offset to avoid stacking
-    // local.offset_x = (randomfloat(1.0) * 64.0) - 32.0 // Random between -32 and 32
-    // local.offset_y = (randomfloat(1.0) * 64.0) - 32.0
-    // local.spawn_pos = local.base_pos + (local.offset_x local.offset_y 0)
-    
-    // // A simple check to ensure player spawns on ground, by tracing down.
-    // // MOHAA's default spawn system might also unstick, but this helps.
-    // local.hit_something = sighttrace (local.spawn_pos + (0 0 80)) (local.spawn_pos + (0 0 5)) // Trace from head height down
-    //// println("--------------- hit_something: " + local.hit_something)
-
-    // if (!local.hit_something)
-    // {
-    //     end local.spawn_pos // Valid spawn position found
-    // }
-
 end local.base_pos // Fallback to the recorded position if trace fails or finds nothing nearby
 
 can_spawn_here local.spawn_pos:
@@ -495,7 +462,7 @@ event_player_damaged:
     self.is_under_fire_expiration = level.time + 4
     println("^3Player " + netname self + " is under fire!")
 
-    while (level.time < self.is_under_fire_expiration)
+    while (self && level.time < self.is_under_fire_expiration)
     {
         wait 0.1
     }

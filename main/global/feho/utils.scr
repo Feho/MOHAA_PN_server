@@ -29,6 +29,36 @@ get_alive_players:
 
 end local.alive_players
 
+get_human_players:
+
+    local.human_players = NIL
+    local.count = 0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+
+        if (!isBot local.p)
+        {
+            local.count++
+            local.human_players[local.count] = local.p
+        }
+    }
+
+end local.human_players
+
+count_human_players:
+
+    local.count = 0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+        if (!isBot local.p) local.count++
+    }
+
+end local.count
+
 get_weapon local.p:
 
 	if (!local.p) end
@@ -95,3 +125,143 @@ get_wpnclass local.wpn_model:
 	}
 
 end local.result
+
+// ============================================================================
+// ARRAY UTILITIES - Higher-order functions using callbacks
+// ============================================================================
+
+/*
+ * array_filter - Filter an array using a predicate callback
+ *
+ * Parameters:
+ *   local.array     - The array to filter
+ *   local.predicate - A function that takes an element and returns 1 (keep) or 0 (discard)
+ *
+ * Returns: A new array containing only elements where predicate returned 1
+ *
+ * Example:
+ *   local.alive = waitthread global/feho/utils.scr::array_filter local.players is_alive
+ */
+array_filter local.array local.predicate:
+    if (local.array == NIL || local.array.size == 0)
+        end NIL
+
+    local.result = NIL
+    for (local.i = 1; local.i <= local.array.size; local.i++)
+    {
+        local.item = local.array[local.i]
+        local.passes = waitthread local.predicate local.item
+        if (local.passes)
+        {
+            if (local.result == NIL)
+                local.result[1] = local.item
+            else
+                local.result[local.result.size + 1] = local.item
+        }
+    }
+end local.result
+
+/*
+ * array_foreach - Apply a callback to each element in an array
+ *
+ * Parameters:
+ *   local.array    - The array to iterate
+ *   local.callback - A function to call with each element
+ *
+ * Example:
+ *   thread global/feho/utils.scr::array_foreach local.players heal_player
+ */
+array_foreach local.array local.callback:
+    if (local.array == NIL)
+        end
+
+    for (local.i = 1; local.i <= local.array.size; local.i++)
+    {
+        if (local.array[local.i] != NIL)
+            thread local.callback local.array[local.i]
+    }
+end
+
+/*
+ * array_find - Find the first element matching a predicate
+ *
+ * Parameters:
+ *   local.array     - The array to search
+ *   local.predicate - A function that returns 1 when the desired element is found
+ *
+ * Returns: The first matching element, or NIL if not found
+ *
+ * Example:
+ *   local.leader = waitthread global/feho/utils.scr::array_find local.members is_alive
+ */
+array_find local.array local.predicate:
+    if (local.array == NIL)
+        end NIL
+
+    for (local.i = 1; local.i <= local.array.size; local.i++)
+    {
+        local.item = local.array[local.i]
+        if (local.item != NIL && waitthread local.predicate local.item)
+            end local.item
+    }
+end NIL
+
+/*
+ * array_remove - Remove a specific element from an array
+ *
+ * Parameters:
+ *   local.array   - The array to modify
+ *   local.element - The element to remove
+ *
+ * Returns: A new array without the specified element
+ *
+ * Example:
+ *   local.new_list = waitthread global/feho/utils.scr::array_remove local.squad local.player
+ */
+array_remove local.array local.element:
+    if (local.array == NIL)
+        end NIL
+
+    local.result = NIL
+    for (local.i = 1; local.i <= local.array.size; local.i++)
+    {
+        if (local.array[local.i] != local.element)
+        {
+            if (local.result == NIL)
+                local.result[1] = local.array[local.i]
+            else
+                local.result[local.result.size + 1] = local.array[local.i]
+        }
+    }
+end local.result
+
+/*
+ * array_random - Get a random element from an array
+ *
+ * Parameters:
+ *   local.array - The array to pick from
+ *
+ * Returns: A random element, or NIL if array is empty
+ */
+array_random local.array:
+    if (local.array == NIL || local.array.size == 0)
+        end NIL
+
+    local.idx = randomint(local.array.size) + 1
+end local.array[local.idx]
+
+// ============================================================================
+// COMMON PREDICATES - Reusable filter functions
+// ============================================================================
+
+/*
+ * is_alive - Check if an entity is alive
+ */
+is_alive local.entity:
+end (local.entity != NIL && local.entity.isAlive == 1)
+
+/*
+ * is_living_human - Check if entity is alive and not a bot
+ */
+is_living_human local.entity:
+end (local.entity != NIL && local.entity.isAlive == 1 && !isBot local.entity)
