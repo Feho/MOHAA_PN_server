@@ -177,10 +177,10 @@ exec global/events.scr
 // exec global/AIR_view.scr
 exec global/feho/squad.scr
 exec global/feho/antinoob.scr
+exec global/feho/voices.scr
 
 level waittill spawn
 
-exec global/feho/voices.scr
 exec global/feho/messages.scr
 
 // Initialize map voting system
