@@ -461,7 +461,7 @@ event_player_damaged:
 
     self.is_under_fire = 1
     self.is_under_fire_expiration = level.time + 4
-    println("^3Player " + netname self + " is under fire!")
+    //println("^3Player " + netname self + " is under fire!")
 
     while (self && level.time < self.is_under_fire_expiration)
     {
