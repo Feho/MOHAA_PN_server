@@ -1,0 +1,56 @@
+main:
+
+    if (level.anticheat_initialized) end
+
+    level.anticheat_initialized = 1
+    
+    event_subscribe "player_killed" event_player_killed
+
+end
+
+event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+
+    if (local.location == -1) // grenade, bash...
+        end
+
+    if (local.attacker.suspicion_level)
+    {
+        // Decrease the damage of the attacker's weapon based on their suspicion level
+        local.attacker weaponcommand dual dmbulletdamage (50 / local.attacker.suspicion_level)
+        println ("^5Suspicion level: " + local.attacker.suspicion_level)
+        println ("^5Bullet damage reduced to: " + (50 / local.attacker.suspicion_level))
+    }
+    else
+    {
+        local.attacker.suspicion_level = 0
+    } 
+
+    if (local.attacker.prev_kill_time)
+    {
+        local.time_diff = level.time - local.attacker.prev_kill_time
+        local.angle_diff = local.attacker.angle - local.attacker.prev_kill_angle
+        if (local.angle_diff > 180) local.angle_diff = local.angle_diff - 360
+        if (local.angle_diff < -180) local.angle_diff = local.angle_diff + 360
+        if (local.angle_diff < 0) local.angle_diff = local.angle_diff * -1
+        
+        if (local.time_diff > 0)
+            local.degrees_per_second = local.angle_diff / local.time_diff
+        else
+            local.degrees_per_second = 0
+
+        // 800 deg/s is an empirically chosen upper bound for human turn speed between kills;
+        // higher values are considered suspicious and likely to indicate aimbot‑like flicks.
+        if (local.degrees_per_second > 800)
+        {
+            local.developer = getcvar "developer"
+            setcvar "developer" 1
+            println ("^1Potential aimbot detected for " + netname local.attacker + " with " + local.degrees_per_second + " degrees per second")
+            local.attacker.suspicion_level += 1
+            setcvar "developer" local.developer
+        }
+    }
+
+    local.attacker.prev_kill_angle = local.attacker.angle
+    local.attacker.prev_kill_time = level.time
+
+end

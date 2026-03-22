@@ -191,3 +191,5 @@ exec global/feho/botcount.scr
 
 // Initialize HVT Event System
 exec global/feho/hvt_event.scr
+
+exec global/feho/anticheat.scr
