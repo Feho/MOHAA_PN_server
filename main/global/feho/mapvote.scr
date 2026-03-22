@@ -125,11 +125,11 @@ start_map_vote:
     
     // Announce the vote
     wait 0.1
-    stuffsrv "say MAP VOTE - Time remaining: 60 seconds"
+    stuffsrv "say [MAP VOTE] Time remaining: 60 seconds"
     wait 0.1
-    stuffsrv ("say " + level.vote_option1 + " (Type '1')")
+    stuffsrv ("say 1: " + level.vote_option1)
     wait 0.1
-    stuffsrv ("say " + level.vote_option2 + " (Type '2')")
+    stuffsrv ("say 2: " + level.vote_option2)
     wait 0.1
     
     // Wait for the round to end, then tally votes
@@ -149,9 +149,9 @@ send_vote_reminders:
         if (level.voting_active == 1)
         {
             local.reminder_count++
-            stuffsrv ("say MAP VOTE: " + level.vote_option1 + " (1) vs " + level.vote_option2 + " (2)")
+            stuffsrv ("say [MAP VOTE] 1: " + level.vote_option1 + " vs 2: " + level.vote_option2)
 	    wait 0.1
-            stuffsrv ("say Current votes: " + level.vote_map1_tally + " vs " + level.vote_map2_tally)
+            stuffsrv ("say [MAP VOTE] " + level.vote_map1_tally + " vs " + level.vote_map2_tally)
         }
     }
 end
@@ -316,12 +316,12 @@ end_vote_when_round_ends:
     if (level.vote_map1_tally > level.vote_map2_tally)
     {
         local.winning_map = level.vote_option1
-        stuffsrv ("say WINNER: " + level.vote_option1)
+        //stuffsrv ("say WINNER: " + level.vote_option1)
     }
     else if (level.vote_map2_tally > level.vote_map1_tally)
     {
         local.winning_map = level.vote_option2
-        stuffsrv ("say WINNER: " + level.vote_option2)
+        //stuffsrv ("say WINNER: " + level.vote_option2)
     }
     else
     {
@@ -336,7 +336,6 @@ end_vote_when_round_ends:
             stuffsrv "say Vote tied - using default map rotation"
         }
         wait 0.1
-        stuffsrv ("say Next map: " + level.vote_option1)
     }
     
     wait 0.1
