@@ -149,23 +149,23 @@ tdm_spawns:
 	spawn info_player_axis "origin" "5975.12 3507.51 215.93" "angle" "-164" "targetname" "X15"
 	
 
-	spawn info_player_allied "origin" "2361.31 -1755.49 190.40" "angle" "112" "targetname" "A1"
-	spawn info_player_allied "origin" "2045.88 -1565.55 209.02" "angle" "99" "targetname" "A2"
-	spawn info_player_allied "origin" "1814.68 -1744.51 241.26" "angle" "69" "targetname" "A3"
-	spawn info_player_allied "origin" "2188.52 -1883.91 193.36" "angle" "102" "targetname" "A4"
-	spawn info_player_allied "origin" "2447.57 -2054.66 188.29" "angle" "113" "targetname" "A5" 
+	spawn info_player_allied "origin" "( 1583.368 -1074.839 278.493 )" "angle" "42.297" "targetname" "A1"
+	spawn info_player_allied "origin" "( 987.185 48.903 168.125 )" "angle" "359.324" "targetname" "A2"
+	spawn info_player_allied "origin" "( 971.815 130.300 168.125 )" "angle" "0.731" "targetname" "A3"
+	spawn info_player_allied "origin" "( 2379.187 -1094.229 237.359 )" "angle" "92.944" "targetname" "A4"
+	spawn info_player_allied "origin" "( 2289.846 -1096.435 239.974 )" "angle" "104.084" "targetname" "A5"
 
-	spawn info_player_allied "origin" "2673.13 -1590.52 233.43" "angle" "152" "targetname" "A6"
-	spawn info_player_allied "origin" "2855.79 -1640.88 239.99" "angle" "150" "targetname" "A7"
-	spawn info_player_allied "origin" "1548.48 -1094.83 284.18" "angle" "28" "targetname" "A8"
-	spawn info_player_allied "origin" "1135.13 -39.13 170.81" "angle" "-11" "targetname" "A9"
-	spawn info_player_allied "origin" "1135.13 -224.88 192.33" "angle" "17" "targetname" "A10"
+	spawn info_player_allied "origin" "( 2383.523 -146.442 143.180 )" "angle" "40.490" "targetname" "A6"
+	spawn info_player_allied "origin" "( 1579.259 623.789 252.716 )" "angle" "352.727" "targetname" "A7"
+	spawn info_player_allied "origin" "( 3260.607 -761.871 216.294 )" "angle" "78.920" "targetname" "A8"
+	spawn info_player_allied "origin" "( 3730.968 -778.737 224.939 )" "angle" "101.310" "targetname" "A9"
+	spawn info_player_allied "origin" "( 4161.134 -760.087 220.906 )" "angle" "119.806" "targetname" "A10"
 
-	spawn info_player_allied "origin" "1017.59 75.05 168.13" "angle" "1" "targetname" "A11"
-	spawn info_player_allied "origin" "959.07 168.02 168.13" "angle" "-9" "targetname" "A12"
-	spawn info_player_allied "origin" "1491.93 282.33 171.03" "angle" "13" "targetname" "A13"
-	spawn info_player_allied "origin" "1623.76 817.05 270.79" "angle" "1" "targetname" "A14"
-	spawn info_player_allied "origin" "2541.80 -1121.23 253.51" "angle" "98" "targetname" "A15"
+	spawn info_player_allied "origin" "( 3872.000 -699.589 243.012 )" "angle" "89.308" "targetname" "A11"
+	spawn info_player_allied "origin" "( 4703.902 51.260 285.216 )" "angle" "118.614" "targetname" "A12"
+	spawn info_player_allied "origin" "( 4067.736 94.353 125.669 )" "angle" "72.543" "targetname" "A13"
+	spawn info_player_allied "origin" "( 3528.372 1023.714 240.125 )" "angle" "103.689" "targetname" "A14"
+	spawn info_player_allied "origin" "( 3160.257 1021.768 240.129 )" "angle" "75.674" "targetname" "A15"
 
 
 	local.master = spawn scriptmaster
