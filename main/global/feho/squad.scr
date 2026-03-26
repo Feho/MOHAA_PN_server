@@ -482,7 +482,6 @@ event_player_killed:
 
     //println("Squad Mod: Player " + netname local.player + " killed.")
 
-    local.player_entnum = local.player.entnum
     local.squad_info = level.player_squad_info[local.player.entnum]
     // Player might have disconnected right before kill event, squad_info could be NIL
     if (local.squad_info == NIL) 
@@ -604,7 +603,7 @@ update_squad_hud local.player:
                 } else {
                     ihuddraw_color local.player local.member_index 1 0.5 0.5
                 }
-                
+
                 local.cached_hud_strings[local.i] = local.final_string
             }
         }

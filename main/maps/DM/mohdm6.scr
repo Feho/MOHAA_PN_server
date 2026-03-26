@@ -27,7 +27,7 @@ main:
 		thread roundbasedthread
 
 	// start random fog
-	exec global/random_fog.scr
+	// exec global/random_fog.scr
 
 	level waittill prespawn
 
