@@ -178,6 +178,7 @@ exec global/events.scr
 exec global/feho/squad.scr
 exec global/feho/antinoob.scr
 exec global/feho/voices.scr
+exec global/feho/difficulty_adjustment.scr
 
 level waittill spawn
 
