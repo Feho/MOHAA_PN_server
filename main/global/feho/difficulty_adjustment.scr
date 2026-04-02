@@ -16,6 +16,8 @@ end
 
 event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
 
+    if (isBot self) end
+
     // The victim's streak increases
     self.deathsWithoutKill++
 
