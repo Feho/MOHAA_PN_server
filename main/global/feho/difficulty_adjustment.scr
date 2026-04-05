@@ -36,7 +36,7 @@ end
 
 event_player_damaged local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
 
-    if (self.damageReduction == 0 || !isAlive self)
+    if (self.damageReduction == 0 || !isAlive self || isBot self)
         end
 
     // Absorb <damageReduction> % of damage
