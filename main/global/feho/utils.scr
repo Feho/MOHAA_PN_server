@@ -91,9 +91,11 @@ get_wpnclass local.wpn_model:
 	{
 		case "models/weapons/m1_garand.tik":
 		case "models/weapons/kar98.tik":
+			local.result = rifle
+		break
 		case "models/weapons/kar98sniper.tik":
 		case "models/weapons/springfield.tik":
-			local.result = rifle
+			local.result = sniper
 		break
 		case "models/weapons/bar.tik":
 		case "models/weapons/mp44.tik":

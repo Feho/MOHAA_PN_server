@@ -34,14 +34,12 @@ event_player_spawned:
         wait 1
         if (!self) end
 
-        if (randomint(100) < 80)
+        if (randomint(100) < 80 && local.wpnclass != "sniper")
         {
             // Increase the spread of the weapon, so that the bots are not too accurate.
             // self weaponcommand dual dmbulletspread 40 40 70 70
             self weaponcommand dual dmbulletdamage 30
         }
-
-        end
     }
 
 end
