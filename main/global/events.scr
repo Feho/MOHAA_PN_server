@@ -62,7 +62,7 @@ end
 
 event_player_damaged local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
 
-    if (randomint(8) != 1 || !isAlive self || self.has_grenade || !isBot self) end
+    if (randomint(12) != 1 || !isAlive self || self.has_grenade || !isBot self) end
 
     self.has_grenade = 1
 
