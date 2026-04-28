@@ -18,7 +18,7 @@ main:
 
 	setcvar "g_gametype" "4"
 	
-	setcvar "timelimit" "15"
+	setcvar "timelimit" "14"
 	setcvar "fraglimit" "1"
 	
 	setcvar "g_gametypestring" "Search & Destroy"
@@ -239,7 +239,8 @@ allies_win_thread local.bomb1:
 	while (local.bomb1.exploded != 1)
 		wait .1
 	
-	teamwin allies
+	//teamwin allies
+	level.clockside = allies
 end
 
 //*** --------------------------------------------

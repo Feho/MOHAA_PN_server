@@ -14,6 +14,8 @@ setcvar "g_obj_axistext2" "under the bridge"
 setcvar "g_obj_axistext3" "to destroy it"
 
 setcvar "g_scoreboardpic" "objdm4"
+setcvar "g_gametype" "4"
+setcvar "timelimit" "14"
 
 	// load support gun sounds
 	waitthread global/support/support.scr::soundcache
@@ -49,6 +51,15 @@ setcvar "g_scoreboardpic" "objdm4"
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
 
+	local.bombPositions = makeArray
+		( -999 3205 184 )
+		( 785 4455 240 )
+		( 1526 2667 240 )
+	endArray
+
+	local.bombPos = local.bombPositions[randomint(local.bombPositions.size + 1)][1]
+	exec global/feho/create_bomb.scr local.bombPos
+
 	level.defusing_team = "allies"
 	level.planting_team = "axis"
 	level.targets_to_destroy = 1 // only one of the two bombs in the level needs to be blown
@@ -56,14 +67,14 @@ setcvar "g_scoreboardpic" "objdm4"
 	level.bomb_explosion_radius = 1024
 
 	// set the parameters for this round/wave based match
-	level.dmrespawning = 0   // 1 **wave based** or 0 **round based**
-	level.dmroundlimit = 5   // round time limit in minutes
+	level.dmrespawning = 1   // 1 **wave based** or 0 **round based**
+	level.dmroundlimit = 15   // round time limit in minutes
 	level.clockside = allies // set to axis, allies, kills, or draw
 
-	//level waittill roundstart
+	level waittill roundstart
 		
-		$bridge_bomb thread global/obj_dm.scr::bomb_thinker
-		$bridge_bomb2 thread global/obj_dm.scr::bomb_thinker
+		$bridge_bomb thread global/obj_dmsd.scr::bomb_thinker
+		$bridge_bomb2 thread global/obj_dmsd.scr::bomb_thinker
 		
 		$bridge_bomb thread axis_win_bomb
  		$bridge_bomb thread allied_win_timer
@@ -78,7 +89,8 @@ axis_win_bomb:
 	while(level.targets_destroyed < level.targets_to_destroy)
 		waitframe
 		
-	teamwin axis
+	//teamwin axis
+	level.clockside = axis
 end
 
 //*** --------------------------------------------
