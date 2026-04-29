@@ -40,6 +40,7 @@ tdmtype:
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing3a.tga" 
 
 	setcvar "g_gametype" "2"
+
 	setcvar "g_gametypestring" "Team-Match"
 	thread global/bomber.scr::main
 
@@ -104,6 +105,18 @@ tdmtype:
 	
 	thread Map_Guard
 	thread Stage_Timer
+
+	// Fix bots spawn
+	wait 1
+
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if (isBot $player[local.i])
+		{
+			$player[local.i] respawn
+			wait 0.8
+		}
+	}
 	
 	// Uncomment if you want the minefield on
 
