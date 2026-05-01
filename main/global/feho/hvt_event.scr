@@ -285,8 +285,8 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
             if (level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
             {
                 wait 2
-                println ("^3All HVTs eliminated! Event concluded.")
-                iprintlnbold("All HVTs eliminated! Event concluded.")
+                //println ("^3All HVTs eliminated! Event concluded.")
+                //iprintlnbold("All HVTs eliminated! Event concluded.")
                 level.hvt_event_active = 0
             }
         }
@@ -314,8 +314,8 @@ event_player_disconnecting:
     // Check if all HVTs are gone
     if (level.hvt_event_active == 1 && level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
     {
-        println ("^3All HVTs are gone. Event concluded.")
-        iprintlnbold("All HVTs are gone. Event concluded.")
+        //println ("^3All HVTs are gone. Event concluded.")
+        //iprintlnbold("All HVTs are gone. Event concluded.")
         level.hvt_event_active = 0
     }
 
