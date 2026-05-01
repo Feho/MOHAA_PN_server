@@ -87,6 +87,18 @@ tdmtype:
 
 	level.clockside = kills
 
+	// Fix bots spawn
+	wait 1
+
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if (isBot $player[local.i])
+		{
+			$player[local.i] respawn
+			wait 0.8
+		}
+	}
+
 end
 
 
