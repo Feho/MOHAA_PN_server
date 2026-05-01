@@ -2,7 +2,7 @@ main:
 
 	local.player = parm.other
 	
-	if (local.player.needrevive == 1 || local.player.has_the_bomb == 1)
+	if (local.player.needrevive == 1 || local.player.has_the_bomb == 1 || isBot local.player)
 		end
 		
 	self remove
