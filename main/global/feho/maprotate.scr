@@ -1,0 +1,208 @@
+/*
+Weighted nextmap rotation for the PN server.
+
+This file owns weighted map selection and recent-map history. mapvote.scr uses
+choose_vote_options to show players two weighted choices, then records the
+finished map through record_current_map when the result is committed.
+
+The main label is kept as a standalone fallback: if this file is exec'd
+directly, it records the current map and sets nextmap without a vote.
+
+Cvars survive map changes; level.* does not, so only per-map temporary tables
+live on level.
+*/
+
+main:
+    if (level.maprotate_initialized == 1)
+        end
+
+    level.maprotate_initialized = 1
+
+    local.current = getcvar "mapname"
+    if (local.current == NIL || local.current == "")
+        end
+
+    waitthread record_current_map local.current
+
+    local.next = waitthread choose_next_map local.current
+    if (local.next != NIL && local.next != "")
+    {
+        setcvar "nextmap" local.next
+        setcvar "feho_nextmap" local.next
+        println ("[MapRotate] current=" + local.current + " next=" + local.next + " recent=" + (getcvar "feho_map_recent"))
+    }
+end
+
+choose_next_map local.current:
+    waitthread build_weight_table
+
+    local.map = waitthread choose_candidate local.current "" 1
+    if (local.map == NIL || local.map == "")
+        local.map = waitthread choose_candidate local.current "" 0
+
+    end local.map
+
+choose_vote_options local.current:
+    waitthread build_weight_table
+
+    local.options = NIL
+
+    local.options[1] = waitthread choose_candidate local.current "" 1
+    if (local.options[1] == NIL || local.options[1] == "")
+        local.options[1] = waitthread choose_candidate local.current "" 0
+
+    local.options[2] = waitthread choose_candidate local.current local.options[1] 1
+    if (local.options[2] == NIL || local.options[2] == "")
+        local.options[2] = waitthread choose_candidate local.current local.options[1] 0
+
+    end local.options
+
+choose_candidate local.current local.exclude_map local.exclude_recent:
+    local.total = waitthread total_weight local.current local.exclude_map local.exclude_recent
+
+    if (local.total <= 0)
+        end ""
+
+    local.roll = randomint(local.total) + 1
+    local.running = 0
+
+    for (local.i = 1; local.i <= level.maprotate_count; local.i++)
+    {
+        local.map = level.maprotate_maps[local.i]
+        if (waitthread is_allowed_candidate local.map local.current local.exclude_map local.exclude_recent)
+        {
+            local.running += level.maprotate_weights[local.i]
+            if (local.roll <= local.running)
+                end local.map
+        }
+    }
+
+    for (local.i = 1; local.i <= level.maprotate_count; local.i++)
+    {
+        local.map = level.maprotate_maps[local.i]
+        if (local.map != local.current)
+            end local.map
+    }
+
+    end ""
+
+total_weight local.current local.exclude_map local.exclude_recent:
+    local.total = 0
+
+    for (local.i = 1; local.i <= level.maprotate_count; local.i++)
+    {
+        local.map = level.maprotate_maps[local.i]
+        if (waitthread is_allowed_candidate local.map local.current local.exclude_map local.exclude_recent)
+            local.total += level.maprotate_weights[local.i]
+    }
+
+    end local.total
+
+is_allowed_candidate local.map local.current local.exclude_map local.exclude_recent:
+    if (local.map == NIL || local.map == "")
+        end 0
+
+    if (local.map == local.current)
+        end 0
+
+    if (local.exclude_map != NIL && local.exclude_map != "" && local.map == local.exclude_map)
+        end 0
+
+    if (local.exclude_recent == 1 && waitthread is_recent_map local.map)
+        end 0
+
+    end 1
+
+record_current_map local.current:
+    local.old = getcvar "feho_map_recent"
+    local.kept = NIL
+    local.kept_count = 0
+
+    if (local.old != NIL && local.old != "")
+    {
+        local.result = waitthread global/strings.scr::split_line local.old 1 " "
+        local.maps = local.result[1]
+
+        for (local.i = 1; local.i <= local.maps.size; local.i++)
+        {
+            if (local.maps[local.i] != "" && local.maps[local.i] != local.current)
+            {
+                local.kept_count++
+                local.kept[local.kept_count] = local.maps[local.i]
+            }
+        }
+    }
+
+    local.kept_count++
+    local.kept[local.kept_count] = local.current
+
+    local.start = 1
+    if (local.kept_count > 3)
+        local.start = local.kept_count - 2
+
+    local.recent = ""
+    for (local.i = local.start; local.i <= local.kept_count; local.i++)
+    {
+        if (local.recent != "")
+            local.recent += " "
+        local.recent += local.kept[local.i]
+    }
+
+    setcvar "feho_map_recent" local.recent
+end
+
+is_recent_map local.map:
+    local.recent = getcvar "feho_map_recent"
+    if (local.recent == NIL || local.recent == "")
+        end 0
+
+    local.result = waitthread global/strings.scr::split_line local.recent 1 " "
+    local.maps = local.result[1]
+
+    for (local.i = 1; local.i <= local.maps.size; local.i++)
+    {
+        if (local.maps[local.i] == local.map)
+            end 1
+    }
+
+end 0
+
+build_weight_table:
+    level.maprotate_count = 0
+
+    waitthread add_weighted_map "m2l1"          5
+    waitthread add_weighted_map "m2l2a"         5
+    waitthread add_weighted_map "m2l2c"         5
+    waitthread add_weighted_map "m3l3"          5
+    waitthread add_weighted_map "obj/obj_team1" 5
+    waitthread add_weighted_map "obj/obj_team2" 5
+    waitthread add_weighted_map "obj/obj_team4" 5
+
+    waitthread add_weighted_map "dm/mohdm3"     4
+    waitthread add_weighted_map "dm/mohdm4"     4
+    waitthread add_weighted_map "dm/mohdm6"     4
+    waitthread add_weighted_map "dm/mohdm7"     4
+    waitthread add_weighted_map "m4l2"          4
+    waitthread add_weighted_map "m1l2b"         4
+    waitthread add_weighted_map "m1l1"          4
+
+    waitthread add_weighted_map "m4l0"          3
+    waitthread add_weighted_map "m4l1"          3
+    waitthread add_weighted_map "m5l1a"         3
+    waitthread add_weighted_map "m6l2a"         3
+    waitthread add_weighted_map "dm/mohdm2"     3
+
+    waitthread add_weighted_map "m3l2"          2
+    waitthread add_weighted_map "m5l2a"         2
+    waitthread add_weighted_map "m5l3"          2
+    waitthread add_weighted_map "dm/mohdm5"     2
+end
+
+add_weighted_map local.map local.weight:
+    if (local.map == NIL || local.map == "" || local.weight <= 0)
+        end
+
+    level.maprotate_count++
+    level.maprotate_maps[level.maprotate_count] = local.map
+    level.maprotate_weights[level.maprotate_count] = local.weight
+end

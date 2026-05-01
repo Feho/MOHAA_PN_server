@@ -184,7 +184,7 @@ level waittill spawn
 
 exec global/feho/messages.scr
 
-// Initialize map voting system
+// Initialize map voting backed by weighted map rotation
 exec global/feho/mapvote.scr
 
 // Initialize bot count control system

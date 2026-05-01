@@ -3,7 +3,7 @@ Map Voting System for MOHAA PN Server
 Created by Copilot for issue #3
 
 This script implements an end-of-round map voting system that allows players
-to vote between the next map in rotation and a random alternative.
+to vote between two weighted map-rotation options.
 
 Features:
 - Triggers voting 60 seconds before round end
@@ -24,6 +24,8 @@ main:
     level.vote_map2_tally = 0
     level.vote_option1 = ""
     level.vote_option2 = ""
+
+    waitthread clear_stale_nextmap
     
     // Subscribe to player text messages for vote handling
     event_subscribe "player_textMessage" event_player_textMessage
@@ -34,6 +36,18 @@ main:
     // Announce system is loaded (optional debug message)
     // println "MapVote: System initialized"
     
+end
+
+clear_stale_nextmap:
+    local.nextmap = getcvar "nextmap"
+    local.our_nextmap = getcvar "feho_nextmap"
+    local.current_map = getcvar "mapname"
+
+    if (local.nextmap != "" && (local.nextmap == local.our_nextmap || local.nextmap == local.current_map))
+    {
+        setcvar "nextmap" ""
+        setcvar "feho_nextmap" ""
+    }
 end
 
 monitor_round_timer:
@@ -82,26 +96,9 @@ start_map_vote:
     level.vote_map1_tally = 0
     level.vote_map2_tally = 0
     
-    // Parse the map list and determine options
-    local.maplist = getcvar "sv_maplist"
+    // Determine two weighted rotation options. nextmap is set only after voting.
     local.current_map = getcvar "mapname"
-    
-    // Debug output (can be disabled in production)
-    // println ("MapVote: Current map: " + local.current_map)
-    // println ("MapVote: Map list: " + local.maplist)
-    
-    local.maps = waitthread parse_maplist local.maplist
-    
-    if (!local.maps || local.maps.size < 2)
-    {
-        // Not enough maps for voting, end early
-        level.voting_active = 0
-        stuffsrv "say Map voting disabled: Not enough maps in rotation"
-        // println ("MapVote: Insufficient maps for voting")
-        end
-    }
-    
-    local.options = waitthread determine_vote_options local.maps local.current_map
+    local.options = waitthread determine_vote_options local.current_map
     level.vote_option1 = local.options[1]
     level.vote_option2 = local.options[2]
     
@@ -156,90 +153,9 @@ send_vote_reminders:
     }
 end
 
-parse_maplist local.maplist:
-    // Parse space-separated map list into an array using strings.scr utility
-    local.result = waitthread global/strings.scr::split_line local.maplist 0 " "
-    
-    // split_line returns: [1] = array of words, [2] = word count, [3] = full string
-    local.maps = local.result[1]
-    
-end local.maps
-
-determine_vote_options local.maps local.current_map:
-    // Determine the two voting options
+determine_vote_options local.current_map:
     local.options = NIL
-    
-    // Find current map index in the rotation
-    local.current_index = -1
-    for (local.i = 1; local.i <= local.maps.size; local.i++)
-    {
-        if (local.maps[local.i] == local.current_map)
-        {
-            local.current_index = local.i
-            break
-        }
-    }
-    
-    // Option 1: Next map in rotation
-    if (local.current_index >= 1 && local.current_index < local.maps.size)
-    {
-        local.options[1] = local.maps[local.current_index + 1]
-    }
-    else if (local.current_index == local.maps.size)
-    {
-        // Wrap around to first map
-        local.options[1] = local.maps[1]
-    }
-    else
-    {
-        // Current map not found in list, use second map if available
-        if (local.maps.size >= 2)
-        {
-            local.options[1] = local.maps[2]
-        }
-        else
-        {
-            local.options[1] = local.maps[1]
-        }
-    }
-    
-    // Option 2: Random map (excluding current and option 1)
-    local.available_maps = NIL
-    local.available_count = 0
-    
-    for (local.i = 1; local.i <= local.maps.size; local.i++)
-    {
-        local.map = local.maps[local.i]
-        if (local.map != local.current_map && local.map != local.options[1])
-        {
-            local.available_count++
-            local.available_maps[local.available_count] = local.map
-        }
-    }
-    
-    if (local.available_count > 0)
-    {
-        local.random_index = randomint(local.available_count) + 1
-        local.options[2] = local.available_maps[local.random_index]
-    }
-    else
-    {
-        // Fallback: use first map if no alternatives available
-        if (local.maps.size >= 1 && local.maps[1] != local.options[1])
-        {
-            local.options[2] = local.maps[1]
-        }
-        else if (local.maps.size >= 3)
-        {
-            local.options[2] = local.maps[3]
-        }
-        else
-        {
-            // Last resort: duplicate option 1 but with different label
-            local.options[2] = local.options[1]
-        }
-    }
-    
+    local.options = waitthread global/feho/maprotate.scr::choose_vote_options local.current_map
 end local.options
 
 event_player_textMessage local.text local.is_team:
@@ -327,14 +243,14 @@ end_vote_when_round_ends:
     {
         // Tie or no votes - use default (option 1)
         local.winning_map = level.vote_option1
-        if (level.vote_map1_tally == 0 && level.vote_map2_tally == 0)
-        {
-            stuffsrv "say No votes received - using default map rotation"
-        }
-        else
-        {
-            stuffsrv "say Vote tied - using default map rotation"
-        }
+        // if (level.vote_map1_tally == 0 && level.vote_map2_tally == 0)
+        // {
+        //     stuffsrv "say No votes received - using default map rotation"
+        // }
+        // else
+        // {
+        //     stuffsrv "say Vote tied - using default map rotation"
+        // }
         wait 0.1
     }
     
@@ -343,7 +259,9 @@ end_vote_when_round_ends:
     // Set the nextmap cvar if we have a winner from voting
     if (local.winning_map != "")
     {
+        waitthread global/feho/maprotate.scr::record_current_map (getcvar "mapname")
         setcvar "nextmap" local.winning_map
+        setcvar "feho_nextmap" local.winning_map
         wait 0.1
         // stuffsrv ("say Server setting next map to: " + local.winning_map)
     }
