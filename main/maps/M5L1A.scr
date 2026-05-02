@@ -70,15 +70,51 @@ setcvar "g_gametypestring" "Team-Match"
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
 
-	waitthread furniture
+	thread furniture
 	thread Map_Guard
 
 	level.clockside = kills
 
+	level.bot_spawn_points["allies"] = makearray
+		( 2625.556 -2312.476 176.125 ) ( 1249.100 -2701.685 53.448 )
+	endarray
+
+	level.bot_spawn_points["axis"] = makearray
+		( 1995.907 -4262.752 456.125 ) ( 3310.185 -4197.758 -53.637 )
+		( 2786.434 -1738.851 92.941 ) ( 2229.853 -2543.505 35.329 ) 
+		( 2389.401 -1710.101 105.483 ) ( 2229.853 -2543.505 35.329 )
+		( 50.670 -3751.458 676.125 ) ( 1096.906 -3103.516 323.670 )
+		( 1039 -405 520 ) ( 1096.906 -3103.516 323.670 )
+	endarray
+
+	event_subscribe "player_spawned" event_player_spawned
+	event_subscribe "player_killed" event_player_killed
+
 end
 
+event_player_spawned:
 
+	if (!isBot self || randomint(10) > 0) end
+	wait randomfloat(0.15)
 
+	local.spawn_point = level.bot_spawn_points[self.dmteam][randomint(level.bot_spawn_points[self.dmteam].size) + 1]
+
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.other = $player[local.i]
+
+		if (local.other != self && isBot local.other && (vector_within local.spawn_point[1] local.other.origin 20))
+		{
+			end
+		}
+	}
+
+	self tele local.spawn_point[1]
+	self bot_holdposition 1
+	self bot_stand 1
+	self bot_watchat local.spawn_point[2]
+
+end
 
 ffatype:
 
@@ -126,7 +162,7 @@ ffatype:
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
 
-	waitthread furniture
+	thread furniture
 	thread Map_Guard
 
 	level.clockside = kills
@@ -259,7 +295,7 @@ furniture:
 
 
 	// Relocate some FX :)
-	$bomberpath2015.origin = "-528 416 1528"
+	//$bomberpath2015.origin = "-528 416 1528"
 	$ac1.origin = "-555 -1799 1284"
 	$ac2.origin = "-429 -2201 1068"
 	$ac3.origin = "-127 -2442 807"
@@ -270,7 +306,7 @@ furniture:
 	$ac8.origin = "1885 -2520 307"
 	$ac9.origin = "2381 -2490 274"
 	$mackey.origin = "2737 -2454 244"
-	$bomberpath78.origin = "-528 416 1528"
+	//$bomberpath78.origin = "-528 416 1528"
 	$powzer.origin = "-557 -1450 1455"
 	$ned.origin = "-471 -2058 1305"
 	$adam.origin = "-239 -2355 1122"
