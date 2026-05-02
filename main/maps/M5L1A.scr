@@ -88,7 +88,6 @@ setcvar "g_gametypestring" "Team-Match"
 	endarray
 
 	event_subscribe "player_spawned" event_player_spawned
-	event_subscribe "player_killed" event_player_killed
 
 end
 
