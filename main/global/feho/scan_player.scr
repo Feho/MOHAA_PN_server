@@ -32,7 +32,7 @@ main:
 
 	local.team = self.dmteam
 	local.team  = waitexec global/strings.scr::to_upper local.team  0
-	iprintlnbold ("The " + local.team  + " recovered the explosives !")
+	iprintlnbold ("The " + local.team  + " have picked up the bomb!")
 
 	wait 1
 
@@ -63,7 +63,7 @@ main:
 				local.trigger droptofloor
 				self.bomb remove
 				local.trigger playsound bomb_drop1
-				iprintlnbold ("The " + local.team1  + " have dropped the explosives !")
+				iprintlnbold ("The " + local.team1  + " dropped the bomb!")
 				self.has_the_bomb = 0
 				self stufftext "hidemenu dday1"
 				end
@@ -83,7 +83,7 @@ main:
 	local.trigger setthread global/feho/bomb.scr::main
 	local.trigger droptofloor
 	local.trigger playsound bomb_drop1
-	iprintlnbold ("The " + local.team1  + " have dropped the explosives !")
+	iprintlnbold ("The " + local.team1  + " dropped the bomb!")
 	
 end
 
