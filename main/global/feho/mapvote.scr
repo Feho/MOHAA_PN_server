@@ -24,6 +24,8 @@ main:
     level.vote_map2_tally = 0
     level.vote_option1 = ""
     level.vote_option2 = ""
+    level.vote_option1_display = ""
+    level.vote_option2_display = ""
 
     waitthread clear_stale_nextmap
     
@@ -62,22 +64,22 @@ monitor_round_timer:
             wait 30
             goto monitor_round_timer
         }
-        
+
         local.timelimit_seconds = int(local.timelimit) * 60
-        
+
         // Calculate time remaining (using simple approach)
         // In MOHAA, level.time appears to be game time in seconds since round start
         if (level.time > 0)
         {
             local.time_remaining = local.timelimit_seconds - level.time
-            
+
             // Trigger voting at 60 seconds remaining (with a small buffer to avoid multiple triggers)
             if (local.time_remaining <= 61 && local.time_remaining >= 59 && level.voting_active == 0)
             {
                 if ((getcvar "nextmap") != "") end
                 thread start_map_vote
             }
-            
+
             // Stop monitoring if round is over
             if (local.time_remaining <= 0)
             {
@@ -85,7 +87,7 @@ monitor_round_timer:
                 level.voting_active = 0  // Reset for next round
             }
         }
-        
+
         wait 2  // Check every 2 seconds
     }
 end
@@ -119,19 +121,20 @@ start_map_vote:
             local.p.hasVoted = 0
         }
     }
-    
+
+    level.vote_option1_display = waitthread get_map_display_name level.vote_option1
+    level.vote_option2_display = waitthread get_map_display_name level.vote_option2
+
     // Announce the vote
     wait 0.1
-    stuffsrv "say [MAP VOTE] Time remaining: 60 seconds"
+    stuffsrv ("say [MAP VOTE] 1: " + level.vote_option1_display)
     wait 0.1
-    stuffsrv ("say 1: " + level.vote_option1)
+    stuffsrv ("say [MAP VOTE] 2: " + level.vote_option2_display)
     wait 0.1
-    stuffsrv ("say 2: " + level.vote_option2)
-    wait 0.1
-    
+
     // Wait for the round to end, then tally votes
     thread end_vote_when_round_ends
-    
+
     // Send periodic reminders during voting
     thread send_vote_reminders
 end
@@ -146,17 +149,72 @@ send_vote_reminders:
         if (level.voting_active == 1)
         {
             local.reminder_count++
-            stuffsrv ("say [MAP VOTE] 1: " + level.vote_option1 + " vs 2: " + level.vote_option2)
-	    wait 0.1
-            stuffsrv ("say [MAP VOTE] " + level.vote_map1_tally + " vs " + level.vote_map2_tally)
+            stuffsrv ("say [MAP VOTE] 1: " + level.vote_option1_display)
+            wait 0.1
+            stuffsrv ("say [MAP VOTE] 2: " + level.vote_option2_display)
         }
     }
 end
 
 determine_vote_options local.current_map:
-    local.options = NIL
     local.options = waitthread global/feho/maprotate.scr::choose_vote_options local.current_map
 end local.options
+
+get_map_display_name local.map:
+    if (local.map == NIL || local.map == "")
+        end ""
+
+    local.maps["dm/mohdm1"] = "Southern France"
+    local.maps["dm/mohdm2"] = "Destroyed Village"
+    local.maps["dm/mohdm3"] = "Remagen"
+    local.maps["dm/mohdm4"] = "The Crossroads"
+    local.maps["dm/mohdm5"] = "Snowy Park"
+    local.maps["dm/mohdm6"] = "Stalingrad"
+    local.maps["dm/mohdm7"] = "Algiers"
+    local.maps["obj/obj_team1"] = "The Hunt"
+    local.maps["obj/obj_team2"] = "V2 Rocket"
+    local.maps["obj/obj_team3"] = "Omaha Beach"
+    local.maps["obj/obj_team4"] = "The Bridge"
+    local.maps["m1l1"] = "Rangers Lead the Way"
+    local.maps["m1l2a"] = "The Rescue Mission"
+    local.maps["m1l2b"] = "Sabotage the Motorpool"
+    local.maps["m1l3a"] = "The Desert"
+    local.maps["m1l3b"] = "The Airfield"
+    local.maps["m1l3c"] = "The Lighthouse"
+    local.maps["m2l1"] = "The Kriegsmarine"
+    local.maps["m2l2a"] = "Naxos Prototype"
+    local.maps["m2l2b"] = "Inside the U-529"
+    local.maps["m2l2c"] = "Cover Blown"
+    local.maps["m2l3"] = "Escape Trondheim"
+    local.maps["m3l1a"] = "Omaha Beach Landing"
+    local.maps["m3l1b"] = "Omaha Beach Bunker"
+    local.maps["m3l2"] = "Battle in Bocage"
+    local.maps["m3l3"] = "Nebelwerfer Hunt"
+    local.maps["m4l0"] = "The Farm House"
+    local.maps["m4l1"] = "Bocage at Night"
+    local.maps["m4l2"] = "The Railway Station"
+    local.maps["m4l3"] = "The Command Post"
+    local.maps["m5l1a"] = "City Hall Outskirts"
+    local.maps["m5l1b"] = "City Hall"
+    local.maps["m5l2a"] = "King Tiger 1"
+    local.maps["m5l2b"] = "King Tiger 2"
+    local.maps["m5l3"] = "Bridge of Brest"
+    local.maps["m6l1a"] = "Siegfried Forest 1"
+    local.maps["m6l1b"] = "Siegfried Forest 2"
+    local.maps["m6l1c"] = "Die Sturmgewehr"
+    local.maps["m6l2a"] = "Communications Blackout"
+    local.maps["m6l2b"] = "Schmerzen Express"
+    local.maps["m6l3a"] = "Fort Schmerzen 1"
+    local.maps["m6l3b"] = "Fort Schmerzen 2"
+    local.maps["m6l3c"] = "Fort Schmerzen 3"
+    local.maps["m6l3d"] = "Fort Schmerzen 4"
+    local.maps["m6l3e"] = "Fort Schmerzen 5"
+
+    if (local.maps[local.map] == NIL || local.maps[local.map] == "")
+        end local.map
+
+    end (local.maps[local.map] + " (" + local.map + ")")
+end
 
 event_player_textMessage local.text local.is_team:
     // Handle player vote messages
@@ -179,7 +237,7 @@ event_player_textMessage local.text local.is_team:
     {
         level.vote_map1_tally++
         local.player.hasVoted = 1
-        local.player iprint ("Vote recorded for: " + level.vote_option1)
+        local.player iprint ("Vote recorded for: " + level.vote_option1_display)
         
         // Optional: Announce vote count update
         // stuffsrv ("say " + (netname local.player) + " voted for " + level.vote_option1)
@@ -188,7 +246,7 @@ event_player_textMessage local.text local.is_team:
     {
         level.vote_map2_tally++
         local.player.hasVoted = 1
-        local.player iprint ("Vote recorded for: " + level.vote_option2)
+        local.player iprint ("Vote recorded for: " + level.vote_option2_display)
         
         // Optional: Announce vote count update  
         // stuffsrv ("say " + (netname local.player) + " voted for " + level.vote_option2)
@@ -197,8 +255,8 @@ event_player_textMessage local.text local.is_team:
     {
         // Player asking for vote info
         local.player iprint "=== CURRENT MAP VOTE ==="
-        local.player iprint (level.vote_option1 + " (Type '1')")
-        local.player iprint (level.vote_option2 + " (Type '2')")
+        local.player iprint (level.vote_option1_display + " (Type '1')")
+        local.player iprint (level.vote_option2_display + " (Type '2')")
         local.player iprint ("Current votes: " + level.vote_map1_tally + " vs " + level.vote_map2_tally)
     }
     
@@ -222,9 +280,9 @@ end_vote_when_round_ends:
     wait 0.1
     stuffsrv "say MAP VOTE RESULTS:"
     wait 0.1
-    stuffsrv ("say " + level.vote_option1 + ": " + level.vote_map1_tally + " votes")
+    stuffsrv ("say " + level.vote_option1_display + ": " + level.vote_map1_tally + " votes")
     wait 0.1
-    stuffsrv ("say " + level.vote_option2 + ": " + level.vote_map2_tally + " votes")
+    stuffsrv ("say " + level.vote_option2_display + ": " + level.vote_map2_tally + " votes")
     wait 0.1
     
     local.winning_map = ""
@@ -272,5 +330,7 @@ end_vote_when_round_ends:
     level.vote_map2_tally = 0
     level.vote_option1 = ""
     level.vote_option2 = ""
+    level.vote_option1_display = ""
+    level.vote_option2_display = ""
     
 end
