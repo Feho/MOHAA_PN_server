@@ -16,6 +16,15 @@ end
 
 event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
 
+    // The attacker got a kill, reset their streak.
+    // Do this before ignoring bot victims, otherwise human kills against bots
+    // never clear the handicap.
+    if (local.attacker && local.attacker != self)
+    {
+        local.attacker.deathsWithoutKill = 0
+        local.attacker.damageReduction = 0
+    }
+
     if (isBot self) end
 
     // The victim's streak increases
@@ -24,13 +33,6 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
     if (self.deathsWithoutKill >= 8)      self.damageReduction = 0.8
     else if (self.deathsWithoutKill >= 5) self.damageReduction = 0.5
     else                                  self.damageReduction = 0
-
-    // The attacker got a kill, reset their streak
-    if (local.attacker && local.attacker != self)
-    {
-        local.attacker.deathsWithoutKill = 0
-        local.attacker.damageReduction = 0
-    }
 
 end
 
