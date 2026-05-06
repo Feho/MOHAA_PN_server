@@ -37,7 +37,7 @@ set_random_fog:
 	if (level.fog_current_dist == NIL)
 	{
 		// Random starting distance from 1000 to 20000
-		level.fog_current_dist = 1500 + randomint(19000)
+		level.fog_current_dist = 2200 + randomint(19000)
 		// level.fog_current_r = 0.1 + randomfloat(0.3) // Random grey starting color
 		// level.fog_current_g = level.fog_current_r
 		// level.fog_current_b = level.fog_current_r
@@ -50,7 +50,7 @@ set_random_fog:
 
 	// Determine new random fog parameters with wider range
 	// Farplane distance: 800 (very heavy) to 25000 (very light)
-	local.end_dist = 1500 + randomint(24200)
+	local.end_dist = 2200 + randomint(24200)
 	
 	// Fog color: realistic shades of grey with slight variation
 	// local.grey_value = 0.1 + randomfloat(0.5) // from 0.1 to 0.6
