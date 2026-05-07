@@ -8,7 +8,7 @@
 // initialization thread... 
 //***********************************************
 
-bomb_thinker:
+bomb_thinker local.callback:
 // Steve says planting time = 6 seconds
 // defusing time = 12 second
 // tick time = 36 seconds
@@ -39,7 +39,7 @@ bomb_thinker:
 	
 	self.target.collisionent = self.target.target
 	self.target notsolid
-	thread bomb_waittill_set
+	thread bomb_waittill_set local.callback
 end
 
 //***********************************************
@@ -47,7 +47,7 @@ end
 //***********************************************
 
 
-bomb_waittill_set:
+bomb_waittill_set local.callback:
 
 self model items/pulse_explosive.tik
 
@@ -100,6 +100,10 @@ self.trigger_name waittill trigger
 			thread bomb_waittill_explode
 			self.live = 1
 			level.bombs_planted ++
+
+			if (local.callback)
+				thread local.callback self.origin level.planting_team
+
 			end
 		}
 	}
