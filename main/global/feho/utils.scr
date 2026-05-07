@@ -29,6 +29,24 @@ get_alive_players:
 
 end local.alive_players
 
+get_bots:
+
+    local.bot_players = NIL
+    local.count = 0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+
+        if (isBot local.p)
+        {
+            local.count++
+            local.bot_players[local.count] = local.p
+        }
+    }
+
+end local.bot_players
+
 get_human_players:
 
     local.human_players = NIL
