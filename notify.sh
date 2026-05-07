@@ -1,0 +1,1 @@
+ tail -F /home/feho/.openmohaa/main/qconsole.log | rg 'aimbot|says|deploy' --line-buffered | rg -v 127.0.0.1 --line-buffered | xargs -r -d '\n' -I{} curl -fsS --data-binary "{}" https://ntfy.sh/my-mohaa-monitoring-example
