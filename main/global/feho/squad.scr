@@ -398,7 +398,8 @@ event_player_spawned:
     local.player_squad_data = level.player_squad_info[local.player.entnum]
     if (local.player_squad_data == NIL) { end } // Should not happen if assignment worked
 
-    thread update_squad_hud local.player
+    if (!isBot local.player)
+        thread update_squad_hud local.player
 
     local.squad_team_idx = local.player_squad_data["team_idx"]
     local.squad_idx = local.player_squad_data["squad_idx"]
@@ -463,13 +464,21 @@ event_player_damaged:
     self.is_under_fire_expiration = level.time + 4
     //println("^3Player " + netname self + " is under fire!")
 
+    if (self.squad_under_fire_thread_active == 1)
+        end
+
+    self.squad_under_fire_thread_active = 1
+
     while (self && level.time < self.is_under_fire_expiration)
     {
         wait 0.1
     }
 
     if (self)
+    {
         self.is_under_fire = 0
+        self.squad_under_fire_thread_active = 0
+    }
 
 end
 
@@ -534,6 +543,14 @@ reset:
 end
 
 update_squad_hud local.player:
+    if (!local.player || isBot local.player)
+        end
+
+    if (local.player.squad_hud_thread_active == 1)
+        end
+
+    local.player.squad_hud_thread_active = 1
+
     local.hud_index_base = 150 // Fixed base index for all players
     local.hud_y_pos = 380
     local.hud_x_pos = 30
@@ -552,7 +569,7 @@ update_squad_hud local.player:
     ihuddraw_string local.player local.title_index "SQUAD"
     ihuddraw_alpha local.player local.title_index 1.0
 
-    while (local.player && local.player.dmteam == local.team && level.player_squad_info[local.player.entnum] != NIL)
+    while (local.player && local.player.isAlive && local.player.dmteam == local.team && level.player_squad_info[local.player.entnum] != NIL)
     {
         local.squad_info = level.player_squad_info[local.player.entnum]
         local.team_idx = local.squad_info["team_idx"]
@@ -628,6 +645,9 @@ update_squad_hud local.player:
     }
 
     // --- Cleanup all HUD elements when loop ends ---
+    if (local.player)
+        local.player.squad_hud_thread_active = 0
+
     thread cleanup_squad_hud local.player local.hud_index_base
 end
 
