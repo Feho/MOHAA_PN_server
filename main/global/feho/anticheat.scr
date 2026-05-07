@@ -41,7 +41,7 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
     local.degrees_per_second = local.angle_diff / local.time_diff
 
     // Just for debugging purpose
-    if (local.degrees_per_second > 160)
+    if (local.degrees_per_second > 100 && !isBot local.attacker)
     {
         local.developer = getcvar "developer"
         setcvar "developer" 1
