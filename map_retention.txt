@@ -1,0 +1,32 @@
+Map                    Sessions  Dropped   Drop%   Avg time   Median
+--------------------------------------------------------------------
+m5l1b                       119       68     57%      9.0m    6.2m
+dm/mohdm1                   151       83     55%      8.0m    6.7m
+m6l2a                        98       52     53%      8.4m    9.5m
+m2l3                         61       30     49%      7.1m    3.8m
+dm/mohdm5                    88       43     49%      8.1m    8.5m
+m3l2                        168       75     45%     10.7m   10.7m
+m5l2a                        90       40     44%      7.4m    5.9m
+m1l2a                        60       26     43%      8.7m    6.7m
+m4l2                        125       53     42%      9.1m    7.7m
+m4l1                        165       66     40%      9.0m    9.2m
+dm/mohdm6                   151       60     40%    233.4m    8.5m
+m5l3                        110       42     38%      7.9m    8.3m
+m1l2b                       144       52     36%      9.1m   11.1m
+m1l1                        131       47     36%      8.7m   10.3m
+m4l0                        178       63     35%     11.1m    9.2m
+dm/mohdm2                   139       49     35%    163.4m   10.8m
+dm/mohdm3                   158       54     34%      8.1m    7.7m
+obj/obj_team1               136       45     33%     24.3m    6.1m
+dm/mohdm4                   209       69     33%     12.8m   11.0m
+m5l1a                        91       30     33%      7.4m    9.0m
+dm/mohdm7                   107       35     33%      9.5m   11.2m
+m2l1                        141       44     31%      9.0m   11.3m
+obj/obj_team4                46       14     30%      9.0m    8.4m
+m2l2a                       127       31     24%      5.5m    7.0m
+m2l2c                       123       24     20%      5.6m    7.0m
+obj/obj_team2                15        2     13%      4.2m    2.9m
+m3l3                         17        2     12%      4.3m    0.9m
+
+Drop% = % of human sessions that ended mid-map (disconnected before map change)
+Avg/Median = time spent on map before leaving or map ending
