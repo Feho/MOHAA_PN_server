@@ -110,6 +110,9 @@ tdmtype:
     thread Map_Guard
     level.clockside = kills
 
+	wait 4
+	$player bot_movenear (4727.25 -2932.40 -34.13) 128
+
 end
 
 

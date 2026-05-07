@@ -168,17 +168,19 @@ tdmtype:
 	
 	level.clockside = kills
 
-	 //The snow
- level.rain_speed = "32"
- level.rain_speed_vary = "16"
- level.rain_length = "2"
- level.rain_width = "1"
- level.rain_density = ".2"
- level.rain_slant = "250"
- level.rain_min_dist = "1800"
- level.rain_numshaders = 12
- level.rain_shader = "textures/snow0"
+	//The snow
+	level.rain_speed = "32"
+	level.rain_speed_vary = "16"
+	level.rain_length = "2"
+	level.rain_width = "1"
+	level.rain_density = ".2"
+	level.rain_slant = "250"
+	level.rain_min_dist = "1800"
+	level.rain_numshaders = 12
+	level.rain_shader = "textures/snow0"
 
+	wait 3
+	$player bot_movenear (669.76 2059.41 452.24) 64
 	
 end
 

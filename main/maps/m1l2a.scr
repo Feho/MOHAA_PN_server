@@ -60,6 +60,9 @@ tdmtype:
 
 	level.clockside = kills
 
+	wait 4
+	$player bot_movenear (2841.75 -720.38 -112.56) 128
+
 end
 
 
