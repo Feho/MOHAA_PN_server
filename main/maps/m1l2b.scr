@@ -1,23 +1,24 @@
 //
 // M1L2B - Sabotage the Motorpool
+// Time-based Gain Ground variant: front line advances in same direction each round
+// 50% chance of reversed direction each game
 //
 
 
 main:
 
 	setcvar "timelimit" "15"
-	setcvar "push" "1"
-	
+
 	setcvar "g_gametype" "2"
-	
-	if ((getcvar("g_gametype") == "1")) 
+
+	if ((getcvar("g_gametype") == "1"))
 	{
 		waitthread ffatype
 		end
 	}
 	else
 	{
-		waitthread tdmtype  
+		waitthread tdmtype
 		end
 	}
 end
@@ -26,21 +27,21 @@ end
 
 tdmtype:
 
-	setcvar "g_obj_alliedtext1" "Map Name: M1L2B" 
+	setcvar "g_obj_alliedtext1" "Map Name: M1L2B"
 	setcvar "g_obj_alliedtext2" ""
 	setcvar "g_obj_alliedtext3" "Sabotage the Motorpool"
-	
+
 	setcvar "g_obj_axistext1" ""
 	setcvar "g_obj_axistext2" ""
-	setcvar "g_obj_axistext3" "" 
+	setcvar "g_obj_axistext3" ""
 
-	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga"
 
 	setcvar "g_gametype" "2"
 	setcvar "g_gametypestring" "Team-Match"
 		// load support gun sounds
 	waitthread global/support/support.scr::soundcache
-	
+
 	waitthread tdm_spawns
 	waitthread set_da_stuff_up
 
@@ -49,7 +50,7 @@ tdmtype:
 	exec global/door_locked.scr
 	exec global/ambient.scr m1l2b
 	exec global/DMprecache.scr
-	
+
 	thread global/barrel.scr::explosive_barrel
 
 	local.info = makeArray
@@ -57,12 +58,7 @@ tdmtype:
  	endArray
 
 	thread global/AIR_gold.scr::treasure_spawn local.info
-	
-	// Portable 30 cals
-	// exec models/create_guns.scr ( 960 670 -252.88 )
-	
-	// thread music
-	
+
 	local.mur = spawn script_object
 	local.mur.origin = ( 2408 -2489 -125)
 	local.mur.angle = 180
@@ -77,10 +73,9 @@ tdmtype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
-		
+
 	thread setup
-	thread hudstuff
-	thread triggers
+	thread timer
 	thread messages
 	thread eventeams
 	thread spawnswitch
@@ -95,9 +90,12 @@ tdmtype:
 		if (isBot $player[local.i])
 		{
 			$player[local.i] respawn
-			wait 0.8
+			wait 0.2
 		}
 	}
+
+	wait 4
+	thread dispatch_bots
 
 end
 
@@ -106,15 +104,15 @@ end
 
 ffatype:
 
-	setcvar "g_obj_alliedtext1" "Map Name: M1L2B" 
+	setcvar "g_obj_alliedtext1" "Map Name: M1L2B"
 	setcvar "g_obj_alliedtext2" ""
 	setcvar "g_obj_alliedtext3" "Sabotage the Motorpool"
-	
+
 	setcvar "g_obj_axistext1" ""
 	setcvar "g_obj_axistext2" ""
-	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net"
 
-	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga"
 
 	setcvar "g_gametype" "1"
 	setcvar "g_gametypestring" "Free-For-All"	waitthread ffa_spawns
@@ -122,7 +120,7 @@ ffatype:
 
 	// load support gun sounds
 	waitthread global/support/support.scr::soundcache
-	
+
 	level waittill prespawn
 
 	exec global/door_locked.scr
@@ -150,6 +148,7 @@ tdm_spawns:
 	local.allies1 = spawn info_player_allied targetname alh
 	local.allies1.angle = -22
 	local.allies1.origin = ( -4016 4046 -173 )
+	level.spawn_alh = local.allies1
 
 	local.allies2 = spawn info_player_allied targetname alh
 	local.allies2.angle = -22
@@ -162,6 +161,7 @@ tdm_spawns:
 	local.allies4 = spawn info_player_allied targetname al2
 	local.allies4.origin = ( -2223 3258 -173 )
 	local.allies4.angle = 90
+	level.spawn_al2 = local.allies4
 
 	local.allies5 = spawn info_player_allied targetname al2
 	local.allies5.origin = ( -2211 4021 -173 )
@@ -170,6 +170,7 @@ tdm_spawns:
 	local.allies6 = spawn info_player_allied targetname al3
 	local.allies6.origin = ( -1346 2534 -173 )
 	local.allies6.angle = 174
+	level.spawn_al3 = local.allies6
 
 	local.allies7 = spawn info_player_allied targetname al3
 	local.allies7.origin = ( -1409 2858 -173 )
@@ -178,6 +179,7 @@ tdm_spawns:
 	local.allies8 = spawn info_player_allied targetname al4
 	local.allies8.origin = ( 127 2690 -173 )
 	local.allies8.angle = -101
+	level.spawn_al4 = local.allies8
 
 	local.allies9 = spawn info_player_allied targetname al4
 	local.allies9.origin = ( 414 1748 -173 )
@@ -186,6 +188,7 @@ tdm_spawns:
 	local.allies10 = spawn info_player_allied targetname al5
 	local.allies10.origin = ( 2420 2186 -174 )
 	local.allies10.angle = 180
+	level.spawn_al5 = local.allies10
 
 	local.allies11 = spawn info_player_allied targetname al5
 	local.allies11.origin = ( 1047 1619 -173 )
@@ -194,6 +197,7 @@ tdm_spawns:
 	local.allies12 = spawn info_player_allied targetname al6
 	local.allies12.origin = ( 1677 151 -173 )
 	local.allies12.angle = 150
+	level.spawn_al6 = local.allies12
 
 	local.allies13 = spawn info_player_allied targetname al6
 	local.allies13.origin = ( 1403 171 -173 )
@@ -202,6 +206,7 @@ tdm_spawns:
 	local.allies14 = spawn info_player_allied targetname al7
 	local.allies14.origin = ( 898 -149 -173 )
 	local.allies14.angle = 0
+	level.spawn_al7 = local.allies14
 
 	local.allies15 = spawn info_player_allied targetname al7
 	local.allies15.origin = ( 2002 -281 -173 )
@@ -210,6 +215,7 @@ tdm_spawns:
 	local.allies16 = spawn info_player_allied targetname al8
 	local.allies16.origin = ( 1946 -2803 -140 )
 	local.allies16.angle = -180
+	level.spawn_al8 = local.allies16
 
 	local.allies17 = spawn info_player_allied targetname al8
 	local.allies17.origin = ( 1828 -2817 -140 )
@@ -218,20 +224,22 @@ tdm_spawns:
 	local.allies18 = spawn info_player_allied targetname al9
 	local.allies18.origin = ( 1444 -3224 -140 )
 	local.allies18.angle = -100
+	level.spawn_al9 = local.allies18
 
 	local.allies19 = spawn info_player_allied targetname al9
 	local.allies19.origin = ( 1167 -3213 -140 )
 	local.allies19.angle = -30
 
-	local.allies19 = spawn info_player_allied targetname al9
-	local.allies19.origin = ( 1430 -2623 -123 )
-	local.allies19.angle = -10
+	local.allies20 = spawn info_player_allied targetname al9
+	local.allies20.origin = ( 1430 -2623 -123 )
+	local.allies20.angle = -10
 
 	///////////////////////////////////////////////////////////axis
 
 	local.axis1 = spawn info_player_axis targetname axh
 	local.axis1.angle = -179
 	local.axis1.origin = ( 3123 -4126 -245 )
+	level.spawn_axh = local.axis1
 
 	local.axis2 = spawn info_player_axis targetname axh
 	local.axis2.origin = ( 2225 -4494 -207 )
@@ -244,6 +252,7 @@ tdm_spawns:
 	local.axis4 = spawn info_player_axis targetname ax2
 	local.axis4.origin = ( 1834 -3651 -143 )
 	local.axis4.angle = 140
+	level.spawn_ax2 = local.axis4
 
 	local.axis5 = spawn info_player_axis targetname ax2
 	local.axis5.origin = ( 1734 -3348 -43 )
@@ -252,6 +261,7 @@ tdm_spawns:
 	local.axis6 = spawn info_player_axis targetname ax3
 	local.axis6.origin = ( 1262 -3071 -143 )
 	local.axis6.angle = 90
+	level.spawn_ax3 = local.axis6
 
 	local.axis7 = spawn info_player_axis targetname ax3
 	local.axis7.origin = ( 1768 -3029 -143 )
@@ -260,6 +270,7 @@ tdm_spawns:
 	local.axis8 = spawn info_player_axis targetname ax4
 	local.axis8.origin = ( 2169 -192 -173 )
 	local.axis8.angle = -98
+	level.spawn_ax4 = local.axis8
 
 	local.axis9 = spawn info_player_axis targetname ax4
 	local.axis9.origin = ( 792 -222 -207 )
@@ -268,6 +279,7 @@ tdm_spawns:
 	local.axis10 = spawn info_player_axis targetname ax5
 	local.axis10.origin = ( 921 -30 -173 )
 	local.axis10.angle = 90
+	level.spawn_ax5 = local.axis10
 
 	local.axis11 = spawn info_player_axis targetname ax5
 	local.axis11.origin = ( 887 815 -173 )
@@ -276,6 +288,7 @@ tdm_spawns:
 	local.axis12 = spawn info_player_axis targetname ax6
 	local.axis12.origin = ( 1372 1384 -173 )
 	local.axis12.angle = -6
+	level.spawn_ax6 = local.axis12
 
 	local.axis13 = spawn info_player_axis targetname ax6
 	local.axis13.origin = ( 1361 1265 -173 )
@@ -284,6 +297,7 @@ tdm_spawns:
 	local.axis14 = spawn info_player_axis targetname ax7
 	local.axis14.origin = ( -91 1571 -173 )
 	local.axis14.angle = 88
+	level.spawn_ax7 = local.axis14
 
 	local.axis15 = spawn info_player_axis targetname ax7
 	local.axis15.origin = ( -246 2921 -173 )
@@ -292,6 +306,7 @@ tdm_spawns:
 	local.axis16 = spawn info_player_axis targetname ax8
 	local.axis16.origin = ( -1075 2588 -173 )
 	local.axis16.angle = 125
+	level.spawn_ax8 = local.axis16
 
 	local.axis17 = spawn info_player_axis targetname ax8
 	local.axis17.origin = ( -1068 2884 -173 )
@@ -300,6 +315,7 @@ tdm_spawns:
 	local.axis18 = spawn info_player_axis targetname ax9
 	local.axis18.origin = ( -2113 3849 -174 )
 	local.axis18.angle = -95
+	level.spawn_ax9 = local.axis18
 
 	local.axis19 = spawn info_player_axis targetname ax9
 	local.axis19.origin = ( -2094 3404 -173 )
@@ -333,21 +349,21 @@ end
 
 
 set_da_stuff_up:
-	
+
 	// Some sounds
 	local.master = spawn scriptmaster
 	local.master aliascache opeltruck_snd_idle sound/vehicle/veh_truck_idle.wav soundparms 1.0 0.0 1.0 0.0 300 7000 auto loaded maps "m dm obj"
 	local.master aliascache tank_snd_move sound/vehicle/veh_tank_turret1.wav soundparms 0.9 0.2 0.9 0.2 800 4000 auto loaded maps "m dm obj"
 	local.master aliascache m1l2b_radio1 sound/mechanics/shortwave2.wav soundparms 0.7 0.0 1.0 0.0 100 900 auto streamed maps "m dm moh obj"
 	local.master aliascache m1l2b_radio2 sound/mechanics/static1.wav soundparms 0.5 0.0 1.0 0.0 70 700 auto streamed maps "m dm moh obj train"
-	
+
 	// Remove AI
 	removeclass actor
 
 	// Remove ammo
 	removeclass AmmoEntity
-	
-	
+
+
 	// Make use of some things lying around
 	$truckclip notsolid
 	$tankclip notsolid
@@ -357,18 +373,18 @@ set_da_stuff_up:
 	$tank02 thread setup_tank empty_tiger
 	$tank03 thread setup_tank empty_panzer_desert
 	$tank04 thread setup_tank empty_turretless_tiger
-	
+
 	// relocate the Truck for cover
-	$truck01.origin = ( -1056 2136 -224 ) 
+	$truck01.origin = ( -1056 2136 -224 )
 	$truck01.angle = 40
 
 	//relocate the Jeep for cover
-	$jeep.origin = ( -2540.83 2297.01 -255.88 ) 
+	$jeep.origin = ( -2540.83 2297.01 -255.88 )
 	$jeep.angle = 40
 
-	$tank02 thread drive_pathtank $tank02_path 152 $tank02_drive_trigger	
-	
-	$radio1 loopsound m1l2b_radio1				
+	$tank02 thread drive_pathtank $tank02_path 152 $tank02_drive_trigger
+
+	$radio1 loopsound m1l2b_radio1
 	$radio2 loopsound m1l2b_radio2
 
 	// Unlock some doors
@@ -376,7 +392,7 @@ set_da_stuff_up:
 	$door02 unlock
 
 	// Remove some things not needed
-	$cutwire01 remove						
+	$cutwire01 remove
 	$cutwire02 remove
 	$cutwire03 remove
 	$spotlight remove
@@ -390,19 +406,17 @@ set_da_stuff_up:
 	$explosion05_damage remove
 	$exploder remove
 
-
 end
 
 
 // Vehicle thread
 selfstuff:
-	
+
 	self loopsound opeltruck_snd_idle
 	self anim idlenolights
 	self notsolid
 	self nodamage
 end
-
 
 
 
@@ -421,19 +435,19 @@ setup_tank local.tanktype:
 		break
 	case empty_turretless_tiger:
 		self.type = "empty_turretless_tiger"
-		spawn models/vehicles/tigercannon.tik "targetname" "t4gun" "origin" "1580.61 -1344.80 -70" "angle" "71"	
+		spawn models/vehicles/tigercannon.tik "targetname" "t4gun" "origin" "1580.61 -1344.80 -70" "angle" "71"
 		$t4gun scale 1.1
 		$tank04.gun = $tank04 QueryTurretSlotEntity 0
 		$tank04.gun hide
 		break
 	}
-	
+
 	self nodamage
 end
 
 // Tanks drive bit
 drive_pathtank local.path local.speed local.trigger:
-	
+
 	local.trigger waittill trigger
 	wait 45 // timed event :P
 	self drive local.path local.speed 5 200 256
@@ -492,1564 +506,611 @@ end
 
 
 
-// Cobs was ere :P
-
-
+// step 1..9: allies go alh->al9, axis go ax9->axh (same geographic direction)
+// 2 consecutive groups active per team at each step for enough spawn points
+// level.reversed=1 flips: allies go al9->alh, axis go axh->ax9
 setup:
-$axh enablespawn
-$alh enablespawn
 
-$ax9 disablespawn
-$al2 disablespawn
-$ax8 disablespawn
-$al3 disablespawn
-$ax7 disablespawn
-$al4 disablespawn
-$ax6 disablespawn
-$al5 disablespawn
-$ax5 disablespawn
-$al6 disablespawn
-$ax4 disablespawn
-$al7 disablespawn
-$ax3 disablespawn
-$al8 disablespawn
-$ax2 disablespawn
-$al9 disablespawn
-level.alliesscore = 0
-level.axisscore = 0
-level.sflag = 1
-level.sflagx = 1
-end
-
-triggers:
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -4023 2216 -165 )
-local.sptrg setsize ( -200 -100 -100 ) ( 200 100 100 )
-local.sptrg targetname sptrgstart
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -3887 2945 -173 )
-local.sptrg setsize ( -704 -2055 -100 ) ( 704 2055 500 )
-local.sptrg targetname sptrg1
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -2520 2945 -173 )
-local.sptrg setsize ( -583 -2055 -100 ) ( 583 2055 500 )
-local.sptrg targetname sptrg2
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -1478 2945 -173 )
-local.sptrg setsize ( -460 -2055 -100 ) ( 460 2055 500 )
-local.sptrg targetname sptrg3
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 1 2945 -173 )
-local.sptrg setsize ( -1019 -2055 -100 ) ( 1019 2055 500 )
-local.sptrg targetname sptrg4
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 2033 2945 -173 )
-local.sptrg setsize ( -1013 -2055 -100 ) ( 1013 2055 500 )
-local.sptrg targetname sptrg5
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 1158 409 -173 )
-local.sptrg setsize ( -1308 -481 -100 ) ( 1308 481 500 )
-local.sptrg targetname sptrg6
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 998 -1423 -173 )
-local.sptrg setsize ( -1128 -1351 -100 ) ( 1128 1351 500 )
-local.sptrg targetname sptrg7
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 998 -2978 -173 )
-local.sptrg setsize ( -1128 -205 -100 ) ( 1128 205 500 )
-local.sptrg targetname sptrg8
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 998 -3977 -173 )
-local.sptrg setsize ( -1128 -794 -100 ) ( 1128 794 500 )
-local.sptrg targetname sptrg9
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 2196 -3489 -113 )
-local.sptrg setsize ( -40 -80 -40 ) ( 40 80 40 )
-//local.sptrg.origin = ( 2848 -3977 -173 )
-//local.sptrg setsize ( -722 -794 -100 ) ( 722 794 500 )
-local.sptrg targetname sptrg10
-
-////////////////////////////////////////////
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -3220 3366 -173 )
-local.sptrg setsize ( -40 -1000 -40 ) ( 40 1000 40 )
-//local.sptrg.origin = ( -3887 2945 -173 )
-//local.sptrg setsize ( -704 -2055 -100 ) ( 704 2055 500 )
-local.sptrg targetname sptrg10x
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -2520 2945 -173 )
-local.sptrg setsize ( -583 -2055 -100 ) ( 583 2055 500 )
-local.sptrg targetname sptrg9x
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( -1478 2945 -173 )
-local.sptrg setsize ( -460 -2055 -100 ) ( 460 2055 500 )
-local.sptrg targetname sptrg8x
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 1 2945 -173 )
-local.sptrg setsize ( -1019 -2055 -100 ) ( 1019 2055 500 )
-local.sptrg targetname sptrg7x
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 2033 2945 -173 )
-local.sptrg setsize ( -1013 -2055 -100 ) ( 1013 2055 500 )
-local.sptrg targetname sptrg6x
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 1158 409 -173 )
-local.sptrg setsize ( -1308 -481 -100 ) ( 1308 481 500 )
-local.sptrg targetname sptrg5x
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 998 -1423 -173 )
-local.sptrg setsize ( -1128 -1351 -100 ) ( 1128 1351 500 )
-local.sptrg targetname sptrg4x
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 998 -2978 -173 )
-local.sptrg setsize ( -1128 -205 -100 ) ( 1128 205 500 )
-local.sptrg targetname sptrg3x
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 998 -3977 -173 )
-local.sptrg setsize ( -1128 -794 -100 ) ( 1128 794 500 )
-local.sptrg targetname sptrg2x
-
-local.sptrg = spawn trigger_multipleall
-local.sptrg.origin = ( 2848 -3977 -173 )
-local.sptrg setsize ( -722 -794 -100 ) ( 722 794 500 )
-local.sptrg targetname sptrg1x
-
-
-local.edatrg = spawn trigger_multipleall
-local.edatrg.origin = ( 2196 -3489 -113 )
-local.edatrg setsize ( -40 -80 -40 ) ( 40 80 40 )
-local.edatrg targetname endtrgal
-
-// exec global/showbox.scr::show ( 2196 -3489 -113 ) 80 160 80 ( 0 0 1)
-
-local.edxtrg = spawn trigger_multipleall
-local.edxtrg.origin = ( -3220 3366 -173 )
-local.edxtrg setsize ( -40 -1000 -40 ) ( 40 1000 40 )
-local.edxtrg targetname endtrgax
-
-// exec global/showbox.scr::show ( -3220 3366 -173 ) 80 4000 80 ( 1 0 0)
-
-if(getcvar "push" == "1")
-  {
-  thread pushtrgcheck2
-  thread pushtrgcheck2x
-  thread messagepush
-  }
-  else
-  {
-  thread areastrgcheck2
-  thread areastrgcheck2x
-  thread messagepass
-  }
-
-thread endtriggeral
-thread endtriggerax
-thread triggerstart
-
-end
-
-
-endtriggeral:
-while(1)
-{
-$endtrgal waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-   local.player = parm.other 
-   local.player tele ( -4016 4046 -173 ) 
-   // local.player.killcount = ((local.player.killcount)+5)
-   local.player addkills 5
-   local.player iprint "You've won 5 points for scoring !" 1
-   level.alliesscore++
-   level.sflag = 1 // Reset Allied spawn progression
-   thread Scorethread
-   iprintlnbold "Allies Score !"
-   wait 1
-   goto pushtrgcheck2
-  }
-wait .5
-}
-end
-
-endtriggerax:
-while(1)
-{
-$endtrgax waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-   local.player = parm.other 
-   local.player tele ( 2726 -4394 -207 )
-   // local.player.killcount = ((local.player.killcount)+5)
-   local.player addkills 5
-   local.player iprint "You've won 5 points for scoring !" 1
-   level.axisscore++
-   level.sflagx = 1 // Reset Axis spawn progression
-   thread Scorethread
-   iprintlnbold "Axis Score !"
-   wait 1
-   goto pushtrgcheck2x
-
-  }
-wait .5
-}
-end
-
-triggerstart:
-
-while(1)
-{
-$sptrgstart waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-   local.player = parm.other 
-   local.player tele ( 3123 -4126 -245 )
-  }
-
-wait .5
-}
-end
-
-end
-
-hudstuff:
-
-	while(1){
-
-//removing Team Balancer HUD ------>
-setcvar "urm_tb_teamshud" "0"
-  huddraw_alpha  101 0
-  huddraw_alpha  102 0
-  huddraw_alpha  103 0
-  huddraw_alpha  104 0
-  huddraw_alpha  105 0
-//<--------------------------------
-
-	wait .5
-
-	huddraw_virtualsize 200 1
-	huddraw_align  200 right top
-	huddraw_font   200 "verdana-12"
-	huddraw_rect   200 -100 57 200 14
-	huddraw_color  200 .85 .85 .10
-	huddraw_alpha  200 1.0
-	huddraw_string 200 "Gain Ground"
-
-	huddraw_virtualsize 201 1
-	huddraw_align  201 right top
-	huddraw_font   201 "verdana-12"
-	huddraw_rect   201 -100 67 200 14
-	huddraw_color  201 .85 .85 .10
-	huddraw_alpha  201 1.0
-	huddraw_string 201 "by <TWL>ViPER"
-	
-	huddraw_virtualsize 203 1
-	huddraw_shader 203 ("textures/hud/allies")
-	huddraw_align  203 right top
-	huddraw_rect   203 -100 85 14 14
-	huddraw_alpha  203 1.0
-
-	huddraw_virtualsize 205 1
-	huddraw_shader 205 ("textures/hud/axis")
-	huddraw_align  205 right top
-	huddraw_rect   205 -100 100 14 14
-	huddraw_alpha  205 1.0
-
-	huddraw_virtualsize 202 1
-	huddraw_align  202 right top
-	huddraw_font   202 "verdana-12"
-	huddraw_rect   202 -80 85 100 14
-	huddraw_color  202 0 1 1
-	huddraw_alpha  202 1.0
-	huddraw_string 202 ("points: " + level.alliesscore )
-
-	huddraw_virtualsize 204 1
-	huddraw_align  204 right top
-	huddraw_font   204 "verdana-12"
-	huddraw_rect   204 -80 100 100 14
-	huddraw_color  204 1 0 0
-	huddraw_alpha  204 1.0
-	huddraw_string 204 ("points: " + level.axisscore )
-
-	wait 1
-
-	huddraw_virtualsize 206 1
-	huddraw_align  206 right top
-	huddraw_font   206 "verdana-12"
-	huddraw_rect   206 -100 117 200 14
-	huddraw_color  206 0 1 0
-	huddraw_alpha  206 1.0
-	huddraw_string 206 ("Battline        Allies")
-
-	huddraw_virtualsize 219 1
-	huddraw_align  219 right top
-	huddraw_font   219 "verdana-12"
-	huddraw_rect   219 -40 250 200 14
-	huddraw_color  219 0 1 0
-	huddraw_alpha  219 1.0
-	huddraw_string 219 (" Axis")
-
-	huddraw_virtualsize 207 1
-	huddraw_align  207 right bottom
-	huddraw_font   207 "verdana-12"
-	huddraw_rect   207 -275 -12 100 14
-	huddraw_color  207 .90 .90 .90
-	huddraw_alpha  207 1.0
-	huddraw_string 207 "Strategic Mods by: <TWL>ViPER"
-
-	wait 1
-
-	huddraw_virtualsize 220 1
-	huddraw_shader 220 ("textures/hud/allies")
-	huddraw_align  220 right top
-	huddraw_rect   220 -40 130 14 14
-
-	huddraw_virtualsize 221 1
-	huddraw_shader 221 ("textures/hud/allies")
-	huddraw_align  221 right top
-	huddraw_rect   221 -40 145 14 14
-
-	huddraw_virtualsize 222 1
-	huddraw_shader 222 ("textures/hud/allies")
-	huddraw_align  222 right top
-	huddraw_rect   222 -40 160 14 14
-
-	huddraw_virtualsize 223 1
-	huddraw_shader 223 ("textures/hud/allies")
-	huddraw_align  223 right top
-	huddraw_rect   223 -40 175 14 14
-
-	huddraw_virtualsize 224 1
-	huddraw_shader 224 ("textures/hud/allies")
-	huddraw_align  224 right top
-	huddraw_rect   224 -40 190 14 14
-
-	huddraw_virtualsize 225 1
-	huddraw_shader 225 ("textures/hud/allies")
-	huddraw_align  225 right top
-	huddraw_rect   225 -40 205 14 14
-
-	huddraw_virtualsize 226 1
-	huddraw_shader 226 ("textures/hud/allies")
-	huddraw_align  226 right top
-	huddraw_rect   226 -40 220 14 14
-
-	huddraw_virtualsize 227 1
-	huddraw_shader 227 ("textures/hud/allies")
-	huddraw_align  227 right top
-	huddraw_rect   227 -40 235 14 14
-
-	wait 1
-
-	huddraw_virtualsize 230 1
-	huddraw_shader 230 ("textures/hud/axis")
-	huddraw_align  230 right top
-	huddraw_rect   230 -20 235 14 14
-
-	huddraw_virtualsize 231 1
-	huddraw_shader 231 ("textures/hud/axis")
-	huddraw_align  231 right top
-	huddraw_rect   231 -20 220 14 14
-
-	huddraw_virtualsize 232 1
-	huddraw_shader 232 ("textures/hud/axis")
-	huddraw_align  232 right top
-	huddraw_rect   232 -20 205 14 14
-
-	huddraw_virtualsize 233 1
-	huddraw_shader 233 ("textures/hud/axis")
-	huddraw_align  233 right top
-	huddraw_rect   233 -20 190 14 14
-
-	huddraw_virtualsize 234 1
-	huddraw_shader 234 ("textures/hud/axis")
-	huddraw_align  234 right top
-	huddraw_rect   234 -20 175 14 14
-
-	huddraw_virtualsize 235 1
-	huddraw_shader 235 ("textures/hud/axis")
-	huddraw_align  235 right top
-	huddraw_rect   235 -20 160 14 14
-
-	huddraw_virtualsize 236 1
-	huddraw_shader 236 ("textures/hud/axis")
-	huddraw_align  236 right top
-	huddraw_rect   236 -20 145 14 14
-
-	huddraw_virtualsize 237 1
-	huddraw_shader 237 ("textures/hud/axis")
-	huddraw_align  237 right top
-	huddraw_rect   237 -20 130 14 14
-
-
-	wait .5
-
-}
-
-end
-
-Scorethread:
-
-
-
-	setcvar "g_obj_alliedtext3" ("Allies: " + level.alliesscore)
-	setcvar "g_obj_axistext1" ("Axis: " + level.axisscore)
-	setcvar "g_obj_axistext2" ("Winning Team")
-
-	if(level.alliesscore > level.axisscore)
-		{
-		setcvar "g_obj_axistext3" ("is ALLIES")
-		}
-	else if(level.axisscore > level.alliesscore)
-		{
-		setcvar "g_obj_axistext3" ("is AXIS")
-		}
+	// disable all spawn groups
+	$alh disablespawn
+	$al2 disablespawn
+	$al3 disablespawn
+	$al4 disablespawn
+	$al5 disablespawn
+	$al6 disablespawn
+	$al7 disablespawn
+	$al8 disablespawn
+	$al9 disablespawn
+	$axh disablespawn
+	$ax2 disablespawn
+	$ax3 disablespawn
+	$ax4 disablespawn
+	$ax5 disablespawn
+	$ax6 disablespawn
+	$ax7 disablespawn
+	$ax8 disablespawn
+	$ax9 disablespawn
+
+	level.step = 1
+	level.gain_ground_interval = 150
+
+	// 50% chance of reversed direction
+	if (randomint(2) == 0)
+	{
+		level.reversed = 0
+		// step 1 normal: allies = alh+al2 (step 1), axis = ax6+ax5 (step 4)
+		$alh enablespawn
+		$al2 enablespawn
+		$ax6 enablespawn
+		$ax5 enablespawn
+		iprintlnbold "Front line advancing from Allied side !"
+	}
 	else
-		{
-		setcvar "g_obj_axistext3" ("it's a DRAW")
-		}
-
-	huddraw_virtualsize 202 1
-	huddraw_align  202 right top
-	huddraw_font   202 "verdana-12"
-	huddraw_rect   202 -80 85 100 14
-	huddraw_color  202 0 1 1
-	huddraw_alpha  202 1.0
-	huddraw_string 202 ("points: " + level.alliesscore )
-
-	huddraw_virtualsize 204 1
-	huddraw_align  204 right top
-	huddraw_font   204 "verdana-12"
-	huddraw_rect   204 -80 100 100 14
-	huddraw_color  204 1 0 0
-	huddraw_alpha  204 1.0
-	huddraw_string 204 ("points: " + level.axisscore )
-
+	{
+		level.reversed = 1
+		// step 1 reversed: axis = axh+ax2 (step 1), allies = al6+al5 (step 4)
+		$axh enablespawn
+		$ax2 enablespawn
+		$al6 enablespawn
+		$al5 enablespawn
+		iprintlnbold "Front line advancing from Axis side !"
+	}
 
 end
 
-//-----------------------------------------------------------------------------
 
-areastrgcheck2:
-
-while(1)
-{
-$sptrg2 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 2
-  goto areastrgcheck3
-  }
-
-wait 1
-}
-end
-
-areastrgcheck3:
+// Advance level.step from 1 to 9 every gain_ground_interval seconds
+timer:
 
 while(1)
 {
-
-$sptrg3 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 3
-  goto areastrgcheck4
-  }
-
-wait 1
-}
-end
-
-areastrgcheck4:
-
-while(1)
-{
-
-$sptrg4 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 4
-  goto areastrgcheck5
-  }
-
-wait 1
-}
-end
-
-areastrgcheck5:
-
-while(1)
-{
-
-$sptrg5 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 5
-  goto areastrgcheck6
-  }
-
-wait 1
-}
-end
-
-areastrgcheck6:
-
-while(1)
-{
-
-$sptrg6 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 6
-  goto areastrgcheck7
-  }
-
-wait 1
-}
-end
-
-areastrgcheck7:
-
-while(1)
-{
-
-$sptrg7 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 7
-  goto areastrgcheck8
-  }
-
-wait 1
-}
-end
-
-areastrgcheck8:
-
-while(1)
-{
-
-$sptrg8 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 8
-  goto areastrgcheck9
-  }
-
-wait 1
-}
-end
-
-areastrgcheck9:
-
-while(1)
-{
-
-$sptrg9 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 9
-  goto areastrgcheck10
-  }
-
-wait 1
-}
-
-areastrgcheck10:
-
-while(1)
-{
-
-$sptrg10 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 1
-  goto areastrgcheck2
-  }
-
-wait .4
+	wait level.gain_ground_interval
+	if (level.step < 6)
+	{
+		level.step++
+	}
 }
 
 end
 
-//-----------------------------------------------------------------------------
 
-areastrgcheck2x:
-
-while(1)
-{
-$sptrg2x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 2
-  goto areastrgcheck3x
-  }
-
-wait 1
-}
-end
-
-areastrgcheck3x:
-
-while(1)
-{
-
-$sptrg3x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 3
-  goto areastrgcheck4x
-  }
-
-wait 1
-}
-end
-
-areastrgcheck4x:
-
-while(1)
-{
-
-$sptrg4x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 4
-  goto areastrgcheck5x
-  }
-
-wait 1
-}
-end
-
-areastrgcheck5x:
-
-while(1)
-{
-
-$sptrg5x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 5
-  goto areastrgcheck6x
-  }
-
-wait 1
-}
-end
-
-areastrgcheck6x:
-
-while(1)
-{
-
-$sptrg6x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 6
-  goto areastrgcheck7x
-  }
-
-wait 1
-}
-end
-
-areastrgcheck7x:
-
-while(1)
-{
-
-$sptrg7x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 7
-  goto areastrgcheck8x
-  }
-
-wait 1
-}
-end
-
-areastrgcheck8x:
-
-while(1)
-{
-
-$sptrg8x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 8
-  goto areastrgcheck9x
-  }
-
-wait 1
-}
-end
-
-areastrgcheck9x:
-
-while(1)
-{
-
-$sptrg9x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 9
-  goto areastrgcheck10x
-  }
-
-wait 1
-}
-
-areastrgcheck10x:
-
-while(1)
-{
-
-$sptrg10x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 1
-  goto areastrgcheck2x
-  }
-
-wait .4
-}
-
-end
-
-//-----------------------------------------------------------------------------
-
-pushtrgcheck2:
-
-while(1)
-{
-$sptrg2 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 2
-  goto pushtrgcheck3
-  }
-  else
-  {
-  level.sflag = 1
-  wait 1
-  goto pushtrgcheck2
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck3:
-
-while(1)
-{
-$sptrg3 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 3
-  goto pushtrgcheck4
-  }
-  else
-  {
-  level.sflag = 1
-  wait 1
-  goto pushtrgcheck2
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck4:
-
-while(1)
-{
-
-$sptrg4 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 4
-  goto pushtrgcheck5
-  }
-  else
-  {
-  level.sflag = 2
-  wait 1
-  goto pushtrgcheck3
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck5:
-
-while(1)
-{
-
-$sptrg5 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 5
-  goto pushtrgcheck6
-  }
-  else
-  {
-  level.sflag = 3
-  wait 1
-  goto pushtrgcheck4
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck6:
-
-while(1)
-{
-
-$sptrg6 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 6
-  goto pushtrgcheck7
-  }
-  else
-  {
-  level.sflag = 4
-  wait 1
-  goto pushtrgcheck5
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck7:
-
-while(1)
-{
-
-$sptrg7 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 7
-  goto pushtrgcheck8
-  }
-  else
-  {
-  level.sflag = 5
-  wait 1
-  goto pushtrgcheck6
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck8:
-
-while(1)
-{
-
-$sptrg8 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 8
-  goto pushtrgcheck9
-  }
-  else
-  {
-  level.sflag = 6
-  wait 1
-  goto pushtrgcheck7
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck9:
-
-while(1)
-{
-
-$sptrg9 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 9
-  goto pushtrgcheck10
-  }
-  else
-  {
-  level.sflag = 7
-  wait 1
-  goto pushtrgcheck8
-  }
-
-wait 1
-}
-
-pushtrgcheck10:
-
-while(1)
-{
-
-$sptrg10 waittill trigger
-if(parm.other.dmteam == allies) 
-  { 
-  level.sflag = 1
-  goto pushtrgcheck2
-  }
-  else
-  {
-  level.sflag = 7
-  wait 1
-  goto pushtrgcheck8
-  }
-
-wait .4
-}
-
-end
-
-//-----------------------------------------------------------------------------
-
-pushtrgcheck2x:
-
-while(1)
-{
-$sptrg2x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 2
-  goto pushtrgcheck3x
-  }
-  else
-  {
-  level.sflagx = 1
-  wait 1
-  goto pushtrgcheck2x
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck3x:
-
-while(1)
-{
-$sptrg3x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 3
-  goto pushtrgcheck4x
-  }
-  else
-  {
-  level.sflagx = 1
-  wait 1
-  goto pushtrgcheck2x
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck4x:
-
-while(1)
-{
-
-$sptrg4x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 4
-  goto pushtrgcheck5x
-  }
-  else
-  {
-  level.sflagx = 2
-  wait 1
-  goto pushtrgcheck3x
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck5x:
-
-while(1)
-{
-
-$sptrg5x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 5
-  goto pushtrgcheck6x
-  }
-  else
-  {
-  level.sflagx = 3
-  wait 1
-  goto pushtrgcheck4x
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck6x:
-
-while(1)
-{
-
-$sptrg6x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 6
-  goto pushtrgcheck7x
-  }
-  else
-  {
-  level.sflagx = 4
-  wait 1
-  goto pushtrgcheck5x
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck7x:
-
-while(1)
-{
-
-$sptrg7x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 7
-  goto pushtrgcheck8x
-  }
-  else
-  {
-  level.sflagx = 5
-  wait 1
-  goto pushtrgcheck6x
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck8x:
-
-while(1)
-{
-
-$sptrg8x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 8
-  goto pushtrgcheck9x
-  }
-  else
-  {
-  level.sflagx = 6
-  wait 1
-  goto pushtrgcheck7x
-  }
-
-wait 1
-}
-end
-
-pushtrgcheck9x:
-
-while(1)
-{
-
-$sptrg9x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 9
-  goto pushtrgcheck10x
-  }
-  else
-  {
-  level.sflagx = 7
-  wait 1
-  goto pushtrgcheck8x
-  }
-
-wait 1
-}
-
-pushtrgcheck10x:
-
-while(1)
-{
-
-$sptrg10x waittill trigger
-if(parm.other.dmteam == axis) 
-  { 
-  level.sflagx = 1
-  goto pushtrgcheck2x
-  }
-  else
-  {
-  level.sflagx = 7
-  wait 1
-  goto pushtrgcheck8x
-  }
-
-wait .4
-}
-
-end
-
-//-----------------------------------------------------------------------------
-
+// Apply spawn groups for current step, accounting for direction
+// Normal:   allies step N (alh..al9), axis step N+3 capped (ax9..axh)
+// Reversed: axis step N (axh..ax9),   allies step N+3 capped (al9..alh)
+// Gap of 3 steps keeps teams apart on the map
 spawnswitch:
+
+local.last_step = 0
 while(1)
 {
+	if (level.step != local.last_step)
+	{
+	local.last_step = level.step
+	if (level.reversed == 0)
+	{
+		switch(level.step)
+		{
+		case 1:
+			// allies: step 1 = alh+al2  |  axis: step 4 = ax6+ax5
+			$alh enablespawn
+			$al2 enablespawn
+			$al3 disablespawn
+			$al4 disablespawn
+			$al5 disablespawn
+			$al6 disablespawn
+			$al7 disablespawn
+			$al8 disablespawn
+			$al9 disablespawn
+			$ax9 disablespawn
+			$ax8 disablespawn
+			$ax7 disablespawn
+			$ax6 enablespawn
+			$ax5 enablespawn
+			$ax4 disablespawn
+			$ax3 disablespawn
+			$ax2 disablespawn
+			$axh disablespawn
+			;break
+		case 2:
+			// allies: step 2 = al2+al3  |  axis: step 5 = ax5+ax4
+			$alh disablespawn
+			$al2 enablespawn
+			$al3 enablespawn
+			$al4 disablespawn
+			$al5 disablespawn
+			$al6 disablespawn
+			$al7 disablespawn
+			$al8 disablespawn
+			$al9 disablespawn
+			$ax9 disablespawn
+			$ax8 disablespawn
+			$ax7 disablespawn
+			$ax6 disablespawn
+			$ax5 enablespawn
+			$ax4 enablespawn
+			$ax3 disablespawn
+			$ax2 disablespawn
+			$axh disablespawn
+			;break
+		case 3:
+			// allies: step 3 = al3+al4  |  axis: step 6 = ax4+ax3
+			$alh disablespawn
+			$al2 disablespawn
+			$al3 enablespawn
+			$al4 enablespawn
+			$al5 disablespawn
+			$al6 disablespawn
+			$al7 disablespawn
+			$al8 disablespawn
+			$al9 disablespawn
+			$ax9 disablespawn
+			$ax8 disablespawn
+			$ax7 disablespawn
+			$ax6 disablespawn
+			$ax5 disablespawn
+			$ax4 enablespawn
+			$ax3 enablespawn
+			$ax2 disablespawn
+			$axh disablespawn
+			;break
+		case 4:
+			// allies: step 4 = al4+al5  |  axis: step 7 = ax3+ax2
+			$alh disablespawn
+			$al2 disablespawn
+			$al3 disablespawn
+			$al4 enablespawn
+			$al5 enablespawn
+			$al6 disablespawn
+			$al7 disablespawn
+			$al8 disablespawn
+			$al9 disablespawn
+			$ax9 disablespawn
+			$ax8 disablespawn
+			$ax7 disablespawn
+			$ax6 disablespawn
+			$ax5 disablespawn
+			$ax4 disablespawn
+			$ax3 enablespawn
+			$ax2 enablespawn
+			$axh disablespawn
+			;break
+		case 5:
+			// allies: step 5 = al5+al6  |  axis: step 8 = ax2+axh
+			$alh disablespawn
+			$al2 disablespawn
+			$al3 disablespawn
+			$al4 disablespawn
+			$al5 enablespawn
+			$al6 enablespawn
+			$al7 disablespawn
+			$al8 disablespawn
+			$al9 disablespawn
+			$ax9 disablespawn
+			$ax8 disablespawn
+			$ax7 disablespawn
+			$ax6 disablespawn
+			$ax5 disablespawn
+			$ax4 disablespawn
+			$ax3 disablespawn
+			$ax2 enablespawn
+			$axh enablespawn
+			;break
+		case 6:
+			// allies: step 6 = al6+al7  |  axis: step 9 (cap) = ax2+axh
+			$alh disablespawn
+			$al2 disablespawn
+			$al3 disablespawn
+			$al4 disablespawn
+			$al5 disablespawn
+			$al6 enablespawn
+			$al7 enablespawn
+			$al8 disablespawn
+			$al9 disablespawn
+			$ax9 disablespawn
+			$ax8 disablespawn
+			$ax7 disablespawn
+			$ax6 disablespawn
+			$ax5 disablespawn
+			$ax4 disablespawn
+			$ax3 disablespawn
+			$ax2 enablespawn
+			$axh enablespawn
+			;break
+		case 7:
+			// allies: step 7 = al7+al8  |  axis: step 9 (cap) = ax2+axh
+			$alh disablespawn
+			$al2 disablespawn
+			$al3 disablespawn
+			$al4 disablespawn
+			$al5 disablespawn
+			$al6 disablespawn
+			$al7 enablespawn
+			$al8 enablespawn
+			$al9 disablespawn
+			$ax9 disablespawn
+			$ax8 disablespawn
+			$ax7 disablespawn
+			$ax6 disablespawn
+			$ax5 disablespawn
+			$ax4 disablespawn
+			$ax3 disablespawn
+			$ax2 enablespawn
+			$axh enablespawn
+			;break
+		case 8:
+			// allies: step 8 = al8+al9  |  axis: step 9 (cap) = ax2+axh
+			$alh disablespawn
+			$al2 disablespawn
+			$al3 disablespawn
+			$al4 disablespawn
+			$al5 disablespawn
+			$al6 disablespawn
+			$al7 disablespawn
+			$al8 enablespawn
+			$al9 enablespawn
+			$ax9 disablespawn
+			$ax8 disablespawn
+			$ax7 disablespawn
+			$ax6 disablespawn
+			$ax5 disablespawn
+			$ax4 disablespawn
+			$ax3 disablespawn
+			$ax2 enablespawn
+			$axh enablespawn
+			;break
+		case 9:
+			// allies: step 9 (cap) = al8+al9  |  axis: step 9 (cap) = ax2+axh
+			$alh disablespawn
+			$al2 disablespawn
+			$al3 disablespawn
+			$al4 disablespawn
+			$al5 disablespawn
+			$al6 disablespawn
+			$al7 disablespawn
+			$al8 enablespawn
+			$al9 enablespawn
+			$ax9 disablespawn
+			$ax8 disablespawn
+			$ax7 disablespawn
+			$ax6 disablespawn
+			$ax5 disablespawn
+			$ax4 disablespawn
+			$ax3 disablespawn
+			$ax2 enablespawn
+			$axh enablespawn
+			;break
+		}
+	}
+	else
+	{
+		// reversed: axis step N (axh..ax9), allies step N+3 capped (al9..alh)
+		switch(level.step)
+		{
+		case 1:
+			// axis: step 1 = axh+ax2  |  allies: step 4 = al6+al5
+			$al9 disablespawn
+			$al8 disablespawn
+			$al7 disablespawn
+			$al6 enablespawn
+			$al5 enablespawn
+			$al4 disablespawn
+			$al3 disablespawn
+			$al2 disablespawn
+			$alh disablespawn
+			$axh enablespawn
+			$ax2 enablespawn
+			$ax3 disablespawn
+			$ax4 disablespawn
+			$ax5 disablespawn
+			$ax6 disablespawn
+			$ax7 disablespawn
+			$ax8 disablespawn
+			$ax9 disablespawn
+			;break
+		case 2:
+			// axis: step 2 = ax2+ax3  |  allies: step 5 = al5+al4
+			$al9 disablespawn
+			$al8 disablespawn
+			$al7 disablespawn
+			$al6 disablespawn
+			$al5 enablespawn
+			$al4 enablespawn
+			$al3 disablespawn
+			$al2 disablespawn
+			$alh disablespawn
+			$axh disablespawn
+			$ax2 enablespawn
+			$ax3 enablespawn
+			$ax4 disablespawn
+			$ax5 disablespawn
+			$ax6 disablespawn
+			$ax7 disablespawn
+			$ax8 disablespawn
+			$ax9 disablespawn
+			;break
+		case 3:
+			// axis: step 3 = ax3+ax4  |  allies: step 6 = al4+al3
+			$al9 disablespawn
+			$al8 disablespawn
+			$al7 disablespawn
+			$al6 disablespawn
+			$al5 disablespawn
+			$al4 enablespawn
+			$al3 enablespawn
+			$al2 disablespawn
+			$alh disablespawn
+			$axh disablespawn
+			$ax2 disablespawn
+			$ax3 enablespawn
+			$ax4 enablespawn
+			$ax5 disablespawn
+			$ax6 disablespawn
+			$ax7 disablespawn
+			$ax8 disablespawn
+			$ax9 disablespawn
+			;break
+		case 4:
+			// axis: step 4 = ax4+ax5  |  allies: step 7 = al3+al2
+			$al9 disablespawn
+			$al8 disablespawn
+			$al7 disablespawn
+			$al6 disablespawn
+			$al5 disablespawn
+			$al4 disablespawn
+			$al3 enablespawn
+			$al2 enablespawn
+			$alh disablespawn
+			$axh disablespawn
+			$ax2 disablespawn
+			$ax3 disablespawn
+			$ax4 enablespawn
+			$ax5 enablespawn
+			$ax6 disablespawn
+			$ax7 disablespawn
+			$ax8 disablespawn
+			$ax9 disablespawn
+			;break
+		case 5:
+			// axis: step 5 = ax5+ax6  |  allies: step 8 = al2+alh
+			$al9 disablespawn
+			$al8 disablespawn
+			$al7 disablespawn
+			$al6 disablespawn
+			$al5 disablespawn
+			$al4 disablespawn
+			$al3 disablespawn
+			$al2 enablespawn
+			$alh enablespawn
+			$axh disablespawn
+			$ax2 disablespawn
+			$ax3 disablespawn
+			$ax4 disablespawn
+			$ax5 enablespawn
+			$ax6 enablespawn
+			$ax7 disablespawn
+			$ax8 disablespawn
+			$ax9 disablespawn
+			;break
+		case 6:
+			// axis: step 6 = ax6+ax7  |  allies: step 9 (cap) = al2+alh
+			$al9 disablespawn
+			$al8 disablespawn
+			$al7 disablespawn
+			$al6 disablespawn
+			$al5 disablespawn
+			$al4 disablespawn
+			$al3 disablespawn
+			$al2 enablespawn
+			$alh enablespawn
+			$axh disablespawn
+			$ax2 disablespawn
+			$ax3 disablespawn
+			$ax4 disablespawn
+			$ax5 disablespawn
+			$ax6 enablespawn
+			$ax7 enablespawn
+			$ax8 disablespawn
+			$ax9 disablespawn
+			;break
+		case 7:
+			// axis: step 7 = ax7+ax8  |  allies: step 9 (cap) = al2+alh
+			$al9 disablespawn
+			$al8 disablespawn
+			$al7 disablespawn
+			$al6 disablespawn
+			$al5 disablespawn
+			$al4 disablespawn
+			$al3 disablespawn
+			$al2 enablespawn
+			$alh enablespawn
+			$axh disablespawn
+			$ax2 disablespawn
+			$ax3 disablespawn
+			$ax4 disablespawn
+			$ax5 disablespawn
+			$ax6 disablespawn
+			$ax7 enablespawn
+			$ax8 enablespawn
+			$ax9 disablespawn
+			;break
+		case 8:
+			// axis: step 8 = ax8+ax9  |  allies: step 9 (cap) = al2+alh
+			$al9 disablespawn
+			$al8 disablespawn
+			$al7 disablespawn
+			$al6 disablespawn
+			$al5 disablespawn
+			$al4 disablespawn
+			$al3 disablespawn
+			$al2 enablespawn
+			$alh enablespawn
+			$axh disablespawn
+			$ax2 disablespawn
+			$ax3 disablespawn
+			$ax4 disablespawn
+			$ax5 disablespawn
+			$ax6 disablespawn
+			$ax7 disablespawn
+			$ax8 enablespawn
+			$ax9 enablespawn
+			;break
+		case 9:
+			// axis: step 9 (cap) = ax8+ax9  |  allies: step 9 (cap) = al2+alh
+			$al9 disablespawn
+			$al8 disablespawn
+			$al7 disablespawn
+			$al6 disablespawn
+			$al5 disablespawn
+			$al4 disablespawn
+			$al3 disablespawn
+			$al2 enablespawn
+			$alh enablespawn
+			$axh disablespawn
+			$ax2 disablespawn
+			$ax3 disablespawn
+			$ax4 disablespawn
+			$ax5 disablespawn
+			$ax6 disablespawn
+			$ax7 disablespawn
+			$ax8 enablespawn
+			$ax9 enablespawn
+			;break
+		}
+	}
+	thread dispatch_bots
+	}
 
-switch(level.sflag)  
-{ 
-case 1: 
-  $alh enablespawn
-  wait 1
-  $al2 disablespawn
-  $al3 disablespawn
-  $al4 disablespawn
-  $al5 disablespawn
-  $al6 disablespawn
-  $al7 disablespawn
-  $al8 disablespawn
-  $al9 disablespawn
-	huddraw_alpha  220 0
-	huddraw_alpha  221 0
-	huddraw_alpha  222 0
-	huddraw_alpha  223 0
-	huddraw_alpha  224 0
-	huddraw_alpha  225 0
-	huddraw_alpha  226 0
-	huddraw_alpha  227 0
-  ;break //
-case 2: 
-  $alh enablespawn
-  $al2 enablespawn
-  wait 1
-  $al3 disablespawn
-  $al4 disablespawn
-  $al5 disablespawn
-  $al6 disablespawn
-  $al7 disablespawn
-  $al8 disablespawn
-  $al9 disablespawn
-	huddraw_alpha  220 1.0
-	huddraw_alpha  221 0
-	huddraw_alpha  222 0
-	huddraw_alpha  223 0
-	huddraw_alpha  224 0
-	huddraw_alpha  225 0
-	huddraw_alpha  226 0
-	huddraw_alpha  227 0
-  ;break //
-case 3: 
-  $al2 enablespawn
-  $al3 enablespawn
-  wait 1
-  $alh disablespawn
-  $al4 disablespawn
-  $al5 disablespawn
-  $al6 disablespawn
-  $al7 disablespawn
-  $al8 disablespawn
-  $al9 disablespawn
-	huddraw_alpha  220 1.0
-	huddraw_alpha  221 1.0
-	huddraw_alpha  222 0
-	huddraw_alpha  223 0
-	huddraw_alpha  224 0
-	huddraw_alpha  225 0
-	huddraw_alpha  226 0
-	huddraw_alpha  227 0
-  ;break //
-case 4: 
-  $al3 enablespawn
-  $al4 enablespawn
-  wait 1
-  $alh disablespawn
-  $al2 disablespawn
-  $al5 disablespawn
-  $al6 disablespawn
-  $al7 disablespawn
-  $al8 disablespawn
-  $al9 disablespawn
-	huddraw_alpha  220 1.0
-	huddraw_alpha  221 1.0
-	huddraw_alpha  222 1.0
-	huddraw_alpha  223 0
-	huddraw_alpha  224 0
-	huddraw_alpha  225 0
-	huddraw_alpha  226 0
-	huddraw_alpha  227 0
-  ;break // 
-case 5: 
-  $al4 enablespawn
-  $al5 enablespawn
-  wait 1
-  $alh disablespawn
-  $al2 disablespawn
-  $al3 disablespawn
-  $al6 disablespawn
-  $al7 disablespawn
-  $al8 disablespawn
-  $al9 disablespawn
-	huddraw_alpha  220 1.0
-	huddraw_alpha  221 1.0
-	huddraw_alpha  222 1.0
-	huddraw_alpha  223 1.0
-	huddraw_alpha  224 0
-	huddraw_alpha  225 0
-	huddraw_alpha  226 0
-	huddraw_alpha  227 0
-  ;break //
-case 6: 
-  $al5 enablespawn
-  $al6 enablespawn
-  wait 1
-  $alh disablespawn
-  $al2 disablespawn
-  $al3 disablespawn
-  $al4 disablespawn
-  $al7 disablespawn
-  $al8 disablespawn
-  $al9 disablespawn
-	huddraw_alpha  220 1.0
-	huddraw_alpha  221 1.0
-	huddraw_alpha  222 1.0
-	huddraw_alpha  223 1.0
-	huddraw_alpha  224 1.0
-	huddraw_alpha  225 0
-	huddraw_alpha  226 0
-	huddraw_alpha  227 0
-  ;break //
-case 7: 
-  $al6 enablespawn
-  $al7 enablespawn
-  wait 1
-  $alh disablespawn
-  $al2 disablespawn
-  $al3 disablespawn
-  $al4 disablespawn
-  $al5 disablespawn
-  $al8 disablespawn
-  $al9 disablespawn
-	huddraw_alpha  220 1.0
-	huddraw_alpha  221 1.0
-	huddraw_alpha  222 1.0
-	huddraw_alpha  223 1.0
-	huddraw_alpha  224 1.0
-	huddraw_alpha  225 1.0
-	huddraw_alpha  226 0
-	huddraw_alpha  227 0
-  ;break //
-case 8: 
-  $al7 enablespawn
-  $al8 enablespawn
-  wait 1
-  $alh disablespawn
-  $al2 disablespawn
-  $al3 disablespawn
-  $al4 disablespawn
-  $al5 disablespawn
-  $al6 disablespawn
-  $al9 disablespawn
-	huddraw_alpha  220 1.0
-	huddraw_alpha  221 1.0
-	huddraw_alpha  222 1.0
-	huddraw_alpha  223 1.0
-	huddraw_alpha  224 1.0
-	huddraw_alpha  225 1.0
-	huddraw_alpha  226 1.0
-	huddraw_alpha  227 0
-  ;break //
-case 9: 
-  $al8 enablespawn
-  $al9 enablespawn
-  wait 1
-  $alh disablespawn
-  $al2 disablespawn
-  $al3 disablespawn
-  $al4 disablespawn
-  $al5 disablespawn
-  $al6 disablespawn
-  $al7 disablespawn
-	huddraw_alpha  220 1.0
-	huddraw_alpha  221 1.0
-	huddraw_alpha  222 1.0
-	huddraw_alpha  223 1.0
-	huddraw_alpha  224 1.0
-	huddraw_alpha  225 1.0
-	huddraw_alpha  226 1.0
-	huddraw_alpha  227 1.0
-  ;break //
-   } 
-
-wait 2
-
-//-----------------------------------------------------------------------------
-
-
-switch(level.sflagx)  
-{ 
-case 1: 
-  $axh enablespawn
-  wait 1
-  $ax2 disablespawn
-  $ax3 disablespawn
-  $ax4 disablespawn
-  $ax5 disablespawn
-  $ax6 disablespawn
-  $ax7 disablespawn
-  $ax8 disablespawn
-  $ax9 disablespawn
-	huddraw_alpha  230 0
-	huddraw_alpha  231 0
-	huddraw_alpha  232 0
-	huddraw_alpha  233 0
-	huddraw_alpha  234 0
-	huddraw_alpha  235 0
-	huddraw_alpha  236 0
-	huddraw_alpha  237 0
-  ;break //
-case 2: 
-  $axh enablespawn
-  $ax2 enablespawn
-  wait 1
-  $ax3 disablespawn
-  $ax4 disablespawn
-  $ax5 disablespawn
-  $ax6 disablespawn
-  $ax7 disablespawn
-  $ax8 disablespawn
-  $ax9 disablespawn
-	huddraw_alpha  230 1.0
-	huddraw_alpha  231 0
-	huddraw_alpha  232 0
-	huddraw_alpha  233 0
-	huddraw_alpha  234 0
-	huddraw_alpha  235 0
-	huddraw_alpha  236 0
-	huddraw_alpha  237 0
-  ;break //
-case 3: 
-  $ax2 enablespawn
-  $ax3 enablespawn
-  wait 1
-  $axh disablespawn
-  $ax4 disablespawn
-  $ax5 disablespawn
-  $ax6 disablespawn
-  $ax7 disablespawn
-  $ax8 disablespawn
-  $ax9 disablespawn
-	huddraw_alpha  230 1.0
-	huddraw_alpha  231 1.0
-	huddraw_alpha  232 0
-	huddraw_alpha  233 0
-	huddraw_alpha  234 0
-	huddraw_alpha  235 0
-	huddraw_alpha  236 0
-	huddraw_alpha  237 0
-  ;break //
-case 4: 
-  $ax3 enablespawn
-  $ax4 enablespawn
-  wait 1
-  $axh disablespawn
-  $ax2 disablespawn
-  $ax5 disablespawn
-  $ax6 disablespawn
-  $ax7 disablespawn
-  $ax8 disablespawn
-  $ax9 disablespawn
-	huddraw_alpha  230 1.0
-	huddraw_alpha  231 1.0
-	huddraw_alpha  232 1.0
-	huddraw_alpha  233 0
-	huddraw_alpha  234 0
-	huddraw_alpha  235 0
-	huddraw_alpha  236 0
-	huddraw_alpha  237 0
-  ;break //
-case 5: 
-  $ax4 enablespawn
-  $ax5 enablespawn
-  wait 1
-  $axh disablespawn
-  $ax2 disablespawn
-  $ax3 disablespawn
-  $ax6 disablespawn
-  $ax7 disablespawn
-  $ax8 disablespawn
-  $ax9 disablespawn
-	huddraw_alpha  230 1.0
-	huddraw_alpha  231 1.0
-	huddraw_alpha  232 1.0
-	huddraw_alpha  233 1.0
-	huddraw_alpha  234 0
-	huddraw_alpha  235 0
-	huddraw_alpha  236 0
-	huddraw_alpha  237 0
-  ;break //
-case 6: 
-  $ax5 enablespawn
-  $ax6 enablespawn
-  wait 1
-  $axh disablespawn
-  $ax2 disablespawn
-  $ax3 disablespawn
-  $ax4 disablespawn
-  $ax7 disablespawn
-  $ax8 disablespawn
-  $ax9 disablespawn
-	huddraw_alpha  230 1.0
-	huddraw_alpha  231 1.0
-	huddraw_alpha  232 1.0
-	huddraw_alpha  233 1.0
-	huddraw_alpha  234 1.0
-	huddraw_alpha  235 0
-	huddraw_alpha  236 0
-	huddraw_alpha  237 0
-  ;break //
-case 7: 
-  $ax6 enablespawn
-  $ax7 enablespawn
-  wait 1
-  $axh disablespawn
-  $ax2 disablespawn
-  $ax3 disablespawn
-  $ax4 disablespawn
-  $ax5 disablespawn
-  $ax8 disablespawn
-  $ax9 disablespawn
-	huddraw_alpha  230 1.0
-	huddraw_alpha  231 1.0
-	huddraw_alpha  232 1.0
-	huddraw_alpha  233 1.0
-	huddraw_alpha  234 1.0
-	huddraw_alpha  235 1.0
-	huddraw_alpha  236 0
-	huddraw_alpha  237 0
-  ;break //
-case 8: 
-  $ax7 enablespawn
-  $ax8 enablespawn
-  wait 1
-  $axh disablespawn
-  $ax2 disablespawn
-  $ax3 disablespawn
-  $ax4 disablespawn
-  $ax5 disablespawn
-  $ax6 disablespawn
-  $ax9 disablespawn
-	huddraw_alpha  230 1.0
-	huddraw_alpha  231 1.0
-	huddraw_alpha  232 1.0
-	huddraw_alpha  233 1.0
-	huddraw_alpha  234 1.0
-	huddraw_alpha  235 1.0
-	huddraw_alpha  236 1.0
-	huddraw_alpha  237 0
-  ;break // 
-case 9: 
-  $ax8 enablespawn
-  $ax9 enablespawn
-  wait 1
-  $axh disablespawn
-  $ax2 disablespawn
-  $ax3 disablespawn
-  $ax4 disablespawn
-  $ax5 disablespawn
-  $ax6 disablespawn
-  $ax7 disablespawn
-	huddraw_alpha  230 1.0
-	huddraw_alpha  231 1.0
-	huddraw_alpha  232 1.0
-	huddraw_alpha  233 1.0
-	huddraw_alpha  234 1.0
-	huddraw_alpha  235 1.0
-	huddraw_alpha  236 1.0
-	huddraw_alpha  237 1.0
-  ;break //
-   } 
-
-wait 2
-
+	wait 2
 }
+
 end
 
 //-----------------------------------------------------------------------------
 
+// Send allied bots toward the leading axis spawn, and axis bots toward the leading allied spawn
+dispatch_bots:
+
+local.allies_target = NIL
+local.axis_target = NIL
+
+if (level.reversed == 0)
+{
+	// normal: allies advance alh->al9, axis advance ax9->axh
+	// allied bots attack the leading axis spawn (most advanced = lowest ax index active)
+	// axis bots attack the leading allied spawn (most advanced = highest al index active)
+	switch(level.step)
+	{
+	case 1:
+		local.allies_target = level.spawn_ax6
+		local.axis_target = level.spawn_al2
+		;break
+	case 2:
+		local.allies_target = level.spawn_ax5
+		local.axis_target = level.spawn_al3
+		;break
+	case 3:
+		local.allies_target = level.spawn_ax4
+		local.axis_target = level.spawn_al4
+		;break
+	case 4:
+		local.allies_target = level.spawn_ax3
+		local.axis_target = level.spawn_al5
+		;break
+	case 5:
+		local.allies_target = level.spawn_ax2
+		local.axis_target = level.spawn_al6
+		;break
+	case 6:
+		local.allies_target = level.spawn_ax2
+		local.axis_target = level.spawn_al7
+		;break
+	case 7:
+		local.allies_target = level.spawn_ax2
+		local.axis_target = level.spawn_al8
+		;break
+	case 8:
+		local.allies_target = level.spawn_axh
+		local.axis_target = level.spawn_al9
+		;break
+	case 9:
+		local.allies_target = level.spawn_axh
+		local.axis_target = level.spawn_al9
+		;break
+	}
+}
+else
+{
+	// reversed: axis advance axh->ax9, allies advance al9->alh
+	// allied bots attack the leading axis spawn (most advanced = highest ax index active)
+	// axis bots attack the leading allied spawn (most advanced = lowest al index active)
+	switch(level.step)
+	{
+	case 1:
+		local.allies_target = level.spawn_ax2
+		local.axis_target = level.spawn_al6
+		;break
+	case 2:
+		local.allies_target = level.spawn_ax3
+		local.axis_target = level.spawn_al5
+		;break
+	case 3:
+		local.allies_target = level.spawn_ax4
+		local.axis_target = level.spawn_al4
+		;break
+	case 4:
+		local.allies_target = level.spawn_ax5
+		local.axis_target = level.spawn_al3
+		;break
+	case 5:
+		local.allies_target = level.spawn_ax6
+		local.axis_target = level.spawn_al2
+		;break
+	case 6:
+		local.allies_target = level.spawn_ax7
+		local.axis_target = level.spawn_al2
+		;break
+	case 7:
+		local.allies_target = level.spawn_ax8
+		local.axis_target = level.spawn_alh
+		;break
+	case 8:
+		local.allies_target = level.spawn_ax9
+		local.axis_target = level.spawn_alh
+		;break
+	case 9:
+		local.allies_target = level.spawn_ax9
+		local.axis_target = level.spawn_alh
+		;break
+	}
+}
+
+for (local.i = 1; local.i <= $player.size; local.i++)
+{
+	if (isBot $player[local.i])
+	{
+		if ($player[local.i].dmteam == "allies" && local.allies_target != NIL)
+			$player[local.i] bot_movenear local.allies_target.origin 128
+		else if ($player[local.i].dmteam == "axis" && local.axis_target != NIL)
+			$player[local.i] bot_movenear local.axis_target.origin 128
+	}
+}
+
+end
+
+//-----------------------------------------------------------------------------
 
 messages:
 
 while(1)
 {
 wait 90
-	iprintlnbold "Push forward to your enemies base to score !"
-wait 60
-	iprintlnbold "Push forward to your opponents base! Gain Ground and score for your team !"
-wait 60
-	iprintlnbold "Push your teams Battleline forward !"
-wait 60
-	iprintlnbold "Push forward to your opponents base to score for your team !"
-wait 10
-	iprintlnbold "Battline Mod moves the spawns forward with your team !"
-wait 30
+	iprintlnbold "Spawns advance automatically - the front line is moving !"
+wait 120
+	iprintlnbold "Push forward - the battle line reaches the enemy base in 12 minutes !"
+wait 120
+	iprintlnbold "Hold your ground or push ahead - the spawn line never stops !"
+wait 120
 }
-end
-
-messagepush:
-wait 60
-	iprintlnbold "Push mode is on !"
-wait 1
-	iprintlnbold "Push back your opponents spawn !"
-end
-
-messagepass:
-wait 60
-	iprintlnbold "Pass mode is on !"
-wait 1
-	iprintlnbold "Push forward to gain ground and score !"
 end
 
 //-----------------------------------------------------------------------------
@@ -2057,18 +1118,18 @@ end
 eventeams:
 
 wait 30
- 
-while(1) 
-   { 
-   level.allies = 0 
-   level.axis = 0 
-   for(local.dude=1;local.dude <= $player.size;local.dude++) 
-   { 
-   if ($player[local.dude].dmteam == "axis") 
-   level.axis++ 
-   if ($player[local.dude].dmteam == "allies") 
-   level.allies++ 
-   } 
+
+while(1)
+   {
+   level.allies = 0
+   level.axis = 0
+   for(local.dude=1;local.dude <= $player.size;local.dude++)
+   {
+   if ($player[local.dude].dmteam == "axis")
+   level.axis++
+   if ($player[local.dude].dmteam == "allies")
+   level.allies++
+   }
 	setcvar axiscount level.axis
 	setcvar alliescount level.allies
 
@@ -2110,43 +1171,14 @@ while(1)
 	huddraw_alpha  218 1.0
 	huddraw_string 218 level.axis
 
-     } 
+     }
 
-   wait 2 
+   wait 2
 	huddraw_alpha  214 0
 	huddraw_alpha  215 0
 	huddraw_alpha  216 0
 	huddraw_alpha  217 0
 	huddraw_alpha  218 0
    wait 1
-   } 
-end
-
-playmusic:
-	waitframe
-	// $endtrgal stufftext "tmstartloop sound/music/mus_NorthAfrica_01a.mp3"	// Looping music
-	// $endtrgax stufftext "tmstartloop sound/music/mus_NorthAfrica_01a.mp3"	// Looping music
-//	$endtrgal loopsound mus_NorthAfrica_01a
-//	$endtrgax loopsound mus_NorthAfrica_01d
-end
-
-music:
-
-	wait 700
-	local.STUFFSTRING = "tmstart sound/music/mus_NorthAfrica_01a.mp3; seta s_musicvolume 0.3"
-
-	while(1)
-	{
-		for(local.i = 1; local.i <= $player.size; local.i++)
-		{
-			local.p = $player[local.i]
-			if(local.p.music_handled != 1)
-			{
-				local.p.music_handled = 1
-				local.p stufftext local.STUFFSTRING
-			}
-		}
-		waitframe
-	}
-
+   }
 end
