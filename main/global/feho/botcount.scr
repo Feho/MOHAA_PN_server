@@ -32,26 +32,6 @@ main:
     // Subscribe to player text messages
     event_subscribe "player_textMessage" event_player_textMessage
 
-    // Subscribe to player spawn for welcome message
-    event_subscribe "player_spawned" event_player_spawned
-
-end
-
-event_player_spawned:
-    local.player = self
-
-    if (!local.player || isBot local.player)
-        end
-
-    // Only show once per player session
-    if (local.player.botcount_welcomed == 1)
-        end
-
-    local.player.botcount_welcomed = 1
-
-    // Small delay so it doesn't get lost in spawn messages
-    wait 3
-    local.player iprint "Tip: Type 'bots <count>' in chat to adjust bot count (e.g. 'bots 4')"
 end
 
 event_player_textMessage local.text local.is_team:
