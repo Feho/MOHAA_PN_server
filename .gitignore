@@ -230,3 +230,7 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+/.codex
+/main/navmesh
+/main/crashlog.txt
+/main/configs
