@@ -57,8 +57,8 @@ tdmtype:
 	level waittill prespawn
 	
 	// no fog
-	$world farplane_color ( 0.3 0.3 0.3 )
-	$world farplane 12000
+	// $world farplane_color ( 0.3 0.3 0.3 )
+	$world farplane 5000
 	// $world farplane_cull 1
 	
 	//Sorrids ladders 
@@ -335,24 +335,23 @@ tdm_spawns:
 	spawn info_player_axis "origin" "-2855.88 -384.87 216.13" "angle" "51" // "targetname" "X14"
 	spawn info_player_axis "origin" "-1800.87 -1416.33 408.13" "angle" "65" // "targetname" "X15"
 	
+	spawn info_player_allied "origin" "( -4431.204 2668.004 2.125 )" "angle" "267.220" "targetname" "A1"
+	spawn info_player_allied "origin" "( -4696.613 2719.427 2.125 )" "angle" "267.220" "targetname" "A2"
+	spawn info_player_allied "origin" "( -3978.413 3009.589 -2.536 )" "angle" "309.177" "targetname" "A3"
+	spawn info_player_allied "origin" "( -1282.803 -2615.700 15.736 )" "angle" "91.252" "targetname" "A4"
+	spawn info_player_allied "origin" "( -1902.303 -1738.058 -31.875 )" "angle" "267.220" "targetname" "A5"
 
-	spawn info_player_allied "origin" "-3121.78 -3984.72 -310.75" "angle" "161" // "targetname" "A1"
-	spawn info_player_allied "origin" "-5842.08 -456 2" "angle" "-6" // "targetname" "A2"
-	spawn info_player_allied "origin" "-6014.83 541.05 -40" "angle" "-42" // "targetname" "A3"
-	spawn info_player_allied "origin" "-4718.47 591.24 2" "angle" "-93" // "targetname" "A4"
-	spawn info_player_allied "origin" "1756 277 -42" "angle" "-156" // "targetname" "A5" 
+	spawn info_player_allied "origin" "( 314.283 -2624.712 33.513 )" "angle" "131.160" "targetname" "A6"
+	spawn info_player_allied "origin" "( 2422.199 834.423 -1.350 )" "angle" "207.845" "targetname" "A7"
+	spawn info_player_allied "origin" "( 1684.610 -180.904 -21.005 )" "angle" "181.456" "targetname" "A8"
+	spawn info_player_allied "origin" "( 580.476 -1095.797 -63.875 )" "angle" "357.089" "targetname" "A9"
+	spawn info_player_allied "origin" "( -152.442 -1067.725 -32.527 )" "angle" "88.473" "targetname" "A10"
 
-	spawn info_player_allied "origin" "1195 -2265.39 -65" "angle" "115" // "targetname" "A6"
-	spawn info_player_allied "origin" "-1516.29 -2494.69 12.59" "angle" "90" // "targetname" "A7"
-	spawn info_player_allied "origin" "-2328.89 -1606.91 2" "angle" "90" // "targetname" "A8"
-	spawn info_player_allied "origin" "-1433.87 -1099.78 202.34" "angle" "-180" // "targetname" "A9"
-	spawn info_player_allied "origin" "-2198.05 -124.97 202.64" "angle" "-90" // "targetname" "A10"
-
-	spawn info_player_allied "origin" "-984.18 -1570.86 2.61" "angle" "47" // "targetname" "A11"
-	spawn info_player_allied "origin" "-1107.85 -482.81 202.22" "angle" "-47" // "targetname" "A12"
-	spawn info_player_allied "origin" "-574.08 -128.86 213.10" "angle" "-90" // "targetname" "A13"
-	spawn info_player_allied "origin" "-3154.38 108.18 20" "angle" "7" // "targetname" "A14"
-	spawn info_player_allied "origin" "-3033.92 193 18" "angle" "0" // "targetname" "A15"
+	spawn info_player_allied "origin" "( 1005.794 2898.341 2.125 )" "angle" "228.856" "targetname" "A11"
+	spawn info_player_allied "origin" "( -3455.197 -1555.429 14.298 )" "angle" "43.050" "targetname" "A12"
+	spawn info_player_allied "origin" "( -4385.910 -708.964 -11.491 )" "angle" "37.645" "targetname" "A13"
+	spawn info_player_allied "origin" "( -4212.814 406.807 6.852 )" "angle" "357.951" "targetname" "A14"
+	spawn info_player_allied "origin" "( -4337.748 1153.997 -4.059 )" "angle" "37.354" "targetname" "A15"
 
 	local.master = spawn scriptmaster
 	local.master aliascache fire_med sound/amb/fire.wav soundparms 1.2 0.0 1.0 0.0 160 1600 auto loaded maps "m dm moh obj train"
