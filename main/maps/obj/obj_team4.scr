@@ -57,7 +57,7 @@ setcvar "timelimit" "14"
 		( 1526 2667 240 )
 	endArray
 
-	local.bombPos = local.bombPositions[randomint(local.bombPositions.size + 1)][1]
+	local.bombPos = local.bombPositions[randomint(local.bombPositions.size) + 1][1]
 	exec global/feho/create_bomb.scr local.bombPos
 
 	level.defusing_team = "allies"
@@ -72,17 +72,26 @@ setcvar "timelimit" "14"
 	level.clockside = allies // set to axis, allies, kills, or draw
 
 	level waittill roundstart
-		
-		$bridge_bomb thread global/obj_dmsd.scr::bomb_thinker
-		$bridge_bomb2 thread global/obj_dmsd.scr::bomb_thinker
-		
-		$bridge_bomb thread axis_win_bomb
- 		$bridge_bomb thread allied_win_timer
- 		
-//		thread objectives_setup
+
+	$bridge_bomb thread global/obj_dmsd.scr::bomb_thinker maps/obj/obj_team4.scr::bomb_planted
+	$bridge_bomb2 thread global/obj_dmsd.scr::bomb_thinker maps/obj/obj_team4.scr::bomb_planted
+	
+	$bridge_bomb thread axis_win_bomb
+	$bridge_bomb thread allied_win_timer
+
+	// thread objectives_setup
 	
 end
 
+bomb_planted local.origin local.planting_team:
+
+	for (local.i = 1; local.i <= 3; local.i++)
+	{
+		$player bot_movenear local.origin 512
+		wait 7
+	}
+
+end
 
 axis_win_bomb:
 
