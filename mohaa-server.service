@@ -1,0 +1,17 @@
+[Unit]
+Description=MOHAA Server in Screen Session
+After=network-online.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+User=feho
+WorkingDirectory=/home/feho/MOHAA
+ExecStartPre=/bin/bash -c 'mv -f /home/feho/.openmohaa/main/qconsole.log /home/feho/.openmohaa/main/qconsole.$(date +%%Y%%m%%d_%%H%%M%%S).log 2>/dev/null || true'
+ExecStart=/usr/bin/screen -DmS mohaa_server /home/feho/MOHAA/omohaaded +set com_target_game 0 +set dedicated 2 +set sv_maxclients 16 +set net_port 12203 +exec server.cfg +set logfile 2
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
