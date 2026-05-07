@@ -253,10 +253,10 @@ tdmtype:
 	level.squadmaker_areaname 	= "in the village"
 	level.squadmaker_config		= "winterwar"
 
-	start support gunner scripts
+	// start support gunner scripts
 	exec global/support/support.scr
 
-	start squadmaker
+	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
 
 	// Spotlight
