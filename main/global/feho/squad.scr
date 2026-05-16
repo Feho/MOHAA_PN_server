@@ -569,7 +569,7 @@ update_squad_hud local.player:
     ihuddraw_string local.player local.title_index "SQUAD"
     ihuddraw_alpha local.player local.title_index 1.0
 
-    while (local.player && local.player.isAlive && local.player.dmteam == local.team && level.player_squad_info[local.player.entnum] != NIL)
+    while (local.player && local.player.dmteam == local.team && level.player_squad_info[local.player.entnum] != NIL)
     {
         local.squad_info = level.player_squad_info[local.player.entnum]
         local.team_idx = local.squad_info["team_idx"]
