@@ -83,14 +83,14 @@ trigger_hvt_event:
         {
             local.allied_name = netname level.allied_hvt_player
             println ("^2Allied HVT: ^7" + local.allied_name + " ^7(Score: " + level.allied_hvt_score + ")")
-            iprintlnbold("Allied HVT: " + local.allied_name)
+            //iprintlnbold("Allied HVT: " + local.allied_name)
         }
 
         if (level.axis_hvt_player != NIL)
         {
             local.axis_name = netname level.axis_hvt_player
             println ("^1Axis HVT: ^7" + local.axis_name + " ^7(Score: " + level.axis_hvt_score + ")")
-            iprintlnbold("Axis HVT: " + local.axis_name)
+            //iprintlnbold("Axis HVT: " + local.axis_name)
         }
 
         local.bonus_points = int(getcvar "g_hvt_bonus")
@@ -270,7 +270,7 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
         {
             // Award bonus points
             local.bonus_points = int(getcvar "g_hvt_bonus")
-            if (local.bonus_points == 0) local.bonus_points = 10
+            if (local.bonus_points == 0) local.bonus_points = 5
 
             local.attacker addkills local.bonus_points
 
@@ -348,7 +348,7 @@ event_player_spawned:
     if (level.hvt_event_active == 1 && level.allied_hvt_player == NIL && level.axis_hvt_player == NIL)
     {
         println ("^3All HVTs are gone. Event concluded.")
-        iprintlnbold("All HVTs are gone. Event concluded.")
+        //iprintlnbold("All HVTs are gone. Event concluded.")
         level.hvt_event_active = 0
     }
 
