@@ -195,4 +195,6 @@ exec global/feho/hvt_event.scr
 
 exec global/feho/anticheat.scr
 
+exec global/feho/statusb.scr
+
 exec global/feho/spawn_helper.scr

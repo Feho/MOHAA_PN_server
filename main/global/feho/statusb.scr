@@ -1,0 +1,62 @@
+main:
+
+    if (level.statusb_initialized == 1)
+        end
+
+    level.statusb_initialized = 1
+
+    thread statusb_loop
+
+end
+
+// Right-align local.str in a field of local.width characters.
+pad_left local.str local.width:
+
+    local.s = local.str + ""
+    while (local.s.size < local.width)
+        local.s = " " + local.s
+
+end local.s
+
+print_status:
+
+    local.developer = getcvar "developer"
+    setcvar "developer" 1
+
+    println "statusb:"
+    println "num kills  deaths name"
+    println "--- ------ ------ ---------------"
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+
+        if (isBot local.p)
+            continue
+
+        local.num    = waitthread pad_left local.p.entnum 3
+        local.kills  = waitthread pad_left (local.p getkills) 6
+        local.deaths = waitthread pad_left (local.p getdeaths) 6
+        local.name   = netname local.p
+
+        println (local.num + " " + local.kills + " " + local.deaths + " " + local.name)
+    }
+
+    setcvar "developer" local.developer
+
+end
+
+statusb_loop:
+
+    setcvar "statusb" ""
+
+    while (1)
+    {
+        while (getcvar "statusb" == "") { wait 0.5 }
+
+        waitthread print_status
+
+        setcvar "statusb" ""
+    }
+
+end
