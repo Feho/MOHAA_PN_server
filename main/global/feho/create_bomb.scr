@@ -11,8 +11,30 @@ main local.origin:
 	local.trigger model level.bomb_model
 	local.trigger show
 	local.trigger setsize ( -50 -50 0 ) ( 50 50 50 )
-	local.trigger light 1 0 0 50
+	local.trigger thread setup_led
 	local.trigger setthread global/feho/bomb.scr::main
 	local.trigger droptofloor
+
+end
+
+setup_led:
+
+	self light 1 0 0 65
+	self thread flash_led
+
+end
+
+flash_led:
+
+	while (self)
+	{
+		self lightOn
+		wait 0.08
+
+		if (!self) end
+
+		self lightOff
+		wait 1.92
+	}
 
 end

@@ -58,7 +58,7 @@ main:
 				local.trigger model level.bomb_model
 				local.trigger show
 				local.trigger setsize ( -50 -50 0 ) ( 50 50 50 )
-				local.trigger light 1 0 0 50
+				local.trigger thread global/feho/create_bomb.scr::setup_led
 				local.trigger setthread global/feho/bomb.scr::main
 				local.trigger droptofloor
 				self.bomb remove
@@ -79,7 +79,7 @@ main:
 	local.trigger model level.bomb_model
 	local.trigger show
 	local.trigger setsize ( -50 -50 0 ) ( 50 50 50 )
-	local.trigger light 1 0 0 50
+	local.trigger thread global/feho/create_bomb.scr::setup_led
 	local.trigger setthread global/feho/bomb.scr::main
 	local.trigger droptofloor
 	local.trigger playsound bomb_drop1
