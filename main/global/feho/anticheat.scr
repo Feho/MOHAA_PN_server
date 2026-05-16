@@ -40,17 +40,8 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
 
     local.degrees_per_second = local.angle_diff / local.time_diff
 
-    // Just for debugging purpose
+    // I think values higher than 100 deg/s could be considered suspicious, as they are likely to indicate the use of an aimbot.
     if (local.degrees_per_second > 100 && !isBot local.attacker)
-    {
-        local.developer = getcvar "developer"
-        setcvar "developer" 1
-        println ("^1Potential aimbot detected for " + netname local.attacker + " with " + local.degrees_per_second + " degrees per second")
-        setcvar "developer" local.developer
-    }
-
-    // I think values higher than 800 deg/s could be considered suspicious, as they are likely to indicate the use of an aimbot.
-    if (local.degrees_per_second > 800)
     {
         local.developer = getcvar "developer"
         setcvar "developer" 1
