@@ -1,0 +1,10 @@
+// Radio mod preset for mohdm4
+
+level.radio_team = "allies"
+level.radio_enemy_team = "axis"
+level.radio_origin = ( 1218.462 873.125 72.125 )
+level.radio_bomb_origin = ( 1550.439 1617.978 240.125 )
+level.radio_angles = 90
+level.ffe_method = "skybox"
+
+end 1

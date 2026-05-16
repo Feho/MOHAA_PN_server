@@ -1,0 +1,616 @@
+// Radio Mod
+// One team owns a field radio and can call artillery on random enemy positions.
+// The enemy team can destroy the radio by planting a bomb on it.
+// Configuration is per-map via radio_presets/<mapname>.scr
+
+main:
+	if (level.radio_mod_initialized == 1) end
+	level.radio_mod_initialized = 1
+
+	local.preset = waitexec ("global/feho/radio_presets/" + getcvar("mapname") + ".scr")
+	if (local.preset != 1)
+	{
+		println "[radio_mod]: No preset for this map, skipping."
+		end
+	}
+
+	if (level.ffe_method == NIL)
+		level.ffe_method = "skybox"
+	if (level.radio_angles == NIL)
+		level.radio_angles = 0
+
+	level.ffe_settings["artillery_number"] = 4
+	level.ffe_settings["artillery_radius"] = 400
+	level.ffe_settings["artillery_damage"] = 400
+	level.ffe_settings["artillery_spread"] = 250
+	level.ffe_settings["artillery_delayfixed"] = 2.2
+	level.ffe_settings["artillery_delayrandom"] = 1.6
+	level.ffe_settings["earthquakes"] = 1
+
+	local.master = spawn ScriptMaster
+	local.master aliascache arty_leadinmp1 sound/weapons/explo/Exp_LeadIn_06.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps "m dm obj"
+	local.master aliascache arty_leadinmp2 sound/weapons/explo/Exp_LeadIn_07.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps "m dm obj"
+	local.master aliascache arty_leadinmp3 sound/weapons/explo/Exp_LeadIn_08.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps "m dm obj"
+	local.master aliascache arty_leadinmp4 sound/weapons/explo/Exp_LeadIn_09.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps "m dm obj"
+	local.master aliascache arty_leadinmp5 sound/weapons/explo/Exp_LeadIn_10.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps "m dm obj"
+	local.master aliascache arty_leadinmp6 sound/weapons/explo/Exp_LeadIn_11.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps "m dm obj"
+	local.master aliascache arty_leadinmp7 sound/weapons/explo/Exp_LeadIn_12.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps "m dm obj"
+	local.master aliascache arty_leadinmp8 sound/weapons/explo/Exp_LeadIn_13.wav soundparms 0.8 0.2 0.7 0.5 160 3000 auto loaded maps "m dm obj"
+	local.master aliascache radio_valid_target1 sound/dialogue/M3L2/A/dfr_m3l3_346k.wav soundparms 1.0 0.0 1.0 0.0 80 112 dialog streamed maps "m dm obj"
+	local.master aliascache radio_valid_target2 sound/dialogue/M3L3/A/dfr_m3l3_347o.wav soundparms 1.0 0.0 1.0 0.0 80 112 dialog streamed maps "m dm obj"
+	local.master aliascache radio_cooldown1 sound/dialogue/M3L2/A/dfr_m3l3_348k.wav soundparms 1.0 0.0 1.0 0.0 80 112 dialog streamed maps "m dm obj"
+	// obj_dmsd.scr sounds — some aliases have narrow map scopes, register here to cover all maps
+	local.master aliascache bombtick1 sound/items/Item_Timer_01.wav soundparms 0.7 0.0 1.0 0.0 10000 10000 local loaded maps "m dm obj"
+	local.master aliascache final_countdown sound/items/final_countdown.wav soundparms 1.3 0.0 1.0 0.0 10000 10000 local loaded maps "m dm obj"
+	local.master aliascache dfr_objective_o01 sound/dialogue/Multiplayer/a/AMdfr_o_04a.wav soundparms 1.2 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj"
+	local.master aliascache dfr_objective_o02 sound/dialogue/Multiplayer/a/AMdfr_o_04h.wav soundparms 1.2 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj"
+	local.master aliascache dfr_diffused_d01 sound/dialogue/Multiplayer/a/AMdfr_o_09h.wav soundparms 1.2 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj"
+	local.master aliascache dfr_diffused_d02 sound/dialogue/Multiplayer/a/AMdfr_o_09j.wav soundparms 1.2 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj"
+	local.master aliascache den_objective_o01 sound/dialogue/Multiplayer/g/GRden_o_04a.wav soundparms 1.2 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj"
+	local.master aliascache den_objective_o02 sound/dialogue/Multiplayer/g/GRden_o_04c.wav soundparms 1.2 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj"
+	local.master aliascache den_diffused_d01 sound/dialogue/Multiplayer/g/GRden_o_09a.wav soundparms 1.2 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj"
+	local.master aliascache den_diffused_d02 sound/dialogue/Multiplayer/g/GRden_o_09c.wav soundparms 1.2 0.0 1.0 0.0 10000 10000 local streamed maps "m dm obj"
+
+	cache models/animate/fx_mortar_dirt.tik
+	cache models/emitters/linger_smoke.tik
+	cache models/miscobj/radio_military_pulsing.tik
+	cache models/static/bunkertable_ns.tik
+
+	level.radio_active = 0
+	level.radio_cooldown = 0
+	level.radio_bomb_planted = 0
+
+	wait 30
+	thread spawn_radio
+	thread radio_hud_loop
+end
+
+
+// -------------------------------------------------------
+// Radio spawn and bomb objective setup
+// -------------------------------------------------------
+
+spawn_radio:
+	// level.radio_origin = floor/base position of the table
+	// level.radio_angles = yaw facing (0=+Y, 90=+X, 180=-Y, 270=-X)
+	// bunkertable_ns bounding box: (-24 -40 0)(24 40 56) — tabletop surface is at origin+56
+
+	// Derive forward vector from yaw — all props/triggers rotate with level.radio_angles
+	local.dir_helper = spawn script_object model "models/fx/dummy.tik" origin level.radio_origin
+	local.dir_helper.angles = ( 0 level.radio_angles 0 )
+	local.fwd = local.dir_helper.forwardvector
+	local.dir_helper remove
+
+	// All tabletop positions share the same Z lift; XY shift along forward vector
+	local.tabletop  = ( level.radio_origin[0]                   level.radio_origin[1]                   level.radio_origin[2] + 56 )
+	local.radio_pos = ( level.radio_origin[0] + local.fwd[0]*5  level.radio_origin[1] + local.fwd[1]*5  level.radio_origin[2] + 52 )
+
+	local.table = spawn script_object model "models/static/bunkertable_ns.tik" origin level.radio_origin
+	local.table show
+	local.table.angles = ( 0 level.radio_angles 0 )
+
+	// Radio model — visible, non-solid decoration
+	local.radio_model = spawn script_model model "models/miscobj/radio_military_pulsing.tik" origin local.radio_pos
+	local.radio_model show
+	local.radio_model notsolid
+	local.radio_model.angles = ( 0 level.radio_angles 0 )
+	local.radio_model anim idle
+	level.radio_entity = local.radio_model
+	level.radio_active = 1
+	local.radio_model thread setup_radio_led
+
+	// USE trigger centered on the tabletop — rotates with the group
+	local.radio_use = spawn trigger_use origin local.tabletop
+	local.radio_use setsize ( -30 -30 -10 ) ( 30 30 30 )
+	local.radio_use targetname "radio_use_trig"
+	local.radio_use setthread global/feho/radio_mod.scr::radio_use_trigger
+	level.radio_use_trigger = local.radio_use
+
+	// Announce deployment
+	if (level.radio_team == "allies")
+		local.team_label = "Allied"
+	else
+		local.team_label = "Axis"
+	iprintlnbold ("A field radio has been deployed! " + local.team_label + " forces can call artillery support.")
+	println ("[radio_mod]: Radio deployed at " + level.radio_origin)
+
+	// Spawn the bomb pickup for the enemy team
+	waitthread global/feho/create_bomb.scr::main level.radio_bomb_origin
+
+	// Pulsing bomb and proxy sit on the tabletop at the radio position
+	// bomb_thinker removes proxy on explosion — not the radio model
+	local.obj = spawn script_model model "models/items/explosive.tik" origin local.radio_pos
+	local.obj hide
+	local.obj notsolid
+	local.obj.angles = ( 0 level.radio_angles 0 )
+
+	local.radio_proxy = spawn script_model model "models/fx/dummy.tik" origin local.radio_pos
+	local.radio_proxy notsolid
+
+	// Plant trigger at tabletop center — same footprint as USE trigger
+	local.trig_name = "radio_plant_trigger"
+	local.plant_trig = spawn trigger_use origin local.tabletop
+	local.plant_trig setsize ( -40 -40 -10 ) ( 40 40 30 )
+	local.plant_trig targetname local.trig_name
+	level.radio_plant_trigger = local.plant_trig
+
+	local.obj.target = local.radio_proxy
+	local.obj.trigger_name = local.trig_name
+	// All explosion_fx .tik files are invisible dummies in the engine — visuals handled
+	// in radio_destroyed_callback using fx_mortar_dirt + earthquake (same as FFE)
+
+	level.planting_team = level.radio_enemy_team
+	level.defusing_team = level.radio_team
+
+	// Run bomb_thinker async — it handles planting/defusing/exploding
+	thread bomb_thinker_runner local.obj
+
+	// Watch for explosion separately — bomb_thinker callback fires on plant, not explode
+	thread watch_radio_explosion local.obj
+
+	// Show the pulsing explosive when attackers are nearby, and always while planted.
+	thread bomb_proximity_reveal local.obj local.radio_pos
+end
+
+setup_radio_led:
+
+	self light 1 0 0 260
+	self thread flash_radio_led
+
+end
+
+flash_radio_led:
+
+	while (level.radio_active == 1 && self)
+	{
+		self lightOn
+		wait 0.15
+
+		if (level.radio_active != 1 || !self)
+			end
+
+		self lightOff
+		wait 19.85
+	}
+
+end
+
+bomb_thinker_runner local.obj:
+	// bomb_thinker sets level.bomb_damage=200 and level.bomb_explosion_radius=1054 internally
+	local.obj waitthread global/obj_dmsd.scr::bomb_thinker
+end
+
+watch_radio_explosion local.obj:
+	// Wait until obj_dmsd sets self.exploded = 1
+	while (local.obj != NIL && local.obj != NULL)
+	{
+		if (local.obj.live == 1)
+			level.radio_bomb_planted = 1
+		else
+			level.radio_bomb_planted = 0
+
+		if (local.obj.exploded == 1)
+		{
+			level.radio_bomb_planted = 0
+			thread radio_destroyed_callback local.obj.origin level.radio_enemy_team
+			end
+		}
+		wait 0.1
+	}
+end
+
+bomb_proximity_reveal local.obj local.pos:
+	local.visible = 0
+	while (level.radio_active == 1 && local.obj != NIL && local.obj != NULL && local.obj.exploded != 1)
+	{
+		local.nearby = 0
+		if (local.obj.live == 1)
+		{
+			local.nearby = 1
+		}
+		local.i = 1
+		while (local.i <= $player.size)
+		{
+			local.p = $player[local.i]
+			if (local.p != NIL && local.p != NULL && isalive local.p && !isBot local.p && local.p.dmteam == level.radio_enemy_team)
+			{
+				local.dist = vector_length (local.p.origin - local.pos)
+				if (local.dist <= 200)
+				{
+					local.nearby = 1
+				}
+			}
+			local.i++
+		}
+		if (local.nearby == 1 && local.visible == 0)
+		{
+			local.obj show
+			local.visible = 1
+		}
+		else if (local.nearby == 0 && local.visible == 1)
+		{
+			local.obj hide
+			local.visible = 0
+		}
+		wait 0.5
+	}
+end
+
+
+// -------------------------------------------------------
+// Radio USE trigger — called when a player presses USE on the radio
+// -------------------------------------------------------
+
+radio_use_trigger:
+	local.player = parm.other
+
+	if (local.player == NIL || local.player == NULL) end
+	if (!isalive local.player) end
+	if (isBot local.player) end
+	if (local.player.dmteam != level.radio_team) end
+	if (level.radio_active != 1) end
+	if (level.radio_bomb_planted == 1) end
+
+	if (level.radio_cooldown > 0)
+	{
+		local.player playsound radio_cooldown1
+		local.player iprint ("Artillery on cooldown: " + level.radio_cooldown + "s remaining") 1
+		end
+	}
+
+	// Set cooldown immediately before threading to prevent concurrent calls
+	level.radio_cooldown = 40
+	thread call_artillery local.player
+end
+
+
+// -------------------------------------------------------
+// Artillery call
+// -------------------------------------------------------
+
+call_artillery local.caller:
+	thread cooldown_tick
+
+	local.caller playsound radio_valid_target1
+	iprintlnbold "Artillery support called!"
+
+	wait 8
+
+	// Find a target: prefer a living human enemy, fall back to a bot
+	local.target_origin = waitthread get_enemy_target_origin
+	//println ("[radio_mod]: Artillery called by " + netname local.caller + " targeting " + local.target_origin)
+	wait 2
+
+	waitthread artillery_volley local.target_origin local.caller
+end
+
+cooldown_tick:
+	while (level.radio_cooldown > 0)
+	{
+		wait 1
+		level.radio_cooldown--
+	}
+end
+
+get_enemy_target_origin:
+	local.enemy_team = level.radio_enemy_team
+	local.count = 0
+
+	// Collect all living enemy players (humans first, then bots as fallback)
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.p = $player[local.i]
+		if (local.p == NIL || local.p == NULL) continue
+		if (!isalive local.p) continue
+		if (local.p.dmteam != local.enemy_team) continue
+		if (!isBot local.p)
+		{
+			local.count++
+			local.candidates[local.count] = local.p.origin
+		}
+	}
+
+	if (local.count > 0)
+		end local.candidates[randomint(local.count) + 1]
+
+	// No human enemies — collect bots
+	local.count = 0
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.p = $player[local.i]
+		if (local.p == NIL || local.p == NULL) continue
+		if (!isalive local.p) continue
+		if (local.p.dmteam != local.enemy_team) continue
+		local.count++
+		local.candidates[local.count] = local.p.origin
+	}
+
+	if (local.count > 0)
+		end local.candidates[randomint(local.count) + 1]
+
+	end ( 0 0 0 )
+end
+
+
+// -------------------------------------------------------
+// Radio destroyed callback (called by obj_dmsd bomb_explode)
+// -------------------------------------------------------
+
+radio_destroyed_callback local.origin local.planting_team:
+	level.radio_active = 0
+	level.radio_cooldown = 0
+	level.radio_bomb_planted = 0
+
+	if (level.radio_use_trigger != NIL && level.radio_use_trigger != NULL)
+		level.radio_use_trigger remove
+	if (level.radio_plant_trigger != NIL && level.radio_plant_trigger != NULL)
+		level.radio_plant_trigger remove
+	if (level.radio_entity != NIL && level.radio_entity != NULL)
+		level.radio_entity remove
+
+	println "[radio_mod]: Radio destroyed."
+
+	local.blast1 = spawn models/animate/fx_mortar_dirt.tik scale 1.5 origin local.origin
+	local.blast1 playsound arty_exp_sand
+	local.blast1 anim start
+	local.blast2 = spawn models/animate/fx_mortar_dirt.tik scale 1.2 origin (local.origin + ( 30 0 0 ))
+	local.blast2 anim start
+	local.blast3 = spawn models/animate/fx_mortar_dirt.tik scale 1.2 origin (local.origin + ( -20 25 0 ))
+	local.blast3 anim start
+	thread remove_after local.blast1 3
+	thread remove_after local.blast2 3
+	thread remove_after local.blast3 3
+
+	earthquake .35 2 0 0
+	earthquake .25 1 0 0
+
+	local.smoke = spawn models/emitters/linger_smoke.tik origin local.origin
+	local.smoke anim start
+	thread remove_after local.smoke 15
+end
+
+
+// -------------------------------------------------------
+// HUD — team-aware radio objective status (index base 230)
+// -------------------------------------------------------
+
+radio_hud_loop:
+	local.hud_base = 230
+	while (1)
+	{
+		for (local.i = 1; local.i <= $player.size; local.i++)
+		{
+			local.player = $player[local.i]
+			if (local.player == NIL || local.player == NULL || isBot local.player)
+				continue
+
+			local.team = local.player.dmteam
+			if (local.team != level.radio_team && local.team != level.radio_enemy_team)
+			{
+				waitthread clear_radio_hud local.player local.hud_base
+				continue
+			}
+
+			ihuddraw_font local.player local.hud_base "default"
+			ihuddraw_align local.player local.hud_base "left" "top"
+			ihuddraw_rect local.player local.hud_base 30 330 0 0
+			ihuddraw_alpha local.player local.hud_base 1.0
+
+			ihuddraw_font local.player (local.hud_base + 1) "default"
+			ihuddraw_align local.player (local.hud_base + 1) "left" "top"
+			ihuddraw_rect local.player (local.hud_base + 1) 30 348 0 0
+			ihuddraw_alpha local.player (local.hud_base + 1) 1.0
+
+			if (level.radio_active != 1)
+			{
+				ihuddraw_color local.player local.hud_base 0.65 0.65 0.65
+				ihuddraw_color local.player (local.hud_base + 1) 0.8 0.8 0.8
+				ihuddraw_string local.player local.hud_base "RADIO DESTROYED"
+				if (local.team == level.radio_team)
+					ihuddraw_string local.player (local.hud_base + 1) "Artillery offline"
+				else
+					ihuddraw_string local.player (local.hud_base + 1) "Objective complete"
+			}
+			else if (level.radio_bomb_planted == 1)
+			{
+				ihuddraw_color local.player local.hud_base 1.0 0.35 0.2
+				ihuddraw_color local.player (local.hud_base + 1) 1.0 0.85 0.2
+				if (local.team == level.radio_team)
+				{
+					ihuddraw_string local.player local.hud_base "RADIO: BOMB PLANTED"
+					ihuddraw_string local.player (local.hud_base + 1) "Defuse required"
+				}
+				else
+				{
+					ihuddraw_string local.player local.hud_base "BOMB: PLANTED"
+					ihuddraw_string local.player (local.hud_base + 1) "Protect the radio"
+				}
+			}
+			else if (local.team == level.radio_team)
+			{
+				if (level.radio_cooldown > 0)
+				{
+					ihuddraw_color local.player local.hud_base 1.0 0.75 0.25
+					ihuddraw_color local.player (local.hud_base + 1) 0.9 0.9 0.9
+					ihuddraw_string local.player local.hud_base "RADIO: COOLDOWN"
+					ihuddraw_string local.player (local.hud_base + 1) (level.radio_cooldown + "s remaining")
+				}
+				else
+				{
+					ihuddraw_color local.player local.hud_base 0.35 1.0 0.35
+					ihuddraw_color local.player (local.hud_base + 1) 0.9 0.9 0.9
+					ihuddraw_string local.player local.hud_base "RADIO: READY"
+					if (waitthread player_near_radio local.player 160)
+						ihuddraw_string local.player (local.hud_base + 1) "Hold USE to call artillery"
+					else
+						ihuddraw_string local.player (local.hud_base + 1) "Use radio to call artillery"
+				}
+			}
+			else
+			{
+				ihuddraw_color local.player local.hud_base 1.0 0.45 0.25
+				ihuddraw_color local.player (local.hud_base + 1) 0.9 0.9 0.9
+				if (local.player.has_the_bomb == 1)
+				{
+					if (waitthread player_near_radio local.player 160)
+					{
+						ihuddraw_string local.player local.hud_base "BOMB: AT RADIO"
+						ihuddraw_string local.player (local.hud_base + 1) "Hold USE to plant"
+					}
+					else
+					{
+						ihuddraw_string local.player local.hud_base "BOMB: CARRY TO RADIO"
+						ihuddraw_string local.player (local.hud_base + 1) "Plant explosives"
+					}
+				}
+				else
+				{
+					ihuddraw_string local.player local.hud_base "BOMB: FIND EXPLOSIVES"
+					ihuddraw_string local.player (local.hud_base + 1) "Destroy the radio"
+				}
+			}
+		}
+		wait 1
+	}
+end
+
+
+player_near_radio local.player local.distance:
+	if (local.player == NIL || local.player == NULL) end 0
+	if (level.radio_entity == NIL || level.radio_entity == NULL) end 0
+	if (vector_length (local.player.origin - level.radio_entity.origin) <= local.distance)
+		end 1
+	end 0
+end
+
+clear_radio_hud local.player local.hud_base:
+	if (local.player == NIL || local.player == NULL) end
+	ihuddraw_alpha local.player local.hud_base 0.0
+	ihuddraw_alpha local.player (local.hud_base + 1) 0.0
+end
+
+
+// -------------------------------------------------------
+// FFE artillery engine — copied verbatim from Fire-For-Effect v0.9.3
+// Original author: Rookie One
+// -------------------------------------------------------
+
+artillery_volley local.location local.caller:
+	for (local.i = 1; local.i <= level.ffe_settings["artillery_number"]; local.i++)
+		local.explosionorigins[local.i] = waitthread get_random_origin local.location level.ffe_settings["artillery_spread"]
+	for (local.i = 1; local.i <= level.ffe_settings["artillery_number"]; local.i++)
+	{
+		local.explosions[local.i] = spawn models/animate/fx_mortar_dirt.tik scale 1.0 origin local.explosionorigins[local.i]
+		local.explosions[local.i] thread go_boom local.caller
+		wait (level.ffe_settings["artillery_delayfixed"] + randomfloat(level.ffe_settings["artillery_delayrandom"]))
+	}
+end
+
+go_boom local.caller:
+	self playsound arty_leadinmp
+	wait 1
+	self stopsound
+	self anim start
+	waitthread scored_radiusdamage self.origin local.caller level.ffe_settings["artillery_damage"] level.ffe_settings["artillery_radius"]
+	if (level.ffe_settings["earthquakes"] == 1)
+		thread boom_earthquake
+	wait 1
+	self delete
+end
+
+scored_radiusdamage local.org local.attacker local.dmg local.radius:
+	if (local.attacker == NIL || local.attacker == NULL)
+		local.attacker = $world
+	local.ent = waitthread spawn_nobroadcast script_origin (local.org + ( 0 0 8 ))
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		if (isAlive($player[local.i]) && $player[local.i].dmteam != spectator)
+		{
+			if (vector_within local.ent.origin $player[local.i].origin (local.radius + 1))
+			{
+				if (local.ent cansee $player[local.i] 360 local.radius)
+				{
+					local.actualdamage = int(local.dmg - (float(local.dmg) / float(local.radius) * (vector_length ($player[local.i].origin - local.ent.origin))))
+					$player[local.i] damage local.attacker local.actualdamage local.attacker ( 0 0 0 ) ((angles_toforward(angles_pointat local.ent local.ent $player[local.i])) * -1) ( 0 0 0 ) (local.actualdamage * 1.5) 0 9 -1
+				}
+			}
+		}
+	}
+	local.ent delete
+end
+
+get_random_origin local.areacentre local.radius:
+	local.randomorigin = local.areacentre
+	local.x = local.areacentre[0]
+	local.y = local.areacentre[1]
+	local.x = local.x + (randomfloat(local.radius * 2) - local.radius)
+	local.y = local.y + (randomfloat(local.radius * 2) - local.radius)
+	local.temporigin = waitthread trace_surface ( local.x local.y local.areacentre[2] )
+	if (local.temporigin == NIL)
+	{
+		local.x = local.x + (randomfloat(local.radius * 2) - local.radius)
+		local.y = local.y + (randomfloat(local.radius * 2) - local.radius)
+		local.temporigin = waitthread trace_surface ( local.x local.y local.areacentre[2] )
+	}
+	if (local.temporigin == NIL)
+	{
+		local.temporigin = local.areacentre
+		local.x = local.areacentre[0]
+		local.y = local.areacentre[1]
+	}
+	local.z = local.temporigin[2]
+	local.randomorigin[0] = local.x
+	local.randomorigin[1] = local.y
+	local.randomorigin[2] = local.z
+end local.randomorigin
+
+trace_surface local.location:
+	switch (level.ffe_method)
+	{
+		case "skybox":
+			local.skybox = waitthread trace_skybox_height local.location
+			local.tracedorigin = trace ( local.location[0] local.location[1] (local.skybox - 1) ) ( local.location[0] local.location[1] -16384 )
+			end local.tracedorigin
+		case "zones":
+			for (local.i = 1; local.i <= level.ffe_zones.size; local.i++)
+			{
+				local.zone = level.ffe_zones[local.i]
+				local.inbound = waitthread in_bounds_of local.location local.zone
+				if (local.inbound == 1)
+					end NIL
+			}
+			local.skybox = waitthread trace_skybox_height local.location
+			local.tracedorigin = trace ( local.location[0] local.location[1] (local.skybox - 1) ) ( local.location[0] local.location[1] -16384 )
+			break
+		default:
+			local.tracedorigin = trace ( local.location[0] local.location[1] (local.location[2] + level.ffe_method) ) ( local.location[0] local.location[1] -16384 )
+	}
+end local.tracedorigin
+
+trace_skybox_height local.location:
+	local.newloc = trace ( local.location[0] local.location[1] 16384 ) ( local.location[0] local.location[1] -16384 )
+end local.newloc[2]
+
+boom_earthquake local.type:
+	if (local.type == 1)
+	{
+		earthquake .175 2 0 0
+		earthquake .115 1 0 0
+	}
+	else
+	{
+		earthquake .2 1 0 0
+		earthquake .16 .8 0 0
+	}
+end
+
+spawn_nobroadcast local.entityclassname local.origin:
+	local.ent = spawn local.entityclassname origin local.origin
+	local.ent svflags "-broadcast"
+end local.ent
+
+remove_after local.ent local.time:
+	wait local.time
+	if (local.ent != NIL && local.ent != NULL)
+		local.ent delete
+end
