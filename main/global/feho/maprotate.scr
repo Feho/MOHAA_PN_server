@@ -193,7 +193,7 @@ build_weight_table:
     waitthread add_weighted_map "obj/obj_team2" 3
 
     waitthread add_weighted_map "m3l2"          2
-    // waitthread add_weighted_map "m3l3"          2
+    waitthread add_weighted_map "m3l3"          2
     waitthread add_weighted_map "m4l3"          2
 
     waitthread add_weighted_map "dm/mohdm5"     1
