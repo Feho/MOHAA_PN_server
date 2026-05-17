@@ -67,6 +67,17 @@ main:
 	// $world farplane_color ( 0 0 0 )
 	// $world farplane 2000
 
+	event_subscribe "player_spawned" event_player_spawned
+
+end
+
+event_player_spawned:
+
+	if (!isBot self) end
+
+	if (randomint(4) == 1)
+		self bot_movenear ( -174.10 471.10 512.12 ) 64
+
 end
 
 //-----------------------------------------------------------------------------
