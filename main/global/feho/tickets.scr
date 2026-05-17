@@ -1,0 +1,411 @@
+/*
+Battlefield-style tickets for team respawn maps.
+
+Deaths drain the victim team's tickets. When a team reaches 0 tickets, that
+team can no longer respawn. The team loses once no live players remain.
+*/
+
+main:
+    if (level.tickets_initialized == 1)
+        end
+
+	setcvar "fraglimit" "1"
+	setcvar "timelimit" "1"
+    level.dmroundlimit = 15
+    level.tickets_initialized = 1
+    level.tickets_round_over = 0
+    level.tickets_allies_respawn_stopped = 0
+    level.tickets_axis_respawn_stopped = 0
+    level.tickets_blink_state = 0
+	level.dmrespawning = 1
+
+    wait 2
+    waitthread init_tickets
+
+    event_subscribe "player_killed" event_player_killed
+    event_subscribe "player_spawned" event_player_spawned
+    event_subscribe "player_disconnecting" event_player_disconnecting
+
+    thread tickets_hud_loop
+    thread tickets_win_monitor
+
+    println ("[Tickets] initialized start=" + level.tickets_start + " allies=" + level.tickets_allies + " axis=" + level.tickets_axis)
+end
+
+init_tickets:
+    local.active_players = waitthread count_active_players
+    local.start = local.active_players * 12
+
+    if (local.start < 40)
+        local.start = 40
+
+    level.tickets_start = local.start
+    level.tickets_allies = local.start
+    level.tickets_axis = local.start
+end
+
+count_active_players:
+    local.count = 0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (local.player != NIL && local.player != NULL && local.player.dmteam != "spectator")
+            local.count++
+    }
+
+end local.count
+
+event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+    if (level.tickets_round_over == 1)
+        end
+
+    local.victim = self
+    if (local.victim == NIL || local.victim == NULL)
+        end
+
+    local.team = local.victim.dmteam
+    if (local.team != "allies" && local.team != "axis")
+        end
+
+    waitthread remove_ticket local.team
+    waitthread update_all_ticket_huds
+    waitthread check_ticket_winner
+end
+
+event_player_spawned:
+    if (level.tickets_round_over == 1)
+        end
+
+    if (self == NIL || self == NULL)
+        end
+
+    if (isBot self)
+        end
+
+    waitthread update_ticket_hud self
+end
+
+event_player_disconnecting:
+    if (self == NIL || self == NULL)
+        end
+
+    waitthread check_ticket_winner
+end
+
+remove_ticket local.team:
+    if (local.team == "allies")
+    {
+        if (level.tickets_allies > 0)
+            level.tickets_allies--
+
+        if (level.tickets_allies <= 0)
+        {
+            level.tickets_allies = 0
+            if (level.tickets_allies_respawn_stopped != 1)
+            {
+                level.tickets_allies_respawn_stopped = 1
+                stopteamrespawn "american"
+                iprintlnbold "Allies have no respawns left!"
+                println "[Tickets] allied tickets depleted; stopped American respawns"
+                thread play_ticket_depleted_sound
+            }
+        }
+    }
+    else if (local.team == "axis")
+    {
+        if (level.tickets_axis > 0)
+            level.tickets_axis--
+
+        if (level.tickets_axis <= 0)
+        {
+            level.tickets_axis = 0
+            if (level.tickets_axis_respawn_stopped != 1)
+            {
+                level.tickets_axis_respawn_stopped = 1
+                stopteamrespawn "german"
+                iprintlnbold "Axis have no respawns left!"
+                println "[Tickets] axis tickets depleted; stopped German respawns"
+                thread play_ticket_depleted_sound
+            }
+        }
+    }
+end
+
+play_ticket_depleted_sound:
+    $player[0] loopsound bombtick
+    wait 1
+    $player[0] stoploopsound
+end
+
+tickets_win_monitor:
+    while (level.tickets_round_over != 1)
+    {
+        waitthread check_ticket_winner
+        waitthread check_time_winner
+        wait 0.5
+    }
+end
+
+check_ticket_winner:
+    if (level.tickets_round_over == 1)
+        end
+
+    local.allies_alive = waitthread count_alive_team "allies"
+    local.axis_alive = waitthread count_alive_team "axis"
+
+    if (level.tickets_allies <= 0 && local.allies_alive <= 0)
+        waitthread finish_round "axis"
+    else if (level.tickets_axis <= 0 && local.axis_alive <= 0)
+        waitthread finish_round "allies"
+end
+
+check_time_winner:
+    if (level.tickets_round_over == 1)
+        end
+
+    local.timelimit = level.dmroundlimit
+    if (local.timelimit == NIL || local.timelimit <= 0)
+        local.timelimit = int(getcvar "timelimit")
+
+    if (local.timelimit <= 0)
+        end
+
+    local.time_remaining = (local.timelimit * 60) - level.time
+    if (local.time_remaining > 1.0)
+        end
+
+    if (level.tickets_allies > level.tickets_axis)
+        waitthread finish_round "allies"
+    else if (level.tickets_axis > level.tickets_allies)
+        waitthread finish_round "axis"
+end
+
+finish_round local.winner:
+    if (level.tickets_round_over == 1)
+        end
+
+    level.tickets_round_over = 1
+    waitthread update_all_ticket_huds
+
+    if (local.winner == "allies")
+    {
+        println "[Tickets] allies win"
+        teamwin allies
+    }
+    else if (local.winner == "axis")
+    {
+        println "[Tickets] axis win"
+        teamwin axis
+    }
+end
+
+count_alive_team local.team:
+    local.count = 0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (local.player && local.player.dmteam == local.team && local.player.isAlive)
+            local.count++
+    }
+
+end local.count
+
+tickets_hud_loop:
+    while (level.tickets_round_over != 1)
+    {
+        local.has_critical = waitthread has_critical_tickets
+        if (local.has_critical == 1)
+        {
+            if (level.tickets_blink_state == 1)
+                level.tickets_blink_state = 0
+            else
+                level.tickets_blink_state = 1
+        }
+        else
+            level.tickets_blink_state = 0
+
+        waitthread update_all_ticket_huds
+
+        if (local.has_critical == 1)
+            wait 0.5
+        else
+            wait 1
+    }
+end
+
+update_all_ticket_huds:
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (local.player != NIL && local.player != NULL && !isBot local.player)
+            waitthread update_ticket_hud local.player
+    }
+end
+
+update_ticket_hud local.player:
+    if (local.player == NIL || local.player == NULL || isBot local.player)
+        end
+
+    local.base = 240
+    local.y = -78
+
+    local.allies_tickets = waitthread format_ticket_count level.tickets_allies
+    local.allies_bar = waitthread format_ticket_bar level.tickets_allies level.tickets_start 12 0
+    local.axis_bar = waitthread format_ticket_bar level.tickets_axis level.tickets_start 12 1
+    local.axis_tickets = level.tickets_axis
+    local.allies_critical = waitthread is_critical_tickets level.tickets_allies
+    local.axis_critical = waitthread is_critical_tickets level.tickets_axis
+
+    ihuddraw_alpha local.player local.base 0.0
+    ihuddraw_align local.player (local.base + 1) "center" "bottom"
+    ihuddraw_rect local.player (local.base + 1) -220 (local.y) 0 0
+    ihuddraw_font local.player (local.base + 1) "courier-20"
+    waitthread set_ticket_color local.player (local.base + 1) "allies" local.allies_critical
+    ihuddraw_string local.player (local.base + 1) local.allies_tickets
+    ihuddraw_alpha local.player (local.base + 1) 1.0
+
+    ihuddraw_align local.player (local.base + 2) "center" "bottom"
+    ihuddraw_rect local.player (local.base + 2) -180 (local.y) 0 0
+    ihuddraw_font local.player (local.base + 2) "courier-20"
+    waitthread set_ticket_color local.player (local.base + 2) "allies" local.allies_critical
+    ihuddraw_string local.player (local.base + 2) local.allies_bar
+    ihuddraw_alpha local.player (local.base + 2) 1.0
+
+    ihuddraw_align local.player (local.base + 3) "center" "bottom"
+    ihuddraw_rect local.player (local.base + 3) -30 (local.y) 0 0
+    ihuddraw_font local.player (local.base + 3) "courier-20"
+    ihuddraw_color local.player (local.base + 3) 0.95 0.95 0.80
+    ihuddraw_string local.player (local.base + 3) "TICKETS"
+    ihuddraw_alpha local.player (local.base + 3) 1.0
+
+    ihuddraw_align local.player (local.base + 6) "center" "bottom"
+    ihuddraw_rect local.player (local.base + 6) 51 (local.y) 0 0
+    ihuddraw_font local.player (local.base + 6) "courier-20"
+    waitthread set_ticket_color local.player (local.base + 6) "axis" local.axis_critical
+    ihuddraw_string local.player (local.base + 6) local.axis_bar
+    ihuddraw_alpha local.player (local.base + 6) 1.0
+
+    ihuddraw_align local.player (local.base + 4) "center" "bottom"
+
+    ihuddraw_rect local.player (local.base + 4) 201 (local.y) 0 0
+    ihuddraw_font local.player (local.base + 4) "courier-20"
+    waitthread set_ticket_color local.player (local.base + 4) "axis" local.axis_critical
+    ihuddraw_string local.player (local.base + 4) local.axis_tickets
+    ihuddraw_alpha local.player (local.base + 4) 1.0
+
+    waitthread update_last_stand_hud local.player local.base local.y
+end
+
+format_ticket_count local.tickets:
+    if (local.tickets < 0)
+        local.tickets = 0
+
+    if (local.tickets == 0)
+        end ("0")
+
+    if (local.tickets < 10)
+        end ("  " + local.tickets)
+    else if (local.tickets < 100)
+        end (" " + local.tickets)
+
+end ("" + local.tickets)
+
+format_ticket_bar local.tickets local.start local.segments local.reverse:
+    if (local.tickets <= 0)
+        end ("[ NO RESPAWN ]")
+
+    local.bar = waitthread build_bar local.tickets local.start local.segments local.reverse
+end local.bar
+
+is_critical_tickets local.tickets:
+    if (local.tickets > 0 && local.tickets < 10)
+        end 1
+
+end 0
+
+has_critical_tickets:
+    if (level.tickets_allies > 0 && level.tickets_allies < 10)
+        end 1
+    if (level.tickets_axis > 0 && level.tickets_axis < 10)
+        end 1
+
+end 0
+
+set_ticket_color local.player local.hud_id local.team local.is_critical:
+    if (local.is_critical == 1 && level.tickets_blink_state == 1)
+        ihuddraw_color local.player local.hud_id 1.00 0.85 0.15
+    else if (local.team == "allies")
+        ihuddraw_color local.player local.hud_id 0.45 0.70 1.00
+    else
+        ihuddraw_color local.player local.hud_id 1.00 0.38 0.28
+end
+
+update_last_stand_hud local.player local.base local.y:
+    local.message = NIL
+
+    if (level.tickets_allies <= 0 && level.tickets_axis <= 0)
+    {
+        local.allies_alive = waitthread count_alive_team "allies"
+        local.axis_alive = waitthread count_alive_team "axis"
+        local.message = ("LAST STAND: ALLIES " + local.allies_alive + " | AXIS " + local.axis_alive)
+    }
+    else if (level.tickets_allies <= 0)
+    {
+        local.allies_alive = waitthread count_alive_team "allies"
+        local.message = ("ALLIES LAST STAND: " + local.allies_alive + " ALIVE")
+    }
+    else if (level.tickets_axis <= 0)
+    {
+        local.axis_alive = waitthread count_alive_team "axis"
+        local.message = ("AXIS LAST STAND: " + local.axis_alive + " ALIVE")
+    }
+
+    if (local.message == NIL)
+    {
+        ihuddraw_alpha local.player (local.base + 5) 0.0
+        end
+    }
+
+    ihuddraw_align local.player (local.base + 5) "center" "bottom"
+    ihuddraw_rect local.player (local.base + 5) -120 (local.y - 20) 0 0
+    ihuddraw_font local.player (local.base + 5) "courier-20"
+    ihuddraw_color local.player (local.base + 5) 0.95 0.95 0.80
+    ihuddraw_string local.player (local.base + 5) local.message
+    ihuddraw_alpha local.player (local.base + 5) 1.0
+end
+
+build_bar local.tickets local.start local.segments local.reverse:
+    if (local.start <= 0)
+        local.start = 1
+
+    local.numerator = (local.tickets * local.segments) + local.start - 1
+    local.filled = int(local.numerator / local.start)
+
+    if (local.filled < 0)
+        local.filled = 0
+    if (local.filled > local.segments)
+        local.filled = local.segments
+
+    local.bar = "["
+    for (local.i = 1; local.i <= local.segments; local.i++)
+    {
+        if (local.reverse == 1)
+        {
+            if (local.i <= (local.segments - local.filled))
+                local.bar += "."
+            else
+                local.bar += "#"
+        }
+        else
+        {
+            if (local.i <= local.filled)
+                local.bar += "#"
+            else
+                local.bar += "."
+        }
+    }
+    local.bar += "]"
+
+end local.bar
