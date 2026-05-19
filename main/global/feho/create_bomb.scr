@@ -20,7 +20,28 @@ end
 setup_led:
 
 	self light 1 0 0 65
+	self thread setup_icon
 	self thread flash_led
+
+end
+
+setup_icon:
+
+	local.icon = spawn func_beam
+	local.icon shader "textures/hud/explosives.tga"
+	local.icon.origin = self.origin + ( 0 0 30 )
+	local.icon endpoint ( self.origin + ( 0 0 43 ) )
+	local.icon color ( 1.0 1.0 1.0 )
+	local.icon scale 6
+	local.icon numsegments 1
+	local.icon life 0
+	local.icon activate
+	self.icon = local.icon
+
+	while (self)
+		wait 0.5
+
+	local.icon remove
 
 end
 
