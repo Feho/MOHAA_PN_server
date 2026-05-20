@@ -519,6 +519,8 @@ Write exactly 2 short funny observations about specific players. Rules:
 - Be playful, not mean; joke about events, weapons, timing, or bad luck
 - Do not mock skill, nationality, language, or real-world identity
 - Focus on real humans first, but mention bots when they are part of the joke
+- Prefer simple sentences that even non-native English speakers can understand
+- Avoid em dashes
 
 Map context:
 $context"
