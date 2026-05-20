@@ -38,12 +38,49 @@ setup_icon:
 	local.icon activate
 	self.icon = local.icon
 
-	while (self)
-		wait 0.5
+	local.low_offset = 40
+	local.high_offset = 72
+	local.icon_height = 13
+	local.wait = 0.04
 
-	local.icon remove
+	while (self && local.icon)
+	{
+		local.z = local.low_offset
+		while (local.z <= local.high_offset && self && local.icon)
+		{
+			local.endpoint_z = local.z + local.icon_height
+			local.icon.origin = self.origin + ( 0 0 local.z )
+			local.icon endpoint ( self.origin + ( 0 0 local.endpoint_z ) )
+			local.step = waitthread get_icon_bob_step local.z local.low_offset local.high_offset
+			local.z += local.step
+			wait local.wait
+		}
+
+		local.z = local.high_offset
+		while (local.z >= local.low_offset && self && local.icon)
+		{
+			local.endpoint_z = local.z + local.icon_height
+			local.icon.origin = self.origin + ( 0 0 local.z )
+			local.icon endpoint ( self.origin + ( 0 0 local.endpoint_z ) )
+			local.step = waitthread get_icon_bob_step local.z local.low_offset local.high_offset
+			local.z -= local.step
+			wait local.wait
+		}
+	}
+
+	if (local.icon)
+		local.icon remove
 
 end
+
+get_icon_bob_step local.z local.low_offset local.high_offset:
+
+	if (local.z <= local.low_offset + 2) end 1
+	if (local.z >= local.high_offset - 2) end 1
+	if (local.z <= local.low_offset + 8) end 2
+	if (local.z >= local.high_offset - 8) end 2
+
+end 2
 
 flash_led:
 
