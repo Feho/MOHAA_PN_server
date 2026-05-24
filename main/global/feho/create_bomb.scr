@@ -38,8 +38,8 @@ setup_icon:
 	local.icon activate
 	self.icon = local.icon
 
-	local.low_offset = 40
-	local.high_offset = 72
+	local.low_offset = 20
+	local.high_offset = 42
 	local.icon_height = 13
 	local.wait = 0.04
 
