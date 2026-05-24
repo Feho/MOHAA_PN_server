@@ -87,6 +87,29 @@ setcvar "g_gametypestring" "Team-Match"
 		( 1039 -405 520 ) ( 1096.906 -3103.516 323.670 )
 	endarray
 
+	wait 2
+
+	local.x = 1
+
+	for (local.i = 1; local.i <= $player.size; local.i++)
+	{
+		local.p = $player[local.i]
+
+		if (!isBot local.p || local.p.dmteam != "axis")
+			continue
+
+		local.spawn_point = level.bot_spawn_points["axis"][local.x]
+		local.p tele local.spawn_point[1]
+		local.p bot_holdposition 1
+		local.p bot_stand 1
+		local.p bot_watchat local.spawn_point[2]
+		thread relocate_bot local.p local.spawn_point[1]
+		local.x++
+
+		if (local.x > level.bot_spawn_points["axis"].size)
+			break
+	}
+
 	event_subscribe "player_spawned" event_player_spawned
 
 end
@@ -112,6 +135,14 @@ event_player_spawned:
 	self bot_holdposition 1
 	self bot_stand 1
 	self bot_watchat local.spawn_point[2]
+	thread relocate_bot self local.spawn_point[1]
+
+end
+
+relocate_bot local.bot local.location:
+
+	wait 5
+	local.bot tele local.location
 
 end
 
