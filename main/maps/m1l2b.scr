@@ -76,7 +76,6 @@ tdmtype:
 
 	thread setup
 	thread timer
-	thread messages
 	thread eventeams
 	thread spawnswitch
 
@@ -1096,24 +1095,6 @@ for (local.i = 1; local.i <= $player.size; local.i++)
 }
 
 end
-
-//-----------------------------------------------------------------------------
-
-messages:
-
-while(1)
-{
-wait 90
-	iprintlnbold "Spawns advance automatically - the front line is moving !"
-wait 120
-	iprintlnbold "Push forward - the battle line reaches the enemy base in 12 minutes !"
-wait 120
-	iprintlnbold "Hold your ground or push ahead - the spawn line never stops !"
-wait 120
-}
-end
-
-//-----------------------------------------------------------------------------
 
 eventeams:
 

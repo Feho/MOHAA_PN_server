@@ -8,6 +8,7 @@ main:
 removeclass actor
 
 setcvar "g_gametype" "2"
+setcvar "timelimit" "15"
 
 setcvar "g_obj_alliedtext1" "Diverting the Enemy"
 setcvar "g_obj_alliedtext2" " "
