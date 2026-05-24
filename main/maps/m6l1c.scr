@@ -37,7 +37,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing6a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "fraglimit" "0"
 	setcvar "timelimit" "19" 
 
@@ -65,6 +65,9 @@ tdmtype:
 	$world farplane 12000
 
 	//thread Map_Guard
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 
@@ -104,6 +107,9 @@ ffatype:
 
 	
 	//thread Map_Guard
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 

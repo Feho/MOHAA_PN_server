@@ -47,7 +47,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing4a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "g_gametypestring" "Team-Match"
 	// load support gun sounds
 	waitthread global/support/support.scr::soundcache
@@ -252,6 +252,9 @@ tdmtype:
 	
 	waitthread furniture
 
+	// start tickets mode
+	exec global/feho/tickets.scr
+
 	level.clockside = kills
 
 end
@@ -306,6 +309,9 @@ ffatype:
 	thread Map_Guard
 
 	waitthread furniture
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 

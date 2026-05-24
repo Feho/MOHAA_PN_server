@@ -37,7 +37,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga"
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "g_gametypestring" "Team-Match"
 		// load support gun sounds
 	waitthread global/support/support.scr::soundcache
@@ -78,6 +78,9 @@ tdmtype:
 	thread timer
 	thread eventeams
 	thread spawnswitch
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 
@@ -134,6 +137,9 @@ ffatype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 

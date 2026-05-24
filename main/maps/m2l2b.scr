@@ -37,7 +37,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 		waitthread tdm_spawns
 	waitthread set_da_stuff_up
 
@@ -59,6 +59,9 @@ tdmtype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 
@@ -101,6 +104,9 @@ ffatype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 

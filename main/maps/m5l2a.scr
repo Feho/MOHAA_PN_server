@@ -38,7 +38,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 setcvar "g_gametypestring" "Team-Match"
 	setcvar "timelimit" "15" 
 	
@@ -80,6 +80,9 @@ setcvar "g_gametypestring" "Team-Match"
 	thread Map_Guard
 	
 
+	// start tickets mode
+	exec global/feho/tickets.scr
+
 	level.clockside = kills
 
 end
@@ -118,6 +121,9 @@ ffatype:
 
 	waitthread furniture
 	thread Map_Guard
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 

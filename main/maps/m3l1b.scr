@@ -46,7 +46,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing3a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	
 		// load support gun sounds
 	waitthread global/support/support.scr::soundcache
@@ -69,6 +69,9 @@ tdmtype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 
@@ -113,6 +116,9 @@ ffatype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 	

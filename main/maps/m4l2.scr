@@ -7,7 +7,7 @@ main:
 
 removeclass actor
 
-setcvar "g_gametype" "2"
+setcvar "g_gametype" "4"
 setcvar "timelimit" "15"
 
 setcvar "g_obj_alliedtext1" "Diverting the Enemy"
@@ -256,6 +256,9 @@ roundbasedthread:
 	level.dmrespawning = 0 // 1 or 0
 	level.dmroundlimit = 5 // round time limit in minutes
 	level.clockside = kills // set to axis, allies, kills, or draw
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level waittill roundstart
 

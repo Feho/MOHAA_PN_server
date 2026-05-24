@@ -44,7 +44,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "g_gametypestring" "Team-Match"
 	// load support gun sounds
 	waitthread global/support/support.scr::soundcache
@@ -71,6 +71,9 @@ tdmtype:
 	// unlock some doors with triggers
 	exec global/fake_door.scr ( -3919 -3570 -495 ) ( -3919 -3502 -511 ) NIL "metal"
 	exec global/fake_door.scr ( -3919 -3527 -495 ) ( -3919 -3595 -511 ) NIL "metal"
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 
@@ -115,6 +118,9 @@ ffatype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 

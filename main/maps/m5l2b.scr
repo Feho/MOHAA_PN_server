@@ -37,7 +37,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 
 	setcvar "timelimit" "17" // Make sure they get the time for all Stages
 
@@ -85,6 +85,9 @@ tdmtype:
 	thread Map_Guard
 	
 
+	// start tickets mode
+	exec global/feho/tickets.scr
+
 	level.clockside = kills
 
 end
@@ -123,6 +126,9 @@ ffatype:
 	$explodertrigger thread setuptype
 
 	thread Town_FX
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 

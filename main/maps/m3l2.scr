@@ -34,7 +34,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing3a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "g_gametypestring" "Team-Match"
 	setcvar "timelimit" "20" 
 	
@@ -203,6 +203,9 @@ tdmtype:
 
 	$exploder remove 
 	$exploderchunk remove 
+	// start tickets mode
+	exec global/feho/tickets.scr
+
 	level.clockside = kills
 
 	thread Map_Guard
@@ -246,6 +249,9 @@ ffatype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 	thread Map_Guard

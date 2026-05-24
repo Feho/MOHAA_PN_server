@@ -37,7 +37,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 setcvar "g_gametypestring" "Team-Match"
 	waitthread tdm_spawns
 
@@ -72,6 +72,9 @@ setcvar "g_gametypestring" "Team-Match"
 
 	thread furniture
 	thread Map_Guard
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 
@@ -194,6 +197,9 @@ ffatype:
 
 	thread furniture
 	thread Map_Guard
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 

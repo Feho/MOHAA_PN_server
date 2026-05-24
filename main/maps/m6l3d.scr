@@ -36,7 +36,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing6a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 
 	waitthread tdm_spawns
 
@@ -76,6 +76,9 @@ tdmtype:
 	exec global/squadmaker/squadmaker.scr
 
 	$elevatorclip solid
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 
@@ -136,6 +139,9 @@ ffatype:
 	$elevatorclip solid
 
 	
+	// start tickets mode
+	exec global/feho/tickets.scr
+
 	level.clockside = kills
 
 	thread pipeleak

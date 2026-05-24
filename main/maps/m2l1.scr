@@ -34,7 +34,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "g_gametypestring" "Team-Match"
 	setcvar "timelimit" "15"
 	// load support gun sounds
@@ -166,6 +166,9 @@ tdmtype:
 	
 	thread Stage_Timer
 	
+	// start tickets mode
+	exec global/feho/tickets.scr
+
 	level.clockside = kills
 
 	//The snow
@@ -211,6 +214,9 @@ ffatype:
 	exec global/DMprecache.scr
 	
 	level waittill spawn
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 
