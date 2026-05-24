@@ -68,7 +68,7 @@ end
 
 event_player_damaged local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
 
-    if (level.beta_enabled && local.attacker && local.attacker != self && !isBot local.attacker) {
+    if (local.attacker && local.attacker != self && !isBot local.attacker) {
         local.attacker.last_hit_time = level.time
     }
 
