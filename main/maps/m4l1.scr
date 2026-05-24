@@ -7,7 +7,6 @@
 
 main:
 
-    setcvar "g_gametype" "2"
     setcvar "timelimit" "15"
 
     if((getcvar("g_gametype") == "1"))
@@ -37,7 +36,7 @@ tdmtype:
     setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing4a.tga"
 
 
-    setcvar "g_gametype" "2"
+    setcvar "g_gametype" "4"
     setcvar "g_gametypestring" "Team-Match"
     waitthread tdm_spawns
 
@@ -78,13 +77,15 @@ tdmtype:
     // start squadmaker
     exec global/squadmaker/squadmaker.scr
 
+    // start tickets mode
+    exec global/feho/tickets.scr
+
     thread music
     thread music_end
     thread fadescreen // looks like Omaha start
 
     thread setup
     thread timer
-    thread messages
     thread eventeams
     thread spawnswitch
 
@@ -144,6 +145,9 @@ ffatype:
 
     // start squadmaker
     exec global/squadmaker/squadmaker.scr
+
+    // start tickets mode
+    exec global/feho/tickets.scr
 
     level.clockside = kills
 
@@ -875,24 +879,6 @@ for (local.i = 1; local.i <= $player.size; local.i++)
 }
 
 end
-
-//-----------------------------------------------------------------------------
-
-messages:
-
-while(1)
-{
-wait 90
-	iprintlnbold "Spawns advance automatically - the front line is moving !"
-wait 120
-	iprintlnbold "Push forward - the battle line reaches the enemy base in 12 minutes !"
-wait 120
-	iprintlnbold "Hold your ground or push ahead - the spawn line never stops !"
-wait 120
-}
-end
-
-//-----------------------------------------------------------------------------
 
 eventeams:
 

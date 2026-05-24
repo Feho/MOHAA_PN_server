@@ -10,6 +10,7 @@
 
 main: 
 
+	setcvar "timelimit" "15"
 	if((getcvar("g_gametype") == "1")) 
 	{
 	waitthread ffatype
@@ -36,7 +37,7 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing5a.tga" 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 
 	setcvar "timelimit" "14" 
 
@@ -65,6 +66,9 @@ tdmtype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	$tankclip.origin = ( -430.51 -56.42 381.42 )
 	$tankclip2 notsolid

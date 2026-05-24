@@ -4,8 +4,8 @@
 
 main:
 	
-	setcvar "g_gametype" "2"
-	setcvar "timelimit" "15"
+	setcvar "g_gametype" "4"
+	setcvar "timelimit" "1" // prevents round restart that can crash players
 	setcvar "fraglimit" "0"
 
 	// set scoreboard messages
@@ -63,6 +63,9 @@ main:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 	
 	// $world farplane_color ( 0 0 0 )
 	// $world farplane 2000
@@ -92,7 +95,7 @@ roundbasedthread:
 
 	// set the parameters for this round based match
 	level.dmrespawning = 1 // 1 or 0
-	level.dmroundlimit = 6 // round time limit in minutes
+	level.dmroundlimit = 15 // round time limit in minutes
 	level.clockside = kills // set to axis, allies, kills, or draw
 //----------------------------------------------
 

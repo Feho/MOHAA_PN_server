@@ -4,7 +4,7 @@
 
 main:
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "timelimit" "15"
 	setcvar "fraglimit" "0"
 
@@ -60,7 +60,10 @@ main:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
-	
+
+	// start tickets mode
+	exec global/feho/tickets.scr
+
 	// exec global/flakfire.scr ( -480.99 -3030.77 -61.88 ) ( 0.000 134.13 0.000 ) 5 1 50
 	// thread global/AA/vezetheto_tankok.scr::spawn_tank ( -1429.00 -465.00 -22.79 ) ( 0 110 0 ) "panzer_brown" "axis"
 	// thread global/AA/vezetheto_tankok.scr::spawn_tank ( -3158.00 -1803.00 -64.54 ) ( 0 110 0 ) "panzer_brown" "allies"

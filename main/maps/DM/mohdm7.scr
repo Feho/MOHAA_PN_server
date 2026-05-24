@@ -4,7 +4,7 @@
 
 main:
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "timelimit" "15"
 	setcvar "fraglimit" "0"
 
@@ -41,7 +41,7 @@ main:
 	thread global/AIR_gold.scr::treasure_spawn local.info
 	
 	// start random fog
-	exec global/random_fog.scr
+	// exec global/random_fog.scr
 
 	level waittill spawn
 
@@ -53,6 +53,17 @@ main:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
+
+	wait 10
+
+	while (1)
+	{
+		$player bot_movenear ( -1126.66 902.22 -103.88 ) 64
+		wait 90
+	}
 
 end
 

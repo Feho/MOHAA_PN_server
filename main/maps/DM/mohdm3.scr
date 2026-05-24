@@ -7,7 +7,7 @@
 
 main:
 	
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "fraglimit" "0"
 	setcvar "timelimit" "15"
 
@@ -66,6 +66,9 @@ main:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	// Tanks & Jeeps Base Assault
 	// if (level.already_started != 1)

@@ -5,7 +5,7 @@
 
 main: 
 
-	// setcvar "g_gametype" "1"
+	setcvar "timelimit" "15"
 
 	if((getcvar("g_gametype") == "1")) 
 	{
@@ -35,7 +35,7 @@ tdmtype:
 	// load support gun sounds
 	waitthread global/support/support.scr::soundcache
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "g_gametypestring" "Team-match"
 	
 	waitthread tdm_spawns
@@ -58,6 +58,9 @@ tdmtype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 
@@ -101,6 +104,9 @@ ffatype:
 
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
 
 	level.clockside = kills
 

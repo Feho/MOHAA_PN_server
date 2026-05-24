@@ -38,6 +38,8 @@ setcvar "timelimit" "14"
 
 	level waittill spawn
 
+	exec global/feho/tickets.scr
+
 	level.squadmaker_areaname = "on the V2 factory"
 
 	// start support gunner scripts
@@ -72,12 +74,16 @@ end
 
 
 allies_win_bomb:
+	thread allies_win_bomb_watch $v2_explode "V2 rocket destroyed!"
+	thread allies_win_bomb_watch $ctrlroom_explode "Control room destroyed!"
+end
 
-	while(level.targets_destroyed < level.targets_to_destroy)
-		waitframe
+allies_win_bomb_watch local.bomb local.message:
+	while (local.bomb.exploded != 1)
+		wait 0.1
 
-	// teamwin allies
 	level.clockside = allies
+	waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" 30 "objective_destroyed" local.message
 end
 
 //*** --------------------------------------------

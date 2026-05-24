@@ -21,7 +21,7 @@ main:
 	setcvar "timelimit" "14"
 	setcvar "fraglimit" "1"
 	
-	setcvar "g_gametypestring" "Search & Destroy"
+	// setcvar "g_gametypestring" "Search & Destroy" // overridden by Ticket Match mod
 	
 		// load support gun sounds
 	waitthread global/support/support.scr::soundcache
@@ -146,6 +146,8 @@ local.axis2.angle = 10
 	level waittill spawn
 	//////////////////////////
 
+	exec global/feho/tickets.scr
+
 	level.squadmaker_areaname = "on the hunt"
 
 	// start support gunner scripts
@@ -238,9 +240,10 @@ end
 allies_win_thread local.bomb1:
 	while (local.bomb1.exploded != 1)
 		wait .1
-	
+
 	//teamwin allies
 	level.clockside = allies
+	waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" 30 "objective_destroyed" "Flak 88 destroyed!"
 end
 
 //*** --------------------------------------------
@@ -416,8 +419,6 @@ thread jitter_large 0
  //origin   damage   radius    constant damage or not
  radiusdamage local.bomb.origin  level.bomb_damage level.bomb_explosion_radius
     local.bomb hide
-
-	teamwin allies
 end
 
 

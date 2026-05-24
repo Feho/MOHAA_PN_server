@@ -43,6 +43,8 @@ setcvar "timelimit" "14"
 
 	level waittill spawn
 
+	exec global/feho/tickets.scr
+
 	level.squadmaker_areaname = "at the crossroads"
 	
 	// start support gunner scripts
@@ -53,7 +55,6 @@ setcvar "timelimit" "14"
 
 	local.bombPositions = makeArray
 		( -999 3205 184 )
-		( 785 4455 240 )
 		( 1526 2667 240 )
 	endArray
 
@@ -94,12 +95,16 @@ bomb_planted local.origin local.planting_team:
 end
 
 axis_win_bomb:
+	thread axis_win_bomb_watch $bridge_bomb
+	thread axis_win_bomb_watch $bridge_bomb2
+end
 
-	while(level.targets_destroyed < level.targets_to_destroy)
-		waitframe
-		
-	//teamwin axis
+axis_win_bomb_watch local.bomb:
+	while (local.bomb.exploded != 1)
+		wait 0.1
+
 	level.clockside = axis
+	waitthread global/feho/tickets.scr::remove_team_tickets_percent "allies" 30 "objective_destroyed" "Bridge destroyed!"
 end
 
 //*** --------------------------------------------

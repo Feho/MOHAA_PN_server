@@ -7,7 +7,7 @@ main:
 	// Random client crash fix
 	removeclass PlayerIntermission
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	setcvar "timelimit" "15"
 	setcvar "fraglimit" "0"
 
@@ -57,6 +57,9 @@ main:
 	// start squadmaker
 	exec global/squadmaker/squadmaker.scr
 
+	// start tickets mode
+	exec global/feho/tickets.scr
+	
 end
 
 //-----------------------------------------------------------------------------

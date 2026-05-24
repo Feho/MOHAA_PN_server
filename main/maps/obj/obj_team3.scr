@@ -47,6 +47,8 @@ main:
 
 	level waittill spawn
 
+	exec global/feho/tickets.scr
+
 	level.squadmaker_areaname = "on Omaha Beach"
 
 	// start support gunner scripts
@@ -100,8 +102,8 @@ allies_win_bomb:
 
 	while(level.targets_destroyed < level.targets_to_destroy)
 		waitframe
-	
-	teamwin allies
+
+	level.clockside = allies
 end
 
 
@@ -120,6 +122,8 @@ bomb1_exploded local.bomb1:
 		$spawn_axis2 disablespawn
 		$spawn_axis3 enablespawn
 
+		waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" 30 "objective_destroyed" "Western Cannon destroyed!"
+
 end
 
 
@@ -131,12 +135,14 @@ bomb2_exploded local.bomb2:
 
 	while (local.bomb2.exploded != 1)
 
-		wait .1	
+		wait .1
 
 		iprintlnbold "Allies have destroyed the Eastern Cannon!"
 
 		$spawn_axis2 disablespawn
 		$spawn_axis4 enablespawn
+
+		waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" 30 "objective_destroyed" "Eastern Cannon destroyed!"
 
 end
 
