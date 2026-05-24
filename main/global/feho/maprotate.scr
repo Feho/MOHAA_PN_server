@@ -18,6 +18,9 @@ main:
 
     level.maprotate_initialized = 1
 
+    if ((getcvar "nextmap") != "")
+        end
+
     local.current = getcvar "mapname"
     if (local.current == NIL || local.current == "")
         end
@@ -192,12 +195,12 @@ build_weight_table:
     waitthread add_weighted_map "obj/obj_team1" 3
     waitthread add_weighted_map "obj/obj_team2" 3
 
-    waitthread add_weighted_map "m3l2"          2
     waitthread add_weighted_map "m3l3"          2
     waitthread add_weighted_map "m4l3"          2
 
-    waitthread add_weighted_map "dm/mohdm5"     1
+    // waitthread add_weighted_map "dm/mohdm5"     1
     waitthread add_weighted_map "m1l2a"         1
+    waitthread add_weighted_map "m3l2"          1
     waitthread add_weighted_map "m5l2a"         1
 end
 

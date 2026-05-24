@@ -57,7 +57,11 @@ monitor_round_timer:
     while (1)
     {
         // Check if we're in a timed game mode
-        local.timelimit = getcvar "timelimit"
+        if (level.roundbased)
+            local.timelimit = level.dmroundlimit
+        else
+            local.timelimit = int(getcvar "timelimit")
+
         if (local.timelimit == 0 || local.timelimit == "0")
         {
             // No time limit, skip voting
@@ -259,12 +263,16 @@ event_player_textMessage local.text local.is_team:
         local.player iprint (level.vote_option2_display + " (Type '2')")
         local.player iprint ("Current votes: " + level.vote_map1_tally + " vs " + level.vote_map2_tally)
     }
-    
+
 end
 
 end_vote_when_round_ends:
     // Wait for round to end, then tally and apply results
-    local.timelimit = getcvar "timelimit"
+    if (level.roundbased)
+        local.timelimit = level.dmroundlimit
+    else
+        local.timelimit = int(getcvar "timelimit")
+
     local.timelimit_seconds = int(local.timelimit) * 60
     
     // Wait until round actually ends (or close to ending)

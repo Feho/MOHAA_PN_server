@@ -34,15 +34,19 @@ end
 hvt_monitor_thread:
 
     // Get timelimit from cvar (in minutes)
-    local.timelimit_minutes = int(getcvar "timelimit")
-    if (local.timelimit_minutes == NIL || local.timelimit_minutes <= 0)
+    if (level.roundbased)
+        local.timelimit = level.dmroundlimit
+    else
+        local.timelimit = int(getcvar "timelimit")
+
+    if (local.timelimit == NIL || local.timelimit <= 0)
     {
         // Default to 15 minutes if not set
-        local.timelimit_minutes = 15
+        local.timelimit = 15
     }
 
     // Convert to seconds
-    local.timelimit_seconds = local.timelimit_minutes * 60
+    local.timelimit_seconds = local.timelimit * 60
 
     // Calculate trigger window (30% to 70% of match time)
     local.trigger_start = local.timelimit_seconds * 0.3
