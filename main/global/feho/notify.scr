@@ -1,0 +1,140 @@
+// Animated on-screen notification helper.
+//
+// Public entry point:
+//   waitthread global/feho/notify.scr::show "<text>" "<style>" <hold>
+// style ∈ "info" | "warning" | "success"  (default "info")
+// hold  = steady-state duration in seconds (default 2.5)
+//
+// Total on-screen time = 0.25s fade-in + hold + 0.25s fade-out.
+// Calls are FIFO-queued: a second call waits for the first to finish.
+
+show local.text local.style local.hold:
+    if (local.text == NIL) end
+    if (local.style == NIL) local.style = "info"
+    if (local.hold == NIL) local.hold = 2.5
+
+    // Initialise queue state once per map.
+    if (level.notify_initialized != 1)
+    {
+        level.notify_initialized = 1
+        level.notify_head = 1
+        level.notify_tail = 0
+        level.notify_pumping = 0
+        level.notify_active_count = 0
+    }
+
+    // Enqueue. Three parallel arrays — MOHAA's expression evaluator
+    // doesn't reliably support arrays-of-arrays as values.
+    level.notify_tail++
+    level.notify_q_text[level.notify_tail] = local.text
+    level.notify_q_style[level.notify_tail] = local.style
+    level.notify_q_hold[level.notify_tail] = local.hold
+
+    // Start the pump if it isn't already running.
+    if (level.notify_pumping != 1)
+        thread notify_pump
+end
+
+notify_pump:
+    if (level.notify_pumping == 1) end
+    level.notify_pumping = 1
+
+    while (level.notify_head <= level.notify_tail)
+    {
+        local.text = level.notify_q_text[level.notify_head]
+        local.style = level.notify_q_style[level.notify_head]
+        local.hold = level.notify_q_hold[level.notify_head]
+
+        level.notify_q_text[level.notify_head] = NIL
+        level.notify_q_style[level.notify_head] = NIL
+        level.notify_q_hold[level.notify_head] = NIL
+        level.notify_head++
+
+        if (local.text != NIL)
+            waitthread notify_play local.text local.style local.hold
+    }
+
+    // Queue drained — reset pointers so indices don't grow unbounded.
+    level.notify_head = 1
+    level.notify_tail = 0
+    level.notify_pumping = 0
+end
+
+notify_play local.text local.style local.hold:
+    local.rgb = waitthread notify_style_color local.style
+
+    level.notify_active_count = 0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (local.player == NIL || local.player == NULL) continue
+        if (isBot local.player) continue
+
+        level.notify_active_count++
+        thread notify_play_for_player local.player local.text local.rgb local.hold
+    }
+
+    // Barrier: wait for every per-player tween to finish.
+    while (level.notify_active_count > 0)
+        wait 0.05
+end
+
+notify_play_for_player local.player local.text local.rgb local.hold:
+    local.idx = 292
+
+    ihuddraw_font local.player local.idx "facfont-20"
+    ihuddraw_align local.player local.idx "center" "top"
+    ihuddraw_string local.player local.idx local.text
+    ihuddraw_color local.player local.idx local.rgb[0] local.rgb[1] local.rgb[2]
+
+    local.steps = 5.0
+    local.step_wait = 0.05
+    local.rect_x = 100
+    local.rect_w = 400
+    local.rect_h = 30
+    local.y_start = 200
+    local.y_end = 240
+
+    // Fade in + slide down.
+    for (local.s = 1; local.s <= local.steps; local.s++)
+    {
+        if (local.player == NIL || local.player == NULL) { level.notify_active_count--; end }
+
+        local.t = local.s / local.steps
+        local.alpha = local.t
+        local.y = local.y_start + ((local.y_end - local.y_start) * local.t)
+
+        ihuddraw_rect local.player local.idx local.rect_x local.y local.rect_w local.rect_h
+        ihuddraw_alpha local.player local.idx local.alpha
+        wait local.step_wait
+    }
+
+    // Hold.
+    ihuddraw_alpha local.player local.idx 1.0
+    wait local.hold
+
+    // Fade out (no slide back — snappier).
+    for (local.s = 1; local.s <= local.steps; local.s++)
+    {
+        if (local.player == NIL || local.player == NULL) { level.notify_active_count--; end }
+
+        local.t = local.s / local.steps
+        local.alpha = 1.0 - local.t
+
+        ihuddraw_alpha local.player local.idx local.alpha
+        wait local.step_wait
+    }
+
+    ihuddraw_alpha local.player local.idx 0.0
+    level.notify_active_count--
+end
+
+notify_style_color local.style:
+    if (local.style == "warning")
+        end ( 1.0 0.7 0.2 )
+    if (local.style == "success")
+        end ( 0.5 1.0 0.5 )
+    // Default: info / off-white
+    end ( 0.95 0.93 0.85 )
+end

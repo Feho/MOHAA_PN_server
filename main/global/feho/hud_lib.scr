@@ -1,0 +1,66 @@
+// Shared HUD helpers for feho mods.
+// Builds modern panels and bars on top of ihuddraw_shader using the
+// 1x1 black shader tinted via ihuddraw_color.
+
+// Draw a filled rectangle at (x, y) with size (w, h) in player-relative coords.
+// rgb is a vector (r g b), each 0..1. alpha is 0..1.
+draw_rect local.player local.idx local.halign local.valign local.x local.y local.w local.h local.rgb local.alpha:
+	if (local.player == NIL || local.player == NULL) end
+
+	ihuddraw_shader local.player local.idx "textures/mohmenu/black.tga"
+	ihuddraw_align local.player local.idx local.halign local.valign
+	ihuddraw_rect local.player local.idx local.x local.y local.w local.h
+	ihuddraw_color local.player local.idx local.rgb[0] local.rgb[1] local.rgb[2]
+	ihuddraw_alpha local.player local.idx local.alpha
+end
+
+// Hide a previously drawn HUD element.
+hide local.player local.idx:
+	if (local.player == NIL || local.player == NULL) end
+	ihuddraw_alpha local.player local.idx 0.0
+end
+
+// Draw a horizontal bar with a translucent backdrop and a colored fill.
+// (x, y) is interpreted in the alignment space passed by the caller, matching
+// the convention used by surrounding HUD elements so the bar composes with them.
+// fill_pct is 0..1. reverse=1 makes the bar drain from right to left.
+// Uses two HUD indices: idx (backdrop) and idx+1 (fill).
+draw_bar local.player local.idx local.halign local.valign local.x local.y local.w local.h local.fill_pct local.fill_rgb local.reverse:
+	if (local.player == NIL || local.player == NULL) end
+
+	if (local.fill_pct < 0) local.fill_pct = 0
+	if (local.fill_pct > 1) local.fill_pct = 1
+
+	local.fill_w = int(local.w * local.fill_pct)
+	if (local.fill_w < 0) local.fill_w = 0
+	if (local.fill_w > local.w) local.fill_w = local.w
+
+	local.bg_rgb = ( 0.08 0.08 0.08 )
+	waitthread draw_rect local.player local.idx local.halign local.valign local.x local.y local.w local.h local.bg_rgb 0.55
+
+	if (local.fill_w <= 0)
+	{
+		ihuddraw_alpha local.player (local.idx + 1) 0.0
+		end
+	}
+
+	if (local.reverse == 1)
+		local.fill_x = local.x + (local.w - local.fill_w)
+	else
+		local.fill_x = local.x
+
+	waitthread draw_rect local.player (local.idx + 1) local.halign local.valign local.fill_x local.y local.fill_w local.h local.fill_rgb 0.95
+end
+
+// Draw a panel (dark backdrop with a colored left-edge accent strip).
+// Uses two HUD indices: idx (backdrop) and idx+1 (accent).
+draw_panel local.player local.idx local.halign local.valign local.x local.y local.w local.h local.accent_rgb local.alpha:
+	if (local.player == NIL || local.player == NULL) end
+
+	local.accent_alpha = local.alpha + 0.3
+	if (local.accent_alpha > 1.0) local.accent_alpha = 1.0
+
+	local.bg_rgb = ( 0.05 0.05 0.05 )
+	waitthread draw_rect local.player local.idx local.halign local.valign local.x local.y local.w local.h local.bg_rgb local.alpha
+	waitthread draw_rect local.player (local.idx + 1) local.halign local.valign local.x local.y 3 local.h local.accent_rgb local.accent_alpha
+end

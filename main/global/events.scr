@@ -8,6 +8,12 @@ end
 
 event_player_spawned:
 
+    if (!isBot self && !self.hitmarker_started)
+    {
+        self.hitmarker_started = 1
+        thread hitmarker_thread self
+    }
+
     wait 0.301
     local.wpn = waitthread global/feho/utils.scr::get_weapon self
     local.wpnclass = waitthread global/feho/utils.scr::get_wpnclass local.wpn
@@ -61,6 +67,10 @@ event_player_killed:
 end
 
 event_player_damaged local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+
+    if (level.beta_enabled && local.attacker && local.attacker != self && !isBot local.attacker) {
+        local.attacker.last_hit_time = level.time
+    }
 
     if (randomint(12) != 1 || !isAlive self || self.has_grenade || !isBot self) end
 
@@ -137,6 +147,46 @@ event_player_damaged local.attacker local.damage local.inflictor local.position 
             if (!self || !isAlive self) end
 
             self weaponcommand dual dmmovementspeed local.current_speed
+        }
+    }
+
+end
+
+hitmarker_thread local.player:
+
+    local.idx = 291
+    local.visible_for = 0.2
+
+    ihuddraw_font local.player local.idx "default"
+    ihuddraw_align local.player local.idx "center" "center"
+    ihuddraw_rect local.player local.idx -5 -8 0 0
+    ihuddraw_string local.player local.idx "X"
+    ihuddraw_color local.player local.idx 0.95 0.93 0.85
+    ihuddraw_alpha local.player local.idx 0.0
+
+    local.player.last_hit_time = 0
+    local.shown = 0
+
+    while (local.player)
+    {
+        if (local.player.last_hit_time > 0 &&
+            (level.time - local.player.last_hit_time) < local.visible_for)
+        {
+            if (!local.shown)
+            {
+                ihuddraw_alpha local.player local.idx 0.6
+                local.shown = 1
+            }
+            wait 0.05
+        }
+        else
+        {
+            if (local.shown)
+            {
+                ihuddraw_alpha local.player local.idx 0.0
+                local.shown = 0
+            }
+            wait 0.1
         }
     }
 
