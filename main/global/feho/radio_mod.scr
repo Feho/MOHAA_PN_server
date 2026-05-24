@@ -19,7 +19,7 @@ main:
 	if (level.radio_angles == NIL)
 		level.radio_angles = 0
 
-	level.ffe_settings["artillery_number"] = 4
+	level.ffe_settings["artillery_number"] = 3
 	level.ffe_settings["artillery_radius"] = 400
 	level.ffe_settings["artillery_damage"] = 400
 	level.ffe_settings["artillery_spread"] = 250
@@ -272,16 +272,19 @@ call_artillery local.caller:
 	thread cooldown_tick
 
 	local.caller playsound radio_valid_target1
-	iprintlnbold "Artillery support called!"
+	thread global/feho/notify.scr::show "Artillery support called!" "warning" 2.5
 
 	wait 8
 
-	// Find a target: prefer a living human enemy, fall back to a bot
-	local.target_origin = waitthread get_enemy_target_origin
-	//println ("[radio_mod]: Artillery called by " + netname local.caller + " targeting " + local.target_origin)
-	wait 2
+	for (local.i = 1; local.i <= 2; local.i++)
+	{
+		// Find a target: prefer a living human enemy, fall back to a bot
+		local.target_origin = waitthread get_enemy_target_origin
+		//println ("[radio_mod]: Artillery called by " + netname local.caller + " targeting " + local.target_origin)
+		wait 2
 
-	waitthread artillery_volley local.target_origin local.caller
+		waitthread artillery_volley local.target_origin local.caller
+	}
 end
 
 cooldown_tick:
@@ -349,6 +352,7 @@ radio_destroyed_callback local.origin local.planting_team:
 		level.radio_entity remove
 
 	println "[radio_mod]: Radio destroyed."
+	waitthread global/feho/tickets.scr::remove_team_tickets level.radio_team 15 "radio destroyed" "Radio destroyed!"
 
 	local.blast1 = spawn models/animate/fx_mortar_dirt.tik scale 1.5 origin local.origin
 	local.blast1 playsound arty_exp_sand

@@ -2,8 +2,8 @@
 
 level.radio_team = "allies"
 level.radio_enemy_team = "axis"
-level.radio_origin = ( -5616.38 -2345.47 68.12 )
-level.radio_bomb_origin = ( -433.72 -2899.65 479.77 )
+level.radio_origin = ( -5321.13 -1763.11 68.12 )
+level.radio_bomb_origin = ( -3293.57 -1784.35 184.54 )
 level.radio_angles = 0
 level.ffe_method = "skybox"
 
