@@ -11,7 +11,14 @@ event_player_spawned:
     if (!isBot self && !self.hitmarker_started)
     {
         self.hitmarker_started = 1
-        thread hitmarker_thread self
+        local.idx = 300
+
+        ihuddraw_font self local.idx "default"
+        ihuddraw_align self local.idx "center" "center"
+        ihuddraw_rect self local.idx -10 -23 0 0
+        ihuddraw_string self local.idx "\\  /\n\n/  \\"
+        ihuddraw_color self local.idx 0.95 0.93 0.85
+        ihuddraw_alpha self local.idx 0.0
     }
 
     wait 0.301
@@ -50,7 +57,7 @@ event_player_spawned:
 
 end
 
-event_player_killed:
+event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
 
     // Spawn a treasure with a 5% probability
     local.origin = self.origin
@@ -64,12 +71,143 @@ event_player_killed:
         thread global/AIR_gold.scr::treasure_spawn local.info
     }
 
+    // Center-screen "ENEMY KILLED — <name>" banner shown to the killer.
+    //if (int(getcvar "kill_banner") != 1) end
+
+    local.victim = self
+    if (!local.attacker) end
+    if (local.attacker == local.victim) end                       // suicide
+    if (local.attacker.dmteam == local.victim.dmteam) end          // teamkill
+    if (isBot local.attacker) end                                  // bots have no HUD
+
+    local.attacker thread show_kill_banner (netname local.victim)
+
+end
+
+// One-time static HUD setup for a player's kill banner. Issues the properties
+// that never change between kills — font, alignment, rect, backdrop, and both
+// colors — so the per-kill hot path only touches the strings and the alphas.
+// Drawn hidden (alpha 0). The top-line string (294) is written per-kill because
+// it carries the multi-kill suffix ("ENEMY KILLED  x2").
+//   293 : dark backdrop panel
+//   294 : "ENEMY KILLED [ xN ]" (dimmed white, string set per-kill)
+//   295 : victim name (red)
+kb_setup:
+    // Position constants — tweak to taste. With "center"/"top" alignment, y is
+    // measured from the top of the ~480px virtual screen, so ~260 sits just
+    // below the crosshair. Nudge y_top/y_bot live to taste.
+    local.x       = -55
+    local.y_top   = 160
+    local.y_bot   = 178
+
+    // Line 1: ENEMY KILLED (dimmed white) — color/font/rect never vary; the
+    // string is set per-kill in the hot path (it carries the xN suffix).
+    ihuddraw_font self 294 "facfont-20"
+    ihuddraw_align self 294 "center" "center"
+    ihuddraw_rect self 294 local.x local.y_top 0 0
+    ihuddraw_color self 294 0.85 0.85 0.85
+    ihuddraw_alpha self 294 0.0
+
+    // Line 2: victim name (red — matches the ticket-axis red). Color/font/rect
+    // are constant; only the string changes per kill.
+    ihuddraw_font self 295 "facfont-20"
+    ihuddraw_align self 295 "center" "center"
+    ihuddraw_rect self 295 local.x local.y_bot 0 0
+    ihuddraw_color self 295 1.0 0.30 0.25
+    ihuddraw_alpha self 295 0.0
+
+    self.kb_setup = 1
+end
+
+// Per-player center-screen kill confirmation. Drawn just below the crosshair.
+// Interrupt-on-retrigger: a fresh kill bumps self.kb_gen so any in-flight tween
+// for this player bails and the newest call owns the HUD indices.
+// Time-gated multi-kill: kills within kill_banner_window seconds of each other
+// chain, appending "  xN" to the top line. self.* clears between rounds, so a
+// new round naturally restarts the count via the NIL branch.
+show_kill_banner local.name:
+    if (!self) end
+
+    // Issue the static HUD properties once per player; later kills skip them.
+    if (self.kb_setup != 1)
+        waitthread kb_setup
+
+    if (!self) end
+
+    // Multi-kill counter: increment if within the rolling window, else reset to 1.
+    local.window = 3.0
+
+    if (self.kb_count == NIL)
+        local.count = 1
+    else
+    {
+        local.dt = level.time - self.kb_last_time
+        if (local.dt <= local.window)
+            local.count = self.kb_count + 1
+        else
+            local.count = 1
+    }
+    self.kb_count = local.count
+    self.kb_last_time = level.time
+
+    if (self.kb_gen == NIL)
+        self.kb_gen = 0
+    self.kb_gen++
+    local.gen = self.kb_gen
+
+    local.bg  = 293
+    local.top = 294
+    local.bot = 295
+
+    // Top line: bare "ENEMY KILLED", or with an "  xN" suffix for a multi-kill.
+    if (local.count >= 2)
+        local.topstr = "ENEMY KILLED  x" + local.count
+    else
+        local.topstr = "ENEMY KILLED"
+
+    // Hot path: the varying strings + alphas. Everything else was set in kb_setup.
+    ihuddraw_string self local.top local.topstr
+    ihuddraw_string self local.bot local.name
+    ihuddraw_alpha self local.bg 0.55
+    ihuddraw_alpha self local.top 1.0
+    ihuddraw_alpha self local.bot 1.0
+
+    // Hold, then fade out — bail immediately if a newer kill superseded us.
+    wait 2.4
+    if (!self || self.kb_gen != local.gen) end
+
+    for (local.s = 10; local.s >= 0; local.s--)
+    {
+        if (!self || self.kb_gen != local.gen) end
+        local.a = float(local.s) / 10
+        ihuddraw_alpha self local.bg (local.a * 0.55)   // backdrop holds at 0.55
+        ihuddraw_alpha self local.top local.a
+        ihuddraw_alpha self local.bot local.a
+        wait 0.04
+    }
+
+    if (!self || self.kb_gen != local.gen) end
+    ihuddraw_alpha self local.bg 0.0
+    ihuddraw_alpha self local.top 0.0
+    ihuddraw_alpha self local.bot 0.0
 end
 
 event_player_damaged local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
 
-    if (local.attacker && local.attacker != self && !isBot local.attacker) {
-        local.attacker.last_hit_time = level.time
+    if (local.attacker && local.attacker != self && !isBot local.attacker && !local.attacker.hitmarker)
+    {
+        local.idx = 300
+        local.attacker.hitmarker = 1
+
+        for (local.i = 5; local.i >= 0; local.i--)
+        {
+            local.x = float(local.i) / 10
+            ihuddraw_alpha local.attacker local.idx local.x
+            wait 0.04
+        }
+
+        wait 0.5
+        local.attacker.hitmarker = 0
     }
 
     if (randomint(12) != 1 || !isAlive self || self.has_grenade || !isBot self) end
@@ -147,46 +285,6 @@ event_player_damaged local.attacker local.damage local.inflictor local.position 
             if (!self || !isAlive self) end
 
             self weaponcommand dual dmmovementspeed local.current_speed
-        }
-    }
-
-end
-
-hitmarker_thread local.player:
-
-    local.idx = 291
-    local.visible_for = 0.2
-
-    ihuddraw_font local.player local.idx "default"
-    ihuddraw_align local.player local.idx "center" "center"
-    ihuddraw_rect local.player local.idx -5 -8 0 0
-    ihuddraw_string local.player local.idx "X"
-    ihuddraw_color local.player local.idx 0.95 0.93 0.85
-    ihuddraw_alpha local.player local.idx 0.0
-
-    local.player.last_hit_time = 0
-    local.shown = 0
-
-    while (local.player)
-    {
-        if (local.player.last_hit_time > 0 &&
-            (level.time - local.player.last_hit_time) < local.visible_for)
-        {
-            if (!local.shown)
-            {
-                ihuddraw_alpha local.player local.idx 0.6
-                local.shown = 1
-            }
-            wait 0.05
-        }
-        else
-        {
-            if (local.shown)
-            {
-                ihuddraw_alpha local.player local.idx 0.0
-                local.shown = 0
-            }
-            wait 0.1
         }
     }
 
