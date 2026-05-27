@@ -50,7 +50,20 @@ event_manager_monitor:
     // On ticket maps `timelimit` is set to 1 but `dmroundlimit` is 15 — reading the
     // wrong one collapses the window, so branch on level.roundbased like HVT does.
     if (level.roundbased)
+    {
+        // The map execs tickets.scr AFTER `level waittill spawn`, but DMprecache
+        // (which threads this monitor) runs at prespawn — so this thread starts
+        // BEFORE tickets sets level.dmroundlimit. Reading it too early gets NIL.
+        // Wait briefly for tickets to initialize. Bounded; the trigger window does
+        // not open until T*0.3 (>=270s), so this wait is invisible in practice.
+        local.waited = 0
+        while (level.tickets_initialized != 1 && local.waited < 10)
+        {
+            wait 1
+            local.waited++
+        }
         local.timelimit = level.dmroundlimit
+    }
     else
         local.timelimit = int(getcvar "timelimit")
 
