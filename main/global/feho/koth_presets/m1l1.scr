@@ -1,0 +1,13 @@
+// King of the Hill preset for m1l1.
+// Mirrors radio_presets/<mapname>.scr: set zone config, return 1 on success.
+//
+// PLACEMENT IS PROVISIONAL: this origin is borrowed from the m1l1 radio preset
+// (a known-valid in-world coordinate) as a starting reference. The plan defers
+// final zone placement to playtest — the zone should sit on the natural fight
+// path / map center, not necessarily here. Retune during the adoption playtest.
+
+level.koth_origin = ( -4648.00 1165.41 460.12 )
+level.koth_radius = 256
+level.koth_label  = "the Courtyard"
+
+end 1

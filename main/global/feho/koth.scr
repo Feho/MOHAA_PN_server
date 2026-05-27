@@ -1,0 +1,154 @@
+/*
+King of the Hill — mid-match event (SKELETON: announce + countdown timer only).
+
+This is build step 2: the activate body loads the per-map preset, announces, runs
+a HUD countdown for the configured duration, then cleans up. There is NO capture
+scoring or ticket swing yet — those are build steps 3 and 4.
+
+Registers with event_manager.scr. The manager owns the trigger window and picks one
+eligible event per round; KotH's eligibility is "this is a ticket map" only.
+
+HUD index base 250 (reserves 250-270), chosen from a repo-wide audit — clear of
+tickets (240-248), HVT (160-162), map scripts (<=237), notify/hitmarker (291-303).
+*/
+
+main:
+    if (level.koth_initialized == 1)
+        end
+    level.koth_initialized = 1
+
+    level.koth_hud_base = 250
+    level.koth_duration = 240   // 4 min (within the plan's 3-5 min); tune at playtest
+
+    waitthread global/feho/event_manager.scr::register_event "koth" global/feho/koth.scr::koth_eligible global/feho/koth.scr::koth_activate
+end
+
+/*
+koth_eligible — pure predicate called by the event manager. NO side effects.
+KotH only runs on ticket maps (g_gametype 4). getcvar returns a string, so the
+int() cast is required.
+*/
+koth_eligible:
+    if (int(getcvar "g_gametype") == 4)
+        end 1
+    end 0
+
+/*
+koth_activate — the event body the manager waitthreads. Returns when the event
+ends (the manager unlocks on return).
+*/
+koth_activate:
+    // 1. Load the per-map preset ONCE. This is the only place it is touched.
+    //    Bail cleanly (via cleanup) if there is no preset for this map.
+    local.preset = waitexec ("global/feho/koth_presets/" + getcvar("mapname") + ".scr")
+    if (local.preset != 1)
+    {
+        println "[koth]: No preset for this map, skipping."
+        waitthread koth_cleanup
+        end
+    }
+
+    // 2. Spawn the zone marker (visual seam — swap flag/model here later).
+    waitthread spawn_zone_marker
+
+    // 3. Announce loudly (design driver #2).
+    waitthread global/feho/notify.scr::show ("KING OF THE HILL — capture " + level.koth_label + "!") "warning" 3.5
+
+    // 4. Run the countdown for the configured duration, with a HUD timer.
+    //    SKELETON: no capture scoring yet. Bail if the round ends mid-event.
+    local.end_time = level.time + level.koth_duration
+    while (level.time < local.end_time)
+    {
+        if (level.tickets_round_over == 1)
+        {
+            waitthread koth_cleanup
+            end
+        }
+
+        local.remaining = int(local.end_time - level.time)
+        waitthread update_koth_hud local.remaining
+
+        wait 1
+    }
+
+    // 5. End. SKELETON: no winner/swing yet — just announce time and clean up.
+    waitthread global/feho/notify.scr::show "KING OF THE HILL — time!" "info" 2.5
+    waitthread koth_cleanup
+end
+
+/*
+update_koth_hud — draw the countdown timer for every human player.
+Index base + 0: the "KING OF THE HILL" label.
+Index base + 1: the remaining-time readout.
+*/
+update_koth_hud local.remaining:
+    local.base = level.koth_hud_base
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (local.player == NIL || local.player == NULL) continue
+        if (isBot local.player) continue
+
+        ihuddraw_font local.player local.base "facfont-20"
+        ihuddraw_align local.player local.base "center" "top"
+        ihuddraw_rect local.player local.base 0 70 0 0
+        ihuddraw_color local.player local.base 0.95 0.85 0.3
+        ihuddraw_string local.player local.base "KING OF THE HILL"
+        ihuddraw_alpha local.player local.base 1.0
+
+        ihuddraw_font local.player (local.base + 1) "facfont-20"
+        ihuddraw_align local.player (local.base + 1) "center" "top"
+        ihuddraw_rect local.player (local.base + 1) 0 92 0 0
+        ihuddraw_color local.player (local.base + 1) 0.95 0.95 0.95
+        ihuddraw_string local.player (local.base + 1) ("" + local.remaining + "s")
+        ihuddraw_alpha local.player (local.base + 1) 1.0
+    }
+end
+
+/*
+koth_cleanup — single idempotent teardown. Called on EVERY return path of
+koth_activate (normal end, round-end bail, missing-preset bail). Guards each
+removal on existence so it is safe even before anything is allocated.
+*/
+koth_cleanup:
+    waitthread remove_zone_marker
+
+    // Hide the KotH HUD slots for every human player.
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (local.player == NIL || local.player == NULL) continue
+        if (isBot local.player) continue
+        waitthread global/feho/hud_lib.scr::hide local.player level.koth_hud_base
+        waitthread global/feho/hud_lib.scr::hide local.player (level.koth_hud_base + 1)
+    }
+end
+
+/*
+spawn_zone_marker / remove_zone_marker — the visual-marker seam. Marker model is
+TBD (flag/model); isolating it here makes swapping it a one-function change.
+SKELETON: a simple vertical beam at the zone origin so the zone is visible in-world.
+*/
+spawn_zone_marker:
+    if (level.koth_marker)
+        end
+
+    // Verb order mirrors hvt_event.scr set_avatar (the proven func_beam usage):
+    // spawn -> color -> scale -> numsegments -> activate, then endpoint.
+    local.marker = spawn func_beam
+    local.marker.origin = level.koth_origin
+    local.marker color ( 1.0 0.85 0.3 )
+    local.marker scale 6
+    local.marker numsegments 1
+    local.marker activate
+    local.marker endpoint (level.koth_origin + ( 0 0 128 ))
+
+    level.koth_marker = local.marker
+end
+
+remove_zone_marker:
+    if (level.koth_marker)
+        level.koth_marker remove
+    level.koth_marker = NIL
+end

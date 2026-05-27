@@ -196,6 +196,9 @@ exec global/feho/event_manager.scr
 // Initialize HVT Event System (registers itself with the event manager)
 exec global/feho/hvt_event.scr
 
+// Initialize King of the Hill (registers itself with the event manager)
+exec global/feho/koth.scr
+
 exec global/feho/anticheat.scr
 
 exec global/feho/statusb.scr
