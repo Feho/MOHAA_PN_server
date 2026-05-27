@@ -155,7 +155,6 @@ show_kill_banner local.name:
     self.kb_gen++
     local.gen = self.kb_gen
 
-    local.bg  = 293
     local.top = 294
     local.bot = 295
 
@@ -168,9 +167,15 @@ show_kill_banner local.name:
     // Hot path: the varying strings + alphas. Everything else was set in kb_setup.
     ihuddraw_string self local.top local.topstr
     ihuddraw_string self local.bot local.name
-    ihuddraw_alpha self local.bg 0.55
-    ihuddraw_alpha self local.top 1.0
-    ihuddraw_alpha self local.bot 1.0
+
+    for (local.s = 0; local.s <= 3; local.s++)
+    {
+        if (!self || self.kb_gen != local.gen) end
+        local.a = float(local.s) / 3
+        ihuddraw_alpha self local.top local.a
+        ihuddraw_alpha self local.bot local.a
+        wait 0.04
+    }
 
     // Hold, then fade out — bail immediately if a newer kill superseded us.
     wait 2.4
@@ -180,14 +185,12 @@ show_kill_banner local.name:
     {
         if (!self || self.kb_gen != local.gen) end
         local.a = float(local.s) / 10
-        ihuddraw_alpha self local.bg (local.a * 0.55)   // backdrop holds at 0.55
         ihuddraw_alpha self local.top local.a
         ihuddraw_alpha self local.bot local.a
         wait 0.04
     }
 
     if (!self || self.kb_gen != local.gen) end
-    ihuddraw_alpha self local.bg 0.0
     ihuddraw_alpha self local.top 0.0
     ihuddraw_alpha self local.bot 0.0
 end
