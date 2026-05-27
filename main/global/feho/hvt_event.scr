@@ -14,7 +14,6 @@ main:
         end
 
     level.hvt_system_initialized = 1
-    level.hvt_event_triggered = 0
     level.hvt_event_active = 0
     level.allied_hvt_player = NIL
     level.axis_hvt_player = NIL
@@ -26,47 +25,38 @@ main:
     event_subscribe "player_disconnecting" event_player_disconnecting
     event_subscribe "player_spawned" event_player_spawned
 
-    // Start monitoring thread
-    thread hvt_monitor_thread
+    // Register with the mid-match event manager. The manager now owns the trigger
+    // window; HVT no longer self-triggers via hvt_monitor_thread.
+    waitthread global/feho/event_manager.scr::register_event "hvt" global/feho/hvt_event.scr::hvt_eligible global/feho/hvt_event.scr::hvt_activate
 
 end
 
-hvt_monitor_thread:
+/*
+hvt_eligible — eligibility predicate called by the event manager.
+HVT runs on any map (current behavior), so always eligible.
+*/
+hvt_eligible:
+end 1
 
-    // Get timelimit from cvar (in minutes)
-    if (level.roundbased)
-        local.timelimit = level.dmroundlimit
-    else
-        local.timelimit = int(getcvar "timelimit")
+/*
+hvt_activate — blocking adapter the manager waitthreads.
 
-    if (local.timelimit == NIL || local.timelimit <= 0)
-    {
-        // Default to 15 minutes if not set
-        local.timelimit = 15
-    }
+HVT's native lifecycle is fire-and-forget: trigger_hvt_event announces and returns,
+while "event running" lives in level.hvt_event_active (cleared async by the
+kill/disconnect/team-switch handlers). The manager unlocks when this thread RETURNS,
+so we run the trigger then block until the existing flag clears — returning exactly
+when HVT would have ended on its own.
 
-    // Convert to seconds
-    local.timelimit_seconds = local.timelimit * 60
-
-    // Calculate trigger window (30% to 70% of match time)
-    local.trigger_start = local.timelimit_seconds * 0.3
-    local.trigger_end = local.timelimit_seconds * 0.7
-
-    // Random time within the window
-    local.trigger_time = local.trigger_start + ((randomfloat 1) * (local.trigger_end - local.trigger_start))
-
-    // Monitor time until trigger point
-    while (level.hvt_event_triggered == 0)
-    {
-        if (level.time >= local.trigger_time)
-        {
-            thread trigger_hvt_event
-            level.hvt_event_triggered = 1
-        }
-
-        wait 5  // Check every 5 seconds
-    }
-
+Two known-safe fast-paths (NOT bugs):
+  1. No HVTs selected -> trigger_hvt_event never sets active=1 -> while never enters
+     -> returns immediately (silent dud, same as standalone HVT).
+  2. Flag already cleared by an async handler before the while is reached -> loop
+     doesn't enter -> returns correctly (waitthread is synchronous).
+*/
+hvt_activate:
+    waitthread trigger_hvt_event
+    while (level.hvt_event_active == 1)
+        wait 1
 end
 
 trigger_hvt_event:

@@ -190,7 +190,10 @@ exec global/feho/mapvote.scr
 // Initialize bot count control system
 exec global/feho/botcount.scr
 
-// Initialize HVT Event System
+// Initialize the mid-match event manager BEFORE any event registers with it.
+exec global/feho/event_manager.scr
+
+// Initialize HVT Event System (registers itself with the event manager)
 exec global/feho/hvt_event.scr
 
 exec global/feho/anticheat.scr

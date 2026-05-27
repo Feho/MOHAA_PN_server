@@ -1,0 +1,124 @@
+/*
+Mid-Match Event Manager for MOHAA Server
+
+Owns the single mid-match trigger and picks ONE event from a registered pool per
+round. Events (HVT, KotH, ...) register themselves with an eligibility predicate
+and an activate thread; at trigger time the manager picks one eligible event at
+random and runs it to completion. One event per round for v1 — no re-roll if the
+chosen event ends early.
+
+Dispatch stores fully-qualified file::label thread refs in parallel arrays and
+invokes them via `waitthread local.ref` (engine resolves cross-file qualified refs
+held in a variable — see maps/obj/obj_team4.scr:77 / obj_dmsd.scr:105).
+*/
+
+main:
+    if (level.event_manager_initialized == 1)
+        end
+
+    level.event_manager_initialized = 1
+    level.midmatch_event_active = 0
+    level.midmatch_event_fired  = 0
+
+    // Parallel arrays, 1-based. NIL until first register_event.
+    level.event_names      = NIL
+    level.event_eligibility = NIL
+    level.event_activate   = NIL
+    level.event_count      = 0
+
+    thread event_manager_monitor
+
+end
+
+/*
+register_event <name> <eligibility_ref> <activate_ref>
+
+Appends an event descriptor to the pool. Refs are passed as fully-qualified
+tokens, e.g.:
+  register_event "hvt" global/feho/hvt_event.scr::hvt_eligible global/feho/hvt_event.scr::hvt_activate
+*/
+register_event local.name local.eligibility_ref local.activate_ref:
+    local.idx = level.event_count + 1
+    level.event_names[local.idx]       = local.name
+    level.event_eligibility[local.idx] = local.eligibility_ref
+    level.event_activate[local.idx]    = local.activate_ref
+    level.event_count = local.idx
+end
+
+event_manager_monitor:
+    // --- Derive round duration T (seconds), verbatim from HVT (hvt_event.scr:36-46).
+    // On ticket maps `timelimit` is set to 1 but `dmroundlimit` is 15 — reading the
+    // wrong one collapses the window, so branch on level.roundbased like HVT does.
+    if (level.roundbased)
+        local.timelimit = level.dmroundlimit
+    else
+        local.timelimit = int(getcvar "timelimit")
+
+    if (local.timelimit == NIL || local.timelimit <= 0)
+        local.timelimit = 15
+
+    local.T = local.timelimit * 60
+
+    // --- Bounded trigger window. Upper edge leaves room for the longest event to
+    // finish before round end (unlike HVT's old fixed 30-70%).
+    local.max_event_duration = 300   // longest event in pool: KotH 5 min
+    local.buffer = 30
+
+    local.trigger_start = local.T * 0.3
+    local.trigger_end   = local.T - local.max_event_duration - local.buffer
+
+    // Round too short to fit any event: fire nothing this round.
+    if (local.trigger_end <= local.trigger_start)
+        end
+
+    local.trigger_time = local.trigger_start + ((randomfloat 1) * (local.trigger_end - local.trigger_start))
+
+    while (level.midmatch_event_fired == 0)
+    {
+        if (level.time >= local.trigger_time)
+            waitthread trigger_midmatch_event
+
+        wait 5
+    }
+
+end
+
+trigger_midmatch_event:
+    // Guard against a double-trigger if this somehow gets threaded twice.
+    if (level.midmatch_event_fired == 1)
+        end
+
+    // Build the list of eligible event indices.
+    local.eligible_activate = NIL
+    local.eligible_count = 0
+
+    for (local.i = 1; local.i <= level.event_count; local.i++)
+    {
+        // Dispatch through a bare variable (no parens) to match the proven idiom
+        // at obj_dmsd.scr:105 (`thread local.callback args`).
+        local.eligibility_ref = level.event_eligibility[local.i]
+        local.is_eligible = waitthread local.eligibility_ref
+        if (local.is_eligible)
+        {
+            local.eligible_count++
+            local.eligible_activate[local.eligible_count] = level.event_activate[local.i]
+        }
+    }
+
+    // No eligible event: nothing fires, but mark fired so we don't keep retrying.
+    if (local.eligible_count == 0)
+    {
+        level.midmatch_event_fired = 1
+        end
+    }
+
+    local.chosen_activate = local.eligible_activate[randomint(local.eligible_count) + 1]
+
+    // Set fired BEFORE activate so an early-ending or dud event can't be
+    // re-triggered the same round (one event per round, no re-roll).
+    level.midmatch_event_fired  = 1
+    level.midmatch_event_active = 1
+    waitthread local.chosen_activate
+    level.midmatch_event_active = 0
+
+end
