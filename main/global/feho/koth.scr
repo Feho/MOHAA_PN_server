@@ -17,8 +17,19 @@ main:
         end
     level.koth_initialized = 1
 
+    // HUD index reserve 250-270 (see header). Layout:
+    //   250 label, 251 countdown, 252-253 allies-side bar, 254-255 axis-side bar.
     level.koth_hud_base = 250
     level.koth_duration = 240   // 4 min (within the plan's 3-5 min); tune at playtest
+
+    // --- Capture tuning knobs (see plan "Capture model"). Target: a ~3-body
+    // advantage caps an empty zone (0 -> 100) in roughly the back half of the
+    // window. 3 * 0.28 * 120s ~= 100. Cap keeps a zerg from instantly capping.
+    level.koth_tick           = 0.5    // seconds per capture tick
+    level.koth_rate_per_body  = 0.28   // progress %/sec per net body
+    level.koth_rate_cap       = 1.4    // max progress %/sec (~5-body net)
+    level.koth_draw_threshold = 5      // |progress| below this at end = draw, no swing
+    level.koth_swing_pct      = 15     // loser loses this % of starting tickets (auto-scales)
 
     waitthread global/feho/event_manager.scr::register_event "koth" global/feho/koth.scr::koth_eligible global/feho/koth.scr::koth_activate
 end
@@ -54,8 +65,11 @@ koth_activate:
     // 3. Announce loudly (design driver #2).
     waitthread global/feho/notify.scr::show ("KING OF THE HILL — capture " + level.koth_label + "!") "warning" 3.5
 
-    // 4. Run the countdown for the configured duration, with a HUD timer.
-    //    SKELETON: no capture scoring yet. Bail if the round ends mid-event.
+    // 4. Capture loop. Tug-of-war: progress in [-100,+100], negative=axis,
+    //    positive=allies. Bail without a swing if the round ends mid-event.
+    level.koth_progress = 0
+    local.delta_cap = level.koth_rate_cap * level.koth_tick
+
     local.end_time = level.time + level.koth_duration
     while (level.time < local.end_time)
     {
@@ -65,29 +79,110 @@ koth_activate:
             end
         }
 
+        // Count live, non-spectator bodies of each team inside the zone.
+        local.allies_in = waitthread count_zone_bodies "allies"
+        local.axis_in   = waitthread count_zone_bodies "axis"
+        local.diff = local.allies_in - local.axis_in
+
+        // diff == 0 (contested or empty) -> freeze, no movement (classic tug-of-war).
+        if (local.diff != 0)
+        {
+            local.delta = local.diff * level.koth_rate_per_body * level.koth_tick
+            if (local.delta > local.delta_cap)  local.delta = local.delta_cap
+            if (local.delta < (0 - local.delta_cap)) local.delta = 0 - local.delta_cap
+
+            level.koth_progress = level.koth_progress + local.delta
+            if (level.koth_progress > 100)  level.koth_progress = 100
+            if (level.koth_progress < -100) level.koth_progress = -100
+        }
+
         local.remaining = int(local.end_time - level.time)
         waitthread update_koth_hud local.remaining
 
-        wait 1
+        wait level.koth_tick
     }
 
-    // 5. End. SKELETON: no winner/swing yet — just announce time and clean up.
-    waitthread global/feho/notify.scr::show "KING OF THE HILL — time!" "info" 2.5
+    // 5. End: decide the winner and announce. Ticket swing is wired in step 4.
+    waitthread koth_resolve
     waitthread koth_cleanup
 end
 
 /*
-update_koth_hud — draw the countdown timer for every human player.
-Index base + 0: the "KING OF THE HILL" label.
-Index base + 1: the remaining-time readout.
+count_zone_bodies <team> — count live players of <team> standing inside the zone.
+Spectators and dead players excluded; bots DO count (they fight too).
+*/
+count_zone_bodies local.team:
+    local.count = 0
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (!local.player) continue
+        if (!isalive local.player) continue
+        if (local.player.dmteam != local.team) continue
+        if (vector_within level.koth_origin local.player.origin level.koth_radius)
+            local.count++
+    }
+end local.count
+
+/*
+koth_resolve — at duration end, decide the winner against the draw band and
+announce loudly (design driver #3). Stores the outcome for step 4's ticket swing.
+  level.koth_winner: "allies" | "axis" | "draw"
+*/
+koth_resolve:
+    // Announce the winner first (the win line plays before the ticket-loss line
+    // since notify is FIFO-queued), then apply the loser-only ticket swing.
+    // remove_team_tickets_percent self-no-ops if tickets aren't initialized or the
+    // round is over, and announces the loss itself via notify (design driver #3).
+    // The swing stays here inside koth_resolve — which only runs on a normal end,
+    // never on the round-over bail — so level.koth_winner is always current.
+    if (level.koth_progress >= level.koth_draw_threshold)
+    {
+        level.koth_winner = "allies"
+        waitthread global/feho/notify.scr::show "ALLIES TOOK THE HILL!" "success" 4.0
+        waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" level.koth_swing_pct "koth" "Lost King of the Hill —"
+    }
+    else if (level.koth_progress <= (0 - level.koth_draw_threshold))
+    {
+        level.koth_winner = "axis"
+        waitthread global/feho/notify.scr::show "AXIS TOOK THE HILL!" "success" 4.0
+        waitthread global/feho/tickets.scr::remove_team_tickets_percent "allies" level.koth_swing_pct "koth" "Lost King of the Hill —"
+    }
+    else
+    {
+        level.koth_winner = "draw"
+        waitthread global/feho/notify.scr::show "KING OF THE HILL — contested, no winner" "info" 3.0
+    }
+end
+
+/*
+update_koth_hud — draw the timer + tug-of-war bar for every human player.
+Reads level.koth_progress directly. Index layout (base = 250):
+  base+0 : "KING OF THE HILL" label
+  base+1 : remaining-time readout
+  base+2,+3 : allies-side bar (grows rightward from center as progress goes +)
+  base+4,+5 : axis-side bar (grows leftward from center as progress goes -, reverse)
+The two half-bars meet at screen center, so the filled side shows who is winning.
 */
 update_koth_hud local.remaining:
     local.base = level.koth_hud_base
 
+    // Fraction of each side filled, 0..1.
+    local.allies_pct = level.koth_progress / 100
+    if (local.allies_pct < 0) local.allies_pct = 0
+    local.axis_pct = (0 - level.koth_progress) / 100
+    if (local.axis_pct < 0) local.axis_pct = 0
+
+    local.half_w = 100   // each half-bar width
+    local.bar_h  = 12
+    local.bar_y  = 110
+    local.allies_rgb = ( 0.4 0.6 1.0 )
+    local.axis_rgb   = ( 1.0 0.45 0.4 )
+
     for (local.i = 1; local.i <= $player.size; local.i++)
     {
         local.player = $player[local.i]
-        if (local.player == NIL || local.player == NULL) continue
+        if (!local.player) continue
         if (isBot local.player) continue
 
         ihuddraw_font local.player local.base "facfont-20"
@@ -103,6 +198,11 @@ update_koth_hud local.remaining:
         ihuddraw_color local.player (local.base + 1) 0.95 0.95 0.95
         ihuddraw_string local.player (local.base + 1) ("" + local.remaining + "s")
         ihuddraw_alpha local.player (local.base + 1) 1.0
+
+        // Allies half: anchored at center (x=0), fills rightward.
+        waitthread global/feho/hud_lib.scr::draw_bar local.player (local.base + 2) "center" "top" 0 local.bar_y local.half_w local.bar_h local.allies_pct local.allies_rgb 0
+        // Axis half: anchored to the left of center, fills leftward (reverse).
+        waitthread global/feho/hud_lib.scr::draw_bar local.player (local.base + 4) "center" "top" (0 - local.half_w) local.bar_y local.half_w local.bar_h local.axis_pct local.axis_rgb 1
     }
 end
 
@@ -114,14 +214,14 @@ removal on existence so it is safe even before anything is allocated.
 koth_cleanup:
     waitthread remove_zone_marker
 
-    // Hide the KotH HUD slots for every human player.
+    // Hide the KotH HUD slots (250-255) for every human player.
     for (local.i = 1; local.i <= $player.size; local.i++)
     {
         local.player = $player[local.i]
-        if (local.player == NIL || local.player == NULL) continue
+        if (!local.player) continue
         if (isBot local.player) continue
-        waitthread global/feho/hud_lib.scr::hide local.player level.koth_hud_base
-        waitthread global/feho/hud_lib.scr::hide local.player (level.koth_hud_base + 1)
+        for (local.j = 0; local.j <= 5; local.j++)
+            waitthread global/feho/hud_lib.scr::hide local.player (level.koth_hud_base + local.j)
     }
 end
 
