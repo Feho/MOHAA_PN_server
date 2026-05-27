@@ -18,7 +18,7 @@ main:
     level.koth_initialized = 1
 
     // HUD index reserve 250-270 (see header). Layout:
-    //   250 label, 251 countdown, 252-253 allies-side bar, 254-255 axis-side bar.
+    //   250 label, 251 countdown, 252 bar backdrop, 253 axis bar, 254 allies bar.
     level.koth_hud_base = 250
     level.koth_duration = 240   // 4 min (within the plan's 3-5 min); tune at playtest
 
@@ -36,12 +36,19 @@ end
 
 /*
 koth_eligible — pure predicate called by the event manager. NO side effects.
-KotH only runs on ticket maps (g_gametype 4). getcvar returns a string, so the
-int() cast is required.
+KotH needs a ticket map (g_gametype 4) AND a per-map zone preset. Without the
+preset koth_activate bails immediately, which would silently burn the round's one
+event slot (no re-roll) — so gate on a hardcoded allowlist of maps that have a
+koth_presets/<mapname>.scr. Add a line here when you add a preset. The key matches
+getcvar("mapname") (lowercase map id), same value koth_activate uses to load it.
 */
 koth_eligible:
-    if (int(getcvar "g_gametype") == 4)
-        end 1
+    if (int(getcvar "g_gametype") != 4)
+        end 0
+
+    local.map = getcvar "mapname"
+    if (local.map == "m1l1") end 1
+
     end 0
 
 /*
@@ -49,6 +56,10 @@ koth_activate — the event body the manager waitthreads. Returns when the event
 ends (the manager unlocks on return).
 */
 koth_activate:
+    // Clear any stale outcome from a prior event so an aborted run can't leave a
+    // previous winner readable.
+    level.koth_winner = NIL
+
     // 1. Load the per-map preset ONCE. This is the only place it is touched.
     //    Bail cleanly (via cleanup) if there is no preset for this map.
     local.preset = waitexec ("global/feho/koth_presets/" + getcvar("mapname") + ".scr")
@@ -103,6 +114,13 @@ koth_activate:
     }
 
     // 5. End: decide the winner and announce. Ticket swing is wired in step 4.
+    //    Re-check round-over here: it can flip between the last loop check and now,
+    //    and we must not announce/swing into a round that has already ended.
+    if (level.tickets_round_over == 1)
+    {
+        waitthread koth_cleanup
+        end
+    }
     waitthread koth_resolve
     waitthread koth_cleanup
 end
@@ -169,8 +187,8 @@ Reads level.koth_progress directly. Index layout (base = 250):
   base+0 : "KING OF THE HILL" label
   base+1 : remaining-time readout
   base+2 : bar backdrop (dark rect, full width)
-  base+3 : allies-side glyph bar (blue), fills rightward from center
-  base+4 : axis-side glyph bar (red), fills leftward from center (reverse)
+  base+3 : axis-side glyph bar (red), fills leftward from center (reverse)
+  base+4 : allies-side glyph bar (blue), fills rightward from center
 The two half-bars meet at screen center, so the filled side shows who is winning.
 */
 update_koth_hud local.remaining:
