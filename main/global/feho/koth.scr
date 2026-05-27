@@ -157,27 +157,35 @@ end
 
 /*
 update_koth_hud — draw the timer + tug-of-war bar for every human player.
+
+The bar is built from COLORED TEXT GLYPHS, not tinted shader rects:
+textures/mohmenu/black.tga (what hud_lib.scr::draw_bar uses) only renders black —
+ihuddraw_color cannot tint it to blue/red. Tickets has the same constraint and
+solves it the same way (colored ihuddraw_string glyph bars; see build_bar /
+set_ticket_color). black.tga is still fine as a dark backdrop, which is its only
+proven use.
+
 Reads level.koth_progress directly. Index layout (base = 250):
   base+0 : "KING OF THE HILL" label
   base+1 : remaining-time readout
-  base+2,+3 : allies-side bar (grows rightward from center as progress goes +)
-  base+4,+5 : axis-side bar (grows leftward from center as progress goes -, reverse)
+  base+2 : bar backdrop (dark rect, full width)
+  base+3 : allies-side glyph bar (blue), fills rightward from center
+  base+4 : axis-side glyph bar (red), fills leftward from center (reverse)
 The two half-bars meet at screen center, so the filled side shows who is winning.
 */
 update_koth_hud local.remaining:
     local.base = level.koth_hud_base
+    local.segs = 10   // glyphs per half-bar
 
-    // Fraction of each side filled, 0..1.
-    local.allies_pct = level.koth_progress / 100
-    if (local.allies_pct < 0) local.allies_pct = 0
-    local.axis_pct = (0 - level.koth_progress) / 100
-    if (local.axis_pct < 0) local.axis_pct = 0
+    // Filled glyph count per side, 0..segs, from |progress|/100.
+    local.allies_filled = int((level.koth_progress * local.segs) / 100)
+    if (local.allies_filled < 0) local.allies_filled = 0
+    local.axis_filled = int(((0 - level.koth_progress) * local.segs) / 100)
+    if (local.axis_filled < 0) local.axis_filled = 0
 
-    local.half_w = 100   // each half-bar width
-    local.bar_h  = 12
-    local.bar_y  = 110
-    local.allies_rgb = ( 0.4 0.6 1.0 )
-    local.axis_rgb   = ( 1.0 0.45 0.4 )
+    // Allies grows rightward (reverse 0); axis grows leftward (reverse 1).
+    local.allies_bar = waitthread build_koth_bar local.segs local.allies_filled 0
+    local.axis_bar   = waitthread build_koth_bar local.segs local.axis_filled 1
 
     for (local.i = 1; local.i <= $player.size; local.i++)
     {
@@ -199,12 +207,52 @@ update_koth_hud local.remaining:
         ihuddraw_string local.player (local.base + 1) ("" + local.remaining + "s")
         ihuddraw_alpha local.player (local.base + 1) 1.0
 
-        // Allies half: anchored at center (x=0), fills rightward.
-        waitthread global/feho/hud_lib.scr::draw_bar local.player (local.base + 2) "center" "top" 0 local.bar_y local.half_w local.bar_h local.allies_pct local.allies_rgb 0
-        // Axis half: anchored to the left of center, fills leftward (reverse).
-        waitthread global/feho/hud_lib.scr::draw_bar local.player (local.base + 4) "center" "top" (0 - local.half_w) local.bar_y local.half_w local.bar_h local.axis_pct local.axis_rgb 1
+        // Backdrop behind both half-bars (black.tga used as a dark rect only).
+        waitthread global/feho/hud_lib.scr::draw_rect local.player (local.base + 2) "center" "top" -110 108 220 16 ( 0.06 0.06 0.06 ) 0.55
+
+        // Axis half (red), left of center, right-anchored so it grows leftward.
+        ihuddraw_font local.player (local.base + 3) "courier-20"
+        ihuddraw_align local.player (local.base + 3) "right" "top"
+        ihuddraw_rect local.player (local.base + 3) -4 110 0 0
+        ihuddraw_color local.player (local.base + 3) 1.00 0.38 0.28
+        ihuddraw_string local.player (local.base + 3) local.axis_bar
+        ihuddraw_alpha local.player (local.base + 3) 1.0
+
+        // Allies half (blue), right of center, left-anchored so it grows rightward.
+        ihuddraw_font local.player (local.base + 4) "courier-20"
+        ihuddraw_align local.player (local.base + 4) "left" "top"
+        ihuddraw_rect local.player (local.base + 4) 4 110 0 0
+        ihuddraw_color local.player (local.base + 4) 0.45 0.70 1.00
+        ihuddraw_string local.player (local.base + 4) local.allies_bar
+        ihuddraw_alpha local.player (local.base + 4) 1.0
     }
 end
+
+/*
+build_koth_bar <segments> <filled> <reverse> — build a glyph bar string.
+Mirrors tickets build_bar: '#' for filled, ' ' for empty. reverse=1 packs the
+filled glyphs at the RIGHT end (used by the axis side so its fill abuts center).
+*/
+build_koth_bar local.segments local.filled local.reverse:
+    local.bar = ""
+    for (local.i = 1; local.i <= local.segments; local.i++)
+    {
+        if (local.reverse == 1)
+        {
+            if (local.i <= (local.segments - local.filled))
+                local.bar += " "
+            else
+                local.bar += "#"
+        }
+        else
+        {
+            if (local.i <= local.filled)
+                local.bar += "#"
+            else
+                local.bar += " "
+        }
+    }
+end local.bar
 
 /*
 koth_cleanup — single idempotent teardown. Called on EVERY return path of
@@ -214,13 +262,13 @@ removal on existence so it is safe even before anything is allocated.
 koth_cleanup:
     waitthread remove_zone_marker
 
-    // Hide the KotH HUD slots (250-255) for every human player.
+    // Hide the KotH HUD slots (250-254) for every human player.
     for (local.i = 1; local.i <= $player.size; local.i++)
     {
         local.player = $player[local.i]
         if (!local.player) continue
         if (isBot local.player) continue
-        for (local.j = 0; local.j <= 5; local.j++)
+        for (local.j = 0; local.j <= 4; local.j++)
             waitthread global/feho/hud_lib.scr::hide local.player (level.koth_hud_base + local.j)
     }
 end
