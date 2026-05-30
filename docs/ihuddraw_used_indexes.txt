@@ -1,4 +1,12 @@
-Liste des index utilisés pour afficher des messages à un joueur :
+Liste des index utilisÃ©s pour afficher des messages Ã  un joueur :
 
 20 : KickNade
 50, 51 : Medic mod
+240     : Feho tickets HUD backdrop panel (drawn first, behind text)
+241-246 : Feho tickets HUD (text)
+291     : Feho hitmarker (off-white X, gated on beta cvar)
+292     : Feho notify (animated callout, single slot, FIFO queued)
+293     : Feho kill banner backdrop panel (gated on kill_banner cvar)
+294-295 : Feho kill banner text (ENEMY KILLED + victim name)
+296     : Feho kill banner left accent bar (red, white.tga tinted, drawn above panel)
+300-303 : Feho hitmarker X (event_player_damaged, four segments)

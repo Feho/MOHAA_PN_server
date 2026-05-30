@@ -85,34 +85,47 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
 end
 
 // One-time static HUD setup for a player's kill banner. Issues the properties
-// that never change between kills — font, alignment, rect, backdrop, and both
-// colors — so the per-kill hot path only touches the strings and the alphas.
-// Drawn hidden (alpha 0). The top-line string (294) is written per-kill because
-// it carries the multi-kill suffix ("ENEMY KILLED  x2").
+// that never change between kills — fonts, alignments, the backdrop shader, and
+// both line colors — so the per-kill hot path only touches the strings, rects,
+// and alphas. Drawn hidden (alpha 0). The top-line string (294) is written
+// per-kill because it carries the multi-kill suffix ("ENEMY KILLED  x2").
 //   293 : dark backdrop panel
 //   294 : "ENEMY KILLED [ xN ]" (dimmed white, string set per-kill)
 //   295 : victim name (red)
 kb_setup:
-    // Position constants — tweak to taste. With "center"/"top" alignment, y is
-    // measured from the top of the ~480px virtual screen, so ~260 sits just
-    // below the crosshair. Nudge y_top/y_bot live to taste.
-    local.x       = -55
-    local.y_top   = 160
-    local.y_bot   = 178
+    // Backdrop panel (293): dark translucent box behind both lines. black.tga can
+    // only render black, so we just set its alpha (color stays ~black). align +
+    // font/shader are constant; the rect (x/width) is sized per-kill to the name,
+    // so it is set in the hot path, not here. Center-aligned so the whole banner
+    // stays centered on screen and grows symmetrically as names lengthen.
+    ihuddraw_shader self 293 "textures/mohmenu/black.tga"
+    ihuddraw_align self 293 "center" "center"
+    ihuddraw_color self 293 0.04 0.04 0.04
+    ihuddraw_alpha self 293 0.0
 
-    // Line 1: ENEMY KILLED (dimmed white) — color/font/rect never vary; the
-    // string is set per-kill in the hot path (it carries the xN suffix).
-    ihuddraw_font self 294 "facfont-20"
+    // Accent bar (296): thin red vertical strip at the panel's LEFT edge. Drawn
+    // above the panel (296 > 293) so it sits on top. MUST use white.tga, not
+    // black.tga — black multiplies any color back to black; white tints to red.
+    // white.tga ships in stock Pak2.pk3 (no client download). Center-aligned like
+    // everything else; the per-kill rect uses an iX offset to sit at the left edge.
+    ihuddraw_shader self 296 "textures/common/white.tga"
+    ihuddraw_align self 296 "center" "center"
+    ihuddraw_color self 296 0.85 0.20 0.18
+    ihuddraw_alpha self 296 0.0
+
+    // Both lines use handle-23 (a wider, blockier stock HUD face). All elements are
+    // center-aligned; the two text lines share one iX offset so they line up on a
+    // common left edge — no per-line centering drift. font/align never vary, so they
+    // are cached here; string + rect are set per-kill.
+    // Line 1: ENEMY KILLED (dimmed white).
+    ihuddraw_font self 294 "handle-23"
     ihuddraw_align self 294 "center" "center"
-    ihuddraw_rect self 294 local.x local.y_top 0 0
     ihuddraw_color self 294 0.85 0.85 0.85
     ihuddraw_alpha self 294 0.0
 
-    // Line 2: victim name (red — matches the ticket-axis red). Color/font/rect
-    // are constant; only the string changes per kill.
-    ihuddraw_font self 295 "facfont-20"
+    // Line 2: victim name (red — matches the ticket-axis red). Color never varies.
+    ihuddraw_font self 295 "handle-23"
     ihuddraw_align self 295 "center" "center"
-    ihuddraw_rect self 295 local.x local.y_bot 0 0
     ihuddraw_color self 295 1.0 0.30 0.25
     ihuddraw_alpha self 295 0.0
 
@@ -155,8 +168,13 @@ show_kill_banner local.name:
     self.kb_gen++
     local.gen = self.kb_gen
 
-    local.top = 294
-    local.bot = 295
+    local.panel = 293
+    local.top   = 294
+    local.bot   = 295
+    local.bar   = 296
+
+    local.y_top = 160
+    local.y_bot = 183
 
     // Top line: bare "ENEMY KILLED", or with an "  xN" suffix for a multi-kill.
     if (local.count >= 2)
@@ -164,18 +182,73 @@ show_kill_banner local.name:
     else
         local.topstr = "ENEMY KILLED"
 
-    // Hot path: the varying strings + alphas. Everything else was set in kb_setup.
+    // Layout — everything is CENTER-aligned; we offset via iX. With center align the
+    // engine draws an element's left edge at (320 + iX - rectWidth/2):
+    //   - panel (width box_w): iX 0 -> left edge at 320 - box_w/2, stays centered and
+    //     grows symmetric with the name.
+    //   - text rects are zero-width, so their left edge is just (320 + iX). To put
+    //     both lines on a shared left edge (panel left + inset) we give them the same
+    //     iX = -box_w/2 + pad_left — no per-line centering drift.
+    //   - the bar has real width, so iX = -box_w/2 + bar_w/2 lands its left edge on
+    //     the panel's left edge.
+    local.top_w  = waitthread global/feho/hud_lib.scr::handle23_width local.topstr
+    local.name_w = waitthread global/feho/hud_lib.scr::handle23_width local.name
+
+    // box_w encloses the wider line plus a left inset (bar + gap) and a right margin.
+    local.bar_w   = 4
+    local.pad_left = local.bar_w + 18      // text starts past the bar + an 18px gap
+    local.pad_right = 12
+    local.text_w  = local.name_w
+    if (local.top_w > local.text_w)
+        local.text_w = local.top_w
+    local.box_w  = local.text_w + local.pad_left + local.pad_right
+
+    // Vertical sizing. A text rect's y is the glyph's TOP edge (R_DrawString draws
+    // downward from y; for a zero-height rect valign-center is a no-op), so each line
+    // of ink spans [y .. y + font_h], NOT y +/- font_h/2. The text block therefore
+    // runs from y_top (top of line 1) to y_bot + font_h (bottom of line 2). We wrap
+    // it with equal padding top and bottom. Deriving box_h and the panel center from
+    // the line positions keeps the padding correct if y_top/y_bot/font ever change.
+    local.font_h  = 21                                   // handle-23 glyph height
+    local.pad_v   = 9                                    // top & bottom padding
+    local.text_lo = local.y_top                          // top of the first line's ink
+    local.text_hi = local.y_bot + local.font_h           // bottom of the name's ink
+    local.box_h   = (local.text_hi - local.text_lo) + 2 * local.pad_v
+    local.box_cy  = (local.text_lo + local.text_hi) / 2  // panel/bar center y
+
+    // Panel: real width, iX 0 (center align subtracts width/2 itself).
+    ihuddraw_rect self local.panel 0 local.box_cy local.box_w local.box_h
+
+    // Accent bar: real width, offset so its left edge meets the panel's left edge.
+    local.bar_x = (0 - local.box_w / 2) + local.bar_w / 2
+    ihuddraw_rect self local.bar local.bar_x local.box_cy local.bar_w local.box_h
+
+    // Text: zero-width rects share an iX one inset past the panel's left edge.
+    local.text_x = (0 - local.box_w / 2) + local.pad_left
+    ihuddraw_rect self local.top local.text_x local.y_top 0 0
+    ihuddraw_rect self local.bot local.text_x local.y_bot 0 0
+
+    // Hot path: the varying strings. Everything else was set in kb_setup.
     ihuddraw_string self local.top local.topstr
     ihuddraw_string self local.bot local.name
 
-    for (local.s = 0; local.s <= 3; local.s++)
+    // Fade in on waitframe (one step per server snapshot — the finest the engine
+    // actually delivers; finer waits just get coalesced). ~0.25s over 5 frames.
+    for (local.s = 1; local.s <= 5; local.s++)
     {
         if (!self || self.kb_gen != local.gen) end
-        local.a = float(local.s) / 3
+        local.a = float(local.s) / 5
+
+        // Panel fades to a translucent 0.3; bar and text fade to full opacity.
+        ihuddraw_alpha self local.panel (local.a * 0.3)
+        ihuddraw_alpha self local.bar local.a
         ihuddraw_alpha self local.top local.a
         ihuddraw_alpha self local.bot local.a
-        wait 0.04
+
+        waitframe
     }
+
+    if (!self || self.kb_gen != local.gen) end
 
     // Hold, then fade out — bail immediately if a newer kill superseded us.
     wait 2.4
@@ -185,12 +258,17 @@ show_kill_banner local.name:
     {
         if (!self || self.kb_gen != local.gen) end
         local.a = float(local.s) / 10
+
+        ihuddraw_alpha self local.panel (local.a * 0.3)
+        ihuddraw_alpha self local.bar local.a
         ihuddraw_alpha self local.top local.a
         ihuddraw_alpha self local.bot local.a
-        wait 0.04
+        waitframe
     }
 
     if (!self || self.kb_gen != local.gen) end
+    ihuddraw_alpha self local.panel 0.0
+    ihuddraw_alpha self local.bar 0.0
     ihuddraw_alpha self local.top 0.0
     ihuddraw_alpha self local.bot 0.0
 end
@@ -206,7 +284,7 @@ event_player_damaged local.attacker local.damage local.inflictor local.position 
         {
             local.x = float(local.i) / 10
             ihuddraw_alpha local.attacker local.idx local.x
-            wait 0.04
+            waitframe
         }
 
         wait 0.5

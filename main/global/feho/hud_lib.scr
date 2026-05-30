@@ -14,6 +14,22 @@ draw_rect local.player local.idx local.halign local.valign local.x local.y local
 	ihuddraw_alpha local.player local.idx local.alpha
 end
 
+// Draw a filled rectangle in ANY color. Same signature as draw_rect, but backed
+// by textures/common/white.tga (a pure-white 64x64 texel that ships in stock
+// Pak2.pk3 on every client — no download required). ihuddraw_color is a multiply,
+// so a white base tints cleanly to red/green/blue/etc., unlike black.tga which is
+// (0,0,0) and multiplies any color back to black. Use this when you need real
+// color; use draw_rect for dark translucent panels.
+draw_rect_color local.player local.idx local.halign local.valign local.x local.y local.w local.h local.rgb local.alpha:
+	if (local.player == NIL || local.player == NULL) end
+
+	ihuddraw_shader local.player local.idx "textures/common/white.tga"
+	ihuddraw_align local.player local.idx local.halign local.valign
+	ihuddraw_rect local.player local.idx local.x local.y local.w local.h
+	ihuddraw_color local.player local.idx local.rgb[0] local.rgb[1] local.rgb[2]
+	ihuddraw_alpha local.player local.idx local.alpha
+end
+
 // Hide a previously drawn HUD element.
 hide local.player local.idx:
 	if (local.player == NIL || local.player == NULL) end
@@ -64,3 +80,23 @@ draw_panel local.player local.idx local.halign local.valign local.x local.y loca
 	waitthread draw_rect local.player local.idx local.halign local.valign local.x local.y local.w local.h local.bg_rgb local.alpha
 	waitthread draw_rect local.player (local.idx + 1) local.halign local.valign local.x local.y 3 local.h local.accent_rgb local.accent_alpha
 end
+
+// Estimated pixel width of a string in facfont-20 (the game's proportional HUD
+// face), 640-virtual space. facfont-20 has no script-callable width function and
+// per-glyph summing isn't practical in .scr, so this is an estimate: ~8 units/glyph
+// (between the [A-Za-z] avg of 7.67 and the wider uppercase used in banners).
+// Centering via iX = -(width)/2 is therefore approximate — drifts a few px on
+// unusually wide/narrow strings. Verified glyph data: see facfont20 memory.
+facfont20_width local.str:
+	if (local.str == NIL) end 0
+end (local.str.size * 8)
+
+// Estimated pixel width of a string in handle-23 (a wider, blockier stock HUD
+// face), 640-virtual space. Same estimate approach as facfont20_width. handle-23
+// glyphs run ~11.6/ch over [A-Za-z]; uppercase banners ("ENEMY KILLED") average
+// ~12, so 12 units/glyph keeps the centering tight on the banner while staying
+// generous enough that mixed-case names aren't under-sized. Verified glyph data
+// parsed from fonts/handle-23.RitualFont in Pak0.pk3.
+handle23_width local.str:
+	if (local.str == NIL) end 0
+end (local.str.size * 12)
