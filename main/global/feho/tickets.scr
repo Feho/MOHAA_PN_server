@@ -21,6 +21,7 @@ main:
     level.tickets_allies_respawn_stopped = 0
     level.tickets_axis_respawn_stopped = 0
     level.tickets_blink_state = 0
+    level.tickets_hud_gen = 0
 
     wait 2
     waitthread init_tickets
@@ -72,8 +73,15 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
     if (local.team != "allies" && local.team != "axis")
         end
 
+    // Ticket arithmetic and its side effects (decrement, stopteamrespawn) must run
+    // for every kill. But the HUD redraw fans out to ALL players (~13 ihuddraw ops
+    // each) and a grenade killing N players fires this handler N times in one frame
+    // — an N-player x N-kill HUD flood. So the redraw is deferred + coalesced (see
+    // request_ticket_hud_refresh): all N kills decrement synchronously this frame,
+    // then a single redraw next frame shows the final counts. update_clockside and
+    // check_ticket_winner are cheap and stay per-kill; pulse_team_count self-guards.
     waitthread remove_ticket local.team
-    waitthread update_all_ticket_huds
+    thread request_ticket_hud_refresh
     waitthread update_clockside
     waitthread check_ticket_winner
     thread pulse_team_count local.team
@@ -368,6 +376,26 @@ apply_team_alpha local.idx local.alpha:
         if (isBot local.player) continue
         ihuddraw_alpha local.player local.idx local.alpha
     }
+end
+
+// Coalesced, 1-frame-deferred ticket-HUD redraw. Spawn this async (thread, NOT
+// waitthread) per kill: all same-frame spawns bump level.tickets_hud_gen, capture
+// their own gen, then park on the same waitframe. Next frame only the last (highest
+// gen) survives the guard and redraws once; the earlier ones bail. The generation
+// token lives on LEVEL, not self — this handler's self is the VICTIM, a different
+// entity each kill, so a self.* token would never dedup. Deferring one frame (not
+// via tickets_hud_loop's 0.5-1s cadence) keeps counts current: all remove_ticket
+// calls already ran synchronously this frame before the redraw fires.
+request_ticket_hud_refresh:
+    level.tickets_hud_gen++
+    local.gen = level.tickets_hud_gen
+
+    waitframe
+
+    if (level.tickets_hud_gen != local.gen)
+        end
+
+    waitthread update_all_ticket_huds
 end
 
 update_all_ticket_huds:

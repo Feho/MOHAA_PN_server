@@ -72,7 +72,12 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
     }
 
     // Center-screen "ENEMY KILLED — <name>" banner shown to the killer.
-    //if (int(getcvar "kill_banner") != 1) end
+    // Default ON; set "kill_banner 0" to disable (e.g. to A/B test whether the
+    // banner contributes to a multikill hitch vs. the tickets HUD). An unset cvar
+    // reads as "" here (engine default), so we only bail on an explicit "0".
+    local.kb_cvar = getcvar "kill_banner"
+    if (local.kb_cvar == "0")
+        end
 
     local.victim = self
     if (!local.attacker) end
@@ -168,6 +173,17 @@ show_kill_banner local.name:
     self.kb_gen++
     local.gen = self.kb_gen
 
+    // Coalesce same-frame multikills (e.g. a grenade killing 5 players fires
+    // player_killed 5 times in one frame, spawning 5 of these threads on the same
+    // killer). Yield one frame right after bumping kb_gen and the count, before the
+    // heavy prologue (layout, rects, the typewriter). Next frame only the latest
+    // thread survives the gen-guard; the earlier 4 bail here, having done nothing
+    // but the cheap counter math. Result: one banner reading "ENEMY KILLED  x5"
+    // instead of 5 banners racing — no HUD-command flood, no visual fight. The
+    // single-kill case just appears 0.05s later, which is imperceptible.
+    waitframe
+    if (!self || self.kb_gen != local.gen) end
+
     local.panel = 293
     local.top   = 294
     local.bot   = 295
@@ -228,25 +244,50 @@ show_kill_banner local.name:
     ihuddraw_rect self local.top local.text_x local.y_top 0 0
     ihuddraw_rect self local.bot local.text_x local.y_bot 0 0
 
-    // Hot path: the varying strings. Everything else was set in kb_setup.
-    ihuddraw_string self local.top local.topstr
-    ihuddraw_string self local.bot local.name
+    // Typewriter reveal. The box/bar are pre-sized to the FULL text width above, so
+    // they don't reflow as letters appear — only the strings grow. Each frame adds
+    // 2 characters per line (sv_fps 20 -> 2 chars / 0.05s). The two lines advance
+    // together; the shorter one finishes and just holds its full string while the
+    // longer keeps typing — substr_prefix clamps each line's prefix length to its
+    // own size so str[i] is never indexed out of bounds (that throws and would
+    // freeze the banner). Text alpha is full from frame 0 (the letters themselves
+    // are the reveal); the panel and bar still fade in over the first 5 frames so
+    // the backdrop arrives smoothly rather than popping.
+    local.cps = 2                                  // characters revealed per frame
+    local.top_len  = local.topstr.size
+    local.name_len = local.name.size
+    local.steps = local.top_len
+    if (local.name_len > local.steps)
+        local.steps = local.name_len
 
-    // Fade in on waitframe (one step per server snapshot — the finest the engine
-    // actually delivers; finer waits just get coalesced). ~0.25s over 5 frames.
-    for (local.s = 1; local.s <= 5; local.s++)
+    ihuddraw_alpha self local.top 1.0
+    ihuddraw_alpha self local.bot 1.0
+
+    for (local.n = local.cps; local.n < local.steps; local.n += local.cps)
     {
         if (!self || self.kb_gen != local.gen) end
-        local.a = float(local.s) / 5
 
-        // Panel fades to a translucent 0.3; bar and text fade to full opacity.
+        local.topsub  = waitthread global/feho/hud_lib.scr::substr_prefix local.topstr local.n
+        local.namesub = waitthread global/feho/hud_lib.scr::substr_prefix local.name local.n
+        ihuddraw_string self local.top local.topsub
+        ihuddraw_string self local.bot local.namesub
+
+        // Backdrop fade-in, concurrent with typing: full by the 5th frame.
+        local.a = float(local.n) / 5
+        if (local.a > 1.0) local.a = 1.0
         ihuddraw_alpha self local.panel (local.a * 0.3)
         ihuddraw_alpha self local.bar local.a
-        ihuddraw_alpha self local.top local.a
-        ihuddraw_alpha self local.bot local.a
 
         waitframe
     }
+
+    // Guarantee the full strings and full backdrop alpha are set, in case steps was
+    // short or a clamp rounded down.
+    if (!self || self.kb_gen != local.gen) end
+    ihuddraw_string self local.top local.topstr
+    ihuddraw_string self local.bot local.name
+    ihuddraw_alpha self local.panel 0.3
+    ihuddraw_alpha self local.bar 1.0
 
     if (!self || self.kb_gen != local.gen) end
 

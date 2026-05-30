@@ -100,3 +100,18 @@ end (local.str.size * 8)
 handle23_width local.str:
 	if (local.str == NIL) end 0
 end (local.str.size * 12)
+
+// First local.n characters of a string, for typewriter reveals. MOHAA has no
+// substring built-in, but str[i] returns a single CHAR (engine: str(char) ctor
+// yields a 1-char string, NOT the ASCII number), so we concatenate. Indexing at
+// or past the length THROWS ("String index out of range"), so callers must keep
+// local.n within bounds — this clamps defensively too. Returns "" for n <= 0.
+substr_prefix local.str local.n:
+	if (local.str == NIL) end ""
+	if (local.n > local.str.size) local.n = local.str.size
+	if (local.n <= 0) end ""
+
+	local.out = ""
+	for (local.i = 0; local.i < local.n; local.i++)
+		local.out = local.out + local.str[local.i]
+end local.out
