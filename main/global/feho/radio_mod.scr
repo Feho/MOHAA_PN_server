@@ -150,6 +150,12 @@ spawn_radio:
 
 	// Show the pulsing explosive when attackers are nearby, and always while planted.
 	thread bomb_proximity_reveal local.obj local.radio_pos
+
+	// Through-walls radio icon hovering above the radio (stock radio1.tga, no
+	// client download). Last so a load error in obj_marker.scr can only cost the
+	// cosmetic icon, never the gameplay-critical bomb/trigger setup above.
+	// Removed on destroy in radio_destroyed_callback.
+	level.radio_icon = waitthread global/feho/obj_marker.scr::spawn_at ( local.radio_pos[0] local.radio_pos[1] local.radio_pos[2] + 5 ) "textures/hud/radio1.tga"
 end
 
 setup_radio_led:
@@ -350,6 +356,8 @@ radio_destroyed_callback local.origin local.planting_team:
 		level.radio_plant_trigger remove
 	if (level.radio_entity != NIL && level.radio_entity != NULL)
 		level.radio_entity remove
+	if (level.radio_icon != NIL && level.radio_icon != NULL)
+		level.radio_icon thread global/feho/obj_marker.scr::kill
 
 	println "[radio_mod]: Radio destroyed."
 	waitthread global/feho/tickets.scr::remove_team_tickets level.radio_team 15 "radio destroyed" "Radio destroyed!"

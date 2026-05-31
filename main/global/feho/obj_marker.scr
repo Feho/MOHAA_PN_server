@@ -1,0 +1,167 @@
+/*
+Objective Marker — world-anchored icon visible through walls.
+
+Renders a stock HUD icon as a func_beam above a world position or entity.
+Because the texture is referenced as a raw .tga with no authored shader block,
+the engine builds a default LIGHTMAP_2D shader with GLS_DEPTHTEST_DISABLE, so
+the icon draws through walls and is visible from anywhere. All assets are stock
+(ship in Pak0), so NO client download is required.
+
+This is the proven setup_icon pattern from create_bomb.scr, generalized: the
+func_beam is its own controller, the bob loop runs on the beam entity itself.
+
+VERIFIED SEE-THROUGH stock icons (no shader block -> depth test disabled):
+  explosives, bangalores  -> bomb / demolition objective
+  radio1                  -> radio objective
+  clipboard               -> documents / intel objective
+  battery                 -> power / battery objective
+  wirecutters             -> sabotage objective
+  compassobjarrow         -> generic objective marker
+  binoc3                  -> recon objective
+
+DO NOT USE for through-walls (these have depth-tested shader blocks and will
+render OCCLUDED): item_papers1, item_papers2, item_camera,
+item_radio_explosive, compassobjball, directional_arrow.
+Verify any new texture: a stock .tga with NO block named "textures/hud/<name>"
+in the pak .shader files draws through walls; one WITH a (non-noDepthTest)
+block does not.
+
+USAGE
+  // Anchor to a fixed position:
+  local.m = waitthread global/feho/obj_marker.scr::spawn_at ( 100 200 -50 ) "textures/hud/radio1.tga"
+
+  // Anchor to an entity (icon follows it every frame):
+  local.m = waitthread global/feho/obj_marker.scr::spawn_on local.ent "textures/hud/explosives.tga"
+
+  // Remove it later:
+  local.m thread global/feho/obj_marker.scr::kill
+
+Returns the func_beam controller. Call ::kill on it (or remove it) to stop.
+*/
+
+// Fixed position, bobbing. For stationary objectives.
+spawn_at local.pos local.shader:
+
+	local.icon = spawn func_beam
+	local.icon.anchor = local.pos
+	local.icon shader local.shader
+	local.icon color ( 1.0 1.0 1.0 )
+	local.icon scale 6
+	local.icon numsegments 1
+	local.icon life 0
+	// position before activate (mirrors create_bomb setup_icon) so there is
+	// no one-frame flash at world origin
+	local.icon.origin = local.icon.anchor + ( 0 0 20 )
+	local.icon endpoint ( local.icon.anchor + ( 0 0 33 ) )
+	local.icon activate
+	local.icon thread bob
+	end local.icon
+
+end
+
+// Follow a (moving) entity. Static offset above it, no bob.
+// bind/glue can't be used: a func_beam is drawn between two points and the
+// endpoint is an absolute coord set once (beam.cpp SetEndPoint), so binding
+// only carries the origin and the beam smears (confirmed in-game). Instead we
+// recompute BOTH origin and endpoint from the live entity origin every frame.
+spawn_on local.ent local.shader:
+
+	local.icon = spawn func_beam
+	local.icon.follow = local.ent
+	local.icon shader local.shader
+	local.icon color ( 1.0 1.0 1.0 )
+	local.icon scale 6
+	local.icon numsegments 1
+	local.icon life 0
+	// position before activate so there is no one-frame flash at world origin
+	local.icon.origin = local.ent.origin + ( 0 0 75 )
+	local.icon endpoint ( local.ent.origin + ( 0 0 88 ) )
+	local.icon activate
+	local.icon thread follow
+	end local.icon
+
+end
+
+// Per-frame follow: keep the icon a fixed height above self.follow, updating
+// origin and endpoint together. Self-stops if the entity goes away.
+// Offset is clearly ABOVE the head: a player/bot origin is at the feet (~72u
+// to head) and the entity is solid, so the endpoint's G_Trace (beam.cpp
+// SetEndPoint) would collapse if the segment started inside the body. Anchoring
+// above the head keeps the trace in open air. (Stationary spawn_at uses a
+// smaller offset because it sits above a non-solid trigger.)
+follow:
+
+	local.base_offset = 75
+	local.icon_height = 13
+
+	while (self && self.follow)
+	{
+		self.origin = self.follow.origin + ( 0 0 local.base_offset )
+		self endpoint ( self.follow.origin + ( 0 0 local.base_offset + local.icon_height ) )
+		waitframe
+	}
+
+	// followed entity gone (or marker killed) — clean up the beam
+	if (self)
+		self remove
+
+end
+
+kill:
+
+	if (self)
+		self remove
+
+end
+
+bob:
+
+	local.low_offset = 20
+	local.high_offset = 42
+	local.icon_height = 13
+
+	while (self)
+	{
+		// re-anchor to the followed entity, if any
+		if (self.follow)
+			self.anchor = self.follow.origin
+
+		local.z = local.low_offset
+		while (local.z <= local.high_offset && self)
+		{
+			if (self.follow)
+				self.anchor = self.follow.origin
+
+			local.endpoint_z = local.z + local.icon_height
+			self.origin = self.anchor + ( 0 0 local.z )
+			self endpoint ( self.anchor + ( 0 0 local.endpoint_z ) )
+			local.step = waitthread get_icon_bob_step local.z local.low_offset local.high_offset
+			local.z += local.step
+			waitframe
+		}
+
+		local.z = local.high_offset
+		while (local.z >= local.low_offset && self)
+		{
+			if (self.follow)
+				self.anchor = self.follow.origin
+
+			local.endpoint_z = local.z + local.icon_height
+			self.origin = self.anchor + ( 0 0 local.z )
+			self endpoint ( self.anchor + ( 0 0 local.endpoint_z ) )
+			local.step = waitthread get_icon_bob_step local.z local.low_offset local.high_offset
+			local.z -= local.step
+			waitframe
+		}
+	}
+
+end
+
+get_icon_bob_step local.z local.low_offset local.high_offset:
+
+	if (local.z <= local.low_offset + 2) end 1
+	if (local.z >= local.high_offset - 2) end 1
+	if (local.z <= local.low_offset + 8) end 2
+	if (local.z >= local.high_offset - 8) end 2
+
+end 2

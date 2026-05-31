@@ -41,7 +41,6 @@ setup_icon:
 	local.low_offset = 20
 	local.high_offset = 42
 	local.icon_height = 13
-	local.wait = 0.04
 
 	while (self && local.icon)
 	{
@@ -53,7 +52,7 @@ setup_icon:
 			local.icon endpoint ( self.origin + ( 0 0 local.endpoint_z ) )
 			local.step = waitthread get_icon_bob_step local.z local.low_offset local.high_offset
 			local.z += local.step
-			wait local.wait
+			waitframe
 		}
 
 		local.z = local.high_offset
@@ -64,7 +63,7 @@ setup_icon:
 			local.icon endpoint ( self.origin + ( 0 0 local.endpoint_z ) )
 			local.step = waitthread get_icon_bob_step local.z local.low_offset local.high_offset
 			local.z -= local.step
-			wait local.wait
+			waitframe
 		}
 	}
 
