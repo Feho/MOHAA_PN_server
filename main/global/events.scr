@@ -13,10 +13,10 @@ event_player_spawned:
         self.hitmarker_started = 1
         local.idx = 300
 
-        ihuddraw_font self local.idx "default"
+        ihuddraw_font self local.idx "verdana-12"
         ihuddraw_align self local.idx "center" "center"
-        ihuddraw_rect self local.idx -10 -23 0 0
-        ihuddraw_string self local.idx "\\  /\n\n/  \\"
+        ihuddraw_rect self local.idx -9 -19 0 0
+        ihuddraw_string self local.idx "\\   /\n\n/   \\"
         ihuddraw_color self local.idx 0.95 0.93 0.85
         ihuddraw_alpha self local.idx 0.0
     }
