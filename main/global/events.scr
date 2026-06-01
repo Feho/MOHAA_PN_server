@@ -59,10 +59,10 @@ end
 
 event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
 
-    // Spawn a treasure with a 5% probability
+    // Spawn a treasure with a 4% probability
     local.origin = self.origin
 
-    if (randomint(100) < 5)
+    if (randomint(100) < 4)
     {
         local.info = makeArray
             local.origin ( 0 0 0 ) "random" 0
