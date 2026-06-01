@@ -71,14 +71,6 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
         thread global/AIR_gold.scr::treasure_spawn local.info
     }
 
-    // Center-screen "ENEMY KILLED — <name>" banner shown to the killer.
-    // Default ON; set "kill_banner 0" to disable (e.g. to A/B test whether the
-    // banner contributes to a multikill hitch vs. the tickets HUD). An unset cvar
-    // reads as "" here (engine default), so we only bail on an explicit "0".
-    local.kb_cvar = getcvar "kill_banner"
-    if (local.kb_cvar == "0")
-        end
-
     local.victim = self
     if (!local.attacker) end
     if (local.attacker == local.victim) end                       // suicide
@@ -275,7 +267,7 @@ show_kill_banner local.name:
         // Backdrop fade-in, concurrent with typing: full by the 5th frame.
         local.a = float(local.n) / 5
         if (local.a > 1.0) local.a = 1.0
-        ihuddraw_alpha self local.panel (local.a * 0.3)
+        ihuddraw_alpha self local.panel (local.a * 0.2)
         ihuddraw_alpha self local.bar local.a
 
         waitframe
@@ -286,7 +278,7 @@ show_kill_banner local.name:
     if (!self || self.kb_gen != local.gen) end
     ihuddraw_string self local.top local.topstr
     ihuddraw_string self local.bot local.name
-    ihuddraw_alpha self local.panel 0.3
+    ihuddraw_alpha self local.panel 0.2
     ihuddraw_alpha self local.bar 1.0
 
     if (!self || self.kb_gen != local.gen) end
@@ -295,12 +287,12 @@ show_kill_banner local.name:
     wait 2.4
     if (!self || self.kb_gen != local.gen) end
 
-    for (local.s = 10; local.s >= 0; local.s--)
+    for (local.s = 5; local.s >= 0; local.s--)
     {
         if (!self || self.kb_gen != local.gen) end
-        local.a = float(local.s) / 10
+        local.a = float(local.s) / 5
 
-        ihuddraw_alpha self local.panel (local.a * 0.3)
+        ihuddraw_alpha self local.panel (local.a * 0.2)
         ihuddraw_alpha self local.bar local.a
         ihuddraw_alpha self local.top local.a
         ihuddraw_alpha self local.bot local.a
