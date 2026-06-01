@@ -5,7 +5,7 @@
 
 main: 
 
-	setcvar "g_gametype" "2"
+	setcvar "g_gametype" "4"
 	//setcvar "developer" "0" // temporaire
 	
 	if((getcvar("g_gametype") == "1")) 
@@ -348,8 +348,12 @@ Stage_Timer:
 	local.messagetosay = "S T A G E  1"
 	thread scrollMsg local.messagetosay
 
-    local.timelimit_minutes = int(getcvar "timelimit")
-	wait (local.timelimit_minutes * 60 * 0.5)
+	if (level.roundbased)
+		local.timelimit = level.dmroundlimit
+	else
+		local.timelimit = int(getcvar "timelimit")
+
+	wait (local.timelimit * 60 * 0.5)
 	
 	waitthread global/feho/squad.scr::reset
 
