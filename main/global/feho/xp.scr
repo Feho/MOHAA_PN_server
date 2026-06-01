@@ -243,7 +243,21 @@ end
 // --- Round end -------------------------------------------------------------
 // A thread can waittill only one notify at a time, so fan out one literal-token
 // watcher per outcome (the engine fires allieswin/axiswin via teamwin in
-// tickets.scr finish_round; obj_team*.scr waits on the same notifies).
+// tickets.scr finish_round; obj_team*.scr waits on the same notifies, including
+// obj_team1.scr's axis_win_timer which waits on a *timer*-driven axiswin).
+//
+// VERIFY IN-GAME: confirm the summary appears when a round ends by ENGINE TIMER
+// EXPIRY (timelimit/dmroundlimit), not only by full-team elimination. tickets.scr
+// calls teamwin only on elimination; the engine resolves a timed round itself
+// using level.clockside. The obj_team*.scr timer-win threads imply the engine
+// also emits allieswin/axiswin on that path — if testing shows it does NOT, add a
+// self-contained fallback here (e.g. a poll on tickets' round-over state or the
+// intermission), keeping this file's no-other-script-edits contract.
+//
+// SINGLE ROUND PER MAP: level.xp_summary_shown latches for the whole map and only
+// clears when main: re-runs on map load. Every active-rotation map execs tickets
+// (timelimit 1) -> one round per map, so this is correct. If a multi-round map
+// (e.g. a non-tickets mohdm*) is ever enabled, reset the latch per round.
 xp_winwatch:
     thread xp_winwatch_allies
     thread xp_winwatch_axis
@@ -280,7 +294,10 @@ xp_show_round_summary:
         local.p = $player[local.i]
         if (local.p == NIL || local.p == NULL) continue
         if (isBot local.p) continue
-        if (local.p.dmteam == "spectator") continue
+        // Only ranked combatants: this is a team match (g_gametype 4), so anyone
+        // not on allies/axis (spectator, freeforall, just-joined, mid-switch) is
+        // excluded — otherwise they'd pad the board with phantom 0-XP rows.
+        if (local.p.dmteam != "allies" && local.p.dmteam != "axis") continue
 
         local.score = local.p.xp_total
         if (local.score == NIL)
