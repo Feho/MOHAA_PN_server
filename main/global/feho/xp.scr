@@ -1,0 +1,403 @@
+/*
+Battlefield-style XP / scoring feedback. v1 (simplest version).
+
+Self-contained: this script subscribes to its own "player_killed" event and
+watches the engine win-notifies directly. It does NOT modify events.scr,
+tickets.scr or any other script. The only edit outside this file is one
+`exec global/feho/xp.scr` line in DMprecache.scr.
+
+Two pieces:
+  1. A live, center-screen XP "receipt" under the kill banner: each kill shows
+     an itemized list (+100 Kill / +75 Headshot / +50 Double Kill) with a
+     subtotal, then fades. Same-frame multikills (a grenade killing several)
+     coalesce into ONE receipt via the generation guard, exactly like the kill
+     banner (events.scr show_kill_banner).
+  2. A round-end sorted standings + MVP, drawn when the engine fires
+     allieswin / axiswin / draw (the same notify obj_team*.scr already uses,
+     fired by tickets.scr finish_round -> teamwin).
+
+State is entity-scoped (self.* on the scoring player), so it lives and dies
+with the player: no disconnect policy, no entnum-reuse bugs, and it clears on
+map change -> per-map persistence as required.
+
+HUD indices: 310-319 (reserved; see docs/ihuddraw_used_indexes.txt).
+  Live feed : 311-314 item lines, 315 subtotal.
+  Round end : 310 MVP header, 311-318 rank rows (feed hidden first).
+*/
+
+main:
+    if (level.xp_initialized == 1)
+        end
+    level.xp_initialized = 1
+
+    // --- Tuning constants (level-scoped so the per-entity threads can read them) ---
+    level.xp_kill = 100              // base XP per enemy kill
+    level.xp_headshot = 75           // bonus for a head/helmet/neck kill
+    level.xp_multi_window = 3.0      // seconds: chained kills within this count up the multikill
+
+    // NOTE: there is intentionally NO separate "coalesce window". Each kill builds
+    // its own self-contained receipt; same-frame multikills coalesce to the newest
+    // via the waitframe + xp_gen guard, mirroring events.scr show_kill_banner. A
+    // later kill simply supersedes the previous receipt, just like the kill banner.
+
+    level.xp_summary_shown = 0
+
+    event_subscribe "player_killed" xp_on_player_killed
+    thread xp_winwatch
+end
+
+// self == victim. Filtered exactly like events.scr:82-88.
+xp_on_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+    // self == victim: dying breaks the victim's own multikill chain (so a
+    // kill -> death -> kill within the window doesn't escalate across lives).
+    self.xp_mk_count = NIL
+
+    if (!local.attacker) end
+    if (local.attacker == self) end                       // suicide
+    if (local.attacker.dmteam == self.dmteam) end         // teamkill
+    if (isBot local.attacker) end                         // bots have no HUD
+
+    // hitloc_t: HITLOC_HEAD=0, HITLOC_HELMET=1, HITLOC_NECK=2 (events.scr treats
+    // location as an int too). Guard NIL explicitly: explosive/grenade kills often
+    // report no hit location, and NIL coerces to 0 in numeric comparison — without
+    // this guard every such kill would be mis-scored as a headshot.
+    local.is_headshot = (local.location != NIL && local.location >= 0 && local.location <= 2)
+
+    local.attacker thread xp_award_kill local.is_headshot
+end
+
+// ON the attacker (self). Builds THIS kill's receipt, accumulates the per-map
+// total, then renders — coalescing same-frame multikills to the newest thread.
+xp_award_kill local.is_headshot:
+    if (!self) end
+
+    // --- Multikill chain count (its own 3.0s window + timestamp) ---
+    if (self.xp_mk_count == NIL || self.xp_mk_last_time == NIL || (level.time - self.xp_mk_last_time) > level.xp_multi_window)
+        local.count = 1
+    else
+        local.count = self.xp_mk_count + 1
+    self.xp_mk_count = local.count
+    self.xp_mk_last_time = level.time
+
+    // --- Build this kill's line items into the receipt arrays (self-contained) ---
+    local.n = 0
+
+    self.xp_recv_label[local.n] = "Kill"
+    self.xp_recv_amount[local.n] = level.xp_kill
+    local.n++
+
+    if (local.is_headshot)
+    {
+        self.xp_recv_label[local.n] = "Headshot"
+        self.xp_recv_amount[local.n] = level.xp_headshot
+        local.n++
+    }
+
+    if (local.count >= 2)
+    {
+        local.mk_label = waitthread xp_mk_label local.count
+        local.mk_amount = waitthread xp_mk_amount local.count
+        self.xp_recv_label[local.n] = local.mk_label
+        self.xp_recv_amount[local.n] = local.mk_amount
+        local.n++
+    }
+
+    self.xp_recv_n = local.n
+
+    // --- Accumulate per-map total (runs for EVERY kill, never coalesced away) ---
+    if (self.xp_total == NIL)
+        self.xp_total = 0
+    local.sum = 0
+    for (local.i = 0; local.i < local.n; local.i++)
+        local.sum += self.xp_recv_amount[local.i]
+    self.xp_total += local.sum
+
+    // --- Generation guard. Same-frame multikill: each victim spawns one of these
+    // threads on the killer; each bumps xp_gen then waitframes; next frame only the
+    // newest survives and renders one receipt (mirrors events.scr:171-185). ---
+    if (self.xp_gen == NIL)
+        self.xp_gen = 0
+    self.xp_gen++
+    local.gen = self.xp_gen
+
+    waitframe
+    if (!self || self.xp_gen != local.gen) end
+
+    waitthread xp_render local.gen
+end
+
+xp_mk_label local.count:
+    if (local.count == 2) end "Double Kill"
+    if (local.count == 3) end "Triple Kill"
+    if (local.count == 4) end "Multi Kill"
+end "Mega Kill"
+
+xp_mk_amount local.count:
+    if (local.count == 2) end 50
+    if (local.count == 3) end 75
+    if (local.count == 4) end 100
+end 150
+
+// One-time static HUD setup for a player's XP feed. Issues the properties that
+// never change (fonts, alignments, colors), drawn hidden (alpha 0). The hot path
+// only touches strings, rects and alphas. Text only: no backdrop panel, no
+// accent bar.
+//   311-314 : item lines (facfont-20, off-white)
+//   315     : subtotal     (handle-23, gold)
+xp_setup:
+    for (local.i = 0; local.i < 4; local.i++)
+    {
+        local.idx = 311 + local.i
+        ihuddraw_font self local.idx "facfont-20"
+        ihuddraw_align self local.idx "center" "center"
+        ihuddraw_color self local.idx 0.95 0.93 0.85
+        ihuddraw_alpha self local.idx 0.0
+    }
+
+    ihuddraw_font self 315 "handle-23"
+    ihuddraw_align self 315 "center" "center"
+    ihuddraw_color self 315 1.0 0.85 0.4
+    ihuddraw_alpha self 315 0.0
+
+    self.xp_setup = 1
+end
+
+// Renders self.xp_recv_* on the scoring player. Gen-guarded throughout so a newer
+// kill mid-render bails this one and owns the HUD indices.
+xp_render local.gen:
+    if (!self || self.xp_gen != local.gen) end
+
+    if (self.xp_setup != 1)
+        waitthread xp_setup
+    if (!self || self.xp_gen != local.gen) end
+
+    local.n = self.xp_recv_n
+    local.drawn = local.n
+    if (local.drawn > 4)
+        local.drawn = 4
+
+    // Sits directly under the kill banner (banner bottom ink ~y204). Lines stack
+    // downward; subtotal sits just below the last line.
+    local.feed_y0 = 210
+    local.spacing = 18
+
+    // Subtotal = sum of ALL line amounts (even rows beyond the 4-row draw cap).
+    local.subtotal = 0
+    for (local.i = 0; local.i < local.n; local.i++)
+        local.subtotal += self.xp_recv_amount[local.i]
+
+    // Strings + positions for the drawn rows.
+    for (local.i = 0; local.i < local.drawn; local.i++)
+    {
+        local.idx = 311 + local.i
+        local.y = local.feed_y0 + local.i * local.spacing
+        local.line = "+" + self.xp_recv_amount[local.i] + " " + self.xp_recv_label[local.i]
+        ihuddraw_string self local.idx local.line
+        ihuddraw_rect self local.idx 0 local.y 0 0
+    }
+    // Hide any rows a previous, longer receipt left visible.
+    for (local.i = local.drawn; local.i < 4; local.i++)
+        ihuddraw_alpha self (311 + local.i) 0.0
+
+    local.sub_y = local.feed_y0 + local.drawn * local.spacing + 4
+    local.substr = "" + local.subtotal + " XP"
+    ihuddraw_string self 315 local.substr
+    ihuddraw_rect self 315 0 local.sub_y 0 0
+
+    // Fade in.
+    for (local.s = 1; local.s <= 5; local.s++)
+    {
+        if (!self || self.xp_gen != local.gen) end
+        local.a = float(local.s) / 5
+        for (local.i = 0; local.i < local.drawn; local.i++)
+            ihuddraw_alpha self (311 + local.i) local.a
+        ihuddraw_alpha self 315 local.a
+        waitframe
+    }
+
+    if (!self || self.xp_gen != local.gen) end
+    for (local.i = 0; local.i < local.drawn; local.i++)
+        ihuddraw_alpha self (311 + local.i) 1.0
+    ihuddraw_alpha self 315 1.0
+
+    // Hold, then fade out — bail immediately if a newer kill superseded us.
+    wait 2.4
+    if (!self || self.xp_gen != local.gen) end
+
+    for (local.s = 10; local.s >= 0; local.s--)
+    {
+        if (!self || self.xp_gen != local.gen) end
+        local.a = float(local.s) / 10
+        for (local.i = 0; local.i < local.drawn; local.i++)
+            ihuddraw_alpha self (311 + local.i) local.a
+        ihuddraw_alpha self 315 local.a
+        waitframe
+    }
+
+    if (!self || self.xp_gen != local.gen) end
+    for (local.i = 0; local.i < 4; local.i++)
+        ihuddraw_alpha self (311 + local.i) 0.0
+    ihuddraw_alpha self 315 0.0
+end
+
+// --- Round end -------------------------------------------------------------
+// A thread can waittill only one notify at a time, so fan out one literal-token
+// watcher per outcome (the engine fires allieswin/axiswin via teamwin in
+// tickets.scr finish_round; obj_team*.scr waits on the same notifies).
+xp_winwatch:
+    thread xp_winwatch_allies
+    thread xp_winwatch_axis
+    thread xp_winwatch_draw
+end
+
+xp_winwatch_allies:
+    level waittill allieswin
+    waitthread xp_summary_once
+end
+
+xp_winwatch_axis:
+    level waittill axiswin
+    waitthread xp_summary_once
+end
+
+xp_winwatch_draw:
+    level waittill draw
+    waitthread xp_summary_once
+end
+
+// Only fire once per map (timelimit 1 -> one round per map).
+xp_summary_once:
+    if (level.xp_summary_shown == 1) end
+    level.xp_summary_shown = 1
+    waitthread xp_show_round_summary
+end
+
+xp_show_round_summary:
+    // Collect connected humans and their totals into parallel arrays.
+    local.cn = 0
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+        if (local.p == NIL || local.p == NULL) continue
+        if (isBot local.p) continue
+        if (local.p.dmteam == "spectator") continue
+
+        local.score = local.p.xp_total
+        if (local.score == NIL)
+            local.score = 0          // players with no kills never had it set
+
+        local.cn++
+        local.names[local.cn] = netname local.p
+        local.scores[local.cn] = local.score
+        local.ents[local.cn] = local.p
+    }
+
+    if (local.cn <= 0) end
+
+    // Selection sort, descending by score (tiny N). Top = MVP.
+    for (local.a = 1; local.a <= local.cn; local.a++)
+    {
+        local.best = local.a
+        for (local.b = local.a + 1; local.b <= local.cn; local.b++)
+        {
+            if (local.scores[local.b] > local.scores[local.best])
+                local.best = local.b
+        }
+        if (local.best != local.a)
+        {
+            local.tn = local.names[local.a]
+            local.names[local.a] = local.names[local.best]
+            local.names[local.best] = local.tn
+
+            local.ts = local.scores[local.a]
+            local.scores[local.a] = local.scores[local.best]
+            local.scores[local.best] = local.ts
+        }
+    }
+
+    // Publish sorted standings for the per-viewer renderer (params can't carry arrays).
+    level.xp_rank_n = local.cn
+    for (local.i = 1; local.i <= local.cn; local.i++)
+    {
+        level.xp_rank_name[local.i] = local.names[local.i]
+        level.xp_rank_score[local.i] = local.scores[local.i]
+    }
+
+    // SWITCH POINT (intermission-clobber risk): "hud" draws the ihuddraw standings;
+    // "print" uses iprintlnbold, which survives the engine intermission scoreboard.
+    // Decide after the in-game test; default "hud".
+    local.mode = getcvar "xp_summary_mode"
+    if (local.mode == "print")
+    {
+        waitthread xp_print_summary
+        end
+    }
+
+    for (local.i = 1; local.i <= local.cn; local.i++)
+        thread xp_draw_summary_for local.ents[local.i]
+end
+
+// HUD standings for one viewer. Reuses 310-318 (feed hidden first).
+xp_draw_summary_for local.viewer:
+    if (local.viewer == NIL || local.viewer == NULL) end
+
+    // Invalidate any in-flight live-feed render for this player (e.g. the very kill
+    // that ended the round). Bumping xp_gen makes that thread's gen-guard bail on its
+    // next step so it can't re-alpha 311-315 on top of the standings we draw below.
+    if (local.viewer.xp_gen == NIL)
+        local.viewer.xp_gen = 0
+    local.viewer.xp_gen++
+
+    // Hide the live feed.
+    for (local.i = 311; local.i <= 315; local.i++)
+        ihuddraw_alpha local.viewer local.i 0.0
+
+    local.n = level.xp_rank_n
+    if (local.n > 8)
+        local.n = 8                  // 311..318 -> at most 8 rows
+
+    // MVP header (310).
+    ihuddraw_font local.viewer 310 "handle-23"
+    ihuddraw_align local.viewer 310 "center" "center"
+    ihuddraw_color local.viewer 310 1.0 0.85 0.4
+    ihuddraw_rect local.viewer 310 0 140 0 0
+    local.header = "MVP  " + level.xp_rank_name[1]
+    ihuddraw_string local.viewer 310 local.header
+    ihuddraw_alpha local.viewer 310 1.0
+
+    // Rank rows (311-318): "1. Name   1234".
+    local.y0 = 168
+    local.spacing = 18
+    for (local.i = 1; local.i <= local.n; local.i++)
+    {
+        local.idx = 310 + local.i
+        local.y = local.y0 + (local.i - 1) * local.spacing
+        local.row = "" + local.i + ". " + level.xp_rank_name[local.i] + "   " + level.xp_rank_score[local.i]
+        ihuddraw_font local.viewer local.idx "facfont-20"
+        ihuddraw_align local.viewer local.idx "center" "center"
+        ihuddraw_color local.viewer local.idx 0.95 0.93 0.85
+        ihuddraw_rect local.viewer local.idx 0 local.y 0 0
+        ihuddraw_string local.viewer local.idx local.row
+        ihuddraw_alpha local.viewer local.idx 1.0
+    }
+
+    wait 8
+    if (local.viewer == NIL || local.viewer == NULL) end
+    for (local.i = 310; local.i <= 318; local.i++)
+        ihuddraw_alpha local.viewer local.i 0.0
+end
+
+// Fallback standings via the bold center-print (survives intermission).
+xp_print_summary:
+    local.head = "=== ROUND OVER   MVP: " + level.xp_rank_name[1] + " ==="
+    iprintlnbold local.head
+
+    local.n = level.xp_rank_n
+    if (local.n > 8)
+        local.n = 8
+    for (local.i = 1; local.i <= local.n; local.i++)
+    {
+        local.line = "" + local.i + ". " + level.xp_rank_name[local.i] + "   " + level.xp_rank_score[local.i] + " XP"
+        iprintlnbold local.line
+    }
+end

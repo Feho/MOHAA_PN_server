@@ -10,3 +10,5 @@ Liste des index utilisés pour afficher des messages à un joueur :
 294-295 : Feho kill banner text (ENEMY KILLED + victim name)
 296     : Feho kill banner left accent bar (red, white.tga tinted, drawn above panel)
 300-303 : Feho hitmarker X (event_player_damaged, four segments)
+310-319 : Feho XP feed / round-end summary (xp.scr). Live feed: 311-314 item
+          lines, 315 subtotal. Round end: 310 MVP header, 311-318 rank rows.
