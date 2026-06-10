@@ -13,6 +13,8 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
 
     if (local.location == -1) end // grenade, bash...
 
+    if (isBot local.attacker) end
+
     if (!local.attacker.prev_kill_time)
     {
         local.attacker.prev_kill_angle = local.attacker.angle
@@ -33,6 +35,9 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
 
     local.angle_diff = local.attacker.angle - local.attacker.prev_kill_angle
 
+    local.attacker.prev_kill_angle = local.attacker.angle
+    local.attacker.prev_kill_time = level.time
+
     // Angle normalization
     if (local.angle_diff > 180) local.angle_diff = local.angle_diff - 360
     if (local.angle_diff < -180) local.angle_diff = local.angle_diff + 360
@@ -41,7 +46,7 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
     local.degrees_per_second = local.angle_diff / local.time_diff
 
     // I think values higher than 100 deg/s could be considered suspicious, as they are likely to indicate the use of an aimbot.
-    if (local.degrees_per_second > 100 && !isBot local.attacker)
+    if (local.degrees_per_second > 100)
     {
         local.developer = getcvar "developer"
         setcvar "developer" 1
