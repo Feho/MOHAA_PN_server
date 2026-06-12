@@ -30,6 +30,18 @@ draw_rect_color local.player local.idx local.halign local.valign local.x local.y
 	ihuddraw_alpha local.player local.idx local.alpha
 end
 
+// Global (shared-for-everyone) variant of draw_rect_color. Uses the huddraw_*
+// family, which writes ONE HUD seen by all clients — no per-player arg, no loop.
+// Use this for HUDs that are identical for every player (e.g. team tickets); use
+// the per-player draw_rect_color when content differs per client.
+draw_rect_color_global local.idx local.halign local.valign local.x local.y local.w local.h local.rgb local.alpha:
+	huddraw_shader local.idx "textures/common/white.tga"
+	huddraw_align local.idx local.halign local.valign
+	huddraw_rect local.idx local.x local.y local.w local.h
+	huddraw_color local.idx local.rgb[0] local.rgb[1] local.rgb[2]
+	huddraw_alpha local.idx local.alpha
+end
+
 // Hide a previously drawn HUD element.
 hide local.player local.idx:
 	if (local.player == NIL || local.player == NULL) end

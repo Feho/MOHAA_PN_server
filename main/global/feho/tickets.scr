@@ -74,9 +74,9 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
         end
 
     // Ticket arithmetic and its side effects (decrement, stopteamrespawn) must run
-    // for every kill. But the HUD redraw fans out to ALL players (~13 ihuddraw ops
-    // each) and a grenade killing N players fires this handler N times in one frame
-    // — an N-player x N-kill HUD flood. So the redraw is deferred + coalesced (see
+    // for every kill. The HUD is now a single global huddraw set (~13 ops total, not
+    // per-player), but a grenade killing N players still fires this handler N times in
+    // one frame — N redraws. So the redraw stays deferred + coalesced (see
     // request_ticket_hud_refresh): all N kills decrement synchronously this frame,
     // then a single redraw next frame shows the final counts. update_clockside and
     // check_ticket_winner are cheap and stay per-kill; pulse_team_count self-guards.
@@ -97,7 +97,9 @@ event_player_spawned:
     if (isBot self)
         end
 
-    waitthread update_ticket_hud self
+    // Global HUD already shows for everyone; one redraw ensures the just-spawned
+    // player sees current counts immediately (tickets_hud_loop also refreshes ~1s).
+    waitthread update_ticket_hud
     thread show_ticket_help self
 end
 
@@ -368,14 +370,9 @@ pulse_team_count local.team:
         level.tickets_axis_pulsing = 0
 end
 
+// Global HUD: one huddraw_alpha sets the shared element for all clients.
 apply_team_alpha local.idx local.alpha:
-    for (local.i = 1; local.i <= $player.size; local.i++)
-    {
-        local.player = $player[local.i]
-        if (local.player == NIL || local.player == NULL) continue
-        if (isBot local.player) continue
-        ihuddraw_alpha local.player local.idx local.alpha
-    }
+    huddraw_alpha local.idx local.alpha
 end
 
 // Coalesced, 1-frame-deferred ticket-HUD redraw. Spawn this async (thread, NOT
@@ -398,57 +395,51 @@ request_ticket_hud_refresh:
     waitthread update_all_ticket_huds
 end
 
+// The tickets HUD is identical for everyone, so it's drawn once with the global
+// huddraw_* family (one shared HUD) rather than looping ihuddraw per player.
 update_all_ticket_huds:
-    for (local.i = 1; local.i <= $player.size; local.i++)
-    {
-        local.player = $player[local.i]
-        if (local.player != NIL && local.player != NULL && !isBot local.player)
-            waitthread update_ticket_hud local.player
-    }
+    waitthread update_ticket_hud
 end
 
-update_ticket_hud local.player:
-    if (local.player == NIL || local.player == NULL || isBot local.player)
-        end
-
+update_ticket_hud:
     local.base = 240
     local.y = -78
 
     // --- Backdrop panel at index 240 (lowest, draws behind the text indices 241-246)
-    // white.tga base lets ihuddraw_color tint each team's panel. Kept dark + desaturated
+    // white.tga base lets huddraw_color tint each team's panel. Kept dark + desaturated
     // (low luminance) so the bright team text (allies blue / axis red) stays readable on top.
     // Indices 240/241 back the allies side, 242/243 the axis side.
-    waitthread global/feho/hud_lib.scr::draw_rect_color local.player local.base "center" "bottom" -234 (local.y - 1) 40 20 ( 0.012 0.020 0.036 ) 0.6
-    waitthread global/feho/hud_lib.scr::draw_rect_color local.player (local.base + 1) "center" "bottom" -104 (local.y + 4) 200 10 ( 0.012 0.020 0.036 ) 0.6
-    waitthread global/feho/hud_lib.scr::draw_rect_color local.player (local.base + 2) "center" "bottom" 105 (local.y + 4) 200 10 ( 0.036 0.012 0.012 ) 0.6
-    waitthread global/feho/hud_lib.scr::draw_rect_color local.player (local.base + 3) "center" "bottom" 235 (local.y - 1) 40 20 ( 0.036 0.012 0.012 ) 0.6
+    waitthread global/feho/hud_lib.scr::draw_rect_color_global local.base "center" "bottom" -234 (local.y - 1) 40 20 ( 0.012 0.020 0.036 ) 0.6
+    waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 1) "center" "bottom" -104 (local.y + 4) 200 10 ( 0.012 0.020 0.036 ) 0.6
+    waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 2) "center" "bottom" 105 (local.y + 4) 200 10 ( 0.036 0.012 0.012 ) 0.6
+    waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 3) "center" "bottom" 235 (local.y - 1) 40 20 ( 0.036 0.012 0.012 ) 0.6
 
     local.allies_tickets = waitthread format_ticket_count level.tickets_allies
     local.axis_tickets = level.tickets_axis
     local.allies_critical = waitthread is_critical_tickets level.tickets_allies
     local.axis_critical = waitthread is_critical_tickets level.tickets_axis
 
-    ihuddraw_align local.player (local.base + 4) "center" "bottom"
-    ihuddraw_rect local.player (local.base + 4) -249 (local.y - 1) 0 0
-    ihuddraw_font local.player (local.base + 4) "courier-20"
-    waitthread set_ticket_color local.player (local.base + 4) "allies" local.allies_critical
-    ihuddraw_string local.player (local.base + 4) local.allies_tickets
-    ihuddraw_alpha local.player (local.base + 4) 1.0
+    huddraw_align (local.base + 4) "center" "bottom"
+    huddraw_rect (local.base + 4) -249 (local.y - 1) 0 0
+    huddraw_font (local.base + 4) "courier-20"
+    waitthread set_ticket_color (local.base + 4) "allies" local.allies_critical
+    huddraw_string (local.base + 4) local.allies_tickets
+    huddraw_alpha (local.base + 4) 1.0
 
     // Bar fills (indices 245/246) draw on top of the backdrop tracks (241/242).
     // The dark team-tinted backdrop is the empty track; this bright rect is the fill.
     // Both deplete from the outer edge toward the center, matching the old #-bar.
-    waitthread draw_ticket_fill local.player (local.base + 5) "allies" level.tickets_allies local.allies_critical
-    waitthread draw_ticket_fill local.player (local.base + 6) "axis" level.tickets_axis local.axis_critical
+    waitthread draw_ticket_fill (local.base + 5) "allies" level.tickets_allies local.allies_critical
+    waitthread draw_ticket_fill (local.base + 6) "axis" level.tickets_axis local.axis_critical
 
-    ihuddraw_align local.player (local.base + 7) "center" "bottom"
-    ihuddraw_rect local.player (local.base + 7) 220 (local.y - 1) 0 0
-    ihuddraw_font local.player (local.base + 7) "courier-20"
-    waitthread set_ticket_color local.player (local.base + 7) "axis" local.axis_critical
-    ihuddraw_string local.player (local.base + 7) local.axis_tickets
-    ihuddraw_alpha local.player (local.base + 7) 1.0
+    huddraw_align (local.base + 7) "center" "bottom"
+    huddraw_rect (local.base + 7) 220 (local.y - 1) 0 0
+    huddraw_font (local.base + 7) "courier-20"
+    waitthread set_ticket_color (local.base + 7) "axis" local.axis_critical
+    huddraw_string (local.base + 7) local.axis_tickets
+    huddraw_alpha (local.base + 7) 1.0
 
-    waitthread update_last_stand_hud local.player local.base local.y
+    waitthread update_last_stand_hud local.base local.y
 end
 
 format_ticket_count local.tickets:
@@ -470,7 +461,7 @@ end ("" + local.tickets)
 //   axis   track spans x=[5,205]  (backdrop 242, center  105 w 200)
 // Both deplete from the outer edge inward, mirroring the old #-bar direction.
 // At 0 tickets the fill is hidden (alpha 0); the last-stand HUD covers that state.
-draw_ticket_fill local.player local.idx local.team local.tickets local.is_critical:
+draw_ticket_fill local.idx local.team local.tickets local.is_critical:
     local.track_w = 200
     local.bar_h = 10   // matches the backdrop track height (both trimmed 20% from 13)
     local.y = -78
@@ -488,7 +479,7 @@ draw_ticket_fill local.player local.idx local.team local.tickets local.is_critic
 
     if (local.fill_w <= 0)
     {
-        ihuddraw_alpha local.player local.idx 0.0
+        huddraw_alpha local.idx 0.0
         end
     }
 
@@ -510,7 +501,7 @@ draw_ticket_fill local.player local.idx local.team local.tickets local.is_critic
     if (local.is_critical == 1 && level.tickets_blink_state == 1)
         local.fill_rgb = ( 0.81 0.685 0.165 )
 
-    waitthread global/feho/hud_lib.scr::draw_rect_color local.player local.idx "center" "bottom" local.center_x (local.y + 4) local.fill_w local.bar_h local.fill_rgb 1.0
+    waitthread global/feho/hud_lib.scr::draw_rect_color_global local.idx "center" "bottom" local.center_x (local.y + 4) local.fill_w local.bar_h local.fill_rgb 1.0
 end
 
 is_critical_tickets local.tickets:
@@ -527,16 +518,16 @@ has_critical_tickets:
 
 end 0
 
-set_ticket_color local.player local.hud_id local.team local.is_critical:
+set_ticket_color local.hud_id local.team local.is_critical:
     if (local.is_critical == 1 && level.tickets_blink_state == 1)
-        ihuddraw_color local.player local.hud_id 1.00 0.85 0.15
+        huddraw_color local.hud_id 1.00 0.85 0.15
     else if (local.team == "allies")
-        ihuddraw_color local.player local.hud_id 0.45 0.70 1.00
+        huddraw_color local.hud_id 0.45 0.70 1.00
     else
-        ihuddraw_color local.player local.hud_id 1.00 0.38 0.28
+        huddraw_color local.hud_id 1.00 0.38 0.28
 end
 
-update_last_stand_hud local.player local.base local.y:
+update_last_stand_hud local.base local.y:
     local.message = NIL
 
     if (level.tickets_allies <= 0 && level.tickets_axis <= 0)
@@ -558,14 +549,14 @@ update_last_stand_hud local.player local.base local.y:
 
     if (local.message == NIL)
     {
-        ihuddraw_alpha local.player (local.base + 8) 0.0
+        huddraw_alpha (local.base + 8) 0.0
         end
     }
 
-    ihuddraw_align local.player (local.base + 8) "center" "bottom"
-    ihuddraw_rect local.player (local.base + 8) -120 (local.y - 20) 0 0
-    ihuddraw_font local.player (local.base + 8) "courier-20"
-    ihuddraw_color local.player (local.base + 8) 0.95 0.95 0.80
-    ihuddraw_string local.player (local.base + 8) local.message
-    ihuddraw_alpha local.player (local.base + 8) 1.0
+    huddraw_align (local.base + 8) "center" "bottom"
+    huddraw_rect (local.base + 8) -120 (local.y - 20) 0 0
+    huddraw_font (local.base + 8) "courier-20"
+    huddraw_color (local.base + 8) 0.95 0.95 0.80
+    huddraw_string (local.base + 8) local.message
+    huddraw_alpha (local.base + 8) 1.0
 end
