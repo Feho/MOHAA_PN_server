@@ -7,9 +7,10 @@ tickets.scr or any other script. The only edit outside this file is one
 `exec global/feho/xp.scr` line in DMprecache.scr.
 
 Two pieces:
-  1. A live, center-screen XP "receipt" under the kill banner: each kill shows
-     an itemized list (+100 Kill / +75 Headshot / +50 Double Kill) with a
-     subtotal, then fades. Same-frame multikills (a grenade killing several)
+  1. A live XP "receipt" under the kill banner, Battlefield 1 style: each kill
+     shows right-edge-aligned inline lines (ENEMY KILLED 100 / HEADSHOT 75 /
+     DOUBLE KILL 50) hugging a common right margin, with a subtotal, then fades.
+     Same-frame multikills (a grenade killing several)
      coalesce into ONE receipt via the generation guard, exactly like the kill
      banner (events.scr show_kill_banner).
   2. A round-end sorted standings + MVP, drawn when the engine fires
@@ -79,16 +80,38 @@ xp_award_kill local.is_headshot:
     self.xp_mk_count = local.count
     self.xp_mk_last_time = level.time
 
+    // --- Base + headshot: the per-VICTIM portion. Computed from locals (never by
+    // reading back the shared self.xp_recv_* arrays, which sibling same-frame threads
+    // also write). Banked SYNCHRONOUSLY below — every victim must count, so a grenade
+    // that kills 5 banks 5x base here, before any coalescing can drop a sibling. ---
+    local.base = level.xp_kill
+    if (local.is_headshot)
+        local.base += level.xp_headshot
+
+    // --- Multikill bonus: the per-CLUSTER portion. Banked ONCE, by the surviving
+    // gen thread only (see after the guard). A same-frame grenade multikill must bank
+    // ONE bonus for the whole cluster, not one per victim — matching the single
+    // receipt the player sees. self.xp_mk_count holds the cluster's kill count. ---
+    if (local.count >= 2)
+        local.bonus = waitthread xp_mk_amount local.count
+    else
+        local.bonus = 0
+
     // --- Build this kill's line items into the receipt arrays (self-contained) ---
+    // Note: line 1 is always a single "Kill" (base). For a SAME-FRAME grenade cluster
+    // the visible receipt therefore understates ("Kill 100" while the total correctly
+    // banks base*victims) — a cosmetic carryover from the coalesced single-receipt
+    // design, not a total error. Fixing the popup needs a per-frame base accumulator
+    // keyed on level.time; deferred as polish.
     local.n = 0
 
-    self.xp_recv_label[local.n] = "Kill"
+    self.xp_recv_label[local.n] = "ENEMY KILLED"
     self.xp_recv_amount[local.n] = level.xp_kill
     local.n++
 
     if (local.is_headshot)
     {
-        self.xp_recv_label[local.n] = "Headshot"
+        self.xp_recv_label[local.n] = "HEADSHOT"
         self.xp_recv_amount[local.n] = level.xp_headshot
         local.n++
     }
@@ -96,21 +119,17 @@ xp_award_kill local.is_headshot:
     if (local.count >= 2)
     {
         local.mk_label = waitthread xp_mk_label local.count
-        local.mk_amount = waitthread xp_mk_amount local.count
         self.xp_recv_label[local.n] = local.mk_label
-        self.xp_recv_amount[local.n] = local.mk_amount
+        self.xp_recv_amount[local.n] = local.bonus
         local.n++
     }
 
     self.xp_recv_n = local.n
 
-    // --- Accumulate per-map total (runs for EVERY kill, never coalesced away) ---
+    // --- Bank the per-victim base SYNCHRONOUSLY (every thread, never coalesced). ---
     if (self.xp_total == NIL)
         self.xp_total = 0
-    local.sum = 0
-    for (local.i = 0; local.i < local.n; local.i++)
-        local.sum += self.xp_recv_amount[local.i]
-    self.xp_total += local.sum
+    self.xp_total += local.base
 
     // --- Generation guard. Same-frame multikill: each victim spawns one of these
     // threads on the killer; each bumps xp_gen then waitframes; next frame only the
@@ -123,14 +142,21 @@ xp_award_kill local.is_headshot:
     waitframe
     if (!self || self.xp_gen != local.gen) end
 
+    // Survivor-only: bank the cluster's single multikill bonus. Because each
+    // sequential kill is the sole survivor of its own frame, this still gives
+    // escalating bonuses across a spaced-out chain (50, then 75, ...), while a
+    // same-frame grenade cluster banks exactly one bonus for its highest count.
+    if (local.bonus > 0)
+        self.xp_total += local.bonus
+
     waitthread xp_render local.gen
 end
 
 xp_mk_label local.count:
-    if (local.count == 2) end "Double Kill"
-    if (local.count == 3) end "Triple Kill"
-    if (local.count == 4) end "Multi Kill"
-end "Mega Kill"
+    if (local.count == 2) end "DOUBLE KILL"
+    if (local.count == 3) end "TRIPLE KILL"
+    if (local.count == 4) end "MULTI KILL"
+end "MEGA KILL"
 
 xp_mk_amount local.count:
     if (local.count == 2) end 50
@@ -144,6 +170,18 @@ end 150
 // accent bar.
 //   311-314 : item lines (facfont-20, off-white)
 //   315     : subtotal     (handle-23, gold)
+//
+// BF1-style RIGHT-EDGE alignment, done under "center" horizontalalign:
+// the engine's "right" align does NOT right-justify a string — it just sets the
+// draw origin to (640 + iX) and glyphs flow rightward (left-origin;
+// cg_drawtools.cpp:617-623 adds 640, never consults text width). "center" adds
+// vidWidth*0.5 (=320 in 640-space) so iX is measured FROM SCREEN CENTER, matching
+// the kill banner and every other feho HUD element (none use ihuddraw_virtualsize,
+// so this whole HUD is non-virtual; staying non-virtual keeps the feed glued to
+// the banner across resolutions). With center-align the text draws left-origin
+// from 320+iX, so setting iX = XP_FEED_RIGHT - width makes the RIGHT edge land at
+// 320 + XP_FEED_RIGHT regardless of length — longer lines extend left (the BF1
+// look). Width is estimated via hud_lib facfont20_width/handle23_width.
 xp_setup:
     for (local.i = 0; local.i < 4; local.i++)
     {
@@ -178,22 +216,28 @@ xp_render local.gen:
 
     // Sits directly under the kill banner (banner bottom ink ~y204). Lines stack
     // downward; subtotal sits just below the last line.
-    local.feed_y0 = 210
+    local.feed_y0 = 230
     local.spacing = 18
+
+    // BF1 right-edge: every line's RIGHT edge lands at (screen-center + this), under
+    // the center-align set in xp_setup. iX = right - estimated_width cancels width so
+    // the right edge is fixed; longer lines extend further LEFT (the BF1 look).
+    local.right = 80
 
     // Subtotal = sum of ALL line amounts (even rows beyond the 4-row draw cap).
     local.subtotal = 0
     for (local.i = 0; local.i < local.n; local.i++)
         local.subtotal += self.xp_recv_amount[local.i]
 
-    // Strings + positions for the drawn rows.
+    // Strings + positions for the drawn rows. BF1 inline form: "ENEMY KILLED 20".
     for (local.i = 0; local.i < local.drawn; local.i++)
     {
         local.idx = 311 + local.i
         local.y = local.feed_y0 + local.i * local.spacing
-        local.line = "+" + self.xp_recv_amount[local.i] + " " + self.xp_recv_label[local.i]
+        local.line = self.xp_recv_label[local.i] + " " + self.xp_recv_amount[local.i]
+        local.w = waitthread global/feho/hud_lib.scr::facfont20_width local.line
         ihuddraw_string self local.idx local.line
-        ihuddraw_rect self local.idx 0 local.y 0 0
+        ihuddraw_rect self local.idx (local.right - local.w) local.y 0 0
     }
     // Hide any rows a previous, longer receipt left visible.
     for (local.i = local.drawn; local.i < 4; local.i++)
@@ -201,8 +245,9 @@ xp_render local.gen:
 
     local.sub_y = local.feed_y0 + local.drawn * local.spacing + 4
     local.substr = "" + local.subtotal + " XP"
+    local.subw = waitthread global/feho/hud_lib.scr::handle23_width local.substr
     ihuddraw_string self 315 local.substr
-    ihuddraw_rect self 315 0 local.sub_y 0 0
+    ihuddraw_rect self 315 (local.right - local.subw) local.sub_y 0 0
 
     // Fade in.
     for (local.s = 1; local.s <= 5; local.s++)
@@ -287,6 +332,12 @@ xp_summary_once:
 end
 
 xp_show_round_summary:
+    // If the round ended on a multikill's final blow, that kill's cluster bonus is
+    // banked one frame later (survivor path, after the waitframe in xp_award_kill).
+    // Yield one frame so any pending bonus settles before we read self.xp_total —
+    // base+headshot are banked synchronously, so only the deferred bonus needs this.
+    waitframe
+
     // Collect connected humans and their totals into parallel arrays.
     local.cn = 0
     for (local.i = 1; local.i <= $player.size; local.i++)
@@ -373,17 +424,22 @@ xp_draw_summary_for local.viewer:
     if (local.n > 8)
         local.n = 8                  // 311..318 -> at most 8 rows
 
+    // Standings origin. left-align => iX measured from the LEFT screen edge, so the
+    // whole table is left-justified at this margin (matches the SQUAD HUD, x=30 in
+    // squad.scr). Lower y raises it (still center-relative vertically).
+    local.x = 30
+
     // MVP header (310).
     ihuddraw_font local.viewer 310 "handle-23"
-    ihuddraw_align local.viewer 310 "center" "center"
+    ihuddraw_align local.viewer 310 "left" "center"
     ihuddraw_color local.viewer 310 1.0 0.85 0.4
-    ihuddraw_rect local.viewer 310 0 140 0 0
+    ihuddraw_rect local.viewer 310 local.x 120 0 0
     local.header = "MVP  " + level.xp_rank_name[1]
     ihuddraw_string local.viewer 310 local.header
     ihuddraw_alpha local.viewer 310 1.0
 
     // Rank rows (311-318): "1. Name   1234".
-    local.y0 = 168
+    local.y0 = 148
     local.spacing = 18
     for (local.i = 1; local.i <= local.n; local.i++)
     {
@@ -391,9 +447,9 @@ xp_draw_summary_for local.viewer:
         local.y = local.y0 + (local.i - 1) * local.spacing
         local.row = "" + local.i + ". " + level.xp_rank_name[local.i] + "   " + level.xp_rank_score[local.i]
         ihuddraw_font local.viewer local.idx "facfont-20"
-        ihuddraw_align local.viewer local.idx "center" "center"
+        ihuddraw_align local.viewer local.idx "left" "center"
         ihuddraw_color local.viewer local.idx 0.95 0.93 0.85
-        ihuddraw_rect local.viewer local.idx 0 local.y 0 0
+        ihuddraw_rect local.viewer local.idx local.x local.y 0 0
         ihuddraw_string local.viewer local.idx local.row
         ihuddraw_alpha local.viewer local.idx 1.0
     }
