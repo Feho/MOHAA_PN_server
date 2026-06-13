@@ -31,6 +31,7 @@ main:
     level.koth_rate_cap       = 1.4    // max progress %/sec (~5-body net)
     level.koth_draw_threshold = 5      // |progress| below this at end = draw, no swing
     level.koth_swing_pct      = 15     // loser loses this % of starting tickets (auto-scales)
+    level.koth_bot_order_interval = 3  // seconds between retries for bots outside the hill
 
     waitthread global/feho/event_manager.scr::register_event "koth" global/feho/koth.scr::koth_eligible global/feho/koth.scr::koth_activate
 end
@@ -75,6 +76,15 @@ koth_activate:
 
     // 2. Spawn the zone marker (visual seam — swap flag/model here later).
     waitthread spawn_zone_marker
+
+    // Give bots the same objective. The generation token prevents a stale loop
+    // from a previous activation from issuing orders during a later event.
+    if (level.koth_bot_generation == NIL)
+        level.koth_bot_generation = 0
+    level.koth_bot_generation++
+    level.koth_active_bot_generation = level.koth_bot_generation
+    level.koth_active = 1
+    thread koth_bot_loop level.koth_active_bot_generation
 
     // 3. Announce loudly (design driver #2).
     waitthread global/feho/notify.scr::show ("KING OF THE HILL - capture " + level.koth_label + "!") "warning" 5.0
@@ -144,6 +154,33 @@ count_zone_bodies local.team:
             local.count++
     }
 end local.count
+
+/*
+koth_bot_loop <generation> — periodically direct live team bots into the inner
+half of the hill. Bots already inside the capture radius keep their normal AI.
+The retry handles respawns, failed paths, and bots that later leave the zone.
+*/
+koth_bot_loop local.generation:
+    local.move_radius = level.koth_radius * 0.5
+
+    while (level.koth_active == 1 && level.koth_active_bot_generation == local.generation)
+    {
+        for (local.i = 1; local.i <= $player.size; local.i++)
+        {
+            local.bot = $player[local.i]
+            if (!local.bot) continue
+            if (!isBot local.bot) continue
+            if (!isalive local.bot) continue
+            if (local.bot.dmteam != "allies" && local.bot.dmteam != "axis") continue
+            if (vector_within level.koth_origin local.bot.origin level.koth_radius) continue
+
+            local.bot.koth_bot_generation = local.generation
+            local.bot bot_movenear level.koth_origin local.move_radius
+        }
+
+        wait level.koth_bot_order_interval
+    }
+end
 
 /*
 koth_resolve — at duration end, decide the winner against the draw band and
@@ -358,6 +395,26 @@ koth_activate (normal end, round-end bail, missing-preset bail). Guards each
 removal on existence so it is safe even before anything is allocated.
 */
 koth_cleanup:
+    level.koth_active = 0
+    local.bot_generation = level.koth_active_bot_generation
+
+    // Cancel only orders issued by this activation. Bots that were never sent
+    // toward the hill may still be controlled by map-specific scripts.
+    if (local.bot_generation != NIL)
+    {
+        for (local.i = 1; local.i <= $player.size; local.i++)
+        {
+            local.bot = $player[local.i]
+            if (!local.bot) continue
+            if (!isBot local.bot) continue
+            if (local.bot.koth_bot_generation != local.bot_generation) continue
+
+            local.bot bot_releasecontrol
+            local.bot.koth_bot_generation = NIL
+        }
+    }
+    level.koth_active_bot_generation = NIL
+
     waitthread remove_zone_marker
 
     // Hide the shared KotH HUD slots (250-254).
