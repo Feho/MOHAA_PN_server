@@ -8,7 +8,7 @@ scoring or ticket swing yet — those are build steps 3 and 4.
 Registers with event_manager.scr. The manager owns the trigger window and picks one
 eligible event per round; KotH's eligibility is "this is a ticket map" only.
 
-HUD index base 250 (reserves 250-254), chosen from a repo-wide audit — clear of
+HUD index base 250 (reserves 250-255), chosen from a repo-wide audit — clear of
 tickets (240-248), HVT (160-162), map scripts (<=237), notify/hitmarker (291-303).
 */
 
@@ -17,8 +17,9 @@ main:
         end
     level.koth_initialized = 1
 
-    // HUD index reserve 250-254 (see header). Layout:
-    //   250 bar backdrop, 251 label, 252 countdown, 253 axis fill, 254 allies fill.
+    // HUD index reserve 250-255 (see header). Layout:
+    //   250 bar backdrop, 251 label, 252 countdown, 253 axis fill,
+    //   254 allies fill, 255 per-player capture status.
     level.koth_hud_base = 250
     level.koth_duration = 240   // 4 min (within the plan's 3-5 min); tune at playtest
 
@@ -48,6 +49,8 @@ koth_eligible:
 
     local.map = getcvar "mapname"
     if (local.map == "m1l1") end 1
+    if (local.map == "m2l1") end 1
+    if (local.map == "dm/mohdm6") end 1
 
     end 0
 
@@ -56,7 +59,6 @@ koth_activate — the event body the manager waitthreads. Returns when the event
 ends (the manager unlocks on return).
 */
 koth_activate:
-    iprintln "Activate KoTH"
     // Clear any stale outcome from a prior event so an aborted run can't leave a
     // previous winner readable.
     level.koth_winner = NIL
@@ -75,7 +77,7 @@ koth_activate:
     waitthread spawn_zone_marker
 
     // 3. Announce loudly (design driver #2).
-    waitthread global/feho/notify.scr::show ("KING OF THE HILL — capture " + level.koth_label + "!") "warning" 3.5
+    waitthread global/feho/notify.scr::show ("KING OF THE HILL - capture " + level.koth_label + "!") "warning" 5.0
 
     // 4. Capture loop. Tug-of-war: progress in [-100,+100], negative=axis,
     //    positive=allies. Bail without a swing if the round ends mid-event.
@@ -109,7 +111,7 @@ koth_activate:
         }
 
         local.remaining = int(local.end_time - level.time)
-        waitthread update_koth_hud local.remaining
+        waitthread update_koth_hud local.remaining local.allies_in local.axis_in
 
         wait level.koth_tick
     }
@@ -193,9 +195,10 @@ Reads level.koth_progress directly. Index layout (base = 250):
   base+2 : remaining-time readout
   base+3 : axis-side fill (red), grows leftward from center
   base+4 : allies-side fill (blue), grows rightward from center
+  base+5 : per-player status while inside the zone
 The two half-bars meet at screen center, so the filled side shows who is winning.
 */
-update_koth_hud local.remaining:
+update_koth_hud local.remaining local.allies_in local.axis_in:
     local.base = level.koth_hud_base
     local.bar_w = 220
     local.bar_h = 12
@@ -254,6 +257,99 @@ update_koth_hud local.remaining:
         local.allies_x = local.center_gap + (local.allies_w / 2)
         waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 4) "center" "top" local.allies_x local.bar_y local.allies_w local.bar_h ( 0.375 0.575 0.81 ) 1.0
     }
+
+    waitthread update_koth_status_hud local.allies_in local.axis_in
+end
+
+/*
+update_koth_status_hud <allies_in> <axis_in> — show contextual feedback only
+while a human player is alive inside the hill. The last status is cached on the
+player so unchanged states do not resend HUD properties every capture tick.
+*/
+update_koth_status_hud local.allies_in local.axis_in:
+    local.idx = level.koth_hud_base + 5
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (!local.player) continue
+        if (isBot local.player) continue
+
+        local.team = local.player.dmteam
+        if (!isalive local.player || (local.team != "allies" && local.team != "axis"))
+        {
+            waitthread hide_koth_status local.player local.idx
+            continue
+        }
+
+        if (!(vector_within level.koth_origin local.player.origin level.koth_radius))
+        {
+            waitthread hide_koth_status local.player local.idx
+            continue
+        }
+
+        if (local.team == "allies")
+        {
+            local.own_in = local.allies_in
+            local.enemy_in = local.axis_in
+            local.team_progress = level.koth_progress
+        }
+        else
+        {
+            local.own_in = local.axis_in
+            local.enemy_in = local.allies_in
+            local.team_progress = 0 - level.koth_progress
+        }
+
+        if (local.own_in == local.enemy_in)
+        {
+            local.text = "CONTESTED"
+            local.style = "contested"
+            local.rgb = ( 1.0 0.75 0.25 )
+        }
+        else if (local.own_in < local.enemy_in)
+        {
+            local.text = "LOSING THE HILL"
+            local.style = "losing"
+            local.rgb = ( 1.0 0.35 0.25 )
+        }
+        else if (local.team_progress >= 100)
+        {
+            local.text = "DEFENDING"
+            local.style = "defending"
+            local.rgb = ( 0.5 1.0 0.5 )
+        }
+        else
+        {
+            local.text = "CAPTURING..."
+            local.style = "capturing"
+            if (local.team == "allies")
+                local.rgb = ( 0.45 0.70 1.0 )
+            else
+                local.rgb = ( 1.0 0.38 0.28 )
+        }
+
+        local.key = local.style + ":" + local.team
+        if (local.player.koth_status_key == local.key)
+            continue
+
+        local.width = waitthread global/feho/hud_lib.scr::facfont20_width local.text
+        ihuddraw_font local.player local.idx "facfont-20"
+        ihuddraw_align local.player local.idx "center" "top"
+        ihuddraw_rect local.player local.idx 0 128 local.width 20
+        ihuddraw_color local.player local.idx local.rgb[0] local.rgb[1] local.rgb[2]
+        ihuddraw_string local.player local.idx local.text
+        ihuddraw_alpha local.player local.idx 1.0
+        local.player.koth_status_key = local.key
+    }
+end
+
+hide_koth_status local.player local.idx:
+    if (!local.player) end
+    if (local.player.koth_status_key == NIL) end
+
+    ihuddraw_alpha local.player local.idx 0.0
+    local.player.koth_status_key = NIL
 end
 
 /*
@@ -267,6 +363,16 @@ koth_cleanup:
     // Hide the shared KotH HUD slots (250-254).
     for (local.i = 0; local.i <= 4; local.i++)
         huddraw_alpha (level.koth_hud_base + local.i) 0.0
+
+    // Index 255 differs per player, so clear it individually.
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (!local.player) continue
+        if (isBot local.player) continue
+        ihuddraw_alpha local.player (level.koth_hud_base + 5) 0.0
+        local.player.koth_status_key = NIL
+    }
 
     level.koth_hud_next_setup = NIL
 end

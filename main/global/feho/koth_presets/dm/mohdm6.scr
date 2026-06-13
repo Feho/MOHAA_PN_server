@@ -6,8 +6,8 @@
 // final zone placement to playtest — the zone should sit on the natural fight
 // path / map center, not necessarily here. Retune during the adoption playtest.
 
-level.koth_origin = ( -4648.00 1165.41 460.12 )
-level.koth_radius = 256
-level.koth_label  = "the radio"
+level.koth_origin = ( 580.47 -350.15 -151.88 )
+level.koth_radius = 350
+level.koth_label  = "the boiler room"
 
 end 1
