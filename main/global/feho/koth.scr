@@ -50,8 +50,11 @@ koth_eligible:
 
     local.map = getcvar "mapname"
     if (local.map == "m1l1") end 1
-    if (local.map == "m2l1") end 1
+    if (local.map == "m2l2a") end 1
+    if (local.map == "m2l2c") end 1
+    if (local.map == "dm/mohdm2") end 1
     if (local.map == "dm/mohdm6") end 1
+    if (local.map == "dm/mohdm7") end 1
 
     end 0
 
@@ -230,8 +233,8 @@ Reads level.koth_progress directly. Index layout (base = 250):
   base+0 : bar backdrop (dark rect, full width)
   base+1 : "KING OF THE HILL" label
   base+2 : remaining-time readout
-  base+3 : axis-side fill (red), grows leftward from center
-  base+4 : allies-side fill (blue), grows rightward from center
+  base+3 : axis-side fill (red), grows rightward from center
+  base+4 : allies-side fill (blue), grows leftward from center
   base+5 : per-player status while inside the zone
 The two half-bars meet at screen center, so the filled side shows who is winning.
 */
@@ -279,20 +282,20 @@ update_koth_hud local.remaining local.allies_in local.axis_in:
     if (local.axis_w < 0) local.axis_w = 0
     if (local.axis_w > local.half_w) local.axis_w = local.half_w
 
-    if (local.axis_w <= 0)
-        huddraw_alpha (local.base + 3) 0.0
-    else
-    {
-        local.axis_x = 0 - local.center_gap - (local.axis_w / 2)
-        waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 3) "center" "top" local.axis_x local.bar_y local.axis_w local.bar_h ( 0.81 0.34 0.27 ) 1.0
-    }
-
     if (local.allies_w <= 0)
         huddraw_alpha (local.base + 4) 0.0
     else
     {
-        local.allies_x = local.center_gap + (local.allies_w / 2)
+        local.allies_x = 0 - local.center_gap - (local.allies_w / 2)
         waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 4) "center" "top" local.allies_x local.bar_y local.allies_w local.bar_h ( 0.375 0.575 0.81 ) 1.0
+    }
+
+    if (local.axis_w <= 0)
+        huddraw_alpha (local.base + 3) 0.0
+    else
+    {
+        local.axis_x = local.center_gap + (local.axis_w / 2)
+        waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 3) "center" "top" local.axis_x local.bar_y local.axis_w local.bar_h ( 0.81 0.34 0.27 ) 1.0
     }
 
     waitthread update_koth_status_hud local.allies_in local.axis_in
