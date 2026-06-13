@@ -18,7 +18,7 @@ logs-follow:
 
 # chat-only feed, minus localhost
 chat:
-    rg "says|shouts @|tells " {{log}} | rg -i -v "127.0.0.1|broadcast: print" | tail -n 100
+    rg "says" {{log}} | rg -i -v "127.0.0.1|broadcast: print" | tail -n 100
 
 # grep the log for an arbitrary term:  just glog aimbot
 glog term:
@@ -80,7 +80,7 @@ stop:
 
 # attach to the live prod console (detach with Ctrl-A then D)
 console:
-    sudo screen -r mohaa_server
+    screen -r mohaa_server
 
 # follow prod logs via journald
 journal:
