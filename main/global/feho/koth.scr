@@ -8,7 +8,7 @@ scoring or ticket swing yet — those are build steps 3 and 4.
 Registers with event_manager.scr. The manager owns the trigger window and picks one
 eligible event per round; KotH's eligibility is "this is a ticket map" only.
 
-HUD index base 250 (reserves 250-270), chosen from a repo-wide audit — clear of
+HUD index base 250 (reserves 250-254), chosen from a repo-wide audit — clear of
 tickets (240-248), HVT (160-162), map scripts (<=237), notify/hitmarker (291-303).
 */
 
@@ -17,8 +17,8 @@ main:
         end
     level.koth_initialized = 1
 
-    // HUD index reserve 250-270 (see header). Layout:
-    //   250 label, 251 countdown, 252 bar backdrop, 253 axis bar, 254 allies bar.
+    // HUD index reserve 250-254 (see header). Layout:
+    //   250 bar backdrop, 251 label, 252 countdown, 253 axis fill, 254 allies fill.
     level.koth_hud_base = 250
     level.koth_duration = 240   // 4 min (within the plan's 3-5 min); tune at playtest
 
@@ -56,6 +56,7 @@ koth_activate — the event body the manager waitthreads. Returns when the event
 ends (the manager unlocks on return).
 */
 koth_activate:
+    iprintln "Activate KoTH"
     // Clear any stale outcome from a prior event so an aborted run can't leave a
     // previous winner readable.
     level.koth_winner = NIL
@@ -158,119 +159,102 @@ koth_resolve:
     {
         level.koth_winner = "allies"
         waitthread global/feho/notify.scr::show "ALLIES TOOK THE HILL!" "success" 4.0
-        waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" level.koth_swing_pct "koth" "Lost King of the Hill —"
+        waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" level.koth_swing_pct "koth" "Lost King of the Hill -"
     }
     else if (level.koth_progress <= (0 - level.koth_draw_threshold))
     {
         level.koth_winner = "axis"
         waitthread global/feho/notify.scr::show "AXIS TOOK THE HILL!" "success" 4.0
-        waitthread global/feho/tickets.scr::remove_team_tickets_percent "allies" level.koth_swing_pct "koth" "Lost King of the Hill —"
+        waitthread global/feho/tickets.scr::remove_team_tickets_percent "allies" level.koth_swing_pct "koth" "Lost King of the Hill -"
     }
     else
     {
         level.koth_winner = "draw"
-        waitthread global/feho/notify.scr::show "KING OF THE HILL — contested, no winner" "info" 3.0
+        waitthread global/feho/notify.scr::show "KING OF THE HILL - contested, no winner" "info" 5.0
     }
 end
 
 /*
-update_koth_hud — draw the timer + tug-of-war bar for every human player.
+update_koth_hud — draw the shared timer + tug-of-war bar.
 
-The bar is built from COLORED TEXT GLYPHS, not tinted shader rects:
-textures/mohmenu/black.tga (what hud_lib.scr::draw_bar uses) only renders black —
-ihuddraw_color cannot tint it to blue/red. Tickets has the same constraint and
-solves it the same way (colored ihuddraw_string glyph bars; see build_bar /
-set_ticket_color). black.tga is still fine as a dark backdrop, which is its only
-proven use.
+This HUD is identical for every player, so it uses the global huddraw_* family.
+The old per-player redraw multiplied every command by the human player count and
+could backlog HUD updates. Static properties are refreshed once per second so a
+client joining during the event receives the complete HUD.
+
+OpenMoHAA centers an element's declared rectangle, not the rendered text. Text
+therefore needs a nonzero estimated width; width=0 placed its left edge at screen
+center. The bar uses white.tga-backed rects so progress moves smoothly rather than
+jumping between text glyphs.
 
 Reads level.koth_progress directly. Index layout (base = 250):
-  base+0 : "KING OF THE HILL" label
-  base+1 : remaining-time readout
-  base+2 : bar backdrop (dark rect, full width)
-  base+3 : axis-side glyph bar (red), fills leftward from center (reverse)
-  base+4 : allies-side glyph bar (blue), fills rightward from center
+  base+0 : bar backdrop (dark rect, full width)
+  base+1 : "KING OF THE HILL" label
+  base+2 : remaining-time readout
+  base+3 : axis-side fill (red), grows leftward from center
+  base+4 : allies-side fill (blue), grows rightward from center
 The two half-bars meet at screen center, so the filled side shows who is winning.
 */
 update_koth_hud local.remaining:
     local.base = level.koth_hud_base
-    local.segs = 10   // glyphs per half-bar
+    local.bar_w = 220
+    local.bar_h = 12
+    local.bar_y = 110
+    local.center_gap = 2
+    local.half_w = (local.bar_w / 2) - local.center_gap
 
-    // Filled glyph count per side, 0..segs, from |progress|/100.
-    local.allies_filled = int((level.koth_progress * local.segs) / 100)
-    if (local.allies_filled < 0) local.allies_filled = 0
-    local.axis_filled = int(((0 - level.koth_progress) * local.segs) / 100)
-    if (local.axis_filled < 0) local.axis_filled = 0
-
-    // Allies grows rightward (reverse 0); axis grows leftward (reverse 1).
-    local.allies_bar = waitthread build_koth_bar local.segs local.allies_filled 0
-    local.axis_bar   = waitthread build_koth_bar local.segs local.axis_filled 1
-
-    for (local.i = 1; local.i <= $player.size; local.i++)
+    // Re-send static state periodically for clients that join after the event starts.
+    if (level.koth_hud_next_setup == NIL || level.time >= level.koth_hud_next_setup)
     {
-        local.player = $player[local.i]
-        if (!local.player) continue
-        if (isBot local.player) continue
+        waitthread global/feho/hud_lib.scr::draw_rect_color_global local.base "center" "top" 0 local.bar_y local.bar_w local.bar_h ( 0.05 0.05 0.05 ) 0.7
 
-        ihuddraw_font local.player local.base "facfont-20"
-        ihuddraw_align local.player local.base "center" "top"
-        ihuddraw_rect local.player local.base 0 70 0 0
-        ihuddraw_color local.player local.base 0.95 0.85 0.3
-        ihuddraw_string local.player local.base "KING OF THE HILL"
-        ihuddraw_alpha local.player local.base 1.0
+        local.title = "KING OF THE HILL"
+        local.title_w = waitthread global/feho/hud_lib.scr::facfont20_width local.title
+        huddraw_font (local.base + 1) "facfont-20"
+        huddraw_align (local.base + 1) "center" "top"
+        huddraw_rect (local.base + 1) 0 70 local.title_w 20
+        huddraw_color (local.base + 1) 0.95 0.85 0.3
+        huddraw_string (local.base + 1) local.title
+        huddraw_alpha (local.base + 1) 1.0
 
-        ihuddraw_font local.player (local.base + 1) "facfont-20"
-        ihuddraw_align local.player (local.base + 1) "center" "top"
-        ihuddraw_rect local.player (local.base + 1) 0 92 0 0
-        ihuddraw_color local.player (local.base + 1) 0.95 0.95 0.95
-        ihuddraw_string local.player (local.base + 1) ("" + local.remaining + "s")
-        ihuddraw_alpha local.player (local.base + 1) 1.0
+        huddraw_font (local.base + 2) "facfont-20"
+        huddraw_align (local.base + 2) "center" "top"
+        huddraw_color (local.base + 2) 0.95 0.95 0.95
+        huddraw_alpha (local.base + 2) 1.0
 
-        // Backdrop behind both half-bars (black.tga used as a dark rect only).
-        waitthread global/feho/hud_lib.scr::draw_rect local.player (local.base + 2) "center" "top" -110 108 220 16 ( 0.06 0.06 0.06 ) 0.55
+        level.koth_hud_next_setup = level.time + 1
+    }
 
-        // Axis half (red), left of center, right-anchored so it grows leftward.
-        ihuddraw_font local.player (local.base + 3) "courier-20"
-        ihuddraw_align local.player (local.base + 3) "right" "top"
-        ihuddraw_rect local.player (local.base + 3) -4 110 0 0
-        ihuddraw_color local.player (local.base + 3) 1.00 0.38 0.28
-        ihuddraw_string local.player (local.base + 3) local.axis_bar
-        ihuddraw_alpha local.player (local.base + 3) 1.0
+    local.timer_text = ("" + local.remaining + "s")
+    local.timer_w = waitthread global/feho/hud_lib.scr::facfont20_width local.timer_text
+    huddraw_rect (local.base + 2) 0 92 local.timer_w 20
+    huddraw_string (local.base + 2) local.timer_text
 
-        // Allies half (blue), right of center, left-anchored so it grows rightward.
-        ihuddraw_font local.player (local.base + 4) "courier-20"
-        ihuddraw_align local.player (local.base + 4) "left" "top"
-        ihuddraw_rect local.player (local.base + 4) 4 110 0 0
-        ihuddraw_color local.player (local.base + 4) 0.45 0.70 1.00
-        ihuddraw_string local.player (local.base + 4) local.allies_bar
-        ihuddraw_alpha local.player (local.base + 4) 1.0
+    // Multiply before dividing so progress maps smoothly to pixel width.
+    local.allies_w = int((level.koth_progress * local.half_w) / 100)
+    if (local.allies_w < 0) local.allies_w = 0
+    if (local.allies_w > local.half_w) local.allies_w = local.half_w
+
+    local.axis_w = int(((0 - level.koth_progress) * local.half_w) / 100)
+    if (local.axis_w < 0) local.axis_w = 0
+    if (local.axis_w > local.half_w) local.axis_w = local.half_w
+
+    if (local.axis_w <= 0)
+        huddraw_alpha (local.base + 3) 0.0
+    else
+    {
+        local.axis_x = 0 - local.center_gap - (local.axis_w / 2)
+        waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 3) "center" "top" local.axis_x local.bar_y local.axis_w local.bar_h ( 0.81 0.34 0.27 ) 1.0
+    }
+
+    if (local.allies_w <= 0)
+        huddraw_alpha (local.base + 4) 0.0
+    else
+    {
+        local.allies_x = local.center_gap + (local.allies_w / 2)
+        waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 4) "center" "top" local.allies_x local.bar_y local.allies_w local.bar_h ( 0.375 0.575 0.81 ) 1.0
     }
 end
-
-/*
-build_koth_bar <segments> <filled> <reverse> — build a glyph bar string.
-Mirrors tickets build_bar: '#' for filled, ' ' for empty. reverse=1 packs the
-filled glyphs at the RIGHT end (used by the axis side so its fill abuts center).
-*/
-build_koth_bar local.segments local.filled local.reverse:
-    local.bar = ""
-    for (local.i = 1; local.i <= local.segments; local.i++)
-    {
-        if (local.reverse == 1)
-        {
-            if (local.i <= (local.segments - local.filled))
-                local.bar += " "
-            else
-                local.bar += "#"
-        }
-        else
-        {
-            if (local.i <= local.filled)
-                local.bar += "#"
-            else
-                local.bar += " "
-        }
-    }
-end local.bar
 
 /*
 koth_cleanup — single idempotent teardown. Called on EVERY return path of
@@ -280,15 +264,11 @@ removal on existence so it is safe even before anything is allocated.
 koth_cleanup:
     waitthread remove_zone_marker
 
-    // Hide the KotH HUD slots (250-254) for every human player.
-    for (local.i = 1; local.i <= $player.size; local.i++)
-    {
-        local.player = $player[local.i]
-        if (!local.player) continue
-        if (isBot local.player) continue
-        for (local.j = 0; local.j <= 4; local.j++)
-            waitthread global/feho/hud_lib.scr::hide local.player (level.koth_hud_base + local.j)
-    }
+    // Hide the shared KotH HUD slots (250-254).
+    for (local.i = 0; local.i <= 4; local.i++)
+        huddraw_alpha (level.koth_hud_base + local.i) 0.0
+
+    level.koth_hud_next_setup = NIL
 end
 
 /*

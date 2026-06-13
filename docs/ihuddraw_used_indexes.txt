@@ -4,6 +4,7 @@ Liste des index utilisés pour afficher des messages à un joueur :
 50, 51 : Medic mod
 240     : Feho tickets HUD backdrop panel (drawn first, behind text)
 241-246 : Feho tickets HUD (text)
+250-254 : Feho King of the Hill HUD (track, title, timer, axis/allies fills)
 291     : Feho hitmarker (off-white X, gated on beta cvar)
 292     : Feho notify (animated callout, single slot, FIFO queued)
 293     : Feho kill banner backdrop panel (gated on kill_banner cvar)
