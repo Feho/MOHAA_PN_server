@@ -7,7 +7,7 @@
 // path / map center, not necessarily here. Retune during the adoption playtest.
 
 level.koth_origin = ( 1391.46 -6832.53 -511.88 )
-level.koth_radius = 256
+level.koth_radius = 350
 level.koth_label  = "the objective"
 
 end 1

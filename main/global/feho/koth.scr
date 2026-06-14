@@ -110,8 +110,8 @@ koth_activate:
     level.koth_progress = 0
     waitthread update_koth_hud level.koth_duration 0 0
 
-    // 3. Announce loudly (design driver #2).
-    waitthread global/feho/notify.scr::show ("KING OF THE HILL - capture " + level.koth_label + "!") "warning" 5.0
+    // 3. Announce the objective and stakes (design driver #2).
+    waitthread global/feho/notify.scr::show ("CAPTURE " + level.koth_label + " - enemy loses " + level.koth_swing_pct + "% tickets!") "warning" 5.0
 
     // 4. Capture loop. Tug-of-war: progress in [-100,+100], negative=axis,
     //    positive=allies. Bail without a swing if the round ends mid-event.
@@ -171,7 +171,7 @@ count_zone_bodies local.team:
     {
         local.player = $player[local.i]
         if (!local.player) continue
-        if (!isalive local.player) continue
+        if (!local.player.isAlive) continue
         if (local.player.dmteam != local.team) continue
         if (vector_within level.koth_origin local.player.origin level.koth_radius)
             local.count++
@@ -193,7 +193,7 @@ koth_bot_loop local.generation:
             local.bot = $player[local.i]
             if (!local.bot) continue
             if (!isBot local.bot) continue
-            if (!isalive local.bot) continue
+            if (!local.bot.isAlive) continue
             if (local.bot.dmteam != "allies" && local.bot.dmteam != "axis") continue
             if (vector_within level.koth_origin local.bot.origin level.koth_radius) continue
 
@@ -252,17 +252,17 @@ jumping between text glyphs.
 Reads level.koth_progress directly. Index layout (base = 250):
   base+0 : bar backdrop (dark rect, full width)
   base+1 : "KING OF THE HILL" label
-  base+2 : remaining-time readout
+  base+2 : team occupancy + remaining-time readout
   base+3 : axis-side fill (red), grows rightward from center
   base+4 : allies-side fill (blue), grows leftward from center
-  base+5 : per-player status while inside the zone
+  base+5 : per-player distance outside / capture status inside
 The two half-bars meet at screen center, so the filled side shows who is winning.
 */
 update_koth_hud local.remaining local.allies_in local.axis_in:
     local.base = level.koth_hud_base
-    local.bar_w = 220
+    local.bar_w = 260
     local.bar_h = 12
-    local.bar_y = 110
+    local.bar_y = 115
     local.center_gap = 2
     local.half_w = (local.bar_w / 2) - local.center_gap
 
@@ -275,7 +275,8 @@ update_koth_hud local.remaining local.allies_in local.axis_in:
         local.title_w = waitthread global/feho/hud_lib.scr::facfont20_width local.title
         huddraw_font (local.base + 1) "facfont-20"
         huddraw_align (local.base + 1) "center" "top"
-        huddraw_rect (local.base + 1) 0 70 local.title_w 20
+        // Optical correction for this proportional-font phrase.
+        huddraw_rect (local.base + 1) -10 70 local.title_w 20
         huddraw_color (local.base + 1) 0.95 0.85 0.3
         huddraw_string (local.base + 1) local.title
         huddraw_alpha (local.base + 1) 1.0
@@ -288,7 +289,8 @@ update_koth_hud local.remaining local.allies_in local.axis_in:
         level.koth_hud_next_setup = level.time + 1
     }
 
-    local.timer_text = waitthread format_koth_time local.remaining
+    local.time_text = waitthread format_koth_time local.remaining
+    local.timer_text = ("ALLIES " + local.allies_in + "   " + local.time_text + "   " + local.axis_in + " AXIS")
     local.timer_w = waitthread global/feho/hud_lib.scr::facfont20_width local.timer_text
     huddraw_rect (local.base + 2) 0 92 local.timer_w 20
     huddraw_string (local.base + 2) local.timer_text
@@ -302,20 +304,31 @@ update_koth_hud local.remaining local.allies_in local.axis_in:
     if (local.axis_w < 0) local.axis_w = 0
     if (local.axis_w > local.half_w) local.axis_w = local.half_w
 
+    // Center-aligned HUD rectangles only accept integer coordinates. Odd widths
+    // would require a half-pixel center and make the anchored edge alternate by
+    // one pixel, so render both fills at the nearest even width.
+    if (local.allies_w > 0)
+        local.allies_w = int((local.allies_w + 1) / 2) * 2
+    if (local.axis_w > 0)
+        local.axis_w = int((local.axis_w + 1) / 2) * 2
+
     if (local.allies_w <= 0)
         huddraw_alpha (local.base + 4) 0.0
     else
     {
-        local.allies_x = 0 - local.center_gap - (local.allies_w / 2)
-        waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 4) "center" "top" local.allies_x local.bar_y local.allies_w local.bar_h ( 0.375 0.575 0.81 ) 1.0
+        // Same anchored-edge pattern as tickets.scr::draw_ticket_fill.
+        local.allies_right_edge = 0 - local.center_gap
+        local.allies_center_x = local.allies_right_edge - (local.allies_w / 2)
+        waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 4) "center" "top" local.allies_center_x local.bar_y local.allies_w local.bar_h ( 0.375 0.575 0.81 ) 1.0
     }
 
     if (local.axis_w <= 0)
         huddraw_alpha (local.base + 3) 0.0
     else
     {
-        local.axis_x = local.center_gap + (local.axis_w / 2)
-        waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 3) "center" "top" local.axis_x local.bar_y local.axis_w local.bar_h ( 0.81 0.34 0.27 ) 1.0
+        local.axis_left_edge = local.center_gap
+        local.axis_center_x = local.axis_left_edge + (local.axis_w / 2)
+        waitthread global/feho/hud_lib.scr::draw_rect_color_global (local.base + 3) "center" "top" local.axis_center_x local.bar_y local.axis_w local.bar_h ( 0.81 0.34 0.27 ) 1.0
     }
 
     waitthread update_koth_status_hud local.allies_in local.axis_in
@@ -341,9 +354,9 @@ format_koth_time local.remaining:
     end (local.minutes_text + ":" + local.seconds_text)
 
 /*
-update_koth_status_hud <allies_in> <axis_in> — show contextual feedback only
-while a human player is alive inside the hill. The last status is cached on the
-player so unchanged states do not resend HUD properties every capture tick.
+update_koth_status_hud <allies_in> <axis_in> — show distance to the hill outside
+and contextual capture feedback inside. The last status is cached on the player
+so unchanged states do not resend HUD properties every capture tick.
 */
 update_koth_status_hud local.allies_in local.axis_in:
     local.idx = level.koth_hud_base + 5
@@ -355,7 +368,7 @@ update_koth_status_hud local.allies_in local.axis_in:
         if (isBot local.player) continue
 
         local.team = local.player.dmteam
-        if (!isalive local.player || (local.team != "allies" && local.team != "axis"))
+        if (!local.player.isAlive || (local.team != "allies" && local.team != "axis"))
         {
             waitthread hide_koth_status local.player local.idx
             continue
@@ -363,49 +376,59 @@ update_koth_status_hud local.allies_in local.axis_in:
 
         if (!(vector_within level.koth_origin local.player.origin level.koth_radius))
         {
-            waitthread hide_koth_status local.player local.idx
-            continue
-        }
+            // MOHAA maps use 16 world units per foot. Measure to the zone edge,
+            // not its center, so the readout reaches 0m at the capture boundary.
+            local.distance_units = (vector_length (local.player.origin - level.koth_origin)) - level.koth_radius
+            if (local.distance_units < 0)
+                local.distance_units = 0
 
-        if (local.team == "allies")
-        {
-            local.own_in = local.allies_in
-            local.enemy_in = local.axis_in
-            local.team_progress = level.koth_progress
+            local.distance_m = int((local.distance_units / 52.5) + 0.5)
+            local.text = ("HILL " + local.distance_m + "m")
+            local.style = ("distance:" + local.distance_m)
+            local.rgb = ( 0.95 0.85 0.3 )
         }
         else
         {
-            local.own_in = local.axis_in
-            local.enemy_in = local.allies_in
-            local.team_progress = 0 - level.koth_progress
-        }
-
-        if (local.own_in == local.enemy_in)
-        {
-            local.text = "CONTESTED"
-            local.style = "contested"
-            local.rgb = ( 1.0 0.75 0.25 )
-        }
-        else if (local.own_in < local.enemy_in)
-        {
-            local.text = "LOSING THE HILL"
-            local.style = "losing"
-            local.rgb = ( 1.0 0.35 0.25 )
-        }
-        else if (local.team_progress >= 100)
-        {
-            local.text = "DEFENDING"
-            local.style = "defending"
-            local.rgb = ( 0.5 1.0 0.5 )
-        }
-        else
-        {
-            local.text = "CAPTURING..."
-            local.style = "capturing"
             if (local.team == "allies")
-                local.rgb = ( 0.45 0.70 1.0 )
+            {
+                local.own_in = local.allies_in
+                local.enemy_in = local.axis_in
+                local.team_progress = level.koth_progress
+            }
             else
-                local.rgb = ( 1.0 0.38 0.28 )
+            {
+                local.own_in = local.axis_in
+                local.enemy_in = local.allies_in
+                local.team_progress = 0 - level.koth_progress
+            }
+
+            if (local.own_in == local.enemy_in)
+            {
+                local.text = "CONTESTED"
+                local.style = "contested"
+                local.rgb = ( 1.0 0.75 0.25 )
+            }
+            else if (local.own_in < local.enemy_in)
+            {
+                local.text = "LOSING THE HILL"
+                local.style = "losing"
+                local.rgb = ( 1.0 0.35 0.25 )
+            }
+            else if (local.team_progress >= 100)
+            {
+                local.text = "DEFENDING"
+                local.style = "defending"
+                local.rgb = ( 0.5 1.0 0.5 )
+            }
+            else
+            {
+                local.text = "CAPTURING..."
+                local.style = "capturing"
+                if (local.team == "allies")
+                    local.rgb = ( 0.45 0.70 1.0 )
+                else
+                    local.rgb = ( 1.0 0.38 0.28 )
+            }
         }
 
         local.key = local.style + ":" + local.team
@@ -415,7 +438,7 @@ update_koth_status_hud local.allies_in local.axis_in:
         local.width = waitthread global/feho/hud_lib.scr::facfont20_width local.text
         ihuddraw_font local.player local.idx "facfont-20"
         ihuddraw_align local.player local.idx "center" "top"
-        ihuddraw_rect local.player local.idx 0 128 local.width 20
+        ihuddraw_rect local.player local.idx -10 133 local.width 20
         ihuddraw_color local.player local.idx local.rgb[0] local.rgb[1] local.rgb[2]
         ihuddraw_string local.player local.idx local.text
         ihuddraw_alpha local.player local.idx 1.0

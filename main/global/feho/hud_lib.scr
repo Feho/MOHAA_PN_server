@@ -95,13 +95,12 @@ end
 
 // Estimated pixel width of a string in facfont-20 (the game's proportional HUD
 // face), 640-virtual space. facfont-20 has no script-callable width function and
-// per-glyph summing isn't practical in .scr, so this is an estimate: ~8 units/glyph
-// (between the [A-Za-z] avg of 7.67 and the wider uppercase used in banners).
+// per-glyph summing isn't practical in .scr, so this is an estimate: ~7 units/glyph.
 // Centering via iX = -(width)/2 is therefore approximate — drifts a few px on
 // unusually wide/narrow strings. Verified glyph data: see facfont20 memory.
 facfont20_width local.str:
 	if (local.str == NIL) end 0
-end (local.str.size * 8)
+end (local.str.size * 6.9)
 
 // Estimated pixel width of a string in handle-23 (a wider, blockier stock HUD
 // face), 640-virtual space. Same estimate approach as facfont20_width. handle-23
