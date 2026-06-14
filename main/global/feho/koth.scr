@@ -34,6 +34,22 @@ main:
     level.koth_bot_order_interval = 3  // seconds between retries for bots outside the hill
 
     waitthread global/feho/event_manager.scr::register_event "koth" global/feho/koth.scr::koth_eligible global/feho/koth.scr::koth_activate
+
+    // Debug mode bypasses the random mid-match trigger so the event and its HUD
+    // are available immediately after map spawn.
+    if (int(getcvar "debug") == 1)
+        thread koth_debug_activate
+end
+
+/*
+koth_debug_activate — claim the round's event slot and run KotH immediately.
+This prevents the event manager from firing a second event later in the round.
+*/
+koth_debug_activate:
+    level.midmatch_event_fired = 1
+    level.midmatch_event_active = 1
+    waitthread koth_activate
+    level.midmatch_event_active = 0
 end
 
 /*
@@ -89,12 +105,16 @@ koth_activate:
     level.koth_active = 1
     thread koth_bot_loop level.koth_active_bot_generation
 
+    // Draw before the blocking announcement so debug mode exposes the HUD
+    // immediately. The timed capture window still begins after the announcement.
+    level.koth_progress = 0
+    waitthread update_koth_hud level.koth_duration 0 0
+
     // 3. Announce loudly (design driver #2).
     waitthread global/feho/notify.scr::show ("KING OF THE HILL - capture " + level.koth_label + "!") "warning" 5.0
 
     // 4. Capture loop. Tug-of-war: progress in [-100,+100], negative=axis,
     //    positive=allies. Bail without a swing if the round ends mid-event.
-    level.koth_progress = 0
     local.delta_cap = level.koth_rate_cap * level.koth_tick
 
     local.end_time = level.time + level.koth_duration
@@ -268,7 +288,7 @@ update_koth_hud local.remaining local.allies_in local.axis_in:
         level.koth_hud_next_setup = level.time + 1
     }
 
-    local.timer_text = ("" + local.remaining + "s")
+    local.timer_text = waitthread format_koth_time local.remaining
     local.timer_w = waitthread global/feho/hud_lib.scr::facfont20_width local.timer_text
     huddraw_rect (local.base + 2) 0 92 local.timer_w 20
     huddraw_string (local.base + 2) local.timer_text
@@ -300,6 +320,25 @@ update_koth_hud local.remaining local.allies_in local.axis_in:
 
     waitthread update_koth_status_hud local.allies_in local.axis_in
 end
+
+format_koth_time local.remaining:
+    if (local.remaining < 0)
+        local.remaining = 0
+
+    local.minutes = int(local.remaining / 60)
+    local.seconds = local.remaining - (local.minutes * 60)
+
+    if (local.minutes < 10)
+        local.minutes_text = ("0" + local.minutes)
+    else
+        local.minutes_text = ("" + local.minutes)
+
+    if (local.seconds < 10)
+        local.seconds_text = ("0" + local.seconds)
+    else
+        local.seconds_text = ("" + local.seconds)
+
+    end (local.minutes_text + ":" + local.seconds_text)
 
 /*
 update_koth_status_hud <allies_in> <axis_in> — show contextual feedback only
