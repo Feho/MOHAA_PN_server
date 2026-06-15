@@ -1,0 +1,8 @@
+[Unit]
+Description=MOHAA server staleness watchdog (restarts on hang)
+After=mohaa-server.service
+
+[Service]
+Type=oneshot
+# Runs as root: only reads qconsole.log mtime and restarts mohaa-server.service.
+ExecStart=/home/feho/MOHAA/mohaa-watchdog.sh
