@@ -163,6 +163,10 @@ track_leader_positions local.leader_entity:
             end
         }
 
+        // Anticheat honeypot: a bot leader armed as bait is sitting at a lifted,
+        // unreachable origin — don't poison the position history with it.
+        if (local.leader_entity.is_honeypot) continue
+
         local.current_pos = local.leader_entity.origin
         if (!(vector_within local.current_pos local.last_recorded_pos level.squad_leader_pos_update_distance))
         {
@@ -419,7 +423,9 @@ event_player_spawned:
         level.lock[local.squad_leader.entnum] = 1 // Lock to prevent concurrent access from other squad members.
         local.spawn_pos = waitthread get_valid_spawn_pos_near_leader local.squad_leader
 
-        if (local.spawn_pos != NIL)
+        // Anticheat honeypot: don't relocate a bot that is currently armed as bait —
+        // it must stay at its hidden, unreachable origin (see anticheat.scr).
+        if (local.spawn_pos != NIL && !local.player.is_honeypot)
         {
             //println("Squad Mod: Teleporting " + netname local.player + " near leader " + netname local.squad_leader + " to " + local.spawn_pos)
             local.player tele local.spawn_pos

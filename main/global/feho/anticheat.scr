@@ -98,6 +98,9 @@ arm_honeypot local.bot:
     local.bot.honeypot_return_origin = local.bot.origin
     local.bot.honeypot_arm_time = level.time
     local.bot.origin = ( local.bot.origin[0]  local.bot.origin[1]  (local.bot.origin[2] + level.honeypot_lift) )
+    // Freeze so the bot can't fall under gravity (PMF_FROZEN zeroes velocity each
+    // frame) — keeps the bait at the lifted, unreachable origin for the whole window.
+    local.bot freezecontrols 1
     local.bot hide
     local.bot.is_honeypot = 1
 
@@ -109,6 +112,7 @@ arm_honeypot local.bot:
     {
         local.bot.is_honeypot = 0
         local.bot show
+        local.bot freezecontrols 0
         if (isalive local.bot) local.bot.origin = local.bot.honeypot_return_origin
     }
 
