@@ -51,14 +51,16 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
 
     local.degrees_per_second = local.angle_diff / local.time_diff
 
-    // I think values higher than 100 deg/s could be considered suspicious, as they are likely to indicate the use of an aimbot.
-    if (local.degrees_per_second > 100)
+    // I think values higher than 160 deg/s could be considered suspicious, as they are likely to indicate the use of an aimbot.
+    if (local.degrees_per_second > 160)
     {
         local.developer = getcvar "developer"
         setcvar "developer" 1
         println ("^1Potential aimbot detected for " + netname local.attacker + " with " + local.degrees_per_second + " degrees per second")
+        //stuffsrv ("say Potential aimbot detected for " + netname local.attacker + " with " + local.degrees_per_second + " degrees per second")
         setcvar "developer" local.developer
-        local.attacker.suspicion_level += 1
+        local.excess = local.degrees_per_second - 160
+        local.attacker.suspicion_level += int(local.excess / 100) + 1
 
         // Decrease the damage of the attacker's weapon based on their suspicion level
         local.attacker weaponcommand dual dmbulletdamage (50 / local.attacker.suspicion_level)
@@ -72,14 +74,15 @@ event_player_spawned:
 
     if (self.suspicion_level && self.suspicion_level > 0)
     {
+        wait 0.5
         self weaponcommand dual dmbulletdamage (50 / self.suspicion_level)
     }
 
     // Honeypot: occasionally turn a freshly-spawned bot into invisible, unreachable bait.
-    if (isBot self && randomint(level.honeypot_chance) == 0)
-    {
-        thread arm_honeypot self
-    }
+    // if (isBot self && randomint(level.honeypot_chance) == 0)
+    // {
+    //     thread arm_honeypot self
+    // }
 
 end
 
