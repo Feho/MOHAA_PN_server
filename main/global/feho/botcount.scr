@@ -70,29 +70,28 @@ event_player_textMessage local.text local.is_team:
         }
     }
 
-    // Check if message starts with "bots"
     if (local.text == "bots")
     {
         println("^3BOTCOUNT command detected: " + local.text)
         waitthread show_bot_status local.player
         end
     }
-    
+
     // Check for "bots " prefix (with parameter)
-    // Need at least 5 chars for "bots " prefix
-    if (local.text.size < 5)
+    // Need at least 7 chars for "bots " prefix
+    if (local.text.size < 6 || local.text.size > 8)
         end
 
     local.prefix = waitthread global/strings.scr::Left 5 local.text
-    
+
     if (local.prefix != "bots ")
         end
-        
+
     println("^3BOTCOUNT command detected: " + local.text)
 
     // Extract the parameter after "bots "
     local.param = waitthread global/strings.scr::Right (local.text.size - 5) local.text
-    
+
     println("^3BOTCOUNT parameter: " + local.param)
 
     if (local.param == "" || local.param == NIL)
@@ -125,7 +124,7 @@ event_player_textMessage local.text local.is_team:
         // Absolute value: bots N
         local.target = int(local.param)
     }
-    
+
     println("^3BOTCOUNT target bots: " + local.target)
 
     // Request the change
