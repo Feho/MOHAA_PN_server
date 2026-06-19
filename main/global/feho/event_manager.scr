@@ -72,17 +72,9 @@ event_manager_monitor:
 
     local.T = local.timelimit * 60
 
-    // --- Bounded trigger window. Upper edge leaves room for the longest event to
-    // finish before round end (unlike HVT's old fixed 30-70%).
-    local.max_event_duration = 300   // longest event in pool: KotH 5 min
-    local.buffer = 30
-
-    local.trigger_start = local.T * 0.3
-    local.trigger_end   = local.T - local.max_event_duration - local.buffer
-
-    // Round too short to fit any event: fire nothing this round.
-    if (local.trigger_end <= local.trigger_start)
-        end
+    // Bounded trigger window.
+    local.trigger_start = local.T * 0.2
+    local.trigger_end   = local.T * 0.5
 
     local.trigger_time = local.trigger_start + ((randomfloat 1) * (local.trigger_end - local.trigger_start))
 
