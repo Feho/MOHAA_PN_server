@@ -6,14 +6,8 @@
 // final zone placement to playtest — the zone should sit on the natural fight
 // path / map center, not necessarily here. Retune during the adoption playtest.
 
-local.origins = makearray
-    ( 517.09 500.49 -151.88 ) "the square"
-    ( 397.28 1650.91 116.12 ) "the house with the plank"
-endarray
-
-local.origin = local.origins[randomint(local.origins.size) + 1]
-level.koth_origin = local.origin[1]
-level.koth_radius = 350
-level.koth_label  = local.origin[2]
+level.koth_origin = ( 0.92 2892.26 16.12 )
+level.koth_radius = 256
+level.koth_label  = "the sewers"
 
 end 1
