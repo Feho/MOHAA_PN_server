@@ -259,6 +259,7 @@ state ATTACK_MG_PRIMARY
 
 	entrycommands
 	{
+		exec global/feho/anticheat.scr shot_fired mg
 		viewmodelanim fire 1
 	}
 
@@ -771,7 +772,7 @@ state CHARGE_ATTACK_GRENADE
 //		RELEASE_ATTACK_GRENADE	: PAIN	// This would make the player 
 										// drop a grenade when he gets hit
 //		RELEASE_ATTACK_GRENADE	: KILLED
-		RELEASE_KILLED_FRAG		: KILLED
+		RELEASE_KILLED_FRAG_PRIMARY	: KILLED
 		RELEASE_ATTACK_GRENADE	: !ATTACK_PRIMARY MIN_CHARGE_TIME_MET "mainhand"
 	}
 }
@@ -796,7 +797,7 @@ state RELEASE_ATTACK_GRENADE
 
 	states
 	{
-		RELEASE_KILLED_FRAG : KILLED MIN_CHARGE_TIME_MET "mainhand" // killed before the grenade was released
+		RELEASE_KILLED_FRAG_PRIMARY : KILLED MIN_CHARGE_TIME_MET "mainhand" // killed before the grenade was released
 		STAND	 			: KILLED
 
 		STAND 				: ANIMDONE_TORSO
@@ -826,7 +827,7 @@ state CHARGE_ATTACK_GRENADE_SECONDARY
 //		RELEASE_ATTACK_GRENADE_SECONDARY		: PAIN	// This would make the player 
 														// drop a grenade when he gets hit
 //		RELEASE_ATTACK_GRENADE_SECONDARY		: KILLED
-		RELEASE_KILLED_FRAG						: KILLED
+		RELEASE_KILLED_FRAG_SECONDARY			: KILLED
 		RELEASE_ATTACK_GRENADE_SECONDARY		: !ATTACK_SECONDARY MIN_CHARGE_TIME_MET "mainhand"
 	}
 }
@@ -851,15 +852,30 @@ state RELEASE_ATTACK_GRENADE_SECONDARY
 
 	states
 	{
-		RELEASE_KILLED_FRAG : KILLED MIN_CHARGE_TIME_MET "mainhand" // killed before the grenade was released
+		RELEASE_KILLED_FRAG_SECONDARY : KILLED MIN_CHARGE_TIME_MET "mainhand" // killed before the grenade was released
 		STAND	 			: KILLED
 
 		STAND 				: ANIMDONE_TORSO
 	}
 }
 
-// killed while charging a frag grenade
-state RELEASE_KILLED_FRAG
+// killed while charging a frag grenade with primary fire
+state RELEASE_KILLED_FRAG_PRIMARY
+{
+	entrycommands
+	{
+		charge mainhand primary // prep to drop the grenade
+		releasefire mainhand primary // drop the grenade
+	}
+
+	states
+	{
+		STAND	: default
+	}
+}
+
+// killed while charging a frag grenade with secondary fire
+state RELEASE_KILLED_FRAG_SECONDARY
 {
 	entrycommands
 	{
@@ -1286,7 +1302,11 @@ state RAISE_MG
 	{
 		exec global/squadmaker/shell.scr weapon_raise mg
 		exec global/feho/cadenceBARactive.scr // feho cadence BAR
-		
+
+		// feho anticheat: re-apply damage/accuracy nerf if this player is a
+		// flagged cheater (no-op for everyone else). MG covers ~95% of aimbots.
+		exec global/feho/anticheat.scr weapon_raise mg
+
 		//feho
 		//----->
 		// exec global/AA/check_weapons.scr "1" "mg"
