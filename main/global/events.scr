@@ -315,16 +315,19 @@ event_player_damaged local.attacker local.damage local.inflictor local.position 
 
         for (local.i = 5; local.i >= 0; local.i--)
         {
+            if (!local.attacker) break
+
             local.x = float(local.i) / 10
             ihuddraw_alpha local.attacker local.idx local.x
             waitframe
         }
 
         wait 0.5
-        local.attacker.hitmarker = 0
+        if (local.attacker)
+            local.attacker.hitmarker = 0
     }
 
-    if (randomint(12) != 1 || !isAlive self || self.has_grenade || !isBot self) end
+    if (!self || randomint(12) != 1 || !isAlive self || self.has_grenade || !isBot self) end
 
     self.has_grenade = 1
 
