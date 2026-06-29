@@ -1,9 +1,10 @@
 /*
-King of the Hill — mid-match event (SKELETON: announce + countdown timer only).
+King of the Hill — mid-match event.
 
-This is build step 2: the activate body loads the per-map preset, announces, runs
-a HUD countdown for the configured duration, then cleans up. There is NO capture
-scoring or ticket swing yet — those are build steps 3 and 4.
+The activate body loads the per-map preset, announces, runs a HUD countdown for the
+configured duration while accumulating capture progress per net body in the zone,
+then koth_resolve decides the winner against the draw band and applies a loser-only
+ticket swing (remove_team_tickets_percent, koth_swing_pct).
 
 Registers with event_manager.scr. The manager owns the trigger window and picks one
 eligible event per round; KotH's eligibility is "this is a ticket map" only.
@@ -154,7 +155,7 @@ koth_activate:
         wait level.koth_tick
     }
 
-    // 5. End: decide the winner and announce. Ticket swing is wired in step 4.
+    // 5. End: decide the winner, announce, and apply the ticket swing (koth_resolve).
     //    Re-check round-over here: it can flip between the last loop check and now,
     //    and we must not announce/swing into a round that has already ended.
     if (level.tickets_round_over == 1)
@@ -212,7 +213,7 @@ end
 
 /*
 koth_resolve — at duration end, decide the winner against the draw band and
-announce loudly (design driver #3). Stores the outcome for step 4's ticket swing.
+announce loudly (design driver #3), then apply the loser-only ticket swing.
   level.koth_winner: "allies" | "axis" | "draw"
 */
 koth_resolve:
@@ -505,9 +506,9 @@ koth_cleanup:
 end
 
 /*
-spawn_zone_marker / remove_zone_marker — the visual-marker seam. Marker model is
-TBD (flag/model); isolating it here makes swapping it a one-function change.
-SKELETON: a simple vertical beam at the zone origin so the zone is visible in-world.
+spawn_zone_marker / remove_zone_marker — the visual-marker seam. Isolating the
+marker here makes swapping it (flag/model) a one-function change. Currently a
+simple vertical beam at the zone origin so the zone is visible in-world.
 */
 spawn_zone_marker:
     if (level.koth_marker)
