@@ -1,0 +1,144 @@
+/*
+Bot stuck watchdog.
+
+Tracks each alive bot's movement anchor. If the bot remains inside the same
+radius for the configured duration, force a respawn so it can recover from
+blocked or destructible SP-map geometry.
+
+CVars:
+  bot_stuck_watchdog          "" = auto (SP maps on, dm/ maps off), 1 = on, 0 = off
+  bot_stuck_radius            default 128 units
+  bot_stuck_seconds           default 20 seconds
+  bot_stuck_poll              default 2 seconds
+  bot_stuck_respawn_cooldown  default 8 seconds
+*/
+
+main:
+    if (level.bot_stuck_initialized == 1)
+        end
+
+    local.setting = getcvar "bot_stuck_watchdog"
+
+    if (local.setting == "0")
+        end
+
+    if (local.setting != "1")
+    {
+        local.map = getcvar "mapname"
+        local.prefix = waitthread global/strings.scr::Left 3 local.map
+
+        if (local.prefix == "dm/" || local.map == "m5l1a")
+            end
+    }
+
+    level.bot_stuck_initialized = 1
+
+    event_subscribe "player_spawned" event_player_spawned
+    event_subscribe "player_killed" event_player_killed
+
+    thread monitor
+
+end
+
+event_player_spawned:
+    if (!self || !isBot self)
+        end
+
+    waitthread reset_bot self
+end
+
+event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+    if (!self || !isBot self)
+        end
+
+    waitthread reset_bot self
+end
+
+reset_bot local.bot:
+    local.bot.bot_stuck_anchor = NIL
+    local.bot.bot_stuck_since = NIL
+    local.bot.bot_stuck_last_respawn = NIL
+end
+
+monitor:
+    level.bot_stuck_radius = int(getcvar "bot_stuck_radius")
+    if (level.bot_stuck_radius <= 0)
+        level.bot_stuck_radius = 128
+
+    level.bot_stuck_seconds = int(getcvar "bot_stuck_seconds")
+    if (level.bot_stuck_seconds <= 0)
+        level.bot_stuck_seconds = 20
+
+    level.bot_stuck_poll = int(getcvar "bot_stuck_poll")
+    if (level.bot_stuck_poll <= 0)
+        level.bot_stuck_poll = 2
+
+    level.bot_stuck_respawn_cooldown = int(getcvar "bot_stuck_respawn_cooldown")
+    if (level.bot_stuck_respawn_cooldown <= 0)
+        level.bot_stuck_respawn_cooldown = 8
+
+    local.map = getcvar "mapname"
+    println ("[bot_stuck] enabled map=" + local.map + " radius=" + level.bot_stuck_radius + " seconds=" + level.bot_stuck_seconds)
+
+    while (1)
+    {
+        if (level.tickets_round_over != 1)
+            waitthread check_bots
+
+        wait level.bot_stuck_poll
+    }
+end
+
+check_bots:
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.bot = $player[local.i]
+
+        if (!local.bot || !isBot local.bot)
+            continue
+
+        if (!isalive local.bot || local.bot.dmteam == "spectator")
+        {
+            local.bot.bot_stuck_anchor = NIL
+            local.bot.bot_stuck_since = NIL
+            continue
+        }
+
+        waitthread check_bot local.bot
+    }
+end
+
+check_bot local.bot:
+    if (local.bot.bot_stuck_anchor == NIL)
+    {
+        local.bot.bot_stuck_anchor = local.bot.origin
+        local.bot.bot_stuck_since = level.time
+        end
+    }
+
+    if (!(vector_within local.bot.origin local.bot.bot_stuck_anchor level.bot_stuck_radius))
+    {
+        local.bot.bot_stuck_anchor = local.bot.origin
+        local.bot.bot_stuck_since = level.time
+        end
+    }
+
+    local.stuck_time = level.time - local.bot.bot_stuck_since
+    if (local.stuck_time < level.bot_stuck_seconds)
+        end
+
+    if (local.bot.bot_stuck_last_respawn != NIL)
+    {
+        local.cooldown_time = level.time - local.bot.bot_stuck_last_respawn
+        if (local.cooldown_time < level.bot_stuck_respawn_cooldown)
+            end
+    }
+
+    println ("[bot_stuck] respawn " + (netname local.bot) + " stuck_time=" + local.stuck_time + " origin=" + local.bot.origin)
+
+    local.bot.bot_stuck_last_respawn = level.time
+    local.bot.bot_stuck_anchor = NIL
+    local.bot.bot_stuck_since = NIL
+
+    local.bot respawn
+end
