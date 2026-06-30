@@ -84,9 +84,19 @@ tdmtype:
 	
 	level.clockside = kills
 
+	local.trigger = spawn trigger_multiple origin ( 1050.27 5669.78 384.12 )
+	local.trigger setsize ( -50 -50 0 ) ( 50 50 50 )
+	local.trigger setthread respawn_bot
+
 end
 
-	
+respawn_bot:
+
+	local.player = parm.other
+	if (!isBot local.player) end
+	local.player respawn
+
+end
 
 ffatype:
 
