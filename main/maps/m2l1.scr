@@ -24,13 +24,12 @@ end
 
 tdmtype:
 
-	setcvar "g_obj_alliedtext1"  "Map Name: M2L1" 
-	setcvar "g_obj_alliedtext2" "Secret Documents of "
-	setcvar "g_obj_alliedtext3"  " the Kriegsmarine"
+	setcvar "g_obj_alliedtext1" "Allies: Steal Documents"
+	setcvar "g_obj_alliedtext2" "Press USE on 4 papers"
+	setcvar "g_obj_alliedtext3" "to drain Axis tickets"
 	
-	setcvar "g_obj_axistext1" ""
-	setcvar "g_obj_axistext2" ""
-	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+	setcvar "g_obj_axistext1" "Axis: Defend Documents"
+	setcvar "g_obj_axistext2" "Hold camp until Stage 2"
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
 
@@ -169,6 +168,8 @@ tdmtype:
 	// start tickets mode
 	exec global/feho/tickets.scr
 
+	thread doc_heist_init
+
 	level.clockside = kills
 
 	//The snow
@@ -191,13 +192,13 @@ end
 
 ffatype:
 
-	setcvar "g_obj_alliedtext1"  "Map Name: M2L1" 
-	setcvar "g_obj_alliedtext2" "Secret Documents of "
-	setcvar "g_obj_alliedtext3"  " the Kriegsmarine"
+	setcvar "g_obj_alliedtext1" "Allies: Steal Documents"
+	setcvar "g_obj_alliedtext2" "Press USE on 4 papers"
+	setcvar "g_obj_alliedtext3" "Each capture drains Axis"
 	
-	setcvar "g_obj_axistext1" ""
-	setcvar "g_obj_axistext2" ""
-	setcvar "g_obj_axistext3" "Visit www.Mods-R-us.net" 
+	setcvar "g_obj_axistext1" "Axis: Defend Documents"
+	setcvar "g_obj_axistext2" "Deny Allied USE"
+	setcvar "g_obj_axistext3" "Hold camp until Stage 2"
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing2a.tga" 
 
@@ -488,6 +489,7 @@ set_da_stuff_up:
 	local.master aliascache m2l1_radio1 sound/mechanics/shortwave2.wav soundparms 0.7 0.0 1.0 0.0 100 900 auto streamed maps "m dm moh obj"
 	local.master aliascache radio_loop sound/mechanics/Mec_RadioMusic_01.wav soundparms 0.5 0.0 1.0 0.0 150 800 local streamed maps "m2l1 m6l2a dm moh obj train"
 	local.master aliascache m2l1_radio3 sound/mechanics/Mec_RadioLoop_05.wav soundparms 0.7 0.0 1.0 0.0 100 500 auto loaded maps "m2 dm moh obj train"
+	local.master aliascache doc_pickup_papers sound/items/Item_PaperPU_01.wav soundparms 1.5 0.0 1.0 0.0 100 2000 item loaded maps "m2l1"
 
 
 	// Remove AI
@@ -549,21 +551,86 @@ end
 
 
 // End some labels
+doc_heist_init:
+	if (level.docheist_initialized == 1)
+		end
+
+	level.docheist_initialized = 1
+	level.doc_drain_pct = 5	// % of Axis start tickets per document.
+	level.doc_bonus_pct = 5	// Extra % if all four documents are secured.
+	level.docs_remaining = 4
+
+	level.doc_flags[1] = 0
+	level.doc_flags[2] = 0
+	level.doc_flags[3] = 0
+	level.doc_flags[4] = 0
+
+	level.doc_marker[1] = waitthread global/feho/obj_marker.scr::spawn_at ( 448 2384 678 ) "textures/hud/clipboard.tga"
+	level.doc_marker[2] = waitthread global/feho/obj_marker.scr::spawn_at ( 292 1756 688 ) "textures/hud/clipboard.tga"
+	level.doc_marker[3] = waitthread global/feho/obj_marker.scr::spawn_at ( 682 2310 676 ) "textures/hud/clipboard.tga"
+	level.doc_marker[4] = waitthread global/feho/obj_marker.scr::spawn_at ( 1440 2144 680 ) "textures/hud/clipboard.tga"
+
+	wait 15
+	waitthread global/feho/notify.scr::show "Allies: press USE on documents. Axis: defend them." "info" 5.0
+end
+
 document2:
+	waitthread doc_secure 2
 end
 document1:
+	waitthread doc_secure 1
 end
 s7_test:
 end
 music2:
 end
 document4:
+	waitthread doc_secure 4
 end
 document3:
+	waitthread doc_secure 3
 end
 ladder_hint:
 end
 enable_hall_guards:
+end
+
+doc_secure local.n:
+	local.toucher = parm.other
+
+	if (local.toucher == NIL || local.toucher == NULL)
+		end
+	if (!isalive local.toucher)
+		end
+	if (level.doc_flags[local.n] == 1)
+		end
+	if (local.toucher.dmteam != "allies")
+		end
+
+	level.doc_flags[local.n] = 1
+	level.docs_remaining--
+
+	if (local.n == 1)
+		$document1 remove
+	else if (local.n == 2)
+		$document2 remove
+	else if (local.n == 3)
+		$document3 remove
+	else if (local.n == 4)
+		$document4 remove
+
+	if (level.doc_marker[local.n] != NIL && level.doc_marker[local.n] != NULL)
+		level.doc_marker[local.n] thread global/feho/obj_marker.scr::kill
+
+	local.toucher playsound doc_pickup_papers
+	waitthread global/feho/notify.scr::show ("Document " + (4 - level.docs_remaining) + " of 4 secured") "success" 5.0
+	waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" level.doc_drain_pct "docheist" "Documents stolen -"
+
+	if (level.docs_remaining == 0)
+	{
+		waitthread global/feho/notify.scr::show "All documents stolen!" "success" 5.0
+		waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" level.doc_bonus_pct "docheist" "All documents stolen -"
+	}
 end
 
 scrollMsg local.messagetosay:
