@@ -20,12 +20,14 @@ main local.command local.class:
 
     event_subscribe "player_spawned" event_player_spawned
 
+    event_subscribe "player_killed" track_killrate
     // Aimbot gate: kill = known aim point (anchor), first new hit
     // within the window = re-acquisition arc to a new target. Large arc fast
     // = aimbot tell.
     event_subscribe "player_killed" gate_record_kill
     event_subscribe "player_damaged" gate_measure_swing
     event_subscribe "player_damaged" track_mg_accuracy
+    event_subscribe "player_damaged" track_headshots
 
     // --- Honeypot tuning ---
     level.honeypot_chance = 10       // 1-in-N bot spawns arm the trap
@@ -48,8 +50,8 @@ main local.command local.class:
     // weapon_raise hook in mike_torso.st, so it survives re-pick/respawn/pickup.
     // For reference, stock dmbulletspread mins are ~2-40; 90/150 is deliberately
     // shotgun-wide so a confirmed cheater's shots wander.
-    level.ac_nerf_spread = 40      // min spread cone (degrees-ish) for a flagged weapon
-    level.ac_nerf_spread_max = 50  // max spread cone (moving / sustained fire)
+    level.ac_nerf_spread = 60      // min spread cone (degrees-ish) for a flagged weapon
+    level.ac_nerf_spread_max = 80  // max spread cone (moving / sustained fire)
 
     // --- MG accuracy telemetry ---
     // Shots are counted from ATTACK_MG_PRIMARY in mike_torso.st. Hits are counted
@@ -58,9 +60,120 @@ main local.command local.class:
     level.ac_mg_hit_window = 0.35       // sec: bullet damage must arrive soon after the MG shot
     level.ac_mg_log_min_shots = 50      // ignore tiny samples
     level.ac_mg_log_every_shots = 25    // print a compact sample every N MG shots
+
+    // --- Kills/min signal ---
+    // The ONLY signal that fired on all three confirmed cheaters (racaille's
+    // aim looked clean; volume did not). Self-counted from player_killed (engine
+    // getkills/getdeaths are unreliable: num_deaths is assigned from round_kills,
+    // so K==D in the log). Counted per attacker per round on self.*, anchored on
+    // their first kill of the round, so the per-map level.time reset never bites.
+    level.ac_kr_min_kills = 40          // need at least this many kills before a rate is meaningful (else -1)
+    level.ac_kr_min_elapsed = 30        // ...and at least this many seconds since the first kill (else -1)
+
+    // K/M flag threshold (cvar so it's tunable live without a restart). The
+    // watcher only persists/nerfs when this K/M threshold is met after the
+    // larger kill sample above AND the player's IP is a VPN/datacenter.
+    level.ac_kr_flag_km = int(getcvar "ac_kr_flag_km")
+    if (level.ac_kr_flag_km <= 0) level.ac_kr_flag_km = 7    // K/M at/above which we emit [KMFLAG]
+    level.ac_kr_log_floor = 3           // log the K/M value once per round when it first crosses this (calibration)
+
     level.ac_debug = int(getcvar "debug")
 
+    // Consumer loop: lets the external watcher request a nerf by setting the
+    // ac_nerf_slot cvar (mirrors antinoob.scr's unblack: idiom).
+    thread ac_nerf_consumer
+
 end
+
+// ============================================================================
+// Kills/min signal
+// ============================================================================
+// Self-counted kill rate per attacker per round. This is the only signal that
+// fired on all three confirmed cheaters (a smooth/ESP cheat hides its aim but
+// not its kill volume). We count here rather than via engine getkills because
+// getdeaths is corrupted (num_deaths = round_kills => K==D) and getkills is
+// team-mediated; a private counter is deterministic and ours to reset.
+//
+// Counters live on self.* (the attacker), so they clear at the round boundary
+// along with gate_flags/headshot counters. The anchor (ac_kr_t0) is captured on
+// the FIRST kill of the round, so the per-map level.time reset never bites: we
+// never subtract a time across a reset. Count ALL kills (bots included, any
+// means-of-death) — a volume farmer's bot kills are exactly what we want to see.
+
+// player_killed: bump the attacker's per-round kill count; anchor on first kill.
+track_killrate local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+
+    if (!local.attacker) end
+    if (isBot local.attacker) end            // only score humans (victim may be a bot — that's fine)
+    if (local.attacker == self) end          // suicide / world death is not a kill
+
+    if (!local.attacker.ac_kr_kills)
+    {
+        local.attacker.ac_kr_kills = 0
+        local.attacker.ac_kr_t0 = level.time // anchor on the first kill of the round
+    }
+    local.attacker.ac_kr_kills++
+
+    // --- Rate check + flag emit ---
+    local.km = waitthread kill_rate local.attacker
+    if (local.km < 0) end                      // sample still too small (-1)
+
+    // Observability: log the actual K/M value the first time it crosses the (low)
+    // calibration floor this round, so a live session reveals the real
+    // distribution and we can set ac_kr_flag_km from data, not a guess.
+    if (local.km >= level.ac_kr_log_floor && !local.attacker.ac_kr_logged)
+    {
+        local.attacker.ac_kr_logged = 1
+        local.developer = getcvar "developer"
+        setcvar "developer" 1
+        println ("^3[KM] " + netname local.attacker + " km=" + local.km + " (" + local.attacker.ac_kr_kills + " kills)")
+        setcvar "developer" local.developer
+    }
+
+    // Flag emit (latched once per round): the watcher triggers on [KMFLAG]. We
+    // print clientnum (= the {#N|ip} slot, the nerf key), ip (for the VPN check,
+    // ip:port — the watcher strips the port), and netname (for the audit log).
+    if (local.km >= level.ac_kr_flag_km && !local.attacker.ac_kr_flagged)
+    {
+        local.attacker.ac_kr_flagged = 1
+        local.slot = getclientnum local.attacker
+        local.ip = getip local.attacker
+        local.developer = getcvar "developer"
+        setcvar "developer" 1
+        println ("^1[KMFLAG] slot=" + local.slot + " ip=" + local.ip + " kills=" + local.attacker.ac_kr_kills + " km=" + local.km + " name=" + netname local.attacker)
+        setcvar "developer" local.developer
+    }
+
+end
+
+// Returns the attacker's kills/min this round, or -1 if the sample is too small
+// (fewer than ac_kr_min_kills kills, or less than ac_kr_min_elapsed seconds since
+// the first kill) — mirrors the headshot_ratio -1 convention so the brain reads
+// "insufficient sample" the same way across columns.
+kill_rate local.who:
+
+    if (!local.who) end
+    if (!local.who.ac_kr_kills)
+    {
+        local.result = -1
+        end local.result
+    }
+
+    if (local.who.ac_kr_kills < level.ac_kr_min_kills)
+    {
+        local.result = -1
+        end local.result
+    }
+
+    local.elapsed = level.time - local.who.ac_kr_t0
+    if (local.elapsed < level.ac_kr_min_elapsed)
+    {
+        local.result = -1
+        end local.result
+    }
+
+    local.result = (local.who.ac_kr_kills * 60) / local.elapsed
+    end local.result
 
 // ============================================================================
 // Aimbot gate
@@ -132,10 +245,11 @@ gate_measure_swing local.attacker local.damage local.inflictor local.position lo
 
     local.kills = local.attacker getkills
     local.deaths = local.attacker getdeaths
+    local.hs_ratio = waitthread headshot_ratio local.attacker   // -1 if sample too small (see ac_hs_min_hits)
 
     local.developer = getcvar "developer"
     setcvar "developer" 1
-    println ("^1[AIMBOT] " + netname local.attacker + " swing " + local.degs + " deg/s | flags=" + local.attacker.gate_flags + "/" + level.ac_flags_to_punish + " | K/D=" + local.kills + "/" + local.deaths)
+    println ("^1[AIMBOT] " + netname local.attacker + " swing " + local.degs + " deg/s | flags=" + local.attacker.gate_flags + "/" + level.ac_flags_to_punish + " | hs=" + local.hs_ratio + "% (" + local.attacker.ac_hs_heads + "/" + local.attacker.ac_hs_hits + ") | K/D=" + local.kills + "/" + local.deaths)
     setcvar "developer" local.developer
 
     if (local.attacker.gate_flags >= level.ac_flags_to_punish)
@@ -149,11 +263,62 @@ gate_measure_swing local.attacker local.damage local.inflictor local.position lo
 
         local.developer = getcvar "developer"
         setcvar "developer" 1
-        println ("^1[AIMBOT] PUNISH " + netname local.attacker + " | flags=" + local.attacker.gate_flags + " | K/D=" + local.kills + "/" + local.deaths + " | nerf->dmg " + (80 / local.attacker.gate_flags))
+        local.slot = getclientnum local.attacker
+        local.ip = getip local.attacker
+        println ("^1[AIMBOT] PUNISH slot=" + local.slot + " ip=" + local.ip + " name=" + netname local.attacker + " | flags=" + local.attacker.gate_flags + " | K/D=" + local.kills + "/" + local.deaths + " | nerf->dmg " + (60 / local.attacker.gate_flags))
         setcvar "developer" local.developer
     }
 
 end
+
+// ============================================================================
+// Headshot ratio (second signal, LOG-ONLY for now)
+// ============================================================================
+// Aimbots lock to the head hitbox. The hit location is handed to us directly in
+// player_damaged (no world trace needed), so a high headshot fraction over a real
+// sample is a near-free aimbot tell. Counted per attacker per round; the counters
+// live on self.* so they clear at the round boundary along with gate_flags.
+//
+// Scope: only AIMED BULLET weapons count toward the sample. Grenades/explosions
+// (MOD_GRENADE=14) and bashes (MOD_BASH=25) have no aim point and would pollute
+// the ratio, so we restrict to MOD_BULLET=18, MOD_FAST_BULLET=19, MOD_SHOTGUN=26.
+// HITLOC: 0=HEAD, 1=HELMET, 2=NECK is the head band (location <= ac_hs_band).
+
+// player_damaged: count one bullet hit, and whether it landed in the head band.
+track_headshots local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+
+    if (!local.attacker) end
+    if (isBot local.attacker) end
+    if (local.attacker == self) end          // self-damage
+
+    // Aimed bullet weapons only (exclude grenades, explosions, bash, fire, etc.)
+    if (local.meansofdeath != 18 && local.meansofdeath != 19 && local.meansofdeath != 26) end
+
+    if (!local.attacker.ac_hs_hits) local.attacker.ac_hs_hits = 0
+    if (!local.attacker.ac_hs_heads) local.attacker.ac_hs_heads = 0
+
+    local.attacker.ac_hs_hits++
+    if (local.location >= 0 && local.location <= level.ac_hs_band)
+        local.attacker.ac_hs_heads++
+
+end
+
+// Returns the headshot percentage for a player, or -1 if the sample is too small
+// (fewer than ac_hs_min_hits tracked bullet hits) to be meaningful.
+headshot_ratio local.who:
+
+    if (!local.who) end
+    if (!local.who.ac_hs_hits) local.who.ac_hs_hits = 0
+    if (!local.who.ac_hs_heads) local.who.ac_hs_heads = 0
+
+    if (local.who.ac_hs_hits < level.ac_hs_min_hits)
+    {
+        local.result = -1
+        end local.result
+    }
+
+    local.result = (local.who.ac_hs_heads * 100) / local.who.ac_hs_hits
+    end local.result
 
 // ============================================================================
 // MG accuracy telemetry
@@ -248,9 +413,13 @@ apply_nerf local.who:
     if (!local.who.suspicion_level) end
     if (local.who.suspicion_level <= 0) end
 
+    local.who iprintln "Have fun!"
+
     // Damage: scale down by flag count
-    local.who weaponcommand dual dmbulletdamage (80 / local.who.suspicion_level)
+    local.who weaponcommand dual dmbulletdamage (60 / local.who.suspicion_level)
     local.who weaponcommand dual dmbulletspread (level.ac_nerf_spread) (level.ac_nerf_spread) (level.ac_nerf_spread_max) (level.ac_nerf_spread_max)
+    //local.who setspeed 0.7
+    println ("^1[KMNERF] name=" + netname local.who + " -> suspicion=" + local.who.suspicion_level + " nerf applied")
 
 end
 
@@ -267,11 +436,55 @@ weapon_raise local.class:
 
 end
 
+// ============================================================================
+// External nerf consumer (watcher -> cvar -> nerf)
+// ============================================================================
+// The external watcher confirms VPN + K/M flag, then injects into the server
+// console: `seta ac_nerf_slot <clientnum>`. This loop consumes that request,
+// finds the player by client number, flags them (suspicion_level = 3) and nerfs
+// the weapon they hold. The raise-hook (weapon_raise) re-applies it on every
+// subsequent raise, so it survives re-pick/respawn until the round resets.
+// Idiom mirrors antinoob.scr's unblack: clear -> wait-for-nonempty -> resolve.
+ac_nerf_consumer:
+
+    while (1)
+    {
+        setcvar "ac_nerf_slot" ""
+        while (getcvar "ac_nerf_slot" == "") { wait 1 }
+
+        local.slot = int(getcvar "ac_nerf_slot")
+        local.who = waitthread find_player_by_clientnum local.slot
+        if (local.who)
+        {
+            local.who.suspicion_level = 3
+            waitthread apply_nerf local.who
+
+            local.developer = getcvar "developer"
+            setcvar "developer" 1
+            println ("^1[KMNERF] slot=" + local.slot + " name=" + netname local.who + " -> suspicion=3 nerf applied")
+            setcvar "developer" local.developer
+        }
+    }
+
+end
+
+// Returns the player entity whose client number == local.slot, or NIL.
+find_player_by_clientnum local.slot:
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        if (getclientnum $player[local.i] == local.slot)
+            end $player[local.i]
+    }
+    end NIL
+
+end
+
 event_player_spawned:
 
     if (self.suspicion_level && self.suspicion_level > 0)
     {
-        wait 0.5
+        wait 2
         if (!self) end // disconnected during the wait
         // Re-apply the nerf: respawn hands a fresh (un-nerfed) weapon instance.
         // The weapon_raise hook also covers later raises within the life.
