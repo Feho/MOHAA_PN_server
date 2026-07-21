@@ -200,6 +200,7 @@ build_weight_table:
 
     // waitthread add_weighted_map "dm/mohdm5"     1
     waitthread add_weighted_map "m1l2a"         1
+    waitthread add_weighted_map "m1l3b"         1
     waitthread add_weighted_map "m3l2"          1
     waitthread add_weighted_map "m5l2a"         1
 end
