@@ -275,13 +275,34 @@ end local.array[local.idx]
 // ============================================================================
 
 /*
- * is_alive - Check if an entity is alive
+ * is_alive - Check if an entity is alive and actually in play.
+ *
+ * Two traps this avoids:
+ *
+ * 1. `isalive` alone is NOT enough while sv_team_spawn_interval is set (we run 8s
+ *    in server.cfg). On death the engine forces the player into spectator and
+ *    Player::Spectator() resets deadflag = DEAD_NO and health = max_health so the
+ *    queued player isn't processed as a corpse. Script `isalive` is just
+ *    `health > 0`, so everyone waiting out the respawn interval reads ALIVE.
+ *    self.isSpectator (engine getter -> m_bSpectator || m_bTempSpectator) is the
+ *    discriminator: true while queued/spectating, false for a real live player.
+ *
+ * 2. The old `.isAlive` PROPERTY read was squad.scr's self-labelled HACK
+ *    bookkeeping flag (squad.scr:392-409), not engine state -- it is only set on a
+ *    player's SECOND spawn and is never cleared for bots. Never read it; call the
+ *    engine's `isalive` function instead.
  */
 is_alive local.entity:
-end (local.entity != NIL && local.entity.isAlive == 1)
+    if (local.entity == NIL || local.entity == NULL)
+        end 0
+
+end (isalive local.entity && !local.entity.isSpectator)
 
 /*
- * is_living_human - Check if entity is alive and not a bot
+ * is_living_human - Check if entity is alive (see is_alive) and not a bot
  */
 is_living_human local.entity:
-end (local.entity != NIL && local.entity.isAlive == 1 && !isBot local.entity)
+    if (local.entity == NIL || local.entity == NULL)
+        end 0
+
+end (isalive local.entity && !local.entity.isSpectator && !isBot local.entity)

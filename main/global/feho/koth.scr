@@ -177,7 +177,7 @@ count_zone_bodies local.team:
     {
         local.player = $player[local.i]
         if (!local.player) continue
-        if (!local.player.isAlive) continue
+        if (!isalive local.player || local.player.isSpectator) continue
         if (local.player.dmteam != local.team) continue
         if (vector_within level.koth_origin local.player.origin level.koth_radius)
             local.count++
@@ -199,7 +199,7 @@ koth_bot_loop local.generation:
             local.bot = $player[local.i]
             if (!local.bot) continue
             if (!isBot local.bot) continue
-            if (!local.bot.isAlive) continue
+            if (!isalive local.bot || local.bot.isSpectator) continue
             if (local.bot.dmteam != "allies" && local.bot.dmteam != "axis") continue
             if (vector_within level.koth_origin local.bot.origin level.koth_radius) continue
 
@@ -374,7 +374,7 @@ update_koth_status_hud local.allies_in local.axis_in:
         if (isBot local.player) continue
 
         local.team = local.player.dmteam
-        if (!local.player.isAlive || (local.team != "allies" && local.team != "axis"))
+        if (!isalive local.player || local.player.isSpectator || (local.team != "allies" && local.team != "axis"))
         {
             waitthread hide_koth_status local.player local.idx
             continue

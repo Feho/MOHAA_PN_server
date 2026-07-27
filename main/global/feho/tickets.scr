@@ -296,7 +296,13 @@ count_alive_team local.team:
     for (local.i = 1; local.i <= $player.size; local.i++)
     {
         local.player = $player[local.i]
-        if (local.player && local.player.dmteam == local.team && local.player.isAlive)
+        if (local.player == NIL || local.player == NULL)
+            continue
+
+        if (local.player.dmteam != local.team)
+            continue
+
+        if (isalive local.player && !local.player.isSpectator)
             local.count++
     }
 
