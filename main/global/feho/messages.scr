@@ -47,6 +47,7 @@ event_player_spawned:
     local.tips[2] = "Tip: Press [USE] near enemy grenades to kick them!"
     local.tips[3] = "Tip: Right-click with grenade = smoke grenade"
     local.tips[4] = "Tip: Right-click with rifle = grenade launcher"
+    local.tips[5] = "Tip: Squad leader? Aim somewhere and press [USE] to order your bots to hold it"
     local.tip = local.tips[randomint(local.tips.size) + 1]
 
     if (local.player)

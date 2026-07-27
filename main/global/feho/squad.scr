@@ -15,6 +15,17 @@ To be able to respawn near the squad leader, we need to store the last ten posit
 A new position is added to the array when the squad leader moves by a certain distance, and the oldest position is removed from the array.
 When a player spawns (event_player_spawned), we check if he is in a squad. If he is, we check if the squad leader is alive. If the squad leader is alive, we respawn the player at one of the last ten positions of the squad leader.
 
+### Hold-position orders
+
+A human squad leader aims at a spot and presses USE to send the squad's bots there.
+The bots scatter within `level.squad_hold_radius` of the point and hold for
+`level.squad_hold_duration` seconds — the timer starts when each bot arrives, so a long
+walk doesn't eat into the guard time. This uses the engine's extended `bot_holdposition`
+(vector form); see `docs/scripting_bot_commands.md`.
+
+Because USE is also bomb-planting and vehicle-entry, orders are restricted to squad
+leaders who actually have living bots, and are rate-limited by `level.squad_hold_cooldown`.
+
 */
 
 main:
@@ -38,6 +49,13 @@ init_squad_system:
     level.squad_leader_pos_history_count = 20
     level.squad_leader_pos_update_distance = 64.0 // Use float for distance checks
     level.squad_leader_pos_update_interval = 0.5 // Seconds
+
+    // --- Hold-position orders (human presses USE to order squad bots to a spot) ---
+    level.squad_hold_radius = 128   // bots scatter within this radius of the aim point
+    level.squad_hold_duration = 15  // seconds held, clock starts when each bot arrives
+    level.squad_hold_max_range = 4096 // max crosshair trace distance
+    level.squad_hold_cooldown = 3   // seconds between orders, per player
+    level.squad_hold_eye_height = 82 // DEFAULT_VIEWHEIGHT, origin is at the feet
 
     for (local.i = 1; local.i <= level.squad_max_squads_per_team; local.i++)
     {
@@ -203,6 +221,7 @@ assign_player_to_squad local.player:
             level.player_squad_info[local.player.entnum]["squad_idx"] = local.s_idx
             
             thread start_leader_position_tracking local.player
+            thread notify_new_leader local.player
             //println("Squad Mod: Player " + netname local.player + " created and leads squad " + local.s_idx + " on team " + local.player_team_idx)
             end local.player
         }
@@ -259,7 +278,27 @@ promote_new_squad_leader local.team_idx local.squad_idx:
 
     level.squad_leaders[local.team_idx][local.squad_idx] = local.new_leader
     thread start_leader_position_tracking local.new_leader
+    thread notify_new_leader local.new_leader
     //println("Squad Mod: " + netname local.new_leader + " is the new leader of squad " + local.squad_idx + " on team " + local.team_idx)
+end
+
+// Tell a human they can give hold orders, at the moment it becomes true for them.
+// Once per player per map: promotions can happen repeatedly and this would nag.
+notify_new_leader local.player:
+    if (!local.player || isBot local.player)
+        end
+
+    if (local.player.squad_hold_tip_shown == 1)
+        end
+
+    local.player.squad_hold_tip_shown = 1
+
+    // Let the promotion/spawn messages clear first.
+    wait 2
+    if (!local.player)
+        end
+
+    local.player iprint ("You lead this squad - aim and press [USE] to order your bots to hold that spot")
 end
 
 handle_player_leaving_squad local.player:
@@ -403,7 +442,10 @@ event_player_spawned:
     if (local.player_squad_data == NIL) { end } // Should not happen if assignment worked
 
     if (!isBot local.player)
+    {
         thread update_squad_hud local.player
+        thread watch_hold_position_order local.player
+    }
 
     local.squad_team_idx = local.player_squad_data["team_idx"]
     local.squad_idx = local.player_squad_data["squad_idx"]
@@ -455,6 +497,136 @@ event_player_spawned:
         wait 0.1
     }
 end
+
+// ============================================================================
+// HOLD-POSITION ORDERS
+// ============================================================================
+// A human squad leader presses USE to send the squad's bots to whatever their
+// crosshair is on. Bots move there and hold for level.squad_hold_duration; the
+// duration clock only starts once each bot arrives (engine-side), so travel time
+// never eats into the guard time.
+
+// Polls USE for one human player. Started per spawn, ends when they die/leave.
+watch_hold_position_order local.player:
+    if (!local.player || isBot local.player)
+        end
+
+    if (local.player.squad_hold_thread_active == 1)
+        end
+
+    local.player.squad_hold_thread_active = 1
+
+    while (local.player && local.player.isAlive && level.player_squad_info[local.player.entnum] != NIL)
+    {
+        // Edge-triggered: only fire on the press, not every frame USE stays down.
+        if (local.player.useheld == 1)
+        {
+            if (local.player.squad_hold_use_was_down != 1)
+            {
+                local.player.squad_hold_use_was_down = 1
+                thread issue_hold_position_order local.player
+            }
+        }
+        else
+        {
+            local.player.squad_hold_use_was_down = 0
+        }
+
+        waitframe
+    }
+
+    if (local.player)
+    {
+        local.player.squad_hold_thread_active = 0
+        local.player.squad_hold_use_was_down = 0
+    }
+end
+
+issue_hold_position_order local.player:
+    if (!local.player || !local.player.isAlive)
+        end
+
+    // Only the squad leader gives orders.
+    local.squad_info = level.player_squad_info[local.player.entnum]
+    if (local.squad_info == NIL)
+        end
+
+    local.team_idx = local.squad_info["team_idx"]
+    local.squad_idx = local.squad_info["squad_idx"]
+
+    if (level.squad_leaders[local.team_idx][local.squad_idx] != local.player)
+        end
+
+    // Rate-limit repeated orders. The cooldown is only consumed once an order actually
+    // goes out, so a bomb plant or vehicle entry doesn't block the next real order.
+    if (local.player.squad_hold_next_order != NIL && level.time < local.player.squad_hold_next_order)
+        end
+
+    // Collect the commandable bots first. USE is also bomb-planting and vehicle-entry,
+    // so a leader with no bots must never see order feedback for an unrelated keypress.
+    local.squad_members = level.squads[local.team_idx][local.squad_idx]
+    if (local.squad_members == NIL)
+        end
+
+    local.bots = NIL
+    for (local.i = 1; local.i <= local.squad_members.size; local.i++)
+    {
+        local.member = local.squad_members[local.i]
+        if (local.member == NIL || local.member == local.player) continue;
+        if (!isBot local.member || !local.member.isAlive) continue;
+
+        // Anticheat honeypot bots must stay at their hidden origin (see anticheat.scr).
+        if (local.member.is_honeypot) continue;
+
+        // NIL arrays have no .size, so seed index 1 explicitly (same idiom as array_filter).
+        if (local.bots == NIL)
+            local.bots[1] = local.member
+        else
+            local.bots[local.bots.size + 1] = local.member
+    }
+
+    if (local.bots == NIL || local.bots.size == 0)
+        end
+
+    local.target = waitthread get_crosshair_position local.player
+    if (local.target == NIL)
+    {
+        local.player iprint ("Aim at the ground or a wall to set the hold position.")
+        end
+    }
+
+    local.player.squad_hold_next_order = level.time + level.squad_hold_cooldown
+
+    for (local.i = 1; local.i <= local.bots.size; local.i++)
+    {
+        local.bots[local.i] bot_holdposition local.target level.squad_hold_duration level.squad_hold_radius
+    }
+
+    local.player iprint ("Squad holding position (" + local.bots.size + " bots, " + int(level.squad_hold_duration) + "s)")
+end
+
+// Traces from the player's eyes along their view to find the aimed-at point.
+// Both traces use the default MASK_SOLID, which ignores entities — so the line
+// passes through teammates and hits world geometry instead of stopping on them.
+get_crosshair_position local.player:
+    if (!local.player)
+        end NIL
+
+    local.eye = local.player.origin + ( 0 0 level.squad_hold_eye_height )
+    local.aim_end = local.eye + local.player.forwardvector * level.squad_hold_max_range
+
+    // trace always returns a vector: the impact point, or aim_end if nothing was hit.
+    local.hit = trace local.eye local.aim_end
+
+    // Aiming at open sky gives a point in mid-air, which no bot can stand on.
+    if (vector_within local.hit local.aim_end 1)
+        end NIL
+
+    // Drop to the floor so the bots get a standable goal even when the crosshair
+    // lands on a wall. Starting slightly above the impact avoids starting in solid.
+    local.ground = trace ( local.hit + ( 0 0 32 ) ) ( local.hit - ( 0 0 16384 ) )
+
+end local.ground
 
 event_player_damaged:
 
