@@ -26,6 +26,10 @@ walk doesn't eat into the guard time. This uses the engine's extended `bot_holdp
 Because USE is also bomb-planting and vehicle-entry, orders are restricted to squad
 leaders who actually have living bots, and are rate-limited by `level.squad_hold_cooldown`.
 
+Set the `squad_debug` cvar to 1 to flash a green beam at each order's destination.
+The cvar is read per order, so it can be toggled mid-map. The beam is a world entity
+and is therefore visible to everyone — keep it off in production.
+
 */
 
 main:
@@ -55,7 +59,6 @@ init_squad_system:
     level.squad_hold_duration = 15  // seconds held, clock starts when each bot arrives
     level.squad_hold_max_range = 4096 // max crosshair trace distance
     level.squad_hold_cooldown = 3   // seconds between orders, per player
-    level.squad_hold_eye_height = 82 // DEFAULT_VIEWHEIGHT, origin is at the feet
 
     for (local.i = 1; local.i <= level.squad_max_squads_per_team; local.i++)
     {
@@ -597,6 +600,10 @@ issue_hold_position_order local.player:
 
     local.player.squad_hold_next_order = level.time + level.squad_hold_cooldown
 
+    // Read the cvar live (bot_queue.scr idiom) so squad_debug can be toggled mid-map.
+    if (int(getcvar "squad_debug"))
+        thread debug_flash_hold_point local.target
+
     for (local.i = 1; local.i <= local.bots.size; local.i++)
     {
         local.bots[local.i] bot_holdposition local.target level.squad_hold_duration level.squad_hold_radius
@@ -608,12 +615,28 @@ end
 // Traces from the player's eyes along their view to find the aimed-at point.
 // Both traces use the default MASK_SOLID, which ignores entities — so the line
 // passes through teammates and hits world geometry instead of stopping on them.
+//
+// Uses viewangles, NOT forwardvector. forwardvector is SimpleEntity::GetForwardVector,
+// which builds the vector from `angles` — the player's BODY angles, whose pitch is
+// clamped to zero. The result is a purely horizontal ray, so aiming at the floor
+// traced flat ahead and hit the first wall instead. viewangles returns GetVAngles()
+// (v_angle), the real look direction including pitch. Same idiom as the binocular
+// artillery spotting in the Fire-For-Effect mod (root.scr:193).
+//
+// The eye also comes from the head tag rather than origin + a constant: the eye is
+// not at a fixed height when crouched, prone or on a ladder.
 get_crosshair_position local.player:
     if (!local.player)
         end NIL
 
-    local.eye = local.player.origin + ( 0 0 level.squad_hold_eye_height )
-    local.aim_end = local.eye + local.player.forwardvector * level.squad_hold_max_range
+    local.aim_dir = angles_toforward local.player.viewangles
+    local.head = local.player gettagposition "Bip01 Head"
+
+    // Start clear of the player's own bounding box. The head tag sits inside the
+    // solid player hull, and a trace beginning in solid can return its start point
+    // immediately. (FFE uses the same 64-unit lead-in.)
+    local.eye = local.head + local.aim_dir * 64
+    local.aim_end = local.head + local.aim_dir * level.squad_hold_max_range
 
     // trace always returns a vector: the impact point, or aim_end if nothing was hit.
     local.hit = trace local.eye local.aim_end
@@ -627,6 +650,35 @@ get_crosshair_position local.player:
     local.ground = trace ( local.hit + ( 0 0 32 ) ) ( local.hit - ( 0 0 16384 ) )
 
 end local.ground
+
+// Debug only (squad_debug 1): green beam at the point the bots were actually sent to,
+// so you can see where an order landed without reading the console.
+//
+// This is a func_beam — a WORLD entity — so the flash is visible to every player on
+// the server, not just the ordering leader. Acceptable behind a debug cvar; do not
+// reuse this as player-facing order feedback.
+//
+// Verb order follows obj_marker.scr: origin and endpoint are set BEFORE activate so
+// there's no one-frame streak from the world origin. On a flash this short that
+// artifact would be a large fraction of what you see.
+debug_flash_hold_point local.pos:
+    local.duration = 2
+
+    local.beam = spawn func_beam
+    local.beam color ( 0.2 1.0 0.2 )
+    local.beam scale 6
+    local.beam numsegments 1
+    local.beam life 0
+    local.beam.origin = local.pos
+    local.beam endpoint ( local.pos + ( 0 0 96 ) )
+    local.beam activate
+
+    wait local.duration
+
+    // Reap manually rather than relying on life (same as obj_marker.scr::kill).
+    if (local.beam)
+        local.beam remove
+end
 
 event_player_damaged:
 
