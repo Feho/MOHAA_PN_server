@@ -6,6 +6,9 @@ logs_all := "~/.openmohaa/main/qconsole*.log"
 dashboard_url := "http://127.0.0.1:8088"
 dashboard_screen := "mohaa_dashboard"
 dashboard_tunnel_screen := "mohaa_dashboard_tunnel"
+watcher := "tools/cheat_watcher.py"
+watcher_screen := "mohaa_watcher"
+watcher_audit := "~/.openmohaa/main/anticheat/watcher_audit.log"
 
 # list available recipes
 default:
@@ -120,6 +123,48 @@ journal:
 # start a local test server (cheats/developer on, port 12204)
 test-server:
     ./omohaaded +set com_target_game 0 +set dedicated 2 +set sv_maxclients 16 +set net_port 12204 +exec server.cfg +set thereisnomonkey 1 +set cheats 1 +set developer 1
+
+# --- anticheat / cheat watcher (VPN + K/M -> nerf) ---
+
+# run the cheat watcher in DRY-RUN in the foreground (Ctrl-C to stop)
+watch:
+    python3 {{watcher}}
+
+# run the watcher ARMED in the foreground (will issue real nerfs — be sure first)
+watch-arm:
+    python3 {{watcher}} --arm
+
+# start the watcher (DRY-RUN) in a detached screen session
+watch-start:
+    @if screen -S {{watcher_screen}} -Q select . >/dev/null 2>&1; then echo "screen session already running: {{watcher_screen}}"; else screen -dmS {{watcher_screen}} python3 {{watcher}}; echo "started watcher (dry-run) in screen session: {{watcher_screen}}"; fi
+
+# start the watcher ARMED in a detached screen session (issues real nerfs)
+watch-start-arm:
+    @if screen -S {{watcher_screen}} -Q select . >/dev/null 2>&1; then echo "screen session already running: {{watcher_screen}}"; else screen -dmS {{watcher_screen}} python3 {{watcher}} --arm; echo "started watcher (ARMED) in screen session: {{watcher_screen}}"; fi
+
+# attach to the watcher screen session (detach with Ctrl-A then D)
+watch-attach:
+    screen -r {{watcher_screen}}
+
+# stop the watcher screen session
+watch-stop:
+    @if screen -S {{watcher_screen}} -Q select . >/dev/null 2>&1; then screen -S {{watcher_screen}} -X quit; echo "stopped screen session: {{watcher_screen}}"; else echo "screen session not running: {{watcher_screen}}"; fi
+
+# replay the existing log through the watcher (dry-run) and exit — for testing
+watch-backfill:
+    python3 {{watcher}} --backfill-only
+
+# follow the watcher's decisions (connects, WOULD/NERF, KMFLAG)
+watch-audit:
+    tail -f {{watcher_audit}}
+
+# K/M observability + flags from the live log: the distribution that sets the threshold
+km:
+    @rg "\[KM\]|\[KMFLAG\]|\[KMNERF\]" {{log}} | tail -n 60
+
+# all anticheat signal lines (aimbot swings, K/M, accuracy, nerfs)
+ac:
+    @rg "\[AIMBOT\]|\[KM\]|\[KMFLAG\]|\[KMNERF\]|\[ACCURACY:MG\]" {{log}} | tail -n 80
 
 # --- live map (top-down player positions in the browser) ---
 
