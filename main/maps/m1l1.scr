@@ -64,6 +64,68 @@ tdmtype:
 
 	level.clockside = kills
 
+	// Bot action queue demo: `!botplant` in chat to run a fake plant sequence.
+	event_subscribe "player_textMessage" botplant_chat
+
+end
+
+
+//-----------------------------------------------------------------------------
+// `!botplant` demo — bot walks to the radio table, mimes a plant, retreats,
+// and holds position. No real bomb is involved (bots are gated out of bomb
+// pickup in bomb.scr); this exercises the bot_queue machinery only.
+//-----------------------------------------------------------------------------
+
+botplant_chat local.text local.is_team:
+
+	if (local.text != "!botplant") end
+
+	if (!self) end
+
+	// Need the radio mod's positions; bail clearly if we somehow ran before they're set.
+	if (level.radio_origin == NIL || level.radio_bomb_origin == NIL)
+	{
+		self iprint "radio mod not initialized yet"
+		end
+	}
+
+	// Pick an alive bot on the planting team (radio_enemy_team is whoever attacks the radio).
+	local.bots = waitthread global/feho/utils.scr::get_bots
+	local.target_bot = NIL
+	for (local.i = 1; local.i <= local.bots.size; local.i++)
+	{
+		local.b = local.bots[local.i]
+		if (isalive local.b && local.b.dmteam == level.radio_enemy_team)
+		{
+			local.target_bot = local.b
+			break
+		}
+	}
+
+	if (local.target_bot == NIL)
+	{
+		self iprint ("no alive " + level.radio_enemy_team + " bot to drive")
+		end
+	}
+
+	// Plant happens on the tabletop — radio_mod.scr builds it the same way at line 85.
+	local.tabletop = ( level.radio_origin[0] level.radio_origin[1] (level.radio_origin[2] + 56) )
+
+	local.actions = NIL
+	local.actions[1] = waitthread global/feho/bot_queue.scr::step_moveto level.radio_bomb_origin
+	local.actions[2] = waitthread global/feho/bot_queue.scr::step_moveto level.radio_origin
+	local.actions[3] = waitthread global/feho/bot_queue.scr::step_lookat local.tabletop
+	local.actions[4] = waitthread global/feho/bot_queue.scr::step_wait 0.5
+	local.actions[5] = waitthread global/feho/bot_queue.scr::step_holduse 5
+	local.actions[6] = waitthread global/feho/bot_queue.scr::step_movenear level.radio_bomb_origin 96
+	local.actions[7] = waitthread global/feho/bot_queue.scr::step_crouch
+	local.actions[8] = waitthread global/feho/bot_queue.scr::step_hold 30
+	// Cleanup block in `run` will reset look/watch/fire/use/holdposition/stand.
+	// Bot stays under script control — fine for a demo.
+
+	iprintln ("^3botplant: " + (netname local.target_bot) + " running plant sequence")
+	thread global/feho/bot_queue.scr::run local.target_bot local.actions
+
 end
 
 

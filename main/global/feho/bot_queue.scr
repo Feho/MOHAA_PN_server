@@ -1,0 +1,311 @@
+// Bot action queue.
+//
+// Sequence a list of bot commands on one bot. Each step is a small array
+// built by a step_* thread; the runner pops them one at a time and waits
+// for completion before the next.
+//
+// Usage:
+//   local.actions = NIL
+//   local.actions[1] = waitthread global/feho/bot_queue.scr::step_moveto local.obj_pos
+//   local.actions[2] = waitthread global/feho/bot_queue.scr::step_lookat local.obj_pos
+//   local.actions[3] = waitthread global/feho/bot_queue.scr::step_wait 0.4
+//   local.actions[4] = waitthread global/feho/bot_queue.scr::step_holduse 5
+//   local.actions[5] = waitthread global/feho/bot_queue.scr::step_movenear local.cover_pos 64
+//   local.actions[6] = waitthread global/feho/bot_queue.scr::step_hold 30
+//   thread global/feho/bot_queue.scr::run local.bot local.actions
+//
+// Notes:
+//   - `lookat` only *sets* the look target; the bot still rotates to it over
+//     several frames. If the next step depends on aim (`holduse` to plant on
+//     a usable, `primaryfire` at a specific target), insert a short
+//     `step_wait 0.3` or longer between them so the rotation lands.
+//   - `run` resets sticky state at the end of the sequence (clears look/watch,
+//     stops fire and use, releases holdposition, restores stand). But the bot
+//     stays under script control — append `step_release` if you want the
+//     normal bot AI to take over again.
+//
+// Tunables (cvars, all optional):
+//   bot_queue_arrival_radius  default 48   units; how close counts as "arrived" for moveto
+//   bot_queue_move_timeout    default 30   seconds; per-move-step ceiling
+//   bot_queue_debug           default 0    print step transitions to console
+
+//-----------------------------------------------------------------------------
+// Step builders. Each returns a small array: [verb, arg, arg, ...].
+//-----------------------------------------------------------------------------
+
+step_moveto local.target:
+	local.s = NIL
+	local.s[1] = "moveto"
+	local.s[2] = local.target
+end local.s
+
+step_movenear local.target local.radius:
+	local.s = NIL
+	local.s[1] = "movenear"
+	local.s[2] = local.target
+	local.s[3] = local.radius
+end local.s
+
+step_lookat local.target:
+	local.s = NIL
+	local.s[1] = "lookat"
+	local.s[2] = local.target
+end local.s
+
+step_clearlook:
+	local.s = NIL
+	local.s[1] = "clearlook"
+end local.s
+
+step_watchat local.target:
+	local.s = NIL
+	local.s[1] = "watchat"
+	local.s[2] = local.target
+end local.s
+
+step_clearwatch:
+	local.s = NIL
+	local.s[1] = "clearwatch"
+end local.s
+
+step_holduse local.seconds:
+	local.s = NIL
+	local.s[1] = "holduse"
+	local.s[2] = local.seconds
+end local.s
+
+step_hold local.seconds:
+	local.s = NIL
+	local.s[1] = "hold"
+	local.s[2] = local.seconds
+end local.s
+
+step_wait local.seconds:
+	local.s = NIL
+	local.s[1] = "wait"
+	local.s[2] = local.seconds
+end local.s
+
+step_stand:
+	local.s = NIL
+	local.s[1] = "stand"
+end local.s
+
+step_crouch:
+	local.s = NIL
+	local.s[1] = "crouch"
+end local.s
+
+step_prone:
+	local.s = NIL
+	local.s[1] = "prone"
+end local.s
+
+step_primaryfire local.seconds:
+	local.s = NIL
+	local.s[1] = "primaryfire"
+	local.s[2] = local.seconds
+end local.s
+
+step_secondaryfire local.seconds:
+	local.s = NIL
+	local.s[1] = "secondaryfire"
+	local.s[2] = local.seconds
+end local.s
+
+step_reload:
+	local.s = NIL
+	local.s[1] = "reload"
+end local.s
+
+step_stop:
+	local.s = NIL
+	local.s[1] = "stop"
+end local.s
+
+step_release:
+	local.s = NIL
+	local.s[1] = "release"
+end local.s
+
+//-----------------------------------------------------------------------------
+// Runner. Walks the action array on one bot.
+//-----------------------------------------------------------------------------
+
+run local.bot local.actions:
+
+	if (local.bot == NIL || local.bot == NULL) end
+	if (!isBot local.bot) end
+	if (local.actions == NIL) end
+
+	local.debug = int(getcvar "bot_queue_debug")
+
+	if (local.debug)
+		println("[bot_queue] start bot=" + netname local.bot + " steps=" + local.actions.size)
+
+	for (local.i = 1; local.i <= local.actions.size; local.i++)
+	{
+		if (!isalive local.bot)
+		{
+			if (local.debug) println("[bot_queue] abort: bot died at step " + local.i)
+			end
+		}
+
+		local.step = local.actions[local.i]
+		if (local.step == NIL) continue
+
+		local.verb = local.step[1]
+
+		if (local.debug)
+			println("[bot_queue] step " + local.i + ": " + local.verb)
+
+		waitthread exec_step local.bot local.step
+	}
+
+	// Reset sticky state so a queue can't leave the bot crouched mid-fire
+	// or stuck staring at a now-irrelevant target. We deliberately do NOT
+	// call bot_releasecontrol — callers that want the bot to drop scripted
+	// control entirely should add an explicit step_release as the last step.
+	if (isalive local.bot)
+	{
+		local.bot bot_primaryfire 0
+		local.bot bot_secondaryfire 0
+		local.bot bot_use 0
+		local.bot bot_clearlook
+		local.bot bot_clearwatch
+		local.bot bot_holdposition 0
+		local.bot bot_stand 1
+	}
+
+	if (local.debug)
+		println("[bot_queue] done bot=" + netname local.bot)
+
+end
+
+//-----------------------------------------------------------------------------
+// Single-step executor. Knows the verb table.
+//-----------------------------------------------------------------------------
+
+exec_step local.bot local.step:
+
+	local.verb = local.step[1]
+
+	// Movement verbs: issue + poll for arrival.
+	if (local.verb == "moveto")
+	{
+		local.target = local.step[2]
+		local.bot bot_moveto local.target
+		waitthread wait_arrival local.bot local.target
+		end
+	}
+
+	if (local.verb == "movenear")
+	{
+		local.target = local.step[2]
+		local.radius = local.step[3]
+		local.bot bot_movenear local.target local.radius
+		// Treat "near enough" as arrival for movenear; add a small margin so
+		// the bot doesn't keep nudging.
+		waitthread wait_arrival_radius local.bot local.target (local.radius + 16)
+		end
+	}
+
+	// Look / watch are instantaneous state sets; no wait.
+	if (local.verb == "lookat")    { local.bot bot_lookat local.step[2];    end }
+	if (local.verb == "clearlook") { local.bot bot_clearlook;               end }
+	if (local.verb == "watchat")   { local.bot bot_watchat local.step[2];   end }
+	if (local.verb == "clearwatch"){ local.bot bot_clearwatch;              end }
+
+	// Hold-use for N seconds (plant / defuse).
+	if (local.verb == "holduse")
+	{
+		local.bot bot_use 1
+		wait local.step[2]
+		local.bot bot_use 0
+		end
+	}
+
+	// Hold position for N seconds (then release).
+	if (local.verb == "hold")
+	{
+		local.bot bot_holdposition 1
+		wait local.step[2]
+		local.bot bot_holdposition 0
+		end
+	}
+
+	// Plain timed wait, no state change.
+	if (local.verb == "wait")
+	{
+		wait local.step[2]
+		end
+	}
+
+	// Posture.
+	if (local.verb == "stand")  { local.bot bot_stand 1;  end }
+	if (local.verb == "crouch") { local.bot bot_crouch 1; end }
+	if (local.verb == "prone")  { local.bot bot_prone 1;  end }
+
+	// Fire for N seconds.
+	if (local.verb == "primaryfire")
+	{
+		local.bot bot_primaryfire 1
+		wait local.step[2]
+		local.bot bot_primaryfire 0
+		end
+	}
+
+	if (local.verb == "secondaryfire")
+	{
+		local.bot bot_secondaryfire 1
+		wait local.step[2]
+		local.bot bot_secondaryfire 0
+		end
+	}
+
+	if (local.verb == "reload")  { local.bot bot_reload;         end }
+	if (local.verb == "stop")    { local.bot bot_stop;           end }
+	if (local.verb == "release") { local.bot bot_releasecontrol; end }
+
+	println("[bot_queue] unknown verb: " + local.verb)
+end
+
+//-----------------------------------------------------------------------------
+// Arrival polling.
+//-----------------------------------------------------------------------------
+
+wait_arrival local.bot local.target:
+
+	local.radius = int(getcvar "bot_queue_arrival_radius")
+	if (local.radius <= 0) local.radius = 48
+
+	waitthread wait_arrival_radius local.bot local.target local.radius
+
+end
+
+wait_arrival_radius local.bot local.target local.radius:
+
+	local.timeout = int(getcvar "bot_queue_move_timeout")
+	if (local.timeout <= 0) local.timeout = 30
+
+	// Poll interval is intentionally not a cvar: avoiding the string→float
+	// coercion gymnastics keeps the loop math reliable.
+	local.poll = 0.25
+
+	local.elapsed = 0.0
+
+	while (local.elapsed < local.timeout)
+	{
+		if (!isalive local.bot) end
+
+		if (vector_within local.bot.origin local.target local.radius) end
+
+		wait local.poll
+		local.elapsed = local.elapsed + local.poll
+	}
+
+	// Timed out — log and bail so the queue advances.
+	if (int(getcvar "bot_queue_debug"))
+		println("[bot_queue] arrival timeout for " + netname local.bot + " at " + local.target)
+
+end
