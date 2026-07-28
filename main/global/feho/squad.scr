@@ -15,6 +15,13 @@ To be able to respawn near the squad leader, we need to store the last ten posit
 A new position is added to the array when the squad leader moves by a certain distance, and the oldest position is removed from the array.
 When a player spawns (event_player_spawned), we check if he is in a squad. If he is, we check if the squad leader is alive. If the squad leader is alive, we respawn the player at one of the last ten positions of the squad leader.
 
+A candidate position is rejected if any player is within 80 units (telefrag guard), or if a
+living enemy within `level.squad_spawn_enemy_radius` has line of sight to it — that's the
+"respawned in front of an enemy" case. Up to 10 positions are tried; if none is safe the
+player just spawns normally. This is complementary to the leader's `is_under_fire` veto:
+that one asks whether the LEADER is being shot at right now, while this one checks the
+specific history position being considered, which may be many moves behind the leader.
+
 ### Hold-position orders
 
 A human squad leader aims at a spot and presses USE to send the squad's bots there.
@@ -53,6 +60,10 @@ init_squad_system:
     level.squad_leader_pos_history_count = 20
     level.squad_leader_pos_update_distance = 64.0 // Use float for distance checks
     level.squad_leader_pos_update_interval = 0.5 // Seconds
+    // A living enemy closer than this WITH line of sight vetoes a spawn spot.
+    // Raise it and more spots get rejected, so more players fall back to the base
+    // spawn; lower it and squadmates keep popping up inside firefights.
+    level.squad_spawn_enemy_radius = 384
 
     // --- Hold-position orders (human presses USE to order squad bots to a spot) ---
     level.squad_hold_radius = 128   // bots scatter within this radius of the aim point
@@ -352,7 +363,11 @@ get_valid_spawn_pos_near_leader local.leader_entity:
     local.base_pos = local.pos_history[local.random_idx]
     local.tentatives = 0
 
-    while (!(waitthread can_spawn_here local.base_pos))
+    // The spawner is always on the leader's team, so the leader carries the team context
+    // that can_spawn_here needs to tell friend from foe.
+    local.team = local.leader_entity.dmteam
+
+    while (!(waitthread can_spawn_here local.base_pos local.team))
     {
         local.tentatives++
         if (local.tentatives > 10)
@@ -372,13 +387,70 @@ get_valid_spawn_pos_near_leader local.leader_entity:
     
 end local.base_pos // Fallback to the recorded position if trace fails or finds nothing nearby
 
-can_spawn_here local.spawn_pos:
+// Two independent vetoes, both walked in one pass over $player:
+//
+//  1. Telefrag guard — ANY player (friend or foe, alive or not) within 80 units.
+//     Keeps two bodies from materialising inside each other.
+//  2. Enemy guard — a LIVING enemy within level.squad_spawn_enemy_radius that also
+//     has an unobstructed sight line to the spot. This is the "respawned right in
+//     front of a rifle" case.
+//
+// The sight test is what keeps the enemy guard from being too blunt: an enemy on the
+// other side of a wall or a floor is near but can't shoot you, so that spot stays
+// usable. Without it, on tight indoor maps most of the leader's history gets vetoed
+// and squadmates fall back to the base spawn instead.
+//
+// $player contains bots as well as humans (see koth.scr:197 — it walks $player and
+// filters with isBot), so both are covered by this single loop.
+can_spawn_here local.spawn_pos local.team:
 
 	for (local.i = 1; local.i <= $player.size; local.i++)
 	{
-		if ( (vector_within local.spawn_pos $player[local.i].origin 80) == 1)
+		local.other = $player[local.i]
+		if (!local.other) continue
+
+		if ( (vector_within local.spawn_pos local.other.origin 80) == 1)
 		{
-            //println("Squad Mod: Spawn position " + local.spawn_pos + " is occupied by player " + netname $player[local.i])
+            //println("Squad Mod: Spawn position " + local.spawn_pos + " is occupied by player " + netname local.other)
+			end 0
+		}
+
+		// Corpses and spectators can't shoot. Skipping the dead matters here: a body
+		// lying 300 units away would otherwise veto a perfectly safe spot.
+		if (!isalive local.other) continue
+
+		// Match the enemy team by name rather than "not my team", so spectators
+		// (dmteam "spectator") are never mistaken for a threat.
+		if (local.team == "allies")
+		{
+			if (local.other.dmteam != "axis") continue
+		}
+		else if (local.team == "axis")
+		{
+			if (local.other.dmteam != "allies") continue
+		}
+		else
+		{
+			continue // Unknown/spectator leader team: no enemy to test against.
+		}
+
+		// Cheap distance gate first; only survivors pay for a trace.
+		if (!(vector_within local.spawn_pos local.other.origin level.squad_spawn_enemy_radius)) continue
+
+		// Chest-to-chest: origin + 48 on both ends, so the line clears the floor and
+		// lands where the spawning player's torso will be, not between their boots.
+		//
+		// Deliberately NOT gettagposition "Bip01 Head" (as get_crosshair_position uses):
+		// that tag is only reliable on an entity whose model is fully loaded, and a bot
+		// mid-respawn can return (0 0 0). A trace from the world origin reads as BLOCKED,
+		// which would silently disable this veto while still looking like it works.
+		// Crouch/prone eye-height error is irrelevant over a 384-unit span anyway.
+		//
+		// sighttrace returns 1 for a CLEAR line and 0 when something blocks it — the
+		// opposite convention from trace (see pk3s_codebase.md:22011).
+		if (sighttrace ( local.other.origin + ( 0 0 48 ) ) ( local.spawn_pos + ( 0 0 48 ) ) 1)
+		{
+            println("Squad Mod: Spawn position " + local.spawn_pos + " is exposed to " + netname local.other)
 			end 0
 		}
 	}
