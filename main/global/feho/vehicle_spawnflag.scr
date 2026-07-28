@@ -1,0 +1,57 @@
+// vehicle_spawnflag.scr
+//
+// Minimal replacement for the vehicle-relevant part of the old
+// global/AA/global_detect.scr (from zz_vehicules.pk3).
+//
+// The drivable-vehicle scripts (global/AA/vezetheto_jeepek.scr and the
+// global/vehicles/*.scr set) gate their driver/gunner control loops on the
+// per-player entity var self.player_spawned == 1, and read/write
+// self.poziciot_valt (seat-swap state). Those vars were ONLY ever set by
+// global_detect.scr's player_trigger thread -- but global_detect also drags in
+// an unwanted caste system (medic/engineer F7-F8 binds, spawn protection,
+// palyavedelem, and the medic/engineer/spawn_protection/palyavedelem script
+// dependencies).
+//
+// This shim sets exactly the two vars the vehicle scripts read, via the engine
+// player_spawned/player_killed/player_disconnecting events, so m1l3b no longer
+// needs to exec global/AA/global_detect.scr.
+//
+// event_subscribe appends to a delegate list, so subscribing here does NOT
+// conflict with the identical subscriptions in events.scr / tickets.scr --
+// every handler fires. (see reference_multi_event_subscribe)
+//
+// Vars deliberately NOT shimmed (verified against the full reachable vehicle
+// set incl. the pk3 playervehicle.scr / vehicles_thinkers.scr):
+//   self.inveh      -- self-managed: the vehicle scripts set it to 1 on enter
+//                      (vezetheto_jeepek.scr:414/501) and 0 on exit (:641/679).
+//   self.has_weapon -- only ever set to 1 by global/AA/check_weapons.scr, which
+//                      is exec'd ONLY from the inert modok_torso.st. On this
+//                      install (mike_torso.st authoritative) has_weapon is always
+//                      NIL, so the `if (has_weapon == 1) deactivateweapon` branch
+//                      is dead; safeholster 1 does the actual holstering anyway.
+
+main:
+
+	// guard against double-init if two maps exec this in one session
+	if (level.vehicle_spawnflag_initialized == 1)
+		end
+	level.vehicle_spawnflag_initialized = 1
+
+	event_subscribe "player_spawned"        vsf_player_spawned
+	event_subscribe "player_killed"         vsf_player_cleared
+	event_subscribe "player_disconnecting"  vsf_player_cleared
+
+end
+
+vsf_player_spawned:
+
+	self.player_spawned = 1
+	self.poziciot_valt  = 0
+
+end
+
+vsf_player_cleared:
+
+	self.player_spawned = 0
+
+end

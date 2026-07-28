@@ -112,10 +112,11 @@ tdmtype:
 	// 	exec global/AA/global_detect.scr
 	// }
 	
+	exec global/feho/vehicle_spawnflag.scr
 	// Jeep côté Alliés
-	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3174.00 -2926.00 150 ) ( 0 -76 0 ) level.jeep_mask
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -3174.00 -2926.00 150 ) ( 0 -76 0 ) level.jeep_mask
 	// Jeep côté Axe
-	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -2047.00 1354.00 -23.88 ) ( 0 0 0 ) level.jeep_mask
+	thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -2047.00 1354.00 -23.88 ) ( 0 0 0 ) level.jeep_mask
 	
 	level.clockside = kills
 
