@@ -209,3 +209,5 @@ exec global/feho/statusb.scr
 exec global/feho/spawn_helper.scr
 
 exec global/feho/radio_mod.scr
+
+exec global/feho/livemap.scr

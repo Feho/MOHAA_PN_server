@@ -234,3 +234,11 @@ pip-log.txt
 /main/navmesh
 /main/crashlog.txt
 /main/configs
+
+# Generated top-down map renders (rebuild with tools/bspmap.py)
+/dashboard/maps/
+
+# Large custom-map asset packs — install manually, too big for git
+/main/zzzz_SFX_BT-MP-AA.pk3
+/main/zzz_sh_map.pk3
+/main/zzzzz_KNG_st_anger_final.pk3

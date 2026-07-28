@@ -1,0 +1,159 @@
+/*
+Live map position feed.
+
+Writes a snapshot of every alive player's position to a file ~5x/second so an
+external read-only service (the dashboard) can render a 2D top-down map.
+
+Output: ~/.openmohaa/main/livemap/positions.txt   (fs_homepath + fs_gamedir)
+
+PATH BASE — confirmed by observation on a live server, 2026-07-28:
+    fs_write_content resolves relative to fs_homepath, the same base as
+    fs_open_append (which is where anticheat/swings.csv lives). It also
+    CREATES the parent directory on demand — livemap/ appeared by itself.
+
+    (An earlier reading of the disassembly suggested these were bare fopen(3)
+    calls resolved against the process CWD. That was wrong: the live run put
+    the file under fs_homepath and left the CWD directory empty. Trust this
+    note, not the disassembly.)
+
+Format — one line, no trailing newline:
+    <tick>|<map>|<entnum>,<team>,<x>,<y>,<z>,<yaw>;<entnum>,<team>,...
+
+    tick    monotonic counter, resets on map load. This is how the reader
+            detects a stalled feed (tick not advancing) and orders snapshots,
+            without stat()ing the file.
+    team    a = allies, x = axis  (spectators are skipped entirely)
+    x,y,z   world origin, integers. Same coordinate frame as the .bsp, so the
+            renderer's world->image transform applies directly.
+    yaw     viewangles[1], integer degrees. viewangles (not angles) is the
+            direction the player is actually looking — see squad.scr:691.
+
+A snapshot with no eligible players is still written (header, empty body) so a
+reader can distinguish "server empty" from "feed dead".
+
+WRITES ARE NOT ATOMIC — the reader must cope.
+
+    fs_write_content truncates then writes, so a reader can in principle catch
+    the file empty or mid-write. Measured against the LIVE server (m2l1, 20
+    players, ~440B payload, reader polling at 20Hz for 8s): 159/159 reads were
+    complete and well-formed — 0% discarded. A local simulation at 40x rate
+    saw ~1.7% empty reads, so the window exists but is very small in practice.
+    Handle it anyway; the cost is a few lines.
+
+    The reader contract is therefore: parse the snapshot, and on empty or
+    malformed input DISCARD it and reuse the last good one. A dropped frame
+    costs 200ms of staleness, which is invisible on a map view.
+
+    An atomic version would need `frename`, which is NOT available: the legacy
+    file commands (frename/fremove/fexists/fcopy) are only registered when
+    `sv_scriptfiles` is enabled, and turning that on would expose the whole
+    legacy suite to every script on the server — including third-party pk3s.
+    Deliberately not done. Don't "fix" this by enabling that cvar.
+
+SECURITY: this file lands under fs_homepath/main/, INSIDE the tree the engine
+serves from. sv_allowDownload is 0 today, which is what keeps it off clients.
+If that cvar is ever flipped to 1, re-check that this path is not reachable —
+a live position feed handed to a client is a wallhack. The consuming endpoint
+must also stay behind the dashboard's Cloudflare Access gate.
+
+Tunables (cvars, all optional):
+    livemap_enabled   default 1     set 0 to stop the feed without a restart
+    livemap_interval  default 0.2   seconds between snapshots; sv_fps is 20
+                                    (50ms/frame), so don't go below 0.1
+*/
+
+main:
+    if (level.livemap_initialized == 1)
+        end
+    level.livemap_initialized = 1
+
+    level.livemap_path     = "livemap/positions.txt"
+    level.livemap_tick     = 0
+
+    // Placeholder write so a reader starting before the first tick sees a
+    // valid (if empty) snapshot rather than a missing file. fs_write_content
+    // creates livemap/ on demand, so no pre-created directory is needed.
+    fs_write_content level.livemap_path "0||"
+
+    thread livemap_loop
+end
+
+//-----------------------------------------------------------------------------
+// Snapshot loop. One concatenated payload per tick, one write. Never a write
+// per player: at 24 players that would be 24 file opens every 200ms. See the
+// collision-trace hang for why per-frame churn is a real risk.
+// Verified live: holds a steady 5.00 Hz with 20 players on m2l1.
+//-----------------------------------------------------------------------------
+livemap_loop:
+    while (1)
+    {
+        // getcvar returns a STRING. Compare against "" / "0" rather than
+        // numeric 0 — a bare `local.on != 0` on the string "0" does not
+        // reliably disable anything. Don't int() the interval either: that
+        // would truncate 0.2 to 0.
+        local.interval = getcvar "livemap_interval"
+        if (local.interval == "" || local.interval == "0")
+            local.interval = 0.2
+
+        // Read the enable flag every tick so it can be toggled live via rcon
+        // without a map change or restart.
+        local.on = getcvar "livemap_enabled"
+
+        if (local.on == "1")
+            waitthread livemap_write_snapshot
+
+        wait local.interval
+    }
+end
+
+livemap_write_snapshot:
+    level.livemap_tick++
+
+    local.body = ""
+    local.count = 0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.p = $player[local.i]
+        if (local.p == NULL)
+            continue
+
+        // Dead players are excluded: smaller payload, and their positions are
+        // exactly what would be most abusable if this feed ever widened past
+        // admins. Flip here if a spectator view needs them.
+        if (!isalive local.p || local.p.isSpectator)
+            continue
+
+        local.team = local.p.dmteam
+        if (local.team == "allies")
+            local.team = "a"
+        else if (local.team == "axis")
+            local.team = "x"
+        else
+            continue    // spectators and anything unrecognised
+
+        local.o = local.p.origin
+
+        if (local.count > 0)
+            local.body = local.body + ";"
+
+        // Built in steps, not one multi-line expression: nothing in this repo
+        // continues an expression across a newline, and the parser is
+        // line-based. Don't collapse these.
+        local.body = local.body + local.p.entnum + "," + local.team
+        local.body = local.body + "," + int(local.o[0])
+        local.body = local.body + "," + int(local.o[1])
+        local.body = local.body + "," + int(local.o[2])
+        local.body = local.body + "," + int(local.p.viewangles[1])
+
+        local.count++
+    }
+
+    // (getcvar "mapname") parenthesised: bare command calls mid-expression
+    // need it, cf. botcount.scr:104's int(getcvar "sv_minPlayers").
+    local.payload = level.livemap_tick + "|" + (getcvar "mapname") + "|" + local.body
+
+    // Single whole-file write. NOT atomic — see the WRITES ARE NOT ATOMIC note
+    // in the header; the reader is responsible for discarding a torn snapshot.
+    fs_write_content level.livemap_path local.payload
+end
