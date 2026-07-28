@@ -3,6 +3,9 @@
 
 log := "~/.openmohaa/main/qconsole.log"
 logs_all := "~/.openmohaa/main/qconsole*.log"
+dashboard_url := "http://127.0.0.1:8088"
+dashboard_screen := "mohaa_dashboard"
+dashboard_tunnel_screen := "mohaa_dashboard_tunnel"
 
 # list available recipes
 default:
@@ -64,6 +67,34 @@ chatstats:
 scripterrors:
     rg -i "script|\.scr|exception|null|signal" {{log}} | tail -n 100
 
+# run the read-only local web dashboard for cloudflared/Cloudflare Access
+dashboard:
+    python3 dashboard/server.py
+
+# start the read-only local web dashboard in a detached screen session
+dashboard-start:
+    @if screen -S {{dashboard_screen}} -Q select . >/dev/null 2>&1; then echo "screen session already running: {{dashboard_screen}}"; else screen -dmS {{dashboard_screen}} python3 dashboard/server.py; echo "started dashboard in screen session: {{dashboard_screen}}"; fi
+
+# attach to the dashboard server session (detach with Ctrl-A then D)
+dashboard-attach:
+    screen -r {{dashboard_screen}}
+
+# start the dashboard and cloudflared in detached screen sessions
+dashboard-tunnel:
+    @just dashboard-start
+    @if screen -S {{dashboard_tunnel_screen}} -Q select . >/dev/null 2>&1; then echo "screen session already running: {{dashboard_tunnel_screen}}"; else screen -dmS {{dashboard_tunnel_screen}} cloudflared tunnel --url {{dashboard_url}}; echo "started cloudflared in screen session: {{dashboard_tunnel_screen}}"; fi
+    @echo "dashboard local URL: {{dashboard_url}}"
+    @echo "attach with: just dashboard-tunnel-attach"
+
+# attach to the dashboard cloudflared session (detach with Ctrl-A then D)
+dashboard-tunnel-attach:
+    screen -r {{dashboard_tunnel_screen}}
+
+# stop the dashboard and cloudflared screen sessions
+dashboard-tunnel-stop:
+    @if screen -S {{dashboard_tunnel_screen}} -Q select . >/dev/null 2>&1; then screen -S {{dashboard_tunnel_screen}} -X quit; echo "stopped screen session: {{dashboard_tunnel_screen}}"; else echo "screen session not running: {{dashboard_tunnel_screen}}"; fi
+    @if screen -S {{dashboard_screen}} -Q select . >/dev/null 2>&1; then screen -S {{dashboard_screen}} -X quit; echo "stopped screen session: {{dashboard_screen}}"; else echo "screen session not running: {{dashboard_screen}}"; fi
+
 # --- production server (systemd, runs in screen 'mohaa_server' on port 12203) ---
 
 # prod service status
@@ -89,3 +120,25 @@ journal:
 # start a local test server (cheats/developer on, port 12204)
 test-server:
     ./omohaaded +set com_target_game 0 +set dedicated 2 +set sv_maxclients 16 +set net_port 12204 +exec server.cfg +set thereisnomonkey 1 +set cheats 1 +set developer 1
+
+# --- live map (top-down player positions in the browser) ---
+
+# show the current live position snapshot
+livemap-peek:
+    @cat ~/.openmohaa/main/livemap/positions.txt 2>/dev/null && echo "" || echo "no snapshot yet"
+
+# render map images for the browser view:  just livemap-render m2l1 mohdm3   (or 'all')
+livemap-render +maps:
+    python3 tools/bspmap.py {{maps}}
+
+# render every map found in main/*.pk3 (slow — patches are tessellated in pure python)
+livemap-render-all:
+    python3 tools/bspmap.py all
+
+# which maps already have a rendered image
+livemap-maps:
+    @ls dashboard/maps/*.png 2>/dev/null | xargs -n1 basename 2>/dev/null | sed 's/.png$//' || echo "none rendered yet"
+
+# is the feed alive? (tick should advance)
+livemap-check:
+    @python3 -c "import time,pathlib; p=pathlib.Path.home()/'.openmohaa/main/livemap/positions.txt'; a=p.read_text().split('|')[0]; time.sleep(1); b=p.read_text().split('|')[0]; print(f'tick {a} -> {b}', '  LIVE' if b!=a else '  STALLED')"
