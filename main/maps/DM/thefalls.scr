@@ -1,0 +1,189 @@
+// MOHAA map script for The Falls
+// author: |fsc| Col. Polyp
+// version 2.0
+// (C) Col. Polyp 2003
+// www.fsclan.org
+//
+// Adapted to the PN server: adds the feho stack (tickets, squadmaker, support)
+// and DM standards. The author's elevator/Seilbahn state machine and the
+// built-in hint/credit ticker are preserved verbatim. The feho stack is
+// inserted after `level waittill spawn`, ABOVE the infinite hint loop, so it
+// always runs. Loose file (capital DM dir) overrides the pk3 copy.
+
+main:
+
+	// Random client crash fix
+	removeclass PlayerIntermission
+
+	setcvar "g_gametype" "4"
+	setcvar "timelimit" "15"
+	setcvar "fraglimit" "0"
+
+	// set scoreboard messages
+	setcvar "g_obj_alliedtext1" "The Falls"
+	setcvar "g_obj_alliedtext2" "v2.0"
+	setcvar "g_obj_alliedtext3" ""
+	setcvar "g_obj_axistext1" "By Col. Polyp"
+	setcvar "g_obj_axistext2" "& Woodell Bobba"
+	setcvar "g_obj_axistext3" "www.fsclan.org"
+	setcvar "g_scoreboardpic" "none"
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
+	level waittill prespawn
+
+	exec global/DMprecache.scr
+	level.script = maps/dm/thefalls.scr
+	exec global/ambient.scr mohdm1
+
+	thread elevator_preparation
+
+	level waittill spawn
+	//level waittill roundstart
+
+	// --- PN feho stack (inserted above the author's infinite hint loop) ---
+	level.squadmaker_areaname = "by the falls"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode
+	exec global/feho/tickets.scr
+	// --- end feho stack ---
+
+while (1) { //loop this forever
+ wait 20
+ iprintlnbold "The Falls - created by |fsc| Col. Polyp & |fsc| Woodell Bobba"
+ iprintln_noloc "version 2.0 copyright (C) MMIII FSClan - the Netherlands"
+ wait 60
+ iprintln_noloc "For FS-Clan info visit www.fsclan.org"
+ wait 60
+ iprintln_noloc "Macintosh users visit http:\/ \/jump.to\/macmohaa"
+ wait 60
+ iprintln_noloc "Feedback on this map? colpolyp@hotmail.com"
+ wait 60
+ iprintln_noloc "Press the use key to open more than just doors..."
+ wait 60
+ iprintln_noloc "You can get on the roofs of ALL buildings without using the Seilbahn..."
+ wait 60
+ iprintln_noloc "There are medipacks in a secret tunnel..."
+ wait 60
+ iprintln_noloc "Use the rock ledges on cliff faces to descend fast..."
+ wait 60
+ iprintln_noloc "You can walk the skies if you dare..."
+ wait 60
+ iprintln_noloc "There is another tunnel with health packs somewhere..."
+ wait 60
+ iprintln_noloc "Use strafe (not jump) while walking across difficult terrain..."
+ wait 60
+ iprintln_noloc "You can climb more than just ladders..."
+ wait 400
+} // end of the loop
+
+
+end
+
+//-----------------------------------------------------------
+
+elevator_preparation:
+println "Preparing elevator"
+
+$elevator moveto $waypoint_down // Put the elevator in the down position.
+local.elepos = 0
+goto elevator_standby
+
+end
+
+//-----------------------------------------------------------
+
+elevator_standby:
+
+if (local.elepos == 0) // if the lift is down
+{
+ println "Elevator is standby in bottom waypoint"
+ $elevator_button_bottom waittill trigger // wait for the bottom trigger
+ $elevator_button_bottom playsound door_metal_locked_clue
+} else {
+ println "Elevator is standby in top waypoint"
+ $elevator_button_top waittill trigger // wait for the top trigger
+ $elevator_button_top playsound door_metal_locked_clue
+}
+
+if (local.elepos == 0) // if the lift is down
+{
+ goto lift_move_up     // move up
+} else {
+ goto lift_move_down   // else move down
+}
+
+end
+
+//-----------------------------------------------------------
+
+lift_move_up:
+println "Elevator is moving up"
+iprintlnbold "The FSC SeilBahn is now going up..."
+wait 2
+
+$elevator playsound elevator_start
+$elevator time 1 // amount of seconds to move between waypoints
+$elevator moveto $waypoint_1 //move the lift to the first waypoint
+$elevator playsound elevator_run
+$elevator waitmove // wait till the move is finished
+$elevator time 8 // amount of seconds to move between waypoints
+$elevator moveto $waypoint_2 //move the lift to the second waypoint
+$elevator waitmove // wait till the move is finished
+$elevator time 22 // amount of seconds to move between waypoints
+$elevator moveto $waypoint_3 //move the lift to the third waypoint
+$elevator waitmove // wait till the move is finished
+$elevator time 4 // amount of seconds to move between waypoints
+$elevator moveto $waypoint_up //move the lift to the last waypoint
+$elevator waitmove // wait till the move is finished
+
+$elevator playsound elevator_stop
+$elevator playsound elevator_gate
+
+wait 2
+iprintlnbold "The FSC SeilBahn has arrived on the top level..."
+
+local.elepos = 1       // the elevator is up now, so we set the local.elepos to 1
+goto elevator_standby
+
+end
+
+//-----------------------------------------------------------
+
+lift_move_down:
+println "Elevator is moving down"
+iprintlnbold "The FSC SeilBahn is now going down..."
+wait 2
+
+$elevator playsound elevator_start
+$elevator time 2 // amount of seconds to move between waypoints
+$elevator moveto $waypoint_3 //move the lift to the first waypoint
+$elevator playsound elevator_run
+$elevator waitmove  // wait till the move is finished
+$elevator time 20 // amount of seconds to move between waypoints
+$elevator moveto $waypoint_2 //move the lift to the second waypoint
+$elevator waitmove // wait till the move is finished
+$elevator time 8 // amount of seconds to move between waypoints
+$elevator moveto $waypoint_1 //move the lift to the third waypoint
+$elevator waitmove // wait till the move is finished
+$elevator time 3 // amount of seconds to move between waypoints
+$elevator moveto $waypoint_down //move the lift to the last waypoint
+$elevator waitmove // wait till the move is finished
+
+$elevator playsound elevator_stop
+$elevator playsound elevator_gate
+
+wait 2
+iprintlnbold "The FSC SeilBahn has arrived on the bottom level..."
+
+local.elepos = 0      // the elevator is down now, so we set the local.elepos to 0
+goto elevator_standby
+
+end

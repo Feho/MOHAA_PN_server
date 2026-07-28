@@ -1,0 +1,112 @@
+//Objectif la_patrouille_2
+// Conception  Amigos3D et RAF (constructions additionelles et script CASKOU)
+// --------------------------------------------------------------------
+//
+// Adapted to the PN server: mirrors the feho obj pattern so this custom map
+// gets tickets, squadmaker and support gunners like the stock obj maps.
+// Single target, Allies attack (like obj_team2 / stlo / merville).
+// Loose file overrides the copy shipped inside the La Patrouille pk3.
+
+main:
+
+setcvar "g_obj_alliedtext1" "-= La Patrouille 2 =-"
+setcvar "g_obj_alliedtext2" "- Destroy the SDK"
+setcvar "g_obj_alliedtext3" ""
+
+setcvar "g_obj_axistext1" "-= La Patrouille 2 =-"
+setcvar "g_obj_axistext2" "- Protect the SDK"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "textures/hiver/caskami.tga"
+setcvar "g_gametype" "4"
+setcvar "timelimit" "14"
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
+	level waittill prespawn
+
+	//*** Precache Dm Stuff
+	exec global/DMprecache.scr
+
+	//***Ambient sounds
+	level.script = maps/obj/obj_la_patrouille_2.scr
+	level.music = "obj_la_patrouille_2"
+	exec global/ambient.scr obj_la_patrouille_2
+
+	exec global/door_locked.scr::lock
+	exec ubersound/ubersound.scr::caskami
+	exec global/shutter.scr
+
+	//*** map-specific ambient loopsounds
+	local.master = spawn ScriptMaster
+		local.master aliascache snd_radio1 sound/amb_amigos3d/lilimarleyne.wav soundparms 2.0 0.1 1.0 0.0 200 2200 auto loaded maps "obj dm"
+		local.master aliascache snd_radio2 sound/amb_amigos3d/tsf.wav soundparms 1.8 0.1 1.0 0.0 200 2200 auto loaded maps "obj dm"
+		local.master aliascache snd_telephone sound/amb_amigos3d/telephon.wav soundparms 1.5 0.1 1.0 0.0 200 2200 auto loaded maps "obj dm"
+		local.master aliascache snd_camion sound/vehicle/veh_tank_idle1.wav soundparms 1.5 0.1 1.0 0.0 200 2200 auto loaded maps "obj dm"
+		local.master aliascache snd_tino sound/amb_amigos3d/tino_rosi.wav soundparms 1.9 0.1 1.0 0.0 200 2200 auto loaded maps "obj dm"
+
+	level waittill spawn
+
+	exec global/feho/tickets.scr
+
+	level.squadmaker_areaname = "on patrol"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	level.defusing_team = "axis"
+	level.planting_team = "allies"
+	level.targets_to_destroy = 1
+	level.bomb_damage = 200
+	level.bomb_explosion_radius = 640
+
+	// set the parameters for round based match
+	level.dmrespawning = 1 // 1 or 0
+	level.dmroundlimit = 15 // round time limit in minutes
+	level.clockside = axis // set to axis, allies, kills, or draw
+
+	//*** map-specific loopsounds
+	$radio1 loopsound snd_radio1
+	$radio2 loopsound snd_radio2
+	$telephone loopsound snd_telephone
+	$camion loopsound snd_camion
+	$tino loopsound snd_tino
+
+	level waittill roundstart
+
+		$objectif1_explose thread global/obj_dm.scr::bomb_thinker
+
+		thread allies_win_bomb
+		$objectif1_explose thread axis_win_timer
+
+end
+
+//*** --------------------------------------------
+//*** "Allied Victory"
+//*** --------------------------------------------
+
+allies_win_bomb:
+	thread allies_win_bomb_watch $objectif1_explose "SDK destroyed!"
+end
+
+allies_win_bomb_watch local.bomb local.message:
+	while (local.bomb.exploded != 1)
+		wait 0.1
+
+	level.clockside = allies
+	waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" 30 "objective_destroyed" local.message
+end
+
+//*** --------------------------------------------
+//*** "Axis Victory"
+//*** --------------------------------------------
+
+axis_win_timer:
+
+	level waittill axiswin
+
+end

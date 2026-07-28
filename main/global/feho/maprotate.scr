@@ -173,6 +173,23 @@ end 0
 build_weight_table:
     level.maprotate_count = 0
 
+    // When sv_use_custom_maps is 1, rotate the custom community obj maps ONLY
+    // (no built-in maps). Otherwise use the normal built-in table below.
+    if (int(getcvar "sv_use_custom_maps") == 1)
+    {
+        waitthread add_weighted_map "obj/stlo"                5
+        waitthread add_weighted_map "obj/obj_merville"        5
+        waitthread add_weighted_map "obj/renan"              5
+        waitthread add_weighted_map "obj/obj_la_patrouille_2" 5
+        waitthread add_weighted_map "obj/Blutstein"          5
+        waitthread add_weighted_map "dm/dm_routenord"        5
+        waitthread add_weighted_map "dm/MP_Holland_DM"       5
+        waitthread add_weighted_map "dm/MP_Stadt_DM"         5
+        waitthread add_weighted_map "dm/mp_castello_dm"      5
+        waitthread add_weighted_map "dm/thefalls"            5
+        end
+    }
+
     waitthread add_weighted_map "m2l1"          5
     waitthread add_weighted_map "m2l2a"         5
     waitthread add_weighted_map "m2l2c"         5

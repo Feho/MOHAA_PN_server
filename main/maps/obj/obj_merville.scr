@@ -1,0 +1,97 @@
+// Objective Map Merville
+// ARCHITECTURE: -M@ximus-
+// SCRIPTING: -M@ximus-
+//
+// Adapted to the PN server: mirrors maps/obj/obj_team2.scr so this custom map
+// gets tickets, squadmaker and support gunners like the stock obj maps.
+// Loose file overrides the copy shipped inside User-merville.pk3.
+
+main:
+
+setcvar "g_obj_alliedtext1" "- Find and destroy the"
+setcvar "g_obj_alliedtext2" "   German ammo truck"
+setcvar "g_obj_alliedtext3" ""
+
+setcvar "g_obj_axistext1" "- Defend the ammo"
+setcvar "g_obj_axistext2" "   truck at any cost"
+setcvar "g_obj_axistext3" ""
+
+setcvar "g_scoreboardpic" "obj_merville"
+setcvar "g_gametype" "4"
+setcvar "timelimit" "14"
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
+	level waittill prespawn
+
+	//*** Precache Dm Stuff
+	exec global/DMprecache.scr
+
+	//***Ambient sounds
+	level.script = maps/obj/obj_merville.scr
+	exec global/ambient.scr obj_merville1
+
+	exec global/door_locked.scr::lock
+	thread global/exploder.scr::main
+
+	level waittill spawn
+
+	exec global/feho/tickets.scr
+
+	level.squadmaker_areaname = "around the battery"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	level.defusing_team = "axis"
+	level.planting_team = "allies"
+	level.targets_to_destroy = 1
+	level.bomb_damage = 200
+	level.bomb_explosion_radius = 1024
+
+	// set the parameters for round based match
+	level.dmrespawning = 1 // 1 or 0
+	level.dmroundlimit = 15 // round time limit in minutes
+	level.clockside = axis // set to axis, allies, kills, or draw
+
+	level waittill roundstart
+
+		// NOTE: stock script called `thread flyby` but never defined the label,
+		// and this BSP has no bomber path nodes — dropped rather than ported.
+
+		$v2_explode thread global/obj_dm.scr::bomb_thinker
+
+		thread allies_win_bomb
+		$v2_explode thread axis_win_timer
+
+end
+
+//*** --------------------------------------------
+//*** "Allied Victory"
+//*** --------------------------------------------
+
+allies_win_bomb:
+	thread allies_win_bomb_watch $v2_explode "Ammo truck destroyed!"
+end
+
+allies_win_bomb_watch local.bomb local.message:
+	while (local.bomb.exploded != 1)
+		wait 0.1
+
+	level.clockside = allies
+	waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" 30 "objective_destroyed" local.message
+end
+
+//*** --------------------------------------------
+//*** "Axis Victory"
+//*** --------------------------------------------
+
+axis_win_timer:
+
+	level waittill axiswin
+
+end

@@ -1,0 +1,98 @@
+// Obj : St Renan
+// ARCHITECTURE: Kingmarzo (Dave Marsden)
+// SCRIPTING: Kingmarzo (Dave Marsden)
+//
+// Adapted to the PN server: mirrors the feho obj pattern so this custom map
+// gets tickets, squadmaker and support gunners like the stock obj maps.
+// NOTE: teams are inverted here — Axis attack, Allies defend (like obj_team4).
+// Loose file overrides the copy shipped inside "z_Kmarzo-St Renan.pk3".
+
+main:
+
+setcvar "g_obj_alliedtext1" "- Defend the bridge"
+setcvar "g_obj_alliedtext2" ""
+setcvar "g_obj_alliedtext3" ""
+
+setcvar "g_obj_axistext1" "- Place an explosive"
+setcvar "g_obj_axistext2" "   under the bridge"
+setcvar "g_obj_axistext3" "   to destroy it"
+
+setcvar "g_scoreboardpic" "renan"
+setcvar "g_gametype" "4"
+setcvar "timelimit" "14"
+
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
+	level waittill prespawn
+
+	//*** Precache Dm Stuff
+	exec global/DMprecache.scr
+
+	$world farplane 5000
+	$world farplane_color (0.675 0.663 0.651)
+
+	//***Ambient sounds
+	level.script = maps/obj/renan.scr
+	exec global/ambient.scr m3l2
+
+	thread global/exploder.scr::main
+	exec global/door_locked.scr::lock
+
+	level waittill spawn
+
+	exec global/feho/tickets.scr
+
+	level.squadmaker_areaname = "by the bridge"
+
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	level.defusing_team = "allies"
+	level.planting_team = "axis"
+	level.targets_to_destroy = 1
+	level.bomb_damage = 300
+	level.bomb_explosion_radius = 2048
+
+	// set the parameters for this round/wave based match
+	level.dmrespawning = 1   // 1 **wave based** or 0 **round based**
+	level.dmroundlimit = 15  // round time limit in minutes
+	level.clockside = allies // set to axis, allies, kills, or draw
+
+	level waittill roundstart
+
+		$house_explode thread global/obj_dm.scr::bomb_thinker
+
+		thread axis_win_bomb
+		$house_explode thread allied_win_timer
+
+end
+
+//*** --------------------------------------------
+//*** "Axis Victory"
+//*** --------------------------------------------
+
+axis_win_bomb:
+	thread axis_win_bomb_watch $house_explode "Bridge destroyed!"
+end
+
+axis_win_bomb_watch local.bomb local.message:
+	while (local.bomb.exploded != 1)
+		wait 0.1
+
+	level.clockside = axis
+	waitthread global/feho/tickets.scr::remove_team_tickets_percent "allies" 30 "objective_destroyed" local.message
+end
+
+//*** --------------------------------------------
+//*** "Allied Victory"
+//*** --------------------------------------------
+
+allied_win_timer:
+
+	level waittill allieswin
+
+end
