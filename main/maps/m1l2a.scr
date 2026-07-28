@@ -5,7 +5,6 @@
 
 main: 
 
-	setcvar "g_gametype" "4"
 	setcvar "timelimit" "15"
 	
 	if((getcvar("g_gametype") == "1")) 
@@ -34,13 +33,15 @@ tdmtype:
 
 	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
 
+	// load support gun sounds
+	waitthread global/support/support.scr::soundcache
+
+	setcvar "g_gametype" "4"
 	setcvar "g_gametypestring" "Team-Match"
+
 	waitthread tdm_spawns
 	waitthread set_da_stuff_up
 
-	// load support gun sounds
-	waitthread global/support/support.scr::soundcache
-	
 	level waittill prespawn
 
 	exec global/door_locked.scr
