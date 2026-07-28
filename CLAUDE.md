@@ -6,10 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - If a feature request is ambiguous (tuning knob, behavior change, scope of a cleanup), ask one clarifying question before implementing rather than guessing.
 - For bot AI tuning specifically, ask: "what should the bot do differently in observable terms?"
 
-## Working Pattern
-- Default flow for non-trivial work: analyze codebase → write plan to `plans/<feature>.md` → get Codex/advisor review → implement → commit.
-- After non-trivial bot AI changes, always request a Codex or advisor second opinion before committing. Treat findings as a required fix-up pass, not optional.
-
 ## Runtime Paths
 - Server logs are at `~/.openmohaa/main/qconsole.log` — always check here first for log-driven analysis, never assume a different path.
 
