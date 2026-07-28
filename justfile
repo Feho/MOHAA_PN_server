@@ -124,6 +124,10 @@ journal:
 test-server:
     ./omohaaded +set com_target_game 0 +set dedicated 2 +set sv_maxclients 16 +set net_port 12204 +exec server.cfg +set thereisnomonkey 1 +set cheats 1 +set developer 1
 
+# start server #2 with custom maps
+start-server2:
+    ./omohaaded +set com_target_game 0 +set dedicated 2 +set net_port 12204 +set net_gamespy_port 12301 +exec server2.cfg +set fs_homedatapath /home/feho/.openmohaa2 +set logfile 2
+
 # --- anticheat / cheat watcher (VPN + K/M -> nerf) ---
 
 # run the cheat watcher in DRY-RUN in the foreground (Ctrl-C to stop)
