@@ -3,31 +3,19 @@
 //
 
 
-main: 
-	
-	setcvar "timelimit" "20"
-	// setcvar "developer" "3" // temporaire
-	
-	// local.x = randomint(2)
+main:
 
-	// if (local.x == 0)
-	// {
-		// setcvar "g_gametype" "1"
-	// }
-	// else
-	// {
-		setcvar "g_gametype" "2"
-	// }
-	
-	
-	if((getcvar("g_gametype") == "1")) 
+	setcvar "timelimit" "20"
+
+	// gametype is owned by tickets.scr (sets g_gametype 4). Default to the team/ticket path.
+	if((getcvar("g_gametype") == "1"))
 	{
 	waitthread ffatype
 	end
 	}
 	else
 	{
-	waitthread tdmtype  
+	waitthread tdmtype
 	end
 	}
 end
@@ -42,15 +30,13 @@ tdmtype:
 	
 	setcvar "g_obj_axistext1" ""
 	setcvar "g_obj_axistext2" ""
-	setcvar "g_obj_axistext3" "178.32.28.179:12203" 
+	setcvar "g_obj_axistext3" "" 
 
-	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga" 
+	setcvar "g_scoreboardpic" "textures/mohmenu/briefing/briefing1a.tga"
 
-	setcvar "g_gametype" "2"
-	setcvar "g_gametypestring" "Team-Match"
 	// load support gun sounds
 	waitthread global/support/support.scr::soundcache
-	
+
 	waitthread tdm_spawns
 	waitthread set_da_stuff_up
 
@@ -112,18 +98,30 @@ tdmtype:
 	$playerjeep remove
 
 	level waittill spawn
-	
+
 	$world farplane 8000
-	
+
+	level.squadmaker_areaname	= "grounding the airfield"
 	level.squadmaker_config		= "afrika"
 
-	
+	// start support gunner scripts
+	exec global/support/support.scr
+
+	// start squadmaker
+	exec global/squadmaker/squadmaker.scr
+
+	// start tickets mode (owns g_gametype 4 + level.clockside)
+	exec global/feho/tickets.scr
+
+
 	// Tanks & Jeeps Base Assault
 	if (level.already_started != 1)
 	{
 		level.already_started = 1
 
-		exec global/AA/global_detect.scr
+		// vehicle scripts only need self.player_spawned / self.poziciot_valt;
+		// this shim sets them without the old global_detect caste system
+		exec global/feho/vehicle_spawnflag.scr
 	}
 	
 	// thread global/AA/vezetheto_jeepek.scr::spawn_jeep ( -249.00 892.00 -23.88 ) ( 0 96 0 ) level.jeep_mask
@@ -159,7 +157,7 @@ tdmtype:
 
 	thread Map_Guard
 
-	level.clockside = kills
+	// level.clockside owned by tickets.scr
 
 end
 
