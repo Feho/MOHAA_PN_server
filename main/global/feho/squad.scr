@@ -5,9 +5,26 @@ This mod allows players to be attached to one of the 3 or 4 squads per team.
 A squad consists of 4 players, and each player can only be in one squad.
 The first player to join a squad is the squad leader.
 Each time a player is killed, he respawns near his squad leader.
-When the squad leader dies, a new squad leader is chosen randomly from the players in the squad.
 
 ## Technical details
+
+### Leader selection
+
+Humans outrank bots: a bot holds the leader slot only until a human is available.
+Three paths can set a leader, and together they keep that invariant:
+
+  1. First to join an empty squad leads it (`assign_player_to_squad`), human or bot.
+  2. On the leader's death or departure, `promote_new_squad_leader` picks a random
+     LIVING HUMAN, falling back to a random living bot only if the squad has no
+     living human.
+  3. When a human spawns into a squad a BOT is leading, they take it over on the
+     spot (`try_human_leader_takeover`) — path 2 alone would leave a bot in charge
+     of a squad a human joined later, until that bot happened to die.
+
+Path 3 never displaces a human leader: it is bot-to-human only, so a spawning
+human cannot take the role from another human. It DOES take over from a dead bot
+leader, deliberately — `get_valid_spawn_pos_near_leader` requires a living leader,
+so a dead bot in the slot blocks squad respawns until something else promotes.
 
 ### Respawning near the squad leader
 
@@ -296,6 +313,54 @@ promote_new_squad_leader local.team_idx local.squad_idx:
     //println("Squad Mod: " + netname local.new_leader + " is the new leader of squad " + local.squad_idx + " on team " + local.team_idx)
 end
 
+// Humans outrank bots: a bot only ever holds the leader slot until a human is
+// available. promote_new_squad_leader already prefers humans, but it runs only when
+// the leader dies or leaves — so an all-bot squad that a human later joins would keep
+// its bot leader until that bot happened to die. This closes that gap at spawn time.
+//
+// Deliberately NOT reusing promote_new_squad_leader: that picks a RANDOM living human,
+// which is right after a death but wrong here — it could displace an existing HUMAN
+// leader and hand the squad to some third player. This takes over from a BOT only.
+//
+// A dead bot leader is included on purpose: get_valid_spawn_pos_near_leader requires
+// an isAlive leader, so a dead bot in the slot blocks squad respawn for everyone until
+// something else triggers a promotion. Taking over from it immediately restores that.
+//
+// Returns 1 if local.player leads the squad when this ends (took over or already led
+// it), 0 otherwise. No caller currently reads it: the spawn path instead re-reads
+// level.squad_leaders after calling this, so its existing "leader != me" guard skips
+// the teleport on its own. Kept as a return value for callers that want the answer
+// without a second lookup — wiring it into that guard would be redundant, not a fix.
+try_human_leader_takeover local.player local.team_idx local.squad_idx:
+    if (!local.player || isBot local.player)
+        end 0
+
+    local.current_leader = level.squad_leaders[local.team_idx][local.squad_idx]
+
+    // Already leading: nothing to do, but report it so the caller skips the teleport.
+    if (local.current_leader == local.player)
+        end 1
+
+    // An empty slot is promote_new_squad_leader's job, not a "takeover".
+    if (local.current_leader == NIL)
+        end 0
+
+    // Humans never displace humans.
+    if (!isBot local.current_leader)
+        end 0
+
+    // Hand the role over. Stop tracking the bot first: track_leader_positions self-exits
+    // when it sees it is no longer the leader, but that check only runs on its next
+    // 0.5s tick, and the stale history would stay readable until then.
+    thread stop_leader_position_tracking local.current_leader
+
+    level.squad_leaders[local.team_idx][local.squad_idx] = local.player
+    thread start_leader_position_tracking local.player
+    thread notify_new_leader local.player
+
+    //println("Squad Mod: " + netname local.player + " took leadership of squad " + local.squad_idx + " on team " + local.team_idx + " from bot " + netname local.current_leader)
+end 1
+
 // Tell a human they can give hold orders, at the moment it becomes true for them.
 // Once per player per map: promotions can happen repeatedly and this would nag.
 notify_new_leader local.player:
@@ -524,6 +589,14 @@ event_player_spawned:
 
     local.squad_team_idx = local.player_squad_data["team_idx"]
     local.squad_idx = local.player_squad_data["squad_idx"]
+
+    // Take the squad over from a bot leader BEFORE reading the leader below: this
+    // player may become the leader here, and a leader must not teleport onto the
+    // position history of the bot it just replaced. The read below picks up the new
+    // leader, so the "local.squad_leader != local.player" guard is false for them and
+    // the teleport is skipped — they spawn where they normally would.
+    waitthread try_human_leader_takeover local.player local.squad_team_idx local.squad_idx
+
     local.squad_leader = level.squad_leaders[local.squad_team_idx][local.squad_idx]
 
     if (local.squad_leader && local.squad_leader != local.player && local.squad_leader.isAlive)
@@ -895,22 +968,32 @@ update_squad_hud local.player:
             local.member_index = local.hud_index_base + local.i
             local.display_name = netname local.member
 
-            if (local.member == local.squad_leader) {
-                local.display_name = "[L] " + local.display_name
+            // The ">>" marker must stay in the STRING, not just the colour: the cache
+            // below is keyed on it, so a colour-only marker would leave the string
+            // unchanged on promotion and the previous leader would stay gold all map.
+            local.is_leader = (local.member == local.squad_leader)
+            if (local.is_leader) {
+                local.display_name = ">> " + local.display_name
             }
 
+            // Alive/dead is shown by the row colour, not repeated as text.
+            // "(Explosives)" stays: orange alone doesn't say WHAT the player carries.
             local.status_text = ""
-            if (local.member.isAlive) {
-                local.status_text = " - " + int(local.member.health) + " HP"
+            if (local.member.isAlive && local.member.has_the_bomb)
+                local.status_text = " (Explosives)"
 
-                if (local.member.has_the_bomb) local.status_text += " (Explosives)"
-            } else {
-                local.status_text = " - (DEAD)"
-            }
             local.final_string = local.display_name + local.status_text
 
-            // If the cached string is different, update the HUD for that member
-            if (local.cached_hud_strings[local.i] != local.final_string)
+            // Key on the string PLUS liveness, not the drawn string alone: with death
+            // shown by colour, a plain member's string is identical alive and dead
+            // ("Bob" either way), so a string-only key would skip the repaint and leave
+            // a dead squadmate drawn green. "== 1" (not int()) because isAlive is NIL
+            // before a member's first spawn; NIL and 0 collapse to one key, correctly.
+            local.alive_flag = (local.member.isAlive == 1)
+            local.cache_key = local.final_string + "|" + local.alive_flag
+
+            // If the cached key is different, update the HUD for that member
+            if (local.cached_hud_strings[local.i] != local.cache_key)
             {
                 local.y_pos = local.hud_y_pos + 20 + (15 * (local.i - 1))
                 ihuddraw_font local.player local.member_index "default"
@@ -919,16 +1002,22 @@ update_squad_hud local.player:
                 ihuddraw_string local.player local.member_index local.final_string
                 ihuddraw_alpha local.player local.member_index 1.0
 
+                // Colour precedence for a living member: explosives > leader > normal.
+                // Carrying the bomb outranks leading because it is the time-critical
+                // fact on the row; the ">>" glyph still identifies the leader in that
+                // case, so no information is lost when one player is both.
                 if (local.member.isAlive) {
                     if (local.member.has_the_bomb)
                         ihuddraw_color local.player local.member_index 1 0.5 0
+                    else if (local.is_leader)
+                        ihuddraw_color local.player local.member_index 1 0.85 0.2
                     else
                         ihuddraw_color local.player local.member_index 0.5 1 0.5
                 } else {
                     ihuddraw_color local.player local.member_index 1 0.5 0.5
                 }
 
-                local.cached_hud_strings[local.i] = local.final_string
+                local.cached_hud_strings[local.i] = local.cache_key
             }
         }
 
