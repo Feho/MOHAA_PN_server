@@ -27,8 +27,14 @@ MAP_HTML = """<!doctype html>
   h1 { font-size:15px; margin:0; font-weight:600; letter-spacing:.02em; }
   .pill { font-size:12px; color:var(--muted); white-space:nowrap; }
   .pill b { color:var(--text); font-weight:600; }
+  /* The bot half of a team count recedes so the human number reads first --
+     "is anyone real on right now" is the question being scanned for. */
+  .pill b .sub { color:var(--muted); font-weight:400; }
   .dot-legend { display:inline-block; width:9px; height:9px; border-radius:50%;
                 margin-right:4px; vertical-align:-1px; }
+  /* Mirrors how bots are drawn on the map: same team colour, dimmed, no
+     outline. Without this the dim dots read as a rendering glitch. */
+  .dot-legend.bot { opacity:.45; }
   #status { margin-left:auto; font-size:12px; }
   #status.live b { color:#3fb950; }
   #status.stale b { color:#d29922; }
@@ -54,6 +60,7 @@ MAP_HTML = """<!doctype html>
   <span class="pill">map <b id="mapname">—</b></span>
   <span class="pill"><span class="dot-legend" style="background:var(--allies)"></span>allies <b id="n-allies">0</b></span>
   <span class="pill"><span class="dot-legend" style="background:var(--axis)"></span>axis <b id="n-axis">0</b></span>
+  <span class="pill"><span class="dot-legend bot" style="background:var(--muted)"></span>dim = bot</span>
   <span class="pill">tick <b id="tick">—</b></span>
   <span class="pill" id="status">feed <b>connecting…</b></span>
 </header>
@@ -145,8 +152,18 @@ function draw(players) {
     const c = document.createElementNS(SVGNS, "circle");
     c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", r);
     c.setAttribute("fill", COLOR[p.team] || "#999");
-    c.setAttribute("stroke", "#0b0e13");
-    c.setAttribute("stroke-width", Math.max(1, r/3.5));
+    // Bots are marked by WEIGHT, not by colour: colour is load-bearing for
+    // team, which is the whole point of the map. A bot keeps its team colour
+    // but is dimmed and loses the dark outline, so humans pop -- "who is
+    // actually real right now" is what an admin is scanning for. Two
+    // redundant cues (opacity + outline) because at r~3px a single 1px
+    // stroke difference does not read reliably.
+    if (p.bot) {
+      c.setAttribute("opacity", "0.45");
+    } else {
+      c.setAttribute("stroke", "#0b0e13");
+      c.setAttribute("stroke-width", Math.max(1, r/3.5));
+    }
     g.appendChild(c);
     svg.appendChild(g);
   }
@@ -168,8 +185,21 @@ function apply(snap) {
   latest = snap;
   $("tick").textContent = snap.tick;
   $("mapname").textContent = snap.map || "—";
-  $("n-allies").textContent = snap.players.filter(p => p.team === "a").length;
-  $("n-axis").textContent = snap.players.filter(p => p.team === "x").length;
+  // Spell the split out per team: "2 human · 4 bot". An earlier version showed
+  // the total with the bot share appended ("6 (+4)"), which read as "4 MORE
+  // axis somewhere" rather than "4 of these 6 are bots" -- the parenthetical
+  // looked like arithmetic when it was a breakdown. Naming both numbers costs
+  // a little width and removes the ambiguity entirely.
+  const teamLabel = t => {
+    const on = snap.players.filter(p => p.team === t);
+    const bots = on.filter(p => p.bot).length;
+    const humans = on.length - bots;
+    if (!on.length) return "0";
+    if (!bots) return String(humans);
+    return `${humans} human <span class="sub">· ${bots} bot</span>`;
+  };
+  $("n-allies").innerHTML = teamLabel("a");
+  $("n-axis").innerHTML = teamLabel("x");
   setStatus(snap.stale ? "stale" : "live", snap.stale ? "stale" : "live");
 
   if (snap.map && snap.map !== currentMap) {

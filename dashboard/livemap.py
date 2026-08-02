@@ -4,7 +4,14 @@ Reads the snapshot written ~5x/second by main/global/feho/livemap.scr and
 serves it as JSON/SSE. Stdlib only, to match dashboard/server.py.
 
 Snapshot format (one line, no trailing newline):
-    <tick>|<map>|<entnum>,<team>,<x>,<y>,<z>,<yaw>;...
+    <tick>|<map>|<entnum>,<team>,<x>,<y>,<z>,<yaw>,<bot>;...
+
+The trailing <bot> field (1 = bot, 0 = human) was added after the first
+release, so a 6-field chunk is still accepted and means human. That
+tolerance is what lets the reader be deployed BEFORE the .scr: the parser
+rejects a whole SNAPSHOT on any malformed chunk, not just that chunk, so a
+reader that demanded 7 fields would blank the entire feed for as long as
+the old producer was live (until the next map change).
 
 The producer's write is NOT atomic (it truncates then writes), so a read can
 catch the file empty. Measured on the live server the window is small
@@ -38,6 +45,7 @@ class PlayerDot:
     y: int
     z: int
     yaw: int
+    bot: int = 0
 
 
 @dataclass
@@ -84,14 +92,18 @@ def parse_snapshot(text: str) -> Snapshot | None:
     if parts[2]:
         for chunk in parts[2].split(";"):
             f = chunk.split(",")
-            if len(f) != 6:
-                return None            # torn tail -> reject whole snapshot
+            # 6 = pre-bot-flag producer, 7 = current. Anything else is a torn
+            # tail -> reject the whole snapshot.
+            if len(f) not in (6, 7):
+                return None
             team = f[1]
             if team not in TEAM_NAMES:
                 return None
             try:
+                bot = int(f[6]) if len(f) == 7 else 0
                 players.append(PlayerDot(int(f[0]), team,
-                                         int(f[2]), int(f[3]), int(f[4]), int(f[5])))
+                                         int(f[2]), int(f[3]), int(f[4]), int(f[5]),
+                                         1 if bot else 0))
             except ValueError:
                 return None
     return Snapshot(tick, mapname, players, time.time())

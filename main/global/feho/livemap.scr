@@ -17,7 +17,7 @@ PATH BASE — confirmed by observation on a live server, 2026-07-28:
     note, not the disassembly.)
 
 Format — one line, no trailing newline:
-    <tick>|<map>|<entnum>,<team>,<x>,<y>,<z>,<yaw>;<entnum>,<team>,...
+    <tick>|<map>|<entnum>,<team>,<x>,<y>,<z>,<yaw>,<bot>;<entnum>,<team>,...
 
     tick    monotonic counter, resets on map load. This is how the reader
             detects a stalled feed (tick not advancing) and orders snapshots,
@@ -27,6 +27,13 @@ Format — one line, no trailing newline:
             renderer's world->image transform applies directly.
     yaw     viewangles[1], integer degrees. viewangles (not angles) is the
             direction the player is actually looking — see squad.scr:691.
+    bot     1 = AI bot, 0 = human. Bots are ordinary $player entities and are
+            indistinguishable from humans by team/position alone, so the flag
+            has to be carried explicitly.
+
+    The bot field was appended after the first release. The reader accepts a
+    6-field chunk as "human" so it could be deployed ahead of this script;
+    keep it LAST so that stays true.
 
 A snapshot with no eligible players is still written (header, empty body) so a
 reader can distinguish "server empty" from "feed dead".
@@ -134,6 +141,13 @@ livemap_write_snapshot:
 
         local.o = local.p.origin
 
+        // isBot is a bare command, so it gets its own statement rather than
+        // being inlined into the concatenation below — same reason (getcvar
+        // "mapname") is parenthesised further down.
+        local.isbot = 0
+        if (isBot local.p)
+            local.isbot = 1
+
         if (local.count > 0)
             local.body = local.body + ";"
 
@@ -145,6 +159,7 @@ livemap_write_snapshot:
         local.body = local.body + "," + int(local.o[1])
         local.body = local.body + "," + int(local.o[2])
         local.body = local.body + "," + int(local.p.viewangles[1])
+        local.body = local.body + "," + local.isbot
 
         local.count++
     }

@@ -63,6 +63,11 @@ Player IP addresses are not returned by the API or rendered in the page.
 A 2D top-down view of the running map with a dot per alive player — blue for
 Allies, red for Axis, with a wedge showing facing.
 
+**Bots vs humans:** a bot keeps its team colour but is drawn dimmed (45%) and
+without the dark outline, so humans stand out. Colour is never used to mark a
+bot — it means team, and only team. The header spells the split out per team
+(`axis 2 human · 4 bot`), with the bot half muted.
+
 ```text
 main/global/feho/livemap.scr   writes a snapshot ~5x/second
         |                      ~/.openmohaa/main/livemap/positions.txt
