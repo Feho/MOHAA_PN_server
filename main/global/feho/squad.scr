@@ -17,9 +17,9 @@ Three paths can set a leader, and together they keep that invariant:
   2. On the leader's death or departure, `promote_new_squad_leader` picks a random
      LIVING HUMAN, falling back to a random living bot only if the squad has no
      living human.
-  3. When a human spawns into a squad a BOT is leading, they take it over on the
-     spot (`try_human_leader_takeover`) — path 2 alone would leave a bot in charge
-     of a squad a human joined later, until that bot happened to die.
+  3. When a human spawns into a squad a BOT is leading, they first respawn near
+     that bot, then take over (`try_human_leader_takeover`) — path 2 alone would
+     leave a bot in charge of a squad a human joined later, until that bot died.
 
 Path 3 never displaces a human leader: it is bot-to-human only, so a spawning
 human cannot take the role from another human. It DOES take over from a dead bot
@@ -316,7 +316,8 @@ end
 // Humans outrank bots: a bot only ever holds the leader slot until a human is
 // available. promote_new_squad_leader already prefers humans, but it runs only when
 // the leader dies or leaves — so an all-bot squad that a human later joins would keep
-// its bot leader until that bot happened to die. This closes that gap at spawn time.
+// its bot leader until that bot happened to die. The spawn handler calls this only
+// after it has tried to respawn the human near the current leader.
 //
 // Deliberately NOT reusing promote_new_squad_leader: that picks a RANDOM living human,
 // which is right after a death but wrong here — it could displace an existing HUMAN
@@ -327,10 +328,7 @@ end
 // something else triggers a promotion. Taking over from it immediately restores that.
 //
 // Returns 1 if local.player leads the squad when this ends (took over or already led
-// it), 0 otherwise. No caller currently reads it: the spawn path instead re-reads
-// level.squad_leaders after calling this, so its existing "leader != me" guard skips
-// the teleport on its own. Kept as a return value for callers that want the answer
-// without a second lookup — wiring it into that guard would be redundant, not a fix.
+// it), 0 otherwise.
 try_human_leader_takeover local.player local.team_idx local.squad_idx:
     if (!local.player || isBot local.player)
         end 0
@@ -590,13 +588,6 @@ event_player_spawned:
     local.squad_team_idx = local.player_squad_data["team_idx"]
     local.squad_idx = local.player_squad_data["squad_idx"]
 
-    // Take the squad over from a bot leader BEFORE reading the leader below: this
-    // player may become the leader here, and a leader must not teleport onto the
-    // position history of the bot it just replaced. The read below picks up the new
-    // leader, so the "local.squad_leader != local.player" guard is false for them and
-    // the teleport is skipped — they spawn where they normally would.
-    waitthread try_human_leader_takeover local.player local.squad_team_idx local.squad_idx
-
     local.squad_leader = level.squad_leaders[local.squad_team_idx][local.squad_idx]
 
     if (local.squad_leader && local.squad_leader != local.player && local.squad_leader.isAlive)
@@ -633,6 +624,11 @@ event_player_spawned:
     {
         thread promote_new_squad_leader local.squad_team_idx local.squad_idx
     }
+
+    // Preserve the current bot leader through the squad-respawn attempt. A human
+    // takes over only afterward, so a returning human can use the bot's position
+    // history before the takeover stops its tracking and replaces that history.
+    waitthread try_human_leader_takeover local.player local.squad_team_idx local.squad_idx
 
     while (local.player && local.player.isAlive)
     {
