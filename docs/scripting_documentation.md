@@ -67,7 +67,21 @@ MOHAA's game logic is primarily controlled by `.scr` files. These are text-based
         level.AIR["realism"] = 1 // Using an array as a namespace
         level.AIR_mapscript = "dm/mohdm1"
         ```
-    *   `game.variable_name`: Global across map loads (persists as long as the server runs the same mod). Less commonly used directly in `.scr` files but can be set by the engine or config files.
+    *   `game.variable_name`: Legacy persistent game state. It is intended to cross map loads, but dedicated servers can lose it when the game module is unloaded and reloaded. Do not rely on `game.*` for rotation-wide state.
+    *   `session.variable_name`: OpenMoHAA process-lifetime state. It survives map changes and map restarts, including transitions that unload and reload `game.so`, and is accessible from every server-side script.
+        ```scr
+        if (session.rounds_played == NIL)
+        {
+            session.rounds_played = 0
+        }
+
+        session.rounds_played++
+        session.last_map = getcvar "mapname"
+        session.map_wins["allies"] = 3
+        ```
+        Use `session.*` for compact rotation-wide state such as counters, map history, team wins, or one-time initialization flags. Values are cleared when the server process exits or the service is restarted; they are not written to configuration files. NIL, strings, integers, floats, characters, vectors, and arrays containing those types are supported. Entity/listener references and cyclic arrays are not persisted; the server logs a warning and skips an unsupported root variable during a map transition. Keep session data reasonably small because the namespace is serialized during game-module reloads and currently has no explicit payload-size limit.
+
+        `session.*` is an OpenMoHAA extension. It requires a recent OpenMoHAA `game.so`; original MOHAA binaries and older OpenMoHAA game modules do not recognize this namespace.
 *   **Entity References:**
     *   `$<targetname>`: Refers to an entity by its `targetname` (e.g., `$player`, `$world`, `$my_trigger_targetname`).
     *   `$player[index]`: Access a specific player (1-indexed).
@@ -388,6 +402,7 @@ Breaking your mod into multiple script files makes it manageable.
 Keeping track of the game's or an entity's state is crucial.
 *   **`level.` variables:** For global game states (e.g., `level.modname_loaded`).
 *   **`self.` variables:** For entity-specific states (e.g., `self.seats_taken`).
+*   **`session.` variables:** For compact state that must survive map changes but should reset when the server process restarts (e.g., rotation counters or per-team map wins).
 
 ### 6. Debugging and Troubleshooting
 
