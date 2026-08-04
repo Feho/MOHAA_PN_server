@@ -33,13 +33,16 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
     if (local.victim == NIL || local.victim == NULL)
         end
 
-    waitthread add_death local.victim
+    if (!(isBot local.victim))
+        waitthread add_death local.victim
 
     if (local.attacker == NIL || local.attacker == NULL)
         end
     if (local.attacker == local.victim)
         end
     if (!(waitthread is_player_entity local.attacker))
+        end
+    if (isBot local.attacker)
         end
 
     // Team kills are not scoreboard kills. Only apply this rule to actual team
@@ -56,8 +59,18 @@ end
 // and hides the panel at the moment a spectator joins a playing team.
 event_player_teamchanged local.old_team local.new_team:
 
-    if (self == NIL || self == NULL || isBot self)
+    if (self == NIL || self == NULL)
         end
+
+    if (isBot self)
+    {
+        if (session.leaderboard != NIL)
+        {
+            local.name = netname self
+            session.leaderboard[local.name] = NIL
+        }
+        end
+    }
 
     if (local.new_team != "spectator" || !(waitthread is_enabled))
     {
@@ -164,6 +177,8 @@ end
 
 refresh_all:
 
+    waitthread purge_connected_bot_rows
+
     local.enabled = waitthread is_enabled
     local.names = NIL
 
@@ -182,6 +197,24 @@ refresh_all:
             waitthread hide_player local.player
         else
             waitthread draw_player local.player local.names
+    }
+
+end
+
+
+purge_connected_bot_rows:
+
+    if (session.leaderboard == NIL)
+        end
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (local.player != NIL && local.player != NULL && isBot local.player)
+        {
+            local.name = netname local.player
+            session.leaderboard[local.name] = NIL
+        }
     }
 
 end
