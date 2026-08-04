@@ -280,12 +280,20 @@ end local.array[local.idx]
  * Two traps this avoids:
  *
  * 1. `isalive` alone is NOT enough while sv_team_spawn_interval is set (we run 8s
- *    in server.cfg). On death the engine forces the player into spectator and
+ *    in server.cfg). On death the engine puts the player into TEMP spectator and
  *    Player::Spectator() resets deadflag = DEAD_NO and health = max_health so the
  *    queued player isn't processed as a corpse. Script `isalive` is just
  *    `health > 0`, so everyone waiting out the respawn interval reads ALIVE.
  *    self.isSpectator (engine getter -> m_bSpectator || m_bTempSpectator) is the
  *    discriminator: true while queued/spectating, false for a real live player.
+ *
+ *    Temp spectator is an ENGINE flag only -- it does NOT touch .dmteam. A player
+ *    dead and awaiting respawn keeps .dmteam "allies"/"axis"; only .isSpectator
+ *    flips. So the two tests are not interchangeable:
+ *      - liveness ("is this entity in play?")      -> .isSpectator, as used here
+ *      - real spectator ("is this a watcher?")     -> .dmteam == "spectator"
+ *    Using .isSpectator to gate spectator-only UI is over-inclusive: it fires for
+ *    every corpse waiting out the respawn interval.
  *
  * 2. The old `.isAlive` PROPERTY read was squad.scr's self-labelled HACK
  *    bookkeeping flag (squad.scr:392-409), not engine state -- it is only set on a
