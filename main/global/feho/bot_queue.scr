@@ -23,9 +23,18 @@
 //     stops fire and use, releases holdposition, restores stand). But the bot
 //     stays under script control — append `step_release` if you want the
 //     normal bot AI to take over again.
+//   - A move step that doesn't reach its goal ABORTS the rest of the sequence.
+//     Later steps assume the bot is standing at the goal, so running them from
+//     wherever it stalled plants nothing and shoots at nothing. Set
+//     bot_queue_debug 1 to see which step ended things and how.
+//
+// Move completion comes from the engine (`bot_move_done` + `bot_commandstatus`,
+// wrapped by utils.scr::await_command), not from polling the bot's origin. That
+// means arrival is judged by the pathfinder that actually owns the move, failures
+// surface in milliseconds instead of burning the timeout, and a bot dying mid-move
+// wakes the queue at once (death cancels the active command).
 //
 // Tunables (cvars, all optional):
-//   bot_queue_arrival_radius  default 48   units; how close counts as "arrived" for moveto
 //   bot_queue_move_timeout    default 30   seconds; per-move-step ceiling
 //   bot_queue_debug           default 0    print step transitions to console
 
@@ -159,7 +168,29 @@ run local.bot local.actions:
 		if (local.debug)
 			println("[bot_queue] step " + local.i + ": " + local.verb)
 
-		waitthread exec_step local.bot local.step
+		local.status = waitthread exec_step local.bot local.step
+
+		// Only the movement verbs report an outcome. Gate on the verb rather than
+		// on `local.status != NIL`: what a bare `end` returns isn't worth betting
+		// the sequence on, and this way a non-movement step can never be mistaken
+		// for a failed move.
+		if (local.verb == "moveto" || local.verb == "movenear")
+		{
+			// A move that didn't arrive invalidates every step after it — the rest
+			// of the sequence assumes the bot is standing at the goal, so planting
+			// or firing from wherever it stalled is worse than stopping here.
+			//
+			// "superseded" is included deliberately: it means another system
+			// (squad.scr, koth.scr, a map loop) issued this bot a new move and now
+			// owns it. Continuing would fight that system for control, so we bow
+			// out — the sequence failed, but nothing is wrong.
+			if (local.status != "reached")
+			{
+				if (local.debug)
+					println("[bot_queue] abort: step " + local.i + " (" + local.verb + ") ended " + local.status)
+				break
+			}
+		}
 	}
 
 	// Reset sticky state so a queue can't leave the bot crouched mid-fire
@@ -190,24 +221,21 @@ exec_step local.bot local.step:
 
 	local.verb = local.step[1]
 
-	// Movement verbs: issue + poll for arrival.
+	// Movement verbs: issue, then wait on the engine's own completion signal.
+	// These are the only verbs that report an outcome; everything below is a
+	// state set or a timed wait and implicitly succeeds.
 	if (local.verb == "moveto")
 	{
-		local.target = local.step[2]
-		local.bot bot_moveto local.target
-		waitthread wait_arrival local.bot local.target
-		end
+		local.id = local.bot bot_moveto local.step[2]
+		local.status = waitthread global/feho/utils.scr::await_command local.bot local.id
+		end local.status
 	}
 
 	if (local.verb == "movenear")
 	{
-		local.target = local.step[2]
-		local.radius = local.step[3]
-		local.bot bot_movenear local.target local.radius
-		// Treat "near enough" as arrival for movenear; add a small margin so
-		// the bot doesn't keep nudging.
-		waitthread wait_arrival_radius local.bot local.target (local.radius + 16)
-		end
+		local.id = local.bot bot_movenear local.step[2] local.step[3]
+		local.status = waitthread global/feho/utils.scr::await_command local.bot local.id
+		end local.status
 	}
 
 	// Look / watch are instantaneous state sets; no wait.
@@ -225,7 +253,11 @@ exec_step local.bot local.step:
 		end
 	}
 
-	// Hold position for N seconds (then release).
+	// Hold position for N seconds (then release). Latches where the bot stands,
+	// so it issues no command ID and never signals bot_move_done.
+	// Note bot_holdposition 1 cancels any active scripted move. Harmless here
+	// because `run` waits for each step to finish before starting the next —
+	// but a fire-and-forget path that skipped that wait would kill the move.
 	if (local.verb == "hold")
 	{
 		local.bot bot_holdposition 1
@@ -268,44 +300,4 @@ exec_step local.bot local.step:
 	if (local.verb == "release") { local.bot bot_releasecontrol; end }
 
 	println("[bot_queue] unknown verb: " + local.verb)
-end
-
-//-----------------------------------------------------------------------------
-// Arrival polling.
-//-----------------------------------------------------------------------------
-
-wait_arrival local.bot local.target:
-
-	local.radius = int(getcvar "bot_queue_arrival_radius")
-	if (local.radius <= 0) local.radius = 48
-
-	waitthread wait_arrival_radius local.bot local.target local.radius
-
-end
-
-wait_arrival_radius local.bot local.target local.radius:
-
-	local.timeout = int(getcvar "bot_queue_move_timeout")
-	if (local.timeout <= 0) local.timeout = 30
-
-	// Poll interval is intentionally not a cvar: avoiding the string→float
-	// coercion gymnastics keeps the loop math reliable.
-	local.poll = 0.25
-
-	local.elapsed = 0.0
-
-	while (local.elapsed < local.timeout)
-	{
-		if (!isalive local.bot) end
-
-		if (vector_within local.bot.origin local.target local.radius) end
-
-		wait local.poll
-		local.elapsed = local.elapsed + local.poll
-	}
-
-	// Timed out — log and bail so the queue advances.
-	if (int(getcvar "bot_queue_debug"))
-		println("[bot_queue] arrival timeout for " + netname local.bot + " at " + local.target)
-
 end

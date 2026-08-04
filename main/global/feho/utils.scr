@@ -306,3 +306,78 @@ is_living_human local.entity:
         end 0
 
 end (isalive local.entity && !local.entity.isSpectator && !isBot local.entity)
+
+// ============================================================================
+// BOT COMMANDS - Waiting on scripted bot movement
+// ============================================================================
+
+/*
+ * await_command - Block until a scripted bot move finishes, and say how it ended.
+ *
+ * `bot_moveto`, `bot_movenear` and the vector form of `bot_holdposition` return a
+ * command ID. The engine signals `bot_move_done` on the bot when that command hits a
+ * terminal state; `bot_commandstatus` then reports which one. This wraps the two into
+ * one call so callers never poll origin.
+ *
+ * Parameters:
+ *   local.bot - the bot the command was issued to
+ *   local.id  - the ID returned by the bot_* command
+ *
+ * Returns one of:
+ *   "reached"    - arrived at the goal
+ *   "failed"     - unreachable, or the path was lost
+ *   "cancelled"  - bot_stop / bot_releasecontrol / bot_holdposition 1 / respawn / DEATH
+ *   "superseded" - a newer movement order replaced this one
+ *   "timeout"    - no terminal state within bot_queue_move_timeout seconds
+ *
+ * Note "cancelled" covers death: BotController::Killed calls ScriptReleaseControl,
+ * which finishes the active command as Cancelled and fires the notify. So a bot dying
+ * mid-move wakes this immediately -- no separate liveness poll is needed.
+ *
+ * Two ordering rules are baked in here so callers don't have to know them:
+ *
+ * 1. Status is read BEFORE waiting. A `bot_move_done` that fires before the thread
+ *    reaches the waittill is lost (the engine's wake is a no-op with nobody
+ *    registered), and the wait would then block for the whole timeout. Nothing that
+ *    yields may sit between the check and the wait.
+ *
+ * 2. `waittill_timeout`, never bare `waittill`, so a missed notify can't hang the
+ *    thread forever. Since the timeout form doesn't report WHY it resumed, the status
+ *    is re-read afterwards: still "running" means we timed out.
+ *
+ * Example:
+ *   local.id = local.bot bot_moveto (1024 -512 32)
+ *   local.how = waitthread global/feho/utils.scr::await_command local.bot local.id
+ *   if (local.how != "reached") println("bot never made it: " + local.how)
+ */
+await_command local.bot local.id:
+
+    // NIL id = the command was never accepted (not a bot, no controller).
+    // Nothing will ever signal, so don't wait.
+    if (local.id == NIL) end "failed"
+
+    local.timeout = int(getcvar "bot_queue_move_timeout")
+    if (local.timeout <= 0) local.timeout = 30
+
+    // Status first -- a command that already finished never signals again.
+    local.status = local.bot bot_commandstatus local.id
+    if (local.status == NIL) end "cancelled"
+
+    if (local.status == "running")
+    {
+        local.bot waittill_timeout local.timeout bot_move_done
+
+        // botcount.scr adds and removes bots as humans join, so the bot can be
+        // gone by the time we wake. A removed entity never signals (we'd have
+        // burned the full timeout) and must not be dereferenced below.
+        if (local.bot == NULL || local.bot == NIL) end "cancelled"
+
+        local.status = local.bot bot_commandstatus local.id
+    }
+
+    // The ring buffer recycles after 16 commands; an ID aged out mid-wait is
+    // no longer knowable, which for our purposes reads the same as cancelled.
+    if (local.status == NIL) end "cancelled"
+    if (local.status == "running") end "timeout"
+
+end local.status

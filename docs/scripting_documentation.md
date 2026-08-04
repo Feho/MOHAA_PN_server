@@ -143,6 +143,30 @@ MOHAA's game logic is primarily controlled by `.scr` files. These are text-based
     ```
 *   **`goto_label local.variable:` / `goto label`:** Used for jumping to labels, but can make code hard to follow. Generally, prefer structured loops and conditionals.
 
+#### 3.5.1. Waiting
+
+*   **`wait <seconds>` / `waitframe`:** Suspend the current thread for a fixed time. `waitframe` yields for a single frame and is what keeps a `while` loop from freezing the server.
+*   **`<entity> waittill <name>`:** Suspend until the entity signals `<name>` (e.g. `self waittill trigger`, `level waittill spawn`). **This waits forever if the signal never comes** — a thread blocked here is stuck for the rest of the map.
+*   **`<entity> waittill_timeout <seconds> <name>`:** The same wait, but it always resumes: either the signal arrives, or the timeout expires. Prefer this whenever the signal is not strictly guaranteed.
+*   **`<entity> waittill_any <name1> <name2> ...`** and **`<entity> waittill_any_timeout <seconds> <name1> ...`:** Resume on whichever of several signals arrives first.
+
+```scr
+local.door waittill_timeout 10 opened
+```
+
+Note that the timeout forms do **not** tell you *why* they resumed. If that matters, check
+some state afterwards to distinguish "the signal arrived" from "we timed out":
+
+```scr
+local.bot waittill_timeout 30 bot_move_done
+local.status = local.bot bot_commandstatus local.id   // still "running" == timed out
+```
+
+There is also a race worth knowing about: a signal fired *before* your thread reaches the
+`waittill` is lost, because the engine's wake does nothing when no thread is registered
+yet. Where a signal can fire early, check the relevant state first and only wait if the
+work is still pending — with nothing that yields between the check and the wait.
+
 #### 3.6. Functions and Threads
 
 *   **Defining a Thread/Function:**

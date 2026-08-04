@@ -17,6 +17,74 @@
 - bot_use 0|1
 - bot_reload
 - bot_releasecontrol
+- bot_commandstatus <command_id>
+
+Plus one `waittill` on the bot entity: `bot_move_done`.
+
+## Knowing when a move finished
+
+`bot_moveto`, `bot_movenear` and the vector form of `bot_holdposition` return a
+**command ID**. The bot signals `bot_move_done` when that command reaches a terminal
+state, and `bot_commandstatus` says which one:
+
+| Status | Meaning |
+|---|---|
+| `running` | still travelling |
+| `reached` | arrived at the goal |
+| `failed` | unreachable, or the path was lost |
+| `cancelled` | `bot_stop`, `bot_releasecontrol`, `bot_holdposition 1`, or respawn |
+| `superseded` | a newer movement order replaced this one |
+| `NIL` | unknown ID — recycled slot, or not a bot |
+
+```scr
+local.id = local.bot bot_moveto (1024 -512 32)
+local.bot waittill_timeout 30 bot_move_done
+local.status = local.bot bot_commandstatus local.id
+```
+
+The plain forms still work unchanged — `local.bot bot_moveto (x y z)` with no assignment
+behaves exactly as before, so existing scripts need no edits.
+
+### Two rules that matter
+
+**Check the status before waiting.** A `bot_move_done` that fires before your thread
+reaches the `waittill` is *lost* — the engine's wake is a no-op when nobody is registered,
+and the wait then blocks until its timeout. So read `bot_commandstatus` first and only wait
+while it says `running`, with nothing that yields in between:
+
+```scr
+local.status = local.bot bot_commandstatus local.id
+if (local.status == "running")
+{
+    local.bot waittill_timeout 30 bot_move_done
+    local.status = local.bot bot_commandstatus local.id   // why did we wake?
+}
+```
+
+**Prefer `waittill_timeout` over `waittill`.** A bare `waittill bot_move_done` waits
+forever if the notify is ever missed. `waittill_timeout <seconds> bot_move_done` always
+resumes — but it does not report *why* it resumed, which is the reason to re-read
+`bot_commandstatus` afterwards: a status still reading `running` means you timed out.
+
+Command IDs live in a fixed 16-entry ring per bot, so a very old ID eventually reports
+`NIL` rather than resurrecting a reused slot. Treat `NIL` as "no longer knowable", not as
+an error.
+
+### Just use the helper
+
+Both rules above are already wrapped in `global/feho/utils.scr::await_command`, which
+also handles a bot removed mid-move. Prefer it over hand-rolling the pattern:
+
+```scr
+local.id  = local.bot bot_moveto (1024 -512 32)
+local.how = waitthread global/feho/utils.scr::await_command local.bot local.id
+if (local.how != "reached") println("bot never made it: " + local.how)
+```
+
+It returns the same statuses plus `"timeout"`. Note that death arrives as `"cancelled"`
+(the engine cancels the active command when the bot is killed), so there's no need to
+poll `isalive` alongside the wait. `global/feho/bot_queue.scr` uses this for its
+`moveto` / `movenear` steps.
 
 ## bot_holdposition vs bot_stop
 
