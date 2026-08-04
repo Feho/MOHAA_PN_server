@@ -25,6 +25,7 @@ from urllib.parse import unquote, urlparse
 
 import livemap
 from livemap_page import MAP_HTML
+from spawns_page import SPAWNS_HTML
 
 
 DEFAULT_LOG = Path.home() / ".openmohaa" / "main" / "qconsole.log"
@@ -629,6 +630,9 @@ HTML = """<!doctype html>
     <a href="/map" style="margin-left:auto;font-size:13px;text-decoration:none;
        border:1px solid currentColor;border-radius:6px;padding:4px 10px;opacity:.85">
       Live map &rarr;</a>
+    <a href="/spawns" style="font-size:13px;text-decoration:none;margin-left:8px;
+       border:1px solid currentColor;border-radius:6px;padding:4px 10px;opacity:.85">
+      Spawn review &rarr;</a>
   </header>
   <main>
     <section class="status-grid" aria-label="Server status">
@@ -874,6 +878,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_bytes(MAP_HTML.encode("utf-8"), "text/html; charset=utf-8")
             return True
 
+        # Static review page for tools/spawns.py output. The overlay images it
+        # references are ordinary entries in dashboard/maps/, so this adds no
+        # new file-serving path.
+        if route == "/spawns":
+            self.send_bytes(SPAWNS_HTML.encode("utf-8"), "text/html; charset=utf-8")
+            return True
+
         if route == "/api/positions":
             snap = self.feed.latest() if self.feed else None
             body = snap.to_dict() if snap else {"tick": None, "map": None,
@@ -973,6 +984,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
         # with HEAD, and a 404 there while GET returns 200 looks like an outage.
         if route == "/map":
             self.send_head_headers(len(MAP_HTML.encode("utf-8")),
+                                   "text/html; charset=utf-8")
+            return
+        if route == "/spawns":
+            self.send_head_headers(len(SPAWNS_HTML.encode("utf-8")),
                                    "text/html; charset=utf-8")
             return
         if route in ("/api/positions", "/api/livemap/stats") or route.startswith("/api/map/"):
