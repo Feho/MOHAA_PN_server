@@ -58,6 +58,7 @@ reset_bot local.bot:
     local.bot.bot_stuck_anchor = NIL
     local.bot.bot_stuck_since = NIL
     local.bot.bot_stuck_last_respawn = NIL
+    local.bot.isHoldingPosition = 0
 end
 
 monitor:
@@ -97,7 +98,7 @@ check_bots:
         if (!local.bot || !isBot local.bot)
             continue
 
-        if (!isalive local.bot || local.bot.dmteam == "spectator")
+        if (!isalive local.bot || local.bot.isSpectator || local.bot.isHoldingPosition)
         {
             local.bot.bot_stuck_anchor = NIL
             local.bot.bot_stuck_since = NIL

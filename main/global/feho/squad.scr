@@ -747,10 +747,20 @@ issue_hold_position_order local.player:
 
     for (local.i = 1; local.i <= local.bots.size; local.i++)
     {
-        local.bots[local.i] bot_holdposition local.target level.squad_hold_duration level.squad_hold_radius
+        thread hold_position local.bots[local.i] local.target
     }
 
     local.player iprint ("Squad holding position (" + local.bots.size + " bots, " + int(level.squad_hold_duration) + "s)")
+end
+
+hold_position local.bot local.target:
+
+    local.bot bot_holdposition local.target level.squad_hold_duration level.squad_hold_radius
+    local.bot.isHoldingPosition = 1
+    wait level.squad_hold_duration
+    if (local.bot)
+        local.bot.isHoldingPosition = 0
+
 end
 
 // Traces from the player's eyes along their view to find the aimed-at point.
