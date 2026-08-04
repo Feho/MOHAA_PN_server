@@ -9,6 +9,7 @@ dashboard_tunnel_screen := "mohaa_dashboard_tunnel"
 watcher := "tools/cheat_watcher.py"
 watcher_screen := "mohaa_watcher"
 watcher_audit := "~/.openmohaa/main/anticheat/watcher_audit.log"
+scrcheck := "tools/scrcheck/scrcheck"
 
 # list available recipes
 default:
@@ -169,6 +170,42 @@ km:
 # all anticheat signal lines (aimbot swings, K/M, accuracy, nerfs)
 ac:
     @rg "\[AIMBOT\]|\[KM\]|\[KMFLAG\]|\[KMNERF\]|\[ACCURACY:MG\]" {{log}} | tail -n 80
+
+# --- script syntax check (offline .scr parser built from the engine grammar) ---
+#
+# GRAMMAR ONLY. This runs the engine's yyparse() but not its codegen stage, so
+# it catches typos, unbalanced braces and bad syntax — NOT duplicate labels,
+# bad lvalues or illegal break/continue, which the engine only rejects at map
+# load. A clean run means "the parser accepts it", not "the map will load".
+
+# grammar-check .scr files:  just scrcheck main/global/feho/squad.scr   (default: all of main/)
+scrcheck +files="":
+    @just _scrcheck-build
+    @if [ -z "{{files}}" ]; then \
+        find main -name '*.scr' -not -path '*/disabled_mods/*' -print0 | xargs -0 {{scrcheck}} -q \
+            && echo "all $(find main -name '*.scr' -not -path '*/disabled_mods/*' | wc -l) scripts under main/ parse"; \
+    else \
+        {{scrcheck}} {{files}}; \
+    fi
+
+# check only the .scr files you've changed vs git HEAD
+scrcheck-changed:
+    @just _scrcheck-build
+    @changed=$(git diff --name-only HEAD -- '*.scr'; git ls-files --others --exclude-standard -- '*.scr') ; \
+    existing=$(echo "$changed" | sort -u | while read -r f; do [ -n "$f" ] && [ -f "$f" ] && echo "$f"; done) ; \
+    if [ -z "$existing" ]; then echo "no changed .scr files"; else \
+        echo "$existing" | tr '\n' '\0' | xargs -0 {{scrcheck}}; \
+    fi
+
+# force a rebuild of the checker (after pulling new openmohaa parser changes)
+scrcheck-rebuild:
+    @rm -rf tools/scrcheck/.obj {{scrcheck}}
+    @just _scrcheck-build
+    @echo "rebuilt {{scrcheck}}"
+
+# build the checker only if it's missing (internal)
+_scrcheck-build:
+    @test -x {{scrcheck}} || ./tools/scrcheck/build.sh
 
 # --- live map (top-down player positions in the browser) ---
 

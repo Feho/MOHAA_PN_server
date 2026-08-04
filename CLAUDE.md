@@ -11,7 +11,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Medal of Honor: Allied Assault (MOHAA) dedicated server running the OpenMoHAA engine with custom gameplay mods. The "code" in this repo is primarily MOHAA `.scr` scripts and server configuration — there is no traditional build system.
+This is a Medal of Honor: Allied Assault (MOHAA) dedicated server running the OpenMoHAA engine with custom gameplay mods. The "code" in this repo is primarily MOHAA `.scr` scripts and server configuration — there is no compile step for scripts; the engine loads them from disk at map load.
+
+## Common Commands
+
+Routine operations live in the `justfile` — run `just` with no arguments to list every recipe. Check there before hand-rolling a shell command; the common ones already exist:
+
+```bash
+just scrcheck            # grammar-check every .scr under main/ (see below)
+just scrcheck-changed    # grammar-check only what you've edited
+just logs                # filtered server log (joins/leaves/chat/anticheat)
+just restart             # restart prod via systemd
+just status              # prod service status
+just test-server         # local test server on port 12204 (cheats + developer on)
+```
+
+### Checking scripts before a map load
+
+`just scrcheck` runs the engine's own lexer and grammar (`tools/scrcheck/`, built on
+first use from the openmohaa checkout) over every script offline. It catches typos and
+unbalanced braces in about a second, without restarting anything.
+
+It is a **grammar check only** — it stops before the engine's codegen stage, so
+duplicate labels, bad lvalues, and illegal `break`/`continue` still surface only at map
+load. A clean run means "the parser accepts it", not "the map will load".
 
 ## Architecture
 
