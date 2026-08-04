@@ -1,0 +1,342 @@
+// Session-wide kill/death leaderboard for true spectators.
+//
+// session.* survives map changes but is cleared with the server process. The
+// associative table is keyed by netname because entity references cannot be
+// persisted by the session serializer. Renames therefore create a new row and
+// duplicate names intentionally share one row.
+
+main:
+
+    if (level.leaderboard_initialized == 1)
+        end
+
+    level.leaderboard_initialized = 1
+
+    // The script is loaded once per map, so this is the map-change pruning
+    // point. Keep more history than the HUD displays, but bound the serialized
+    // session payload for long-lived server processes.
+    waitthread prune_leaderboard 25
+
+    event_subscribe "player_killed" event_player_killed
+    event_subscribe "player_teamchanged" event_player_teamchanged
+
+    thread refresh_loop
+
+end
+
+event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+
+    if (!(waitthread is_enabled))
+        end
+
+    local.victim = self
+    if (local.victim == NIL || local.victim == NULL)
+        end
+
+    waitthread add_death local.victim
+
+    if (local.attacker == NIL || local.attacker == NULL)
+        end
+    if (local.attacker == local.victim)
+        end
+    if (!(waitthread is_player_entity local.attacker))
+        end
+
+    // Team kills are not scoreboard kills. Only apply this rule to actual team
+    // names so the same code remains valid if a free-for-all map is loaded.
+    if ((local.victim.dmteam == "allies" || local.victim.dmteam == "axis") && local.attacker.dmteam == local.victim.dmteam)
+        end
+
+    waitthread add_kill local.attacker
+
+end
+
+
+// player_teamchanged fires after dmteam is updated. This closes the timer gap
+// and hides the panel at the moment a spectator joins a playing team.
+event_player_teamchanged local.old_team local.new_team:
+
+    if (self == NIL || self == NULL || isBot self)
+        end
+
+    if (local.new_team != "spectator" || !(waitthread is_enabled))
+    {
+        waitthread hide_player self
+        end
+    }
+
+    local.names = waitthread sorted_names
+    if (local.names == NIL || local.names.size == 0)
+    {
+        waitthread hide_player self
+        end
+    }
+
+    waitthread draw_player self local.names
+
+end
+
+
+add_kill local.player:
+
+    local.name = netname local.player
+    waitthread ensure_row local.name
+    session.leaderboard[local.name]["kills"]++
+
+end
+
+
+add_death local.player:
+
+    local.name = netname local.player
+    waitthread ensure_row local.name
+    session.leaderboard[local.name]["deaths"]++
+
+end
+
+
+ensure_row local.name:
+
+    if (session.leaderboard[local.name]["kills"] == NIL)
+        session.leaderboard[local.name]["kills"] = 0
+
+    if (session.leaderboard[local.name]["deaths"] == NIL)
+        session.leaderboard[local.name]["deaths"] = 0
+
+end
+
+
+is_player_entity local.entity:
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        if ($player[local.i] == local.entity)
+            end 1
+    }
+
+end 0
+
+
+is_enabled:
+
+    local.value = getcvar "leaderboard_enabled"
+    if (local.value == "")
+        end 1
+
+end (int(local.value) != 0)
+
+
+row_limit:
+
+    local.rows = int(getcvar "leaderboard_rows")
+    if (local.rows <= 0)
+        local.rows = 10
+
+    // 165 backdrop + 166 two-line header + at most 20 row indices = 186.
+    if (local.rows > 20)
+        local.rows = 20
+
+end local.rows
+
+
+refresh_interval:
+
+    local.interval = float(getcvar "leaderboard_refresh")
+    if (local.interval <= 0)
+        local.interval = 3.0
+    if (local.interval < 1.0)
+        local.interval = 1.0
+
+end local.interval
+
+
+refresh_loop:
+
+    while (1)
+    {
+        waitthread refresh_all
+        local.interval = waitthread refresh_interval
+        wait local.interval
+    }
+
+end
+
+
+refresh_all:
+
+    local.enabled = waitthread is_enabled
+    local.names = NIL
+
+    if (local.enabled)
+        local.names = waitthread sorted_names
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (local.player == NIL || local.player == NULL || isBot local.player)
+            continue
+
+        // dmteam is deliberate: isSpectator also includes dead team players
+        // waiting for sv_team_spawn_interval and would flash the panel on death.
+        if (!local.enabled || local.player.dmteam != "spectator" || local.names == NIL || local.names.size == 0)
+            waitthread hide_player local.player
+        else
+            waitthread draw_player local.player local.names
+    }
+
+end
+
+
+draw_player local.player local.names:
+
+    if (local.player == NIL || local.player == NULL)
+        end
+    if (local.player.dmteam != "spectator")
+    {
+        waitthread hide_player local.player
+        end
+    }
+
+    local.rows = waitthread row_limit
+    if (local.rows > local.names.size)
+        local.rows = local.names.size
+
+    if (local.rows <= 0)
+    {
+        waitthread hide_player local.player
+        end
+    }
+
+    local.base = 165
+    local.panel_x = -385
+    local.panel_y = 65
+    local.panel_w = 370
+    local.panel_h = 54 + (local.rows * 17)
+
+    waitthread global/feho/hud_lib.scr::draw_rect local.player local.base "right" "top" local.panel_x local.panel_y local.panel_w local.panel_h ( 0.04 0.04 0.04 ) 0.72
+
+    ihuddraw_font local.player (local.base + 1) "courier-16"
+    ihuddraw_align local.player (local.base + 1) "right" "top"
+    ihuddraw_rect local.player (local.base + 1) -370 74 0 0
+    ihuddraw_color local.player (local.base + 1) 0.95 0.78 0.28
+    ihuddraw_string local.player (local.base + 1) "SESSION LEADERBOARD\n # KILLS DEATHS   K/D NAME"
+    ihuddraw_alpha local.player (local.base + 1) 1.0
+
+    for (local.i = 0; local.i < local.rows; local.i++)
+    {
+        local.name = local.names[local.i]
+        local.kills = session.leaderboard[local.name]["kills"]
+        local.deaths = session.leaderboard[local.name]["deaths"]
+
+        local.rank_text = waitthread global/feho/statusb.scr::pad_left (local.i + 1) 2
+        local.kills_text = waitthread global/feho/statusb.scr::pad_left local.kills 5
+        local.deaths_text = waitthread global/feho/statusb.scr::pad_left local.deaths 6
+        local.kd_text = waitthread format_kd local.kills local.deaths
+        local.kd_text = waitthread global/feho/statusb.scr::pad_left local.kd_text 5
+        local.name_text = waitthread global/feho/hud_lib.scr::substr_prefix local.name 20
+
+        local.text = local.rank_text + " " + local.kills_text + " " + local.deaths_text + " " + local.kd_text + " " + local.name_text
+        local.idx = local.base + 2 + local.i
+        local.y = 111 + (local.i * 17)
+
+        ihuddraw_font local.player local.idx "courier-16"
+        ihuddraw_align local.player local.idx "right" "top"
+        ihuddraw_rect local.player local.idx -370 local.y 0 0
+        ihuddraw_color local.player local.idx 0.88 0.90 0.92
+        ihuddraw_string local.player local.idx local.text
+        ihuddraw_alpha local.player local.idx 1.0
+    }
+
+    // Clear stale rows after a row-count reduction or after pruning changes the
+    // visible table. This also guarantees the system never touches index 187.
+    for (local.idx = local.base + 2 + local.rows; local.idx <= 186; local.idx++)
+        waitthread global/feho/hud_lib.scr::hide local.player local.idx
+
+end
+
+
+hide_player local.player:
+
+    if (local.player == NIL || local.player == NULL)
+        end
+
+    for (local.idx = 165; local.idx <= 186; local.idx++)
+        waitthread global/feho/hud_lib.scr::hide local.player local.idx
+
+end
+
+
+format_kd local.kills local.deaths:
+
+    local.divisor = local.deaths
+    if (local.divisor <= 0)
+        local.divisor = 1
+
+    // Integer hundredths avoids engine-dependent float string formatting.
+    local.scaled = int((local.kills * 100) / local.divisor)
+    local.whole = int(local.scaled / 100)
+    local.fraction = local.scaled - (local.whole * 100)
+
+    if (local.fraction < 10)
+        local.fraction_text = "0" + local.fraction
+    else
+        local.fraction_text = "" + local.fraction
+
+end (local.whole + "." + local.fraction_text)
+
+
+// getarraykeys returns a compact zero-indexed list. Selection sort is fine for
+// the deliberately tiny table and avoids retaining a second session structure.
+sorted_names:
+
+    if (session.leaderboard == NIL)
+        end NIL
+
+    local.names = getarraykeys session.leaderboard
+    if (local.names == NIL || local.names.size == 0)
+        end NIL
+
+    for (local.i = 0; local.i < local.names.size - 1; local.i++)
+    {
+        local.best = local.i
+
+        for (local.j = local.i + 1; local.j < local.names.size; local.j++)
+        {
+            local.candidate = local.names[local.j]
+            local.current = local.names[local.best]
+            local.candidate_kills = session.leaderboard[local.candidate]["kills"]
+            local.current_kills = session.leaderboard[local.current]["kills"]
+
+            if (local.candidate_kills > local.current_kills)
+                local.best = local.j
+            else if (local.candidate_kills == local.current_kills)
+            {
+                // Prefer fewer deaths for deterministic, useful kill ties.
+                local.candidate_deaths = session.leaderboard[local.candidate]["deaths"]
+                local.current_deaths = session.leaderboard[local.current]["deaths"]
+                if (local.candidate_deaths < local.current_deaths)
+                    local.best = local.j
+            }
+        }
+
+        if (local.best != local.i)
+        {
+            local.swap = local.names[local.i]
+            local.names[local.i] = local.names[local.best]
+            local.names[local.best] = local.swap
+        }
+    }
+
+end local.names
+
+
+prune_leaderboard local.keep:
+
+    local.names = waitthread sorted_names
+    if (local.names == NIL || local.names.size <= local.keep)
+        end
+
+    for (local.i = local.keep; local.i < local.names.size; local.i++)
+        session.leaderboard[local.names[local.i]] = NIL
+
+end

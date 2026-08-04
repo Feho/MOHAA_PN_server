@@ -206,6 +206,9 @@ exec global/feho/anticheat.scr
 
 exec global/feho/statusb.scr
 
+// Session-persistent spectator leaderboard (depends on statusb::pad_left).
+exec global/feho/leaderboard.scr
+
 exec global/feho/spawn_helper.scr
 
 exec global/feho/radio_mod.scr
