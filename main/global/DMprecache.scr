@@ -211,3 +211,8 @@ exec global/feho/spawn_helper.scr
 exec global/feho/radio_mod.scr
 
 exec global/feho/livemap.scr
+
+exec global/feho/tactical_helper.scr
+
+// register authored bot tactical points (team modes only — points are per-team)
+exec global/feho/tactical.scr

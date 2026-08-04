@@ -1,0 +1,73 @@
+main:
+    if (level.tactical_helper_initialized == 1 || (getcvar "tactical_helper") != 1)
+        end
+
+    level.tactical_helper_initialized = 1
+
+    thread tactical_helper
+end
+
+tactical_helper:
+    while ($player.size == 0)
+        wait 1
+
+    println("^7----------------------------- Tactical Point Helper Initialized -----------------------------")
+    println("^7Stand at the hold position, face the watch direction, and press USE.")
+    println("^7Paste the printed line into global/feho/tactical_presets/" + getcvar("mapname") + ".scr")
+
+    local.use_latched = 0
+
+    while (1)
+    {
+        waitframe
+
+        local.player = $player[1]
+
+        if (local.player == NIL || local.player == NULL)
+        {
+            local.use_latched = 0
+        }
+        else if (local.player.useheld && local.player.fireheld != 1)
+        {
+            if (local.use_latched != 1)
+            {
+                local.use_latched = 1
+
+                if (local.player.dmteam == "allies" || local.player.dmteam == "axis")
+                {
+                    local.team = local.player.dmteam
+                    local.origin = local.player.origin
+                    local.look_dir = angles_toforward local.player.viewangles
+
+                    println("level bot_addtacticalpoint " + local.origin + " " + local.look_dir + " \"" + local.team + "\"")
+                    level bot_addtacticalpoint local.origin local.look_dir local.team
+
+                    if (local.team == "allies")
+                    {
+                        local.model = "player/allied_airborne.tik"
+                        local.light = ( 0.4 0.4 1.0 )
+                    }
+                    else
+                    {
+                        local.model = "player/german_waffenss_shutze.tik"
+                        local.light = ( 1.0 0.4 0.4 )
+                    }
+
+                    local.dummy = spawn script_model model local.model
+                    local.dummy.origin = local.origin
+                    local.dummy.angles = ( 0 local.player.viewangles[1] 0 )
+                    local.dummy light local.light[0] local.light[1] local.light[2] 60
+                    local.dummy notsolid
+                }
+                else
+                {
+                    println("^1Tactical Point Helper: join allies or axis before adding a point.")
+                }
+            }
+        }
+        else
+        {
+            local.use_latched = 0
+        }
+    }
+end

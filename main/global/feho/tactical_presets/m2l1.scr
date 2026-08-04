@@ -1,0 +1,18 @@
+level bot_addtacticalpoint ( -354.194 1463.197 448.125 ) ( 0.973 -0.231 -0.017 ) "allies"
+level bot_addtacticalpoint ( -905.887 774.195 448.125 ) ( 0.950 0.307 -0.051 ) "allies"
+level bot_addtacticalpoint ( 1419.853 1741.247 624.125 ) ( 0.913 0.235 -0.333 ) "allies"
+level bot_addtacticalpoint ( 4433.760 2705.888 448.125 ) ( -0.477 0.866 -0.152 ) "allies"
+level bot_addtacticalpoint ( 4537.986 2720.058 448.125 ) ( -0.496 0.854 -0.154 ) "allies"
+level bot_addtacticalpoint ( 4268.085 2595.217 448.125 ) ( -0.323 0.931 -0.173 ) "allies"
+level bot_addtacticalpoint ( 5598.648 2103.266 496.125 ) ( -0.671 0.716 -0.193 ) "allies"
+level bot_addtacticalpoint ( 4608.121 3973.597 -63.875 ) ( -0.974 0.223 -0.030 ) "allies"
+
+level bot_addtacticalpoint ( 4008.339 34.351 491.467 ) ( 0.015 -0.998 -0.057 ) "axis"
+level bot_addtacticalpoint ( 4292.273 -17.980 494.047 ) ( -0.356 -0.934 -0.043 ) "axis"
+level bot_addtacticalpoint ( 320.026 1523.699 624.125 ) ( -0.281 -0.952 -0.121 ) "axis"
+level bot_addtacticalpoint ( 700.143 1535.009 624.125 ) ( -0.342 -0.935 -0.096 ) "axis"
+level bot_addtacticalpoint ( 1106.846 1537.143 624.125 ) ( -0.612 -0.781 -0.124 ) "axis"
+level bot_addtacticalpoint ( -776.962 921.757 448.125 ) ( -0.141 -0.990 -0.007 ) "axis"
+level bot_addtacticalpoint ( 788.309 754.169 472.629 ) ( -0.791 -0.608 -0.064 ) "axis"
+
+end 1

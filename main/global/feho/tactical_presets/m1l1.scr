@@ -1,0 +1,26 @@
+// Tactical points preset for m1l1.
+// Mirrors koth_presets/<mapname>.scr: register points, return 1 on success.
+//
+// PLACEMENT IS PROVISIONAL. These two origins are borrowed from the m1l1 radio
+// preset (known-valid in-world coordinates) purely so the pipeline can be tested
+// end to end. They are NOT surveyed sniper/cover spots and the look directions
+// are guesses.
+//
+// To author real points: stand on the spot in-game, run `coord` in the console,
+// and use the printed position. Look direction is a VECTOR pointing where the
+// bot should watch, not angles.
+//
+// Verify with `g_bot_debug_tactical_spots 1`, which prints each registered point
+// with its score and forward reach. A point that warns about failing geometry
+// evaluation is still registered, but the coordinate should be checked.
+
+level bot_addtacticalpoint ( -4772.03 223.23 367.02 ) (  3.35 -164.60 0.00 ) "allies"
+level bot_addtacticalpoint ( -3858.93 483.17 435.52 ) (  5.30 174.31 0.00 ) "allies"
+level bot_addtacticalpoint ( -3191.67 -492.01 409.21 ) ( 8.76 -99.09 0.00 ) "axis"
+level bot_addtacticalpoint ( -3414.97 -742.23 405.66 ) ( 9.40 -80.60 0.00 ) "axis"
+level bot_addtacticalpoint ( -4697.74 -870.51 414.08 ) ( 8.00 -51.07 0.00 ) "axis"
+level bot_addtacticalpoint ( -5450.69 -1688.81 448.12 ) ( 10.92 -30.42 0.00 ) "axis"
+level bot_addtacticalpoint ( -4424.35 524.43 416.01 ) ( 5.62 -72.59 0.00 ) "axis"
+level bot_addtacticalpoint ( -3996.71 343.12 399.01 ) ( 2.16 -103.52 0.00 ) "axis"
+
+end 1

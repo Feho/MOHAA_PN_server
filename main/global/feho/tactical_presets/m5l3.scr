@@ -1,0 +1,8 @@
+level bot_addtacticalpoint ( 1270.821 2189.797 400.125 ) ( -0.995 0.016 -0.100 ) "allies"
+level bot_addtacticalpoint ( -12.813 3057.316 416.125 ) ( -0.540 -0.839 -0.066 ) "allies"
+
+level bot_addtacticalpoint ( -274.346 4093.558 376.125 ) ( 0.941 -0.322 -0.100 ) "axis"
+level bot_addtacticalpoint ( 962.749 4047.648 512.125 ) ( 0.487 0.848 -0.210 ) "axis"
+level bot_addtacticalpoint ( 2800.383 2857.238 280.125 ) ( -0.559 0.818 -0.134 ) "axis"
+
+end 1

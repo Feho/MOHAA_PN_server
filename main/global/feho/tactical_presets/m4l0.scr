@@ -1,0 +1,14 @@
+level bot_addtacticalpoint ( -5168.211 -4170.535 91.868 ) ( 0.928 0.368 -0.055 ) "allies"
+level bot_addtacticalpoint ( -3753.922 -4137.648 49.514 ) ( 0.907 0.420 -0.015 ) "allies"
+level bot_addtacticalpoint ( -4165.504 -2144.272 80.272 ) ( 0.712 -0.698 -0.077 ) "allies"
+level bot_addtacticalpoint ( -1589.542 -1622.447 458.365 ) ( 0.057 -0.993 -0.106 ) "allies"
+level bot_addtacticalpoint ( -745.553 -1660.034 482.324 ) ( -0.402 -0.902 -0.156 ) "allies"
+level bot_addtacticalpoint ( -5392.02 -1279.79 68.12 ) ( 1.84 -41.09 0.00 ) "allies"
+
+level bot_addtacticalpoint ( -3546.420 -3427.006 62.125 ) ( -0.931 -0.364 -0.040 ) "axis"
+level bot_addtacticalpoint ( -5748.019 -1554.139 68.125 ) ( -0.132 -0.987 -0.094 ) "axis"
+level bot_addtacticalpoint ( -4961.572 -3216.155 68.173 ) ( -0.905 0.400 -0.145 ) "axis"
+level bot_addtacticalpoint ( -1957.815 -4794.514 -99.729 ) ( -0.753 0.656 -0.049 ) "axis"
+level bot_addtacticalpoint ( -3519.697 -4330.275 10.698 ) ( -0.275 0.961 -0.025 ) "axis"
+
+end 1

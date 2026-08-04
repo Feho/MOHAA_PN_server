@@ -1,0 +1,54 @@
+// Authored tactical points for bots.
+//
+// Registers per-map "good places to hold" into the engine's bot tactical memory
+// (BotTacticalMemory). Bots that are NOT in combat pick the best reachable point
+// of their team within 2048 units, walk there, hold it, and fight from it.
+//
+// This does NOT drive bots from script. The engine already owns the whole
+// occupy/hold/release lifecycle (combat leash, return timeout, path-failure
+// bailout, grenade avoidance). We only supply better candidate positions than
+// the ones bots discover on their own.
+//
+// ## When does a bot actually go to a point?
+//
+// Every frame the engine checks, and a bot commits only if ALL hold:
+//   - not on the 10-30s cooldown after leaving a previous point
+//   - not already dwelling at a point
+//   - NOT currently fighting        <- bots never abandon a firefight for a point
+//   - not investigating a noise
+//   - not avoiding a grenade
+//   - a same-team, unoccupied, pathable point exists within 2048 units,
+//     unused for the last 10s
+//
+// So camping emerges BETWEEN engagements. Points further than 2048u from where
+// bots actually roam will never be picked.
+//
+// ## Authoring a point
+//
+// `bot_addtacticalpoint <standpos> <lookdir> <team>`
+//   standpos - where the bot stands. Must be somewhere a player can actually
+//              stand; use the `coord` console command while standing there.
+//   lookdir  - direction the bot watches, as a vector (not angles). It is
+//              normalized engine-side.
+//   team     - "allies" or "axis". Points are per-team.
+//
+// Points are PINNED: bots learning spots at runtime can never evict them.
+// They are level-scoped and cleared on map change, hence registration at init.
+//
+// Set `g_bot_debug_tactical_spots 1` to print each registered point plus the
+// spots bots record on their own.
+//
+// Per-team budget is 16 points (MAX_SPOTS_PER_TEAM). Authored points count
+// against it, so leave headroom for runtime learning.
+
+main:
+    if (level.tactical_initialized == 1) end
+    level.tactical_initialized = 1
+
+    local.preset = waitexec ("global/feho/tactical_presets/" + getcvar("mapname") + ".scr")
+
+    if (local.preset != 1) {
+        // No preset for this map: bots fall back to discovering spots themselves.
+        end
+    }
+end
