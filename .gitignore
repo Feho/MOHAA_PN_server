@@ -243,3 +243,11 @@ pip-log.txt
 /main/zzz_sh_map.pk3
 /main/zzzzz_KNG_st_anger_final.pk3
 /hang-captures
+/.claude/worktrees
+
+# Design docs stay out of git history
+/plans
+
+# The boilerplate [Oo]bj/ rule above is meant for .NET build output; it also
+# swallows this script directory, which is real source.
+!/main/global/feho/tactical_presets/obj/
