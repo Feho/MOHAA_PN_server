@@ -50,9 +50,9 @@ walk doesn't eat into the guard time. This uses the engine's extended `bot_holdp
 Because USE is also bomb-planting and vehicle-entry, orders are restricted to squad
 leaders who actually have living bots, and are rate-limited by `level.squad_hold_cooldown`.
 
-Set the `squad_debug` cvar to 1 to flash a green beam at each order's destination.
-The cvar is read per order, so it can be toggled mid-map. The beam is a world entity
-and is therefore visible to everyone — keep it off in production.
+Each accepted order shows a short green beam at its destination. The beam fades in
+while sliding down to the chosen point, holds briefly, then fades out. It is a world
+entity and is therefore visible to everyone.
 
 */
 
@@ -732,6 +732,12 @@ issue_hold_position_order local.player:
     if (local.bots == NIL || local.bots.size == 0)
         end
 
+    // Give nearby doors priority over the squad binding. The normal order trace
+    // deliberately starts 64 units in front of the player to clear their hull,
+    // which can skip straight through a door that is close enough to use.
+    if (waitthread is_aiming_at_door local.player)
+        end
+
     local.target = waitthread get_crosshair_position local.player
     if (local.target == NIL)
     {
@@ -741,9 +747,7 @@ issue_hold_position_order local.player:
 
     local.player.squad_hold_next_order = level.time + level.squad_hold_cooldown
 
-    // Read the cvar live (bot_queue.scr idiom) so squad_debug can be toggled mid-map.
-    if (int(getcvar "squad_debug"))
-        thread debug_flash_hold_point local.target
+    thread show_hold_point local.target
 
     for (local.i = 1; local.i <= local.bots.size; local.i++)
     {
@@ -752,6 +756,39 @@ issue_hold_position_order local.player:
 
     local.player iprint ("Squad holding position (" + local.bots.size + " bots, " + int(level.squad_hold_duration) + "s)")
 end
+
+// Returns 1 when USE is aimed at a door in normal interaction range. This mirrors
+// Player::getUseableEntities closely: a short box trace from the view position using
+// MASK_USE. Door inheritance covers func_door, func_rotatingdoor and script_door.
+// Some map scripts put a trigger_use in front of a door and store the real door in
+// the trigger's .door field, so handle that proxy pattern too.
+is_aiming_at_door local.player:
+    if (!local.player)
+        end 0
+
+    local.aim_dir = angles_toforward local.player.viewangles
+    local.start = local.player gettagposition "Bip01 Head"
+    local.finish = local.start + local.aim_dir * 80
+
+    // 1107569409 is MASK_USE: solid geometry, entity bounds and use triggers.
+    local.result = traced local.start local.finish local.player.entnum ( -4 -4 -4 ) ( 4 4 4 ) 1107569409
+    local.entity = local.result["entity"]
+    if (!local.entity)
+        end 0
+
+    local.is_door = local.entity inheritsfrom "Door"
+    if (local.is_door)
+        end 1
+
+    local.door = local.entity.door
+    if (local.door)
+    {
+        local.is_door_proxy = local.door inheritsfrom "Door"
+        if (local.is_door_proxy)
+            end 1
+    }
+
+end 0
 
 hold_position local.bot local.target:
 
@@ -802,31 +839,57 @@ get_crosshair_position local.player:
 
 end local.ground
 
-// Debug only (squad_debug 1): green beam at the point the bots were actually sent to,
-// so you can see where an order landed without reading the console.
+// Player-facing marker at the point the bots were actually sent to. func_beam alpha
+// controls the start of the beam and endalpha controls its endpoint, so animate both
+// to keep the full beam uniformly translucent. Both values accept 0.0 through 1.0.
 //
-// This is a func_beam — a WORLD entity — so the flash is visible to every player on
-// the server, not just the ordering leader. Acceptable behind a debug cvar; do not
-// reuse this as player-facing order feedback.
-//
-// Verb order follows obj_marker.scr: origin and endpoint are set BEFORE activate so
-// there's no one-frame streak from the world origin. On a flash this short that
-// artifact would be a large fraction of what you see.
-debug_flash_hold_point local.pos:
-    local.duration = 2
+// This is a WORLD entity, so the marker is visible to every player on the server.
+// Origin and endpoint are set before activate to avoid a one-frame streak from the
+// world origin.
+show_hold_point local.pos:
+    local.beam_height = 48
+    local.slide_height = 64
+    local.fade_steps = 6.0
+    local.step_wait = 0.05
 
     local.beam = spawn func_beam
     local.beam color ( 0.2 1.0 0.2 )
-    local.beam scale 6
+    local.beam scale 3
     local.beam numsegments 1
     local.beam life 0
-    local.beam.origin = local.pos
-    local.beam endpoint ( local.pos + ( 0 0 96 ) )
+    local.beam alpha 0.0
+    local.beam endalpha 0.0
+    local.beam.origin = local.pos + ( 0 0 local.slide_height )
+    local.beam endpoint ( local.beam.origin + ( 0 0 local.beam_height ) )
     local.beam activate
 
-    wait local.duration
+    // Fade in while the beam settles onto the chosen position.
+    for (local.s = 1; local.s <= local.fade_steps; local.s++)
+    {
+        if (!local.beam) end
 
-    // Reap manually rather than relying on life (same as obj_marker.scr::kill).
+        local.t = local.s / local.fade_steps
+        local.offset = local.slide_height * (1.0 - local.t)
+        local.beam.origin = local.pos + ( 0 0 local.offset )
+        local.beam endpoint ( local.beam.origin + ( 0 0 local.beam_height ) )
+        local.beam alpha local.t
+        local.beam endalpha local.t
+        wait local.step_wait
+    }
+
+    wait 1
+
+    // Fade out in place.
+    for (local.s = 1; local.s <= local.fade_steps; local.s++)
+    {
+        if (!local.beam) end
+
+        local.alpha = 1.0 - (local.s / local.fade_steps)
+        local.beam alpha local.alpha
+        local.beam endalpha local.alpha
+        wait local.step_wait
+    }
+
     if (local.beam)
         local.beam remove
 end
