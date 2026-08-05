@@ -252,8 +252,10 @@ draw_player local.player local.names:
     ihuddraw_align local.player (local.base + 1) "right" "top"
     ihuddraw_rect local.player (local.base + 1) -370 74 0 0
     ihuddraw_color local.player (local.base + 1) 0.95 0.78 0.28
-    ihuddraw_string local.player (local.base + 1) "SESSION LEADERBOARD\n # KILLS DEATHS   K/D NAME"
+    ihuddraw_string local.player (local.base + 1) "WEEKLY LEADERBOARD\n # KILLS DEATHS   K/D NAME"
     ihuddraw_alpha local.player (local.base + 1) 1.0
+
+    local.viewer_name = netname local.player
 
     for (local.i = 0; local.i < local.rows; local.i++)
     {
@@ -275,7 +277,10 @@ draw_player local.player local.names:
         ihuddraw_font local.player local.idx "courier-16"
         ihuddraw_align local.player local.idx "right" "top"
         ihuddraw_rect local.player local.idx -370 local.y 0 0
-        ihuddraw_color local.player local.idx 0.88 0.90 0.92
+        if (local.name == local.viewer_name)
+            ihuddraw_color local.player local.idx 1.0 0.78 0.25
+        else
+            ihuddraw_color local.player local.idx 0.88 0.90 0.92
         ihuddraw_string local.player local.idx local.text
         ihuddraw_alpha local.player local.idx 1.0
     }
