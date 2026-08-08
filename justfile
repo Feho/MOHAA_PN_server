@@ -121,9 +121,9 @@ console:
 journal:
     journalctl -u mohaa-server.service -f
 
-# start a local test server (cheats/developer on, port 12204)
+# start a local test server (cheats/developer on, port 12205)
 test-server:
-    ./omohaaded +set com_target_game 0 +set dedicated 2 +set sv_maxclients 16 +set net_port 12204 +exec server.cfg +set thereisnomonkey 1 +set cheats 1 +set developer 1
+    ./omohaaded +set com_target_game 0 +set dedicated 2 +set sv_maxclients 16 +set net_port 12205 +exec server.cfg +set thereisnomonkey 1 +set cheats 1 +set developer 1 +set fs_homedatapath /home/feho/.openmohaa2
 
 # start server #2 with custom maps
 start-server2:
