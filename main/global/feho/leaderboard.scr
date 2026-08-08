@@ -1,9 +1,11 @@
 // Session-wide kill/death leaderboard for true spectators.
 //
-// session.* survives map changes but is cleared with the server process. The
-// associative table is keyed by netname because entity references cannot be
-// persisted by the session serializer. Renames therefore create a new row and
-// duplicate names intentionally share one row.
+// session.* survives map changes but is cleared with the server process. A
+// snapshot at each map start restores completed-map scores after a crash; only
+// the interrupted map is lost. The associative table is keyed by netname
+// because entity references cannot be persisted by the session serializer.
+// Renames therefore create a new row and duplicate names intentionally share
+// one row.
 
 main:
 
@@ -12,12 +14,15 @@ main:
 
     level.leaderboard_initialized = 1
 
+    waitthread restore_leaderboard_once
     waitthread reset_if_new_week
+    waitthread purge_connected_bot_rows
 
     // The script is loaded once per map, so this is the map-change pruning
     // point. Keep more history than the HUD displays, but bound the serialized
     // session payload for long-lived server processes.
     waitthread prune_leaderboard 100
+    waitthread save_leaderboard
 
     event_subscribe "player_killed" event_player_killed
     event_subscribe "player_teamchanged" event_player_teamchanged
@@ -361,6 +366,183 @@ format_kd local.kills local.deaths:
 end (local.whole + "." + local.fraction_text)
 
 
+// Persist at map boundaries rather than on every kill. Two alternating files
+// keep the previous map's valid snapshot if the process dies while the next
+// snapshot is being truncated and written. Files live below fs_homepath/main/.
+restore_leaderboard_once:
+
+    if (session.leaderboard_persistence_loaded == 1)
+        end
+
+    session.leaderboard_persistence_loaded = 1
+
+    local.current_week = waitthread current_week_key
+    local.had_session_week = (session.leaderboard_week != NIL)
+    local.a = waitthread load_leaderboard_snapshot "leaderboard/weekly_a.dat"
+    local.b = waitthread load_leaderboard_snapshot "leaderboard/weekly_b.dat"
+
+    local.latest = NIL
+    local.max_sequence = 0
+
+    if (local.a != NIL)
+    {
+        local.latest = local.a
+        local.max_sequence = local.a["sequence"]
+    }
+
+    if (local.b != NIL && (local.latest == NIL || local.b["sequence"] > local.latest["sequence"]))
+        local.latest = local.b
+
+    if (local.b != NIL && local.b["sequence"] > local.max_sequence)
+        local.max_sequence = local.b["sequence"]
+
+    session.leaderboard_snapshot_sequence = local.max_sequence
+
+    // A new version can be loaded on a map change in an already-running
+    // process. In that case, prefer its newer in-memory table over disk.
+    if (local.had_session_week)
+        end
+
+    session.leaderboard = NIL
+    session.leaderboard_week = local.current_week
+
+    if (local.latest != NIL && local.latest["week"] == local.current_week)
+        session.leaderboard = local.latest["rows"]
+
+end
+
+
+load_leaderboard_snapshot local.path:
+
+    local.content = fs_read_content local.path
+    if (local.content == NIL || local.content == "")
+        end NIL
+
+    local.split = waitthread global/strings.scr::split_line local.content 1 "\n"
+    if (local.split == NIL || local.split[2] < 2)
+        end NIL
+
+    local.lines = local.split[1]
+    local.line_count = local.split[2]
+    if (local.lines[local.line_count] == NIL || local.lines[local.line_count] == "")
+        local.line_count--
+
+    local.header = waitthread global/strings.scr::split_line local.lines[1] 1 "|"
+    if (local.header == NIL || local.header[2] != 4)
+        end NIL
+    if (local.header[1][1] != "weekly-leaderboard-v1")
+        end NIL
+
+    local.week = int(local.header[1][2])
+    local.sequence = int(local.header[1][3])
+    local.count = int(local.header[1][4])
+
+    local.expected_header = "weekly-leaderboard-v1|" + local.week + "|" + local.sequence + "|" + local.count
+    if (local.lines[1] != local.expected_header)
+        end NIL
+    if (local.week <= 0 || local.sequence <= 0 || local.count < 0 || local.count > 100)
+        end NIL
+    if (local.line_count != local.count + 2)
+        end NIL
+
+    local.expected_footer = "end|" + local.week + "|" + local.sequence + "|" + local.count
+    if (local.lines[local.count + 2] != local.expected_footer)
+        end NIL
+
+    for (local.i = 0; local.i < local.count; local.i++)
+    {
+        local.row = waitthread parse_snapshot_row local.lines[local.i + 2]
+        if (local.row == NIL)
+            end NIL
+
+        local.name = local.row["name"]
+        local.rows[local.name]["kills"] = local.row["kills"]
+        local.rows[local.name]["deaths"] = local.row["deaths"]
+    }
+
+    local.snapshot["week"] = local.week
+    local.snapshot["sequence"] = local.sequence
+    local.snapshot["rows"] = local.rows
+
+end local.snapshot
+
+
+parse_snapshot_row local.line:
+
+    local.first = waitthread find_snapshot_separator local.line 0
+    if (local.first <= 0)
+        end NIL
+
+    local.second = waitthread find_snapshot_separator local.line (local.first + 1)
+    if (local.second <= local.first + 1 || local.second >= local.line.size - 1)
+        end NIL
+
+    local.kills_text = waitthread global/strings.scr::Mid 1 local.line local.first
+    local.deaths_text = waitthread global/strings.scr::Mid (local.first + 2) local.line (local.second - local.first - 1)
+    local.name = waitthread global/strings.scr::Mid (local.second + 2) local.line (local.line.size - local.second - 1)
+
+    local.kills = int(local.kills_text)
+    local.deaths = int(local.deaths_text)
+    if (local.kills < 0 || local.deaths < 0 || local.name == "")
+        end NIL
+    if (local.kills_text != "" + local.kills || local.deaths_text != "" + local.deaths)
+        end NIL
+
+    local.row["name"] = local.name
+    local.row["kills"] = local.kills
+    local.row["deaths"] = local.deaths
+
+end local.row
+
+
+find_snapshot_separator local.line local.start:
+
+    for (local.i = local.start; local.i < local.line.size; local.i++)
+    {
+        if (local.line[local.i] == "|")
+            end local.i
+    }
+
+end -1
+
+
+save_leaderboard:
+
+    local.week = waitthread current_week_key
+    local.names = waitthread sorted_names
+    local.count = 0
+    if (local.names != NIL)
+        local.count = local.names.size
+
+    local.sequence = session.leaderboard_snapshot_sequence
+    if (local.sequence == NIL || local.sequence < 0)
+        local.sequence = 0
+    local.sequence++
+    session.leaderboard_snapshot_sequence = local.sequence
+
+    local.payload = "weekly-leaderboard-v1|" + local.week + "|" + local.sequence + "|" + local.count
+
+    for (local.i = 0; local.i < local.count; local.i++)
+    {
+        local.name = local.names[local.i]
+        local.kills = session.leaderboard[local.name]["kills"]
+        local.deaths = session.leaderboard[local.name]["deaths"]
+
+        // OpenMoHAA sanitizes control characters out of netnames, so a name
+        // cannot create another line. Pipes are safe because name is last.
+        local.payload += "\n" + local.kills + "|" + local.deaths + "|" + local.name
+    }
+
+    local.payload += "\nend|" + local.week + "|" + local.sequence + "|" + local.count
+
+    if (local.sequence % 2 == 0)
+        fs_write_content "leaderboard/weekly_a.dat" local.payload
+    else
+        fs_write_content "leaderboard/weekly_b.dat" local.payload
+
+end
+
+
 // Clear stats when local calendar time crosses into a new Monday-based week.
 // Gregorian 0001-01-01 was a Monday, so dividing its zero-based absolute day by
 // seven yields a stable week key without needing a weekday API.
@@ -410,7 +592,11 @@ current_week_key:
     local.absolute_day += int(local.previous_year / 400)
     local.absolute_day += local.days_before_month + local.day
 
-end int((local.absolute_day - 1) / 7)
+    // Keep the cast out of the return statement. In this grammar, `end int()`
+    // can return the literal command name instead of evaluating the cast.
+    local.week = int((local.absolute_day - 1) / 7)
+
+end local.week
 
 
 days_before_month local.month:
