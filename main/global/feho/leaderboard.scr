@@ -2,10 +2,11 @@
 //
 // session.* survives map changes but is cleared with the server process. A
 // snapshot at each map start restores completed-map scores after a crash; only
-// the interrupted map is lost. The associative table is keyed by netname
-// because entity references cannot be persisted by the session serializer.
-// Renames therefore create a new row and duplicate names intentionally share
-// one row.
+// the interrupted map is lost. Completed weeks are archived permanently, and
+// the immediately preceding winner remains visible throughout the next week.
+// The associative table is keyed by netname because entity references cannot
+// be persisted by the session serializer. Renames therefore create a new row
+// and duplicate names intentionally share one row.
 
 main:
 
@@ -87,7 +88,7 @@ event_player_teamchanged local.old_team local.new_team:
     }
 
     local.names = waitthread sorted_names
-    if (local.names == NIL || local.names.size == 0)
+    if ((local.names == NIL || local.names.size == 0) && !(waitthread has_last_week_winner))
     {
         waitthread hide_player self
         end
@@ -243,7 +244,7 @@ refresh_all:
 
         // dmteam is deliberate: isSpectator also includes dead team players
         // waiting for sv_team_spawn_interval and would flash the panel on death.
-        if (!local.enabled || local.player.dmteam != "spectator" || local.names == NIL || local.names.size == 0)
+        if (!local.enabled || local.player.dmteam != "spectator" || ((local.names == NIL || local.names.size == 0) && !(waitthread has_last_week_winner)))
             waitthread hide_player local.player
         else
             waitthread draw_player local.player local.names
@@ -280,11 +281,15 @@ draw_player local.player local.names:
         end
     }
 
-    local.rows = waitthread row_limit
-    if (local.rows > local.names.size)
-        local.rows = local.names.size
+    local.rows = 0
+    if (local.names != NIL)
+    {
+        local.rows = waitthread row_limit
+        if (local.rows > local.names.size)
+            local.rows = local.names.size
+    }
 
-    if (local.rows <= 0)
+    if (local.rows <= 0 && !(waitthread has_last_week_winner))
     {
         waitthread hide_player local.player
         end
@@ -294,7 +299,7 @@ draw_player local.player local.names:
     local.panel_x = -445
     local.panel_y = 65
     local.panel_w = 430
-    local.panel_h = 71 + (local.rows * 17)
+    local.panel_h = 88 + (local.rows * 17)
 
     waitthread global/feho/hud_lib.scr::draw_rect local.player local.base "right" "top" local.panel_x local.panel_y local.panel_w local.panel_h ( 0.04 0.04 0.04 ) 0.72
 
@@ -302,11 +307,19 @@ draw_player local.player local.names:
     ihuddraw_align local.player (local.base + 1) "right" "top"
     ihuddraw_rect local.player (local.base + 1) -430 74 0 0
     ihuddraw_color local.player (local.base + 1) 0.62 0.78 0.95
-    ihuddraw_string local.player (local.base + 1) "WEEKLY XP LEADERBOARD - Resets Monday\n\n #      XP KILLS DEATHS   K/D NAME"
+    local.last_week_text = "LAST WEEK: No result"
+    if (waitthread has_last_week_winner)
+    {
+        local.winner_name = waitthread global/feho/hud_lib.scr::substr_prefix session.leaderboard_last_winner_name 20
+        local.last_week_text = "LAST WEEK: " + local.winner_name + " - " + session.leaderboard_last_winner_xp + " XP"
+    }
+    ihuddraw_string local.player (local.base + 1) ("WEEKLY XP RANKING - Resets Monday\n" + local.last_week_text + "\n\n #      XP KILLS DEATHS   K/D NAME")
     ihuddraw_alpha local.player (local.base + 1) 1.0
 
     local.viewer_name = netname local.player
-    local.viewer_index = waitthread find_name_index local.names local.viewer_name
+    local.viewer_index = -1
+    if (local.names != NIL)
+        local.viewer_index = waitthread find_name_index local.names local.viewer_name
 
     for (local.i = 0; local.i < local.rows; local.i++)
     {
@@ -337,7 +350,7 @@ draw_player local.player local.names:
 
         local.text = local.rank_text + " " + local.xp_text + " " + local.kills_text + " " + local.deaths_text + " " + local.kd_text + " " + local.name_text
         local.idx = local.base + 2 + local.i
-        local.y = 128 + (local.i * 17)
+        local.y = 145 + (local.i * 17)
 
         ihuddraw_font local.player local.idx "courier-16"
         ihuddraw_align local.player local.idx "right" "top"
@@ -364,6 +377,16 @@ draw_player local.player local.names:
         waitthread global/feho/hud_lib.scr::hide local.player local.idx
 
 end
+
+
+has_last_week_winner:
+
+    if (session.leaderboard_last_winner_name == NIL)
+        end 0
+    if (session.leaderboard_last_winner_xp == NIL)
+        end 0
+
+end 1
 
 
 find_name_index local.names local.name:
@@ -443,15 +466,23 @@ restore_leaderboard_once:
     session.leaderboard_snapshot_sequence = local.max_sequence
 
     // A new version can be loaded on a map change in an already-running
-    // process. In that case, prefer its newer in-memory table over disk.
+    // process. In that case, prefer its newer in-memory table over disk, but
+    // still initialize the previous-winner HUD state added by this version.
     if (local.had_session_week)
+    {
+        waitthread load_last_week_winner local.current_week
         end
+    }
 
     session.leaderboard = NIL
     session.leaderboard_week = local.current_week
 
     if (local.latest != NIL && local.latest["week"] == local.current_week)
         session.leaderboard = local.latest["rows"]
+    else if (local.latest != NIL && local.latest["week"] < local.current_week)
+        waitthread write_week_archive local.latest["week"] local.latest["rows"] local.latest["sequence"]
+
+    waitthread load_last_week_winner local.current_week
 
 end
 
@@ -480,6 +511,8 @@ load_leaderboard_snapshot local.path:
         local.version = 1
     else if (local.format == "weekly-leaderboard-v2")
         local.version = 2
+    else if (local.format == "weekly-leaderboard-v3")
+        local.version = 3
     else
         end NIL
 
@@ -555,6 +588,16 @@ parse_snapshot_row local.line local.version:
     if (local.xp_text != "" + local.xp || local.kills_text != "" + local.kills || local.deaths_text != "" + local.deaths)
         end NIL
 
+    // v1 had no XP field. v2 introduced XP but migrated those existing kills
+    // at zero, so conservatively raise both legacy formats to the base kill-XP
+    // floor. Keeping a larger recorded value preserves objective and bonus XP.
+    if (local.version <= 2)
+    {
+        local.minimum_xp = local.kills * (waitthread legacy_kill_xp)
+        if (local.xp < local.minimum_xp)
+            local.xp = local.minimum_xp
+    }
+
     local.row["name"] = local.name
     local.row["xp"] = local.xp
     local.row["kills"] = local.kills
@@ -577,25 +620,54 @@ end -1
 save_leaderboard:
 
     local.week = waitthread current_week_key
-    local.names = waitthread sorted_names
-    local.count = 0
-    if (local.names != NIL)
-        local.count = local.names.size
-
     local.sequence = session.leaderboard_snapshot_sequence
     if (local.sequence == NIL || local.sequence < 0)
         local.sequence = 0
     local.sequence++
     session.leaderboard_snapshot_sequence = local.sequence
 
-    local.payload = "weekly-leaderboard-v2|" + local.week + "|" + local.sequence + "|" + local.count
+    local.payload = waitthread build_snapshot_payload local.week local.sequence session.leaderboard
+
+    if (local.sequence % 2 == 0)
+        fs_write_content "leaderboard/weekly_a.dat" local.payload
+    else
+        fs_write_content "leaderboard/weekly_b.dat" local.payload
+
+end
+
+
+// Completed weeks are retained permanently by week key. The active week keeps
+// using weekly_a.dat/weekly_b.dat so frequent map-boundary saves do not create
+// an unbounded number of partial files.
+write_week_archive local.week local.table local.sequence:
+
+    if (local.week == NIL || local.week <= 0)
+        end
+    if (local.sequence == NIL || local.sequence <= 0)
+        local.sequence = 1
+
+    local.payload = waitthread build_snapshot_payload local.week local.sequence local.table
+    local.path = "leaderboard/weekly_" + local.week + ".dat"
+    fs_write_content local.path local.payload
+
+end
+
+
+build_snapshot_payload local.week local.sequence local.table:
+
+    local.names = waitthread sorted_table_names local.table
+    local.count = 0
+    if (local.names != NIL)
+        local.count = local.names.size
+
+    local.payload = "weekly-leaderboard-v3|" + local.week + "|" + local.sequence + "|" + local.count
 
     for (local.i = 0; local.i < local.count; local.i++)
     {
         local.name = local.names[local.i]
-        local.xp = session.leaderboard[local.name]["xp"]
-        local.kills = session.leaderboard[local.name]["kills"]
-        local.deaths = session.leaderboard[local.name]["deaths"]
+        local.xp = local.table[local.name]["xp"]
+        local.kills = local.table[local.name]["kills"]
+        local.deaths = local.table[local.name]["deaths"]
 
         // OpenMoHAA sanitizes control characters out of netnames, so a name
         // cannot create another line. Pipes are safe because name is last.
@@ -604,10 +676,39 @@ save_leaderboard:
 
     local.payload += "\nend|" + local.week + "|" + local.sequence + "|" + local.count
 
-    if (local.sequence % 2 == 0)
-        fs_write_content "leaderboard/weekly_a.dat" local.payload
-    else
-        fs_write_content "leaderboard/weekly_b.dat" local.payload
+end local.payload
+
+
+legacy_kill_xp:
+
+    local.value = getcvar "xp_kill"
+    if (local.value == NIL || local.value == "")
+        local.value = 100
+
+    local.amount = int(local.value)
+    if (local.amount < 0)
+        local.amount = 0
+
+end local.amount
+
+
+load_last_week_winner local.current_week:
+
+    session.leaderboard_last_winner_name = NIL
+    session.leaderboard_last_winner_xp = NIL
+
+    local.last_week = local.current_week - 1
+    local.path = "leaderboard/weekly_" + local.last_week + ".dat"
+    local.snapshot = waitthread load_leaderboard_snapshot local.path
+    if (local.snapshot == NIL || local.snapshot["week"] != local.last_week)
+        end
+
+    local.names = waitthread sorted_table_names local.snapshot["rows"]
+    if (local.names == NIL || local.names.size == 0)
+        end
+
+    session.leaderboard_last_winner_name = local.names[0]
+    session.leaderboard_last_winner_xp = local.snapshot["rows"][local.names[0]]["xp"]
 
 end
 
@@ -629,8 +730,16 @@ reset_if_new_week:
 
     if (session.leaderboard_week != local.week)
     {
+        local.completed_week = session.leaderboard_week
+        if (local.completed_week < local.week)
+        {
+            waitthread prune_leaderboard 100
+            waitthread write_week_archive local.completed_week session.leaderboard session.leaderboard_snapshot_sequence
+        }
+
         session.leaderboard = NIL
         session.leaderboard_week = local.week
+        waitthread load_last_week_winner local.week
     }
 
 end
@@ -701,10 +810,17 @@ end 0
 // the bounded 100-entry table and avoids retaining a second session structure.
 sorted_names:
 
-    if (session.leaderboard == NIL)
+    local.names = waitthread sorted_table_names session.leaderboard
+
+end local.names
+
+
+sorted_table_names local.table:
+
+    if (local.table == NIL)
         end NIL
 
-    local.names = getarraykeys session.leaderboard
+    local.names = getarraykeys local.table
     if (local.names == NIL || local.names.size == 0)
         end NIL
 
@@ -716,22 +832,22 @@ sorted_names:
         {
             local.candidate = local.names[local.j]
             local.current = local.names[local.best]
-            local.candidate_xp = session.leaderboard[local.candidate]["xp"]
-            local.current_xp = session.leaderboard[local.current]["xp"]
+            local.candidate_xp = local.table[local.candidate]["xp"]
+            local.current_xp = local.table[local.current]["xp"]
 
             if (local.candidate_xp > local.current_xp)
                 local.best = local.j
             else if (local.candidate_xp == local.current_xp)
             {
                 // Kills, then fewer deaths, keep equal-XP ordering useful.
-                local.candidate_kills = session.leaderboard[local.candidate]["kills"]
-                local.current_kills = session.leaderboard[local.current]["kills"]
+                local.candidate_kills = local.table[local.candidate]["kills"]
+                local.current_kills = local.table[local.current]["kills"]
                 if (local.candidate_kills > local.current_kills)
                     local.best = local.j
                 else if (local.candidate_kills == local.current_kills)
                 {
-                    local.candidate_deaths = session.leaderboard[local.candidate]["deaths"]
-                    local.current_deaths = session.leaderboard[local.current]["deaths"]
+                    local.candidate_deaths = local.table[local.candidate]["deaths"]
+                    local.current_deaths = local.table[local.current]["deaths"]
                     if (local.candidate_deaths < local.current_deaths)
                         local.best = local.j
                 }
