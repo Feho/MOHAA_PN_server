@@ -222,6 +222,7 @@ award_xp local.player local.amount local.reason:
     if (local.player.xp_round == NIL)
         local.player.xp_round = 0
     local.player.xp_round += local.amount
+    waitthread global/feho/leaderboard.scr::add_xp local.player local.amount
 
     local.entnum = local.player.entnum
     if (level.xp_pending_reason_count[local.entnum] == NIL)
