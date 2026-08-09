@@ -25,6 +25,13 @@ bomb_thinker local.callback:
 	level.subtitleX = 100
 	level.subtitleY = 50
 
+	// Objective integrations can observe these without changing legacy callback
+	// semantics. Sequence counters make state transitions lossless to pollers.
+	self.objective_plant_sequence = 0
+	self.objective_defuse_sequence = 0
+	self.objective_last_planter = NIL
+	self.objective_last_defuser = NIL
+
 	println "----------------------Z-----------------------"
 	println "self = " self
 	println "self.target (flak 88 or other) = " self.target
@@ -100,6 +107,8 @@ self.trigger_name waittill trigger
 			thread bomb_waittill_explode
 			self.live = 1
 			level.bombs_planted ++
+			self.objective_last_planter = local.player
+			self.objective_plant_sequence++
 
 			if (local.callback)
 				thread local.callback self.origin level.planting_team
@@ -163,6 +172,8 @@ self.trigger_name waittill trigger
 			thread bomb_waittill_set //start first thread again
 			self.live = 0
 			level.bombs_planted --
+			self.objective_last_defuser = local.player
+			self.objective_defuse_sequence++
 			end
 		}
 	}

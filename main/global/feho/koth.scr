@@ -9,8 +9,8 @@ ticket swing (remove_team_tickets_percent, koth_swing_pct).
 Registers with event_manager.scr. The manager owns the trigger window and picks one
 eligible event per round; KotH's eligibility is "this is a ticket map" only.
 
-HUD index base 250 (reserves 250-255), chosen from a repo-wide audit — clear of
-tickets (240-248), HVT (160-162), map scripts (<=237), notify/hitmarker (291-303).
+HUD index base 250 (reserves 250-255). See docs/hud_indices.md for the complete
+audited reservation table.
 */
 
 main:
@@ -33,6 +33,8 @@ main:
     level.koth_draw_threshold = 5      // |progress| below this at end = draw, no swing
     level.koth_swing_pct      = 15     // loser loses this % of starting tickets (auto-scales)
     level.koth_bot_order_interval = 3  // seconds between retries for bots outside the hill
+
+    level.koth_xp_generation = 0
 
     waitthread global/feho/event_manager.scr::register_event "koth" global/feho/koth.scr::koth_eligible global/feho/koth.scr::koth_activate
 
@@ -111,6 +113,9 @@ koth_activate:
     level.koth_active = 1
     thread koth_bot_loop level.koth_active_bot_generation
 
+    level.koth_xp_generation++
+    level.koth_active_xp_generation = level.koth_xp_generation
+
     // Draw before the blocking announcement so debug mode exposes the HUD
     // immediately. The timed capture window still begins after the announcement.
     level.koth_progress = 0
@@ -122,6 +127,10 @@ koth_activate:
     // 4. Capture loop. Tug-of-war: progress in [-100,+100], negative=axis,
     //    positive=allies. Bail without a swing if the round ends mid-event.
     local.delta_cap = level.koth_rate_cap * level.koth_tick
+    local.xp_interval = waitthread global/feho/xp.scr::configured_float "xp_koth_interval" 10.0
+    if (local.xp_interval < level.koth_tick)
+        local.xp_interval = level.koth_tick
+    local.next_xp_time = level.time + local.xp_interval
 
     local.end_time = level.time + level.koth_duration
     while (level.time < local.end_time)
@@ -151,6 +160,12 @@ koth_activate:
 
         local.remaining = int(local.end_time - level.time)
         waitthread update_koth_hud local.remaining local.allies_in local.axis_in
+
+        if (level.time >= local.next_xp_time)
+        {
+            waitthread award_koth_participation level.koth_active_xp_generation
+            local.next_xp_time = level.time + local.xp_interval
+        }
 
         wait level.koth_tick
     }
@@ -183,6 +198,23 @@ count_zone_bodies local.team:
             local.count++
     }
 end local.count
+
+award_koth_participation local.generation:
+    local.amount = waitthread global/feho/xp.scr::configured_amount "xp_koth_participation" 10
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (!local.player) continue
+        if (isBot local.player) continue
+        if (!isalive local.player || local.player.isSpectator) continue
+        if (local.player.dmteam != "allies" && local.player.dmteam != "axis") continue
+        if (!(vector_within level.koth_origin local.player.origin level.koth_radius)) continue
+
+        local.player.koth_xp_generation = local.generation
+        thread global/feho/xp.scr::award_xp local.player local.amount "KOTH PARTICIPATION"
+    }
+end
 
 /*
 koth_bot_loop <generation> — periodically direct live team bots into the inner
@@ -226,12 +258,14 @@ koth_resolve:
     if (level.koth_progress >= level.koth_draw_threshold)
     {
         level.koth_winner = "allies"
+        waitthread award_koth_victory level.koth_winner level.koth_active_xp_generation
         waitthread global/feho/notify.scr::show "ALLIES TOOK THE HILL!" "success" 4.0
         waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" level.koth_swing_pct "koth" "Lost King of the Hill -"
     }
     else if (level.koth_progress <= (0 - level.koth_draw_threshold))
     {
         level.koth_winner = "axis"
+        waitthread award_koth_victory level.koth_winner level.koth_active_xp_generation
         waitthread global/feho/notify.scr::show "AXIS TOOK THE HILL!" "success" 4.0
         waitthread global/feho/tickets.scr::remove_team_tickets_percent "allies" level.koth_swing_pct "koth" "Lost King of the Hill -"
     }
@@ -239,6 +273,22 @@ koth_resolve:
     {
         level.koth_winner = "draw"
         waitthread global/feho/notify.scr::show "KING OF THE HILL - contested, no winner" "info" 5.0
+    }
+
+end
+
+award_koth_victory local.winner local.generation:
+    local.amount = waitthread global/feho/xp.scr::configured_amount "xp_koth_victory" 50
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.player = $player[local.i]
+        if (!local.player) continue
+        if (isBot local.player) continue
+        if (local.player.dmteam != local.winner) continue
+        if (local.player.koth_xp_generation != local.generation) continue
+
+        thread global/feho/xp.scr::award_xp local.player local.amount "KOTH VICTORY"
     }
 end
 

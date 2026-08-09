@@ -81,7 +81,8 @@ notify_play local.text local.style local.hold:
 end
 
 notify_play_for_player local.player local.text local.rgb local.hold:
-    local.idx = 292
+    // Reserved below-256 slot; see docs/hud_indices.md.
+    local.idx = 119
 
     ihuddraw_font local.player local.idx "facfont-20"
     ihuddraw_align local.player local.idx "center" "top"

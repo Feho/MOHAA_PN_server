@@ -624,6 +624,8 @@ doc_secure local.n:
 		level.doc_marker[local.n] thread global/feho/obj_marker.scr::kill
 
 	local.toucher playsound doc_pickup_papers
+	local.xp_amount = waitthread global/feho/xp.scr::configured_amount "xp_document" 150
+	thread global/feho/xp.scr::award_xp local.toucher local.xp_amount "DOCUMENT SECURED"
 	waitthread global/feho/notify.scr::show ("Document " + (4 - level.docs_remaining) + " of 4 secured") "success" 5.0
 	waitthread global/feho/tickets.scr::remove_team_tickets_percent "axis" level.doc_drain_pct "docheist" "Documents stolen -"
 

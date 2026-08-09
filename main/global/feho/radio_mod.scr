@@ -188,8 +188,27 @@ end
 
 watch_radio_explosion local.obj:
 	// Wait until obj_dmsd sets self.exploded = 1
+	local.plant_sequence = 0
+	local.defuse_sequence = 0
 	while (local.obj != NIL && local.obj != NULL)
 	{
+		if (local.obj.objective_plant_sequence != NIL && local.obj.objective_plant_sequence > local.plant_sequence)
+		{
+			local.plant_sequence = local.obj.objective_plant_sequence
+			local.obj.radio_planter = local.obj.objective_last_planter
+			local.amount = waitthread global/feho/xp.scr::configured_amount "xp_radio_plant" 100
+			thread global/feho/xp.scr::award_xp local.obj.radio_planter local.amount "RADIO PLANTED"
+		}
+
+		if (local.obj.objective_defuse_sequence != NIL && local.obj.objective_defuse_sequence > local.defuse_sequence)
+		{
+			local.defuse_sequence = local.obj.objective_defuse_sequence
+			local.defuser = local.obj.objective_last_defuser
+			local.amount = waitthread global/feho/xp.scr::configured_amount "xp_radio_defuse" 150
+			thread global/feho/xp.scr::award_xp local.defuser local.amount "RADIO DEFUSED"
+			local.obj.radio_planter = NIL
+		}
+
 		if (local.obj.live == 1)
 			level.radio_bomb_planted = 1
 		else
@@ -198,7 +217,7 @@ watch_radio_explosion local.obj:
 		if (local.obj.exploded == 1)
 		{
 			level.radio_bomb_planted = 0
-			thread radio_destroyed_callback local.obj.origin level.radio_enemy_team
+			thread radio_destroyed_callback local.obj.origin level.radio_enemy_team local.obj.radio_planter
 			end
 		}
 		wait 0.1
@@ -345,7 +364,7 @@ end
 // Radio destroyed callback (called by obj_dmsd bomb_explode)
 // -------------------------------------------------------
 
-radio_destroyed_callback local.origin local.planting_team:
+radio_destroyed_callback local.origin local.planting_team local.planter:
 	level.radio_active = 0
 	level.radio_cooldown = 0
 	level.radio_bomb_planted = 0
@@ -360,6 +379,8 @@ radio_destroyed_callback local.origin local.planting_team:
 		level.radio_icon thread global/feho/obj_marker.scr::kill
 
 	println "[radio_mod]: Radio destroyed."
+	local.amount = waitthread global/feho/xp.scr::configured_amount "xp_radio_destroy" 200
+	thread global/feho/xp.scr::award_xp local.planter local.amount "RADIO DESTROYED"
 	waitthread global/feho/tickets.scr::remove_team_tickets level.radio_team 15 "radio destroyed" "Radio destroyed!"
 
 	local.blast1 = spawn models/animate/fx_mortar_dirt.tik scale 1.5 origin local.origin

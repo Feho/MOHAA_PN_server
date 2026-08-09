@@ -204,6 +204,9 @@ exec global/feho/koth.scr
 
 exec global/feho/anticheat.scr
 
+// Contribution XP (combat assists and shared objective award API).
+exec global/feho/xp.scr
+
 exec global/feho/statusb.scr
 
 // Session-persistent spectator leaderboard (depends on statusb::pad_left).

@@ -11,7 +11,8 @@ event_player_spawned:
     if (!isBot self && !self.hitmarker_started)
     {
         self.hitmarker_started = 1
-        local.idx = 300
+        // Reserved combat HUD block: hitmarker 124 (docs/hud_indices.md).
+        local.idx = 124
 
         ihuddraw_font self local.idx "verdana-12"
         ihuddraw_align self local.idx "center" "center"
@@ -84,47 +85,49 @@ end
 // One-time static HUD setup for a player's kill banner. Issues the properties
 // that never change between kills — fonts, alignments, the backdrop shader, and
 // both line colors — so the per-kill hot path only touches the strings, rects,
-// and alphas. Drawn hidden (alpha 0). The top-line string (294) is written
+// and alphas. Drawn hidden (alpha 0). The top-line string (121) is written
 // per-kill because it carries the multi-kill suffix ("ENEMY KILLED  x2").
-//   293 : dark backdrop panel
-//   294 : "ENEMY KILLED [ xN ]" (dimmed white, string set per-kill)
-//   295 : victim name (red)
+// Reserved combat HUD block (docs/hud_indices.md):
+//   120 : dark backdrop panel
+//   121 : "ENEMY KILLED [ xN ]" (dimmed white, string set per-kill)
+//   122 : victim name (red)
+//   123 : accent bar
 kb_setup:
-    // Backdrop panel (293): dark translucent box behind both lines. black.tga can
+    // Backdrop panel (120): dark translucent box behind both lines. black.tga can
     // only render black, so we just set its alpha (color stays ~black). align +
     // font/shader are constant; the rect (x/width) is sized per-kill to the name,
     // so it is set in the hot path, not here. Center-aligned so the whole banner
     // stays centered on screen and grows symmetrically as names lengthen.
-    ihuddraw_shader self 293 "textures/mohmenu/black.tga"
-    ihuddraw_align self 293 "center" "center"
-    ihuddraw_color self 293 0.04 0.04 0.04
-    ihuddraw_alpha self 293 0.0
+    ihuddraw_shader self 120 "textures/mohmenu/black.tga"
+    ihuddraw_align self 120 "center" "center"
+    ihuddraw_color self 120 0.04 0.04 0.04
+    ihuddraw_alpha self 120 0.0
 
-    // Accent bar (296): thin red vertical strip at the panel's LEFT edge. Drawn
-    // above the panel (296 > 293) so it sits on top. MUST use white.tga, not
+    // Accent bar (123): thin red vertical strip at the panel's LEFT edge. Drawn
+    // above the panel (123 > 120) so it sits on top. MUST use white.tga, not
     // black.tga — black multiplies any color back to black; white tints to red.
     // white.tga ships in stock Pak2.pk3 (no client download). Center-aligned like
     // everything else; the per-kill rect uses an iX offset to sit at the left edge.
-    ihuddraw_shader self 296 "textures/common/white.tga"
-    ihuddraw_align self 296 "center" "center"
-    ihuddraw_color self 296 0.85 0.20 0.18
-    ihuddraw_alpha self 296 0.0
+    ihuddraw_shader self 123 "textures/common/white.tga"
+    ihuddraw_align self 123 "center" "center"
+    ihuddraw_color self 123 0.85 0.20 0.18
+    ihuddraw_alpha self 123 0.0
 
     // Both lines use handle-23 (a wider, blockier stock HUD face). All elements are
     // center-aligned; the two text lines share one iX offset so they line up on a
     // common left edge — no per-line centering drift. font/align never vary, so they
     // are cached here; string + rect are set per-kill.
     // Line 1: ENEMY KILLED (dimmed white).
-    ihuddraw_font self 294 "handle-23"
-    ihuddraw_align self 294 "center" "center"
-    ihuddraw_color self 294 0.85 0.85 0.85
-    ihuddraw_alpha self 294 0.0
+    ihuddraw_font self 121 "handle-23"
+    ihuddraw_align self 121 "center" "center"
+    ihuddraw_color self 121 0.85 0.85 0.85
+    ihuddraw_alpha self 121 0.0
 
     // Line 2: victim name (red — matches the ticket-axis red). Color never varies.
-    ihuddraw_font self 295 "handle-23"
-    ihuddraw_align self 295 "center" "center"
-    ihuddraw_color self 295 1.0 0.30 0.25
-    ihuddraw_alpha self 295 0.0
+    ihuddraw_font self 122 "handle-23"
+    ihuddraw_align self 122 "center" "center"
+    ihuddraw_color self 122 1.0 0.30 0.25
+    ihuddraw_alpha self 122 0.0
 
     self.kb_setup = 1
 end
@@ -176,10 +179,10 @@ show_kill_banner local.name:
     waitframe
     if (!self || self.kb_gen != local.gen) end
 
-    local.panel = 293
-    local.top   = 294
-    local.bot   = 295
-    local.bar   = 296
+    local.panel = 120
+    local.top   = 121
+    local.bot   = 122
+    local.bar   = 123
 
     local.y_top = 160
     local.y_bot = 183
@@ -310,7 +313,7 @@ event_player_damaged local.attacker local.damage local.inflictor local.position 
 
     if (local.attacker && local.attacker != self && !isBot local.attacker && !local.attacker.hitmarker)
     {
-        local.idx = 300
+        local.idx = 124
         local.attacker.hitmarker = 1
 
         for (local.i = 5; local.i >= 0; local.i--)

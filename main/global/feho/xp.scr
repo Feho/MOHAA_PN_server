@@ -1,0 +1,474 @@
+/*
+Battlefield-style contribution XP.
+
+Stage 1 owns per-round totals, combat awards, assist ledgers, objective award
+helpers, and the per-player XP toast. XP is deliberately independent from
+engine kills, tickets, respawns, and win conditions.
+
+Public API:
+  thread global/feho/xp.scr::award_xp <player> <amount> <reason>
+
+HUD indices are reserved in docs/hud_indices.md:
+  125-126 award lines, 127 total.
+*/
+
+main:
+    if (level.xp_initialized == 1)
+        end
+
+    level.xp_initialized = 1
+    level.xp_damage_time = NIL
+    level.xp_damage_owner = NIL
+    level.xp_pending_reason = NIL
+    level.xp_pending_amount = NIL
+    level.xp_pending_count = NIL
+    level.xp_pending_reason_count = NIL
+    level.xp_pending_total = NIL
+    level.xp_batch_generation = NIL
+
+    event_subscribe "player_connected" event_player_connected
+    event_subscribe "player_spawned" event_player_spawned
+    event_subscribe "player_damaged" event_player_damaged
+    event_subscribe "player_killed" event_player_killed
+    event_subscribe "player_disconnecting" event_player_disconnecting
+end
+
+event_player_connected:
+    if (self == NIL || self == NULL)
+        end
+
+    self.xp_round = 0
+    self.xp_multikill_count = 0
+    self.xp_last_kill_time = NIL
+    waitthread clear_victim_ledger self
+end
+
+event_player_spawned:
+    if (self == NIL || self == NULL)
+        end
+
+    // self.* survives respawns, so initialize rather than resetting round XP.
+    if (self.xp_round == NIL)
+        self.xp_round = 0
+
+    // A death/respawn breaks the rapid-kill chain.
+    self.xp_multikill_count = 0
+    self.xp_last_kill_time = NIL
+    waitthread clear_victim_ledger self
+end
+
+event_player_disconnecting:
+    if (self == NIL || self == NULL)
+        end
+
+    local.entnum = self.entnum
+    waitthread clear_victim_ledger self
+    level.xp_pending_reason[local.entnum] = NIL
+    level.xp_pending_amount[local.entnum] = NIL
+    level.xp_pending_count[local.entnum] = NIL
+    level.xp_pending_reason_count[local.entnum] = NIL
+    level.xp_pending_total[local.entnum] = NIL
+
+    if (level.xp_batch_generation[local.entnum] == NIL)
+        level.xp_batch_generation[local.entnum] = 0
+    level.xp_batch_generation[local.entnum]++
+end
+
+event_player_damaged local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+    if (!(waitthread is_enabled))
+        end
+    if (self == NIL || self == NULL)
+        end
+    if (local.attacker == NIL || local.attacker == NULL)
+        end
+    if (local.attacker == self)
+        end
+    if (!(waitthread is_player_entity local.attacker))
+        end
+    if (isBot local.attacker)
+        end
+    if (waitthread are_teammates local.attacker self)
+        end
+
+    local.victim_num = self.entnum
+    local.attacker_num = local.attacker.entnum
+
+    // player_damaged exposes the weapon's requested damage, not the health
+    // actually removed after hit-location multipliers and clamping. Record only
+    // that this attacker contributed; qualifying assists use a flat XP award.
+    level.xp_damage_time[local.victim_num][local.attacker_num] = level.time
+    level.xp_damage_owner[local.victim_num][local.attacker_num] = local.attacker
+end
+
+event_player_killed local.attacker local.damage local.inflictor local.position local.direction local.normal local.knockback local.damageflags local.meansofdeath local.location:
+    local.victim = self
+    if (local.victim == NIL || local.victim == NULL)
+        end
+
+    if (!(waitthread is_enabled))
+    {
+        waitthread clear_victim_ledger local.victim
+        end
+    }
+
+    // Only a real enemy kill unlocks kill, headshot, and assist awards.
+    if (!(waitthread is_valid_enemy_kill local.attacker local.victim))
+    {
+        waitthread clear_victim_ledger local.victim
+        end
+    }
+
+    waitthread award_assists local.victim local.attacker
+
+    if (!(isBot local.attacker))
+    {
+        local.multikill_count = waitthread register_multikill local.attacker
+        local.kill_xp = waitthread configured_amount "xp_kill" 100
+        thread award_xp local.attacker local.kill_xp "ENEMY KILLED"
+
+        if (local.location >= 0 && local.location <= 2)
+        {
+            local.headshot_xp = waitthread configured_amount "xp_headshot" 25
+            thread award_xp local.attacker local.headshot_xp "HEADSHOT BONUS"
+        }
+
+        // Every kill after the first in the rolling window earns one flat bonus.
+        // Same-frame grenade kills naturally coalesce into "xN" in the XP HUD.
+        if (local.multikill_count > 1)
+        {
+            local.multikill_xp = waitthread configured_amount "xp_multikill" 50
+            thread award_xp local.attacker local.multikill_xp "MULTI KILL BONUS"
+        }
+    }
+
+    waitthread clear_victim_ledger local.victim
+end
+
+register_multikill local.player:
+    local.window = waitthread configured_float "xp_multikill_window" 3.0
+    local.count = 1
+
+    if (local.window > 0 && local.player.xp_last_kill_time != NIL)
+    {
+        local.elapsed = level.time - local.player.xp_last_kill_time
+        if (local.elapsed >= 0 && local.elapsed <= local.window)
+            local.count = local.player.xp_multikill_count + 1
+    }
+
+    local.player.xp_multikill_count = local.count
+    local.player.xp_last_kill_time = level.time
+end local.count
+
+award_assists local.victim local.killer:
+    local.victim_num = local.victim.entnum
+    local.amount = waitthread configured_amount "xp_assist" 50
+    local.expiry = waitthread configured_float "xp_assist_expiry" 20.0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        local.assister = $player[local.i]
+        if (local.assister == NIL || local.assister == NULL) continue
+        if (local.assister == local.killer) continue
+        if (isBot local.assister) continue
+        if (waitthread are_teammates local.assister local.victim) continue
+
+        local.attacker_num = local.assister.entnum
+        if (level.xp_damage_owner[local.victim_num][local.attacker_num] != local.assister) continue
+
+        local.last_damage = level.xp_damage_time[local.victim_num][local.attacker_num]
+        if (local.last_damage == NIL) continue
+        if (local.expiry > 0 && (level.time - local.last_damage) > local.expiry) continue
+
+        thread award_xp local.assister local.amount "DAMAGE ASSIST"
+    }
+end
+
+clear_victim_ledger local.victim:
+    if (local.victim == NIL || local.victim == NULL)
+        end
+
+    local.entnum = local.victim.entnum
+    level.xp_damage_time[local.entnum] = NIL
+    level.xp_damage_owner[local.entnum] = NIL
+end
+
+/*
+award_xp <player> <amount> <reason>
+
+The sole mutation point for XP. Callers may award combat or objective XP without
+touching engine score. Repeated reasons coalesce during a short rolling window.
+*/
+award_xp local.player local.amount local.reason:
+    if (!(waitthread is_enabled))
+        end
+    if (!(waitthread is_player_entity local.player))
+        end
+    if (isBot local.player)
+        end
+
+    local.amount = int(local.amount)
+    if (local.amount <= 0)
+        end
+    if (local.reason == NIL || local.reason == "")
+        local.reason = "XP AWARD"
+
+    if (local.player.xp_round == NIL)
+        local.player.xp_round = 0
+    local.player.xp_round += local.amount
+
+    local.entnum = local.player.entnum
+    if (level.xp_pending_reason_count[local.entnum] == NIL)
+        level.xp_pending_reason_count[local.entnum] = 0
+    if (level.xp_pending_total[local.entnum] == NIL)
+        level.xp_pending_total[local.entnum] = 0
+
+    local.reason_idx = 0
+    for (local.i = 1; local.i <= level.xp_pending_reason_count[local.entnum]; local.i++)
+    {
+        if (level.xp_pending_reason[local.entnum][local.i] == local.reason)
+        {
+            local.reason_idx = local.i
+            break
+        }
+    }
+
+    if (local.reason_idx == 0)
+    {
+        level.xp_pending_reason_count[local.entnum]++
+        local.reason_idx = level.xp_pending_reason_count[local.entnum]
+        level.xp_pending_reason[local.entnum][local.reason_idx] = local.reason
+        level.xp_pending_amount[local.entnum][local.reason_idx] = 0
+        level.xp_pending_count[local.entnum][local.reason_idx] = 0
+    }
+
+    level.xp_pending_amount[local.entnum][local.reason_idx] += local.amount
+    level.xp_pending_count[local.entnum][local.reason_idx]++
+    level.xp_pending_total[local.entnum] += local.amount
+
+    if (level.xp_batch_generation[local.entnum] == NIL)
+        level.xp_batch_generation[local.entnum] = 0
+    level.xp_batch_generation[local.entnum]++
+    local.generation = level.xp_batch_generation[local.entnum]
+
+    thread flush_awards local.player local.entnum local.generation
+end
+
+flush_awards local.player local.entnum local.generation:
+    local.window = waitthread configured_float "xp_aggregation_window" 0.10
+    if (local.window < 0.05)
+        local.window = 0.05
+    wait local.window
+
+    if (!(waitthread is_player_entity local.player))
+        end
+    if (local.player.entnum != local.entnum)
+        end
+    if (level.xp_batch_generation[local.entnum] != local.generation)
+        end
+
+    local.reason_count = level.xp_pending_reason_count[local.entnum]
+    local.total = level.xp_pending_total[local.entnum]
+    if (local.reason_count == NIL || local.reason_count <= 0 || local.total <= 0)
+        end
+
+    for (local.i = 1; local.i <= local.reason_count; local.i++)
+    {
+        local.reasons[local.i] = level.xp_pending_reason[local.entnum][local.i]
+        local.amounts[local.i] = level.xp_pending_amount[local.entnum][local.i]
+        local.counts[local.i] = level.xp_pending_count[local.entnum][local.i]
+    }
+
+    level.xp_pending_reason[local.entnum] = NIL
+    level.xp_pending_amount[local.entnum] = NIL
+    level.xp_pending_count[local.entnum] = NIL
+    level.xp_pending_reason_count[local.entnum] = 0
+    level.xp_pending_total[local.entnum] = 0
+
+    thread show_xp_hud local.player local.reasons local.amounts local.counts local.reason_count local.total
+end
+
+show_xp_hud local.player local.reasons local.amounts local.counts local.reason_count local.total:
+    if (!(waitthread is_player_entity local.player))
+        end
+
+    if (local.player.xp_hud_setup != 1)
+        waitthread setup_xp_hud local.player
+
+    if (local.player.xp_hud_generation == NIL)
+        local.player.xp_hud_generation = 0
+    local.player.xp_hud_generation++
+    local.generation = local.player.xp_hud_generation
+
+    local.line1 = waitthread format_award_line local.reasons[1] local.amounts[1] local.counts[1]
+    local.line2 = ""
+    local.line_count = 1
+
+    if (local.reason_count == 2)
+    {
+        local.line2 = waitthread format_award_line local.reasons[2] local.amounts[2] local.counts[2]
+        local.line_count = 2
+    }
+    else if (local.reason_count > 2)
+    {
+        local.other_amount = 0
+        local.other_count = 0
+        for (local.i = 2; local.i <= local.reason_count; local.i++)
+        {
+            local.other_amount += local.amounts[local.i]
+            local.other_count += local.counts[local.i]
+        }
+        local.line2 = waitthread format_award_line "OTHER AWARDS" local.other_amount local.other_count
+        local.line_count = 2
+    }
+
+    local.total_line = waitthread format_award_line "TOTAL" local.total 1
+    local.total_y = 260
+    if (local.line_count == 2)
+        local.total_y = 278
+
+    ihuddraw_string local.player 125 local.line1
+    ihuddraw_string local.player 126 local.line2
+    ihuddraw_string local.player 127 local.total_line
+
+    // courier-16 is monospaced. Every row contains an 18-character reason field
+    // and an 8-character right-aligned XP field, matching the compact issue mockup.
+    local.text_x = -112
+    ihuddraw_rect local.player 125 local.text_x 242 0 0
+    ihuddraw_rect local.player 126 local.text_x 260 0 0
+    ihuddraw_rect local.player 127 local.text_x local.total_y 0 0
+
+    for (local.step = 1; local.step <= 4; local.step++)
+    {
+        if (!(waitthread owns_xp_hud local.player local.generation)) end
+        local.alpha = float(local.step) / 4
+        ihuddraw_alpha local.player 125 local.alpha
+        if (local.line_count == 2)
+            ihuddraw_alpha local.player 126 local.alpha
+        else
+            ihuddraw_alpha local.player 126 0.0
+        ihuddraw_alpha local.player 127 local.alpha
+        waitframe
+    }
+
+    local.hold = waitthread configured_float "xp_hud_hold" 2.4
+    wait local.hold
+
+    for (local.step = 5; local.step >= 0; local.step--)
+    {
+        if (!(waitthread owns_xp_hud local.player local.generation)) end
+        local.alpha = float(local.step) / 5
+        local.rise = 5 - local.step
+
+        ihuddraw_rect local.player 125 local.text_x (242 - local.rise) 0 0
+        ihuddraw_rect local.player 126 local.text_x (260 - local.rise) 0 0
+        ihuddraw_rect local.player 127 local.text_x (local.total_y - local.rise) 0 0
+
+        ihuddraw_alpha local.player 125 local.alpha
+        ihuddraw_alpha local.player 126 local.alpha
+        ihuddraw_alpha local.player 127 local.alpha
+        waitframe
+    }
+
+    if (!(waitthread owns_xp_hud local.player local.generation)) end
+    waitthread hide_xp_hud local.player
+end
+
+setup_xp_hud local.player:
+    for (local.idx = 125; local.idx <= 127; local.idx++)
+    {
+        ihuddraw_font local.player local.idx "courier-16"
+        ihuddraw_align local.player local.idx "center" "center"
+        ihuddraw_color local.player local.idx 0.90 0.90 0.90
+        ihuddraw_alpha local.player local.idx 0.0
+    }
+
+    local.player.xp_hud_setup = 1
+end
+
+hide_xp_hud local.player:
+    if (!(waitthread is_player_entity local.player))
+        end
+
+    for (local.idx = 125; local.idx <= 127; local.idx++)
+        ihuddraw_alpha local.player local.idx 0.0
+end
+
+owns_xp_hud local.player local.generation:
+    if (!(waitthread is_player_entity local.player))
+        end 0
+end (local.player.xp_hud_generation == local.generation)
+
+format_award_line local.reason local.amount local.count:
+    local.reason_text = local.reason
+    if (local.count > 1)
+        local.reason_text += " x" + local.count
+
+    local.reason_text = waitthread global/feho/hud_lib.scr::substr_prefix local.reason_text 18
+    local.reason_text = waitthread pad_right local.reason_text 18
+
+    local.amount_text = "+" + local.amount + " XP"
+    local.amount_text = waitthread global/feho/statusb.scr::pad_left local.amount_text 8
+end (local.reason_text + local.amount_text)
+
+// Left-align local.str in a fixed-width character field. Together with
+// statusb::pad_left and courier-16 this produces leaderboard-style columns.
+pad_right local.str local.width:
+    local.s = local.str + ""
+    while (local.s.size < local.width)
+        local.s += " "
+end local.s
+
+is_valid_enemy_kill local.attacker local.victim:
+    if (!(waitthread is_player_entity local.attacker))
+        end 0
+    if (local.attacker == local.victim)
+        end 0
+    if (waitthread are_teammates local.attacker local.victim)
+        end 0
+end 1
+
+are_teammates local.a local.b:
+    if (local.a == NIL || local.b == NIL)
+        end 0
+    if (local.a.dmteam != "allies" && local.a.dmteam != "axis")
+        end 0
+end (local.a.dmteam == local.b.dmteam)
+
+is_player_entity local.entity:
+    if (local.entity == NIL || local.entity == NULL)
+        end 0
+
+    for (local.i = 1; local.i <= $player.size; local.i++)
+    {
+        if ($player[local.i] == local.entity)
+            end 1
+    }
+end 0
+
+is_enabled:
+    local.value = getcvar "xp_enabled"
+    if (local.value == NIL || local.value == "")
+        end 1
+end (int(local.value) != 0)
+
+configured_amount local.name local.default:
+    local.value = getcvar local.name
+    if (local.value == NIL || local.value == "")
+        local.value = local.default
+
+    local.value = int(local.value)
+    if (local.value < 0)
+        local.value = 0
+end local.value
+
+configured_float local.name local.default:
+    local.value = getcvar local.name
+    if (local.value == NIL || local.value == "")
+        local.value = local.default
+
+    // The script VM does not reliably evaluate a cast in an `end <expr>`
+    // return. Materialize it first, matching leaderboard.scr's proven CVar
+    // conversion pattern, so callers receive a numeric float rather than the
+    // original CVar string.
+    local.value = float(local.value)
+end local.value
