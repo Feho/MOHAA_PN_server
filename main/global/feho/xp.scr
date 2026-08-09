@@ -25,6 +25,11 @@ main:
     level.xp_pending_reason_count = NIL
     level.xp_pending_total = NIL
     level.xp_batch_generation = NIL
+    level.xp_hud_live_reason = NIL
+    level.xp_hud_live_amount = NIL
+    level.xp_hud_live_count = NIL
+    level.xp_hud_live_reason_count = NIL
+    level.xp_hud_live_total = NIL
 
     event_subscribe "player_connected" event_player_connected
     event_subscribe "player_spawned" event_player_spawned
@@ -40,6 +45,7 @@ event_player_connected:
     self.xp_round = 0
     self.xp_multikill_count = 0
     self.xp_last_kill_time = NIL
+    waitthread clear_xp_hud_state self
     waitthread clear_victim_ledger self
 end
 
@@ -63,6 +69,7 @@ event_player_disconnecting:
 
     local.entnum = self.entnum
     waitthread clear_victim_ledger self
+    waitthread clear_xp_hud_state self
     level.xp_pending_reason[local.entnum] = NIL
     level.xp_pending_amount[local.entnum] = NIL
     level.xp_pending_count[local.entnum] = NIL
@@ -284,28 +291,102 @@ flush_awards local.player local.entnum local.generation:
     level.xp_pending_reason_count[local.entnum] = 0
     level.xp_pending_total[local.entnum] = 0
 
-    thread show_xp_hud local.player local.reasons local.amounts local.counts local.reason_count local.total
+    waitthread merge_xp_hud local.player local.entnum local.reasons local.amounts local.counts local.reason_count local.total
 end
 
-show_xp_hud local.player local.reasons local.amounts local.counts local.reason_count local.total:
+// Merge later batches into the currently visible card. This preserves the first
+// reason, refreshes the hold time, and avoids a backlog of stale notifications.
+merge_xp_hud local.player local.entnum local.reasons local.amounts local.counts local.reason_count local.total:
     if (!(waitthread is_player_entity local.player))
         end
+    if (local.player.entnum != local.entnum)
+        end
 
-    if (local.player.xp_hud_setup != 1)
-        waitthread setup_xp_hud local.player
+    local.is_refresh = (local.player.xp_hud_active == 1)
+    if (!(local.is_refresh))
+    {
+        local.player.xp_hud_active = 1
+        level.xp_hud_live_reason[local.entnum] = NIL
+        level.xp_hud_live_amount[local.entnum] = NIL
+        level.xp_hud_live_count[local.entnum] = NIL
+        level.xp_hud_live_reason_count[local.entnum] = 0
+        level.xp_hud_live_total[local.entnum] = 0
+    }
+
+    for (local.i = 1; local.i <= local.reason_count; local.i++)
+    {
+        local.reason_idx = 0
+        for (local.j = 1; local.j <= level.xp_hud_live_reason_count[local.entnum]; local.j++)
+        {
+            if (level.xp_hud_live_reason[local.entnum][local.j] == local.reasons[local.i])
+            {
+                local.reason_idx = local.j
+                break
+            }
+        }
+
+        if (local.reason_idx == 0)
+        {
+            level.xp_hud_live_reason_count[local.entnum]++
+            local.reason_idx = level.xp_hud_live_reason_count[local.entnum]
+            level.xp_hud_live_reason[local.entnum][local.reason_idx] = local.reasons[local.i]
+            level.xp_hud_live_amount[local.entnum][local.reason_idx] = 0
+            level.xp_hud_live_count[local.entnum][local.reason_idx] = 0
+        }
+
+        level.xp_hud_live_amount[local.entnum][local.reason_idx] += local.amounts[local.i]
+        level.xp_hud_live_count[local.entnum][local.reason_idx] += local.counts[local.i]
+    }
+
+    level.xp_hud_live_total[local.entnum] += local.total
 
     if (local.player.xp_hud_generation == NIL)
         local.player.xp_hud_generation = 0
     local.player.xp_hud_generation++
     local.generation = local.player.xp_hud_generation
+    thread show_xp_hud local.player local.entnum local.generation local.is_refresh
+end
 
-    local.line1 = waitthread format_award_line local.reasons[1] local.amounts[1] local.counts[1]
+clear_xp_hud_state local.player:
+    if (local.player == NIL || local.player == NULL)
+        end
+
+    local.entnum = local.player.entnum
+    level.xp_hud_live_reason[local.entnum] = NIL
+    level.xp_hud_live_amount[local.entnum] = NIL
+    level.xp_hud_live_count[local.entnum] = NIL
+    level.xp_hud_live_reason_count[local.entnum] = 0
+    level.xp_hud_live_total[local.entnum] = 0
+    local.player.xp_hud_active = 0
+
+    // Invalidate a card that is currently holding or fading.
+    if (local.player.xp_hud_generation == NIL)
+        local.player.xp_hud_generation = 0
+    local.player.xp_hud_generation++
+end
+
+show_xp_hud local.player local.entnum local.generation local.is_refresh:
+    if (!(waitthread is_player_entity local.player))
+        end
+    if (local.player.entnum != local.entnum)
+        end
+    if (!(waitthread owns_xp_hud local.player local.generation))
+        end
+
+    if (local.player.xp_hud_setup != 1)
+        waitthread setup_xp_hud local.player
+
+    local.reason_count = level.xp_hud_live_reason_count[local.entnum]
+    if (local.reason_count == NIL || local.reason_count <= 0)
+        end
+
+    local.line1 = waitthread format_award_line level.xp_hud_live_reason[local.entnum][1] level.xp_hud_live_amount[local.entnum][1] level.xp_hud_live_count[local.entnum][1]
     local.line2 = ""
     local.line_count = 1
 
     if (local.reason_count == 2)
     {
-        local.line2 = waitthread format_award_line local.reasons[2] local.amounts[2] local.counts[2]
+        local.line2 = waitthread format_award_line level.xp_hud_live_reason[local.entnum][2] level.xp_hud_live_amount[local.entnum][2] level.xp_hud_live_count[local.entnum][2]
         local.line_count = 2
     }
     else if (local.reason_count > 2)
@@ -314,14 +395,15 @@ show_xp_hud local.player local.reasons local.amounts local.counts local.reason_c
         local.other_count = 0
         for (local.i = 2; local.i <= local.reason_count; local.i++)
         {
-            local.other_amount += local.amounts[local.i]
-            local.other_count += local.counts[local.i]
+            local.other_amount += level.xp_hud_live_amount[local.entnum][local.i]
+            local.other_count += level.xp_hud_live_count[local.entnum][local.i]
         }
         local.line2 = waitthread format_award_line "OTHER AWARDS" local.other_amount local.other_count
         local.line_count = 2
     }
 
-    local.total_line = waitthread format_award_line "TOTAL" local.total 1
+    local.total_line = waitthread format_award_line "TOTAL" level.xp_hud_live_total[local.entnum] 1
+
     local.total_y = 260
     if (local.line_count == 2)
         local.total_y = 278
@@ -337,17 +419,29 @@ show_xp_hud local.player local.reasons local.amounts local.counts local.reason_c
     ihuddraw_rect local.player 126 local.text_x 260 0 0
     ihuddraw_rect local.player 127 local.text_x local.total_y 0 0
 
-    for (local.step = 1; local.step <= 4; local.step++)
+    if (local.is_refresh)
     {
-        if (!(waitthread owns_xp_hud local.player local.generation)) end
-        local.alpha = float(local.step) / 4
-        ihuddraw_alpha local.player 125 local.alpha
+        ihuddraw_alpha local.player 125 1.0
         if (local.line_count == 2)
-            ihuddraw_alpha local.player 126 local.alpha
+            ihuddraw_alpha local.player 126 1.0
         else
             ihuddraw_alpha local.player 126 0.0
-        ihuddraw_alpha local.player 127 local.alpha
-        waitframe
+        ihuddraw_alpha local.player 127 1.0
+    }
+    else
+    {
+        for (local.step = 1; local.step <= 4; local.step++)
+        {
+            if (!(waitthread owns_xp_hud local.player local.generation)) end
+            local.alpha = float(local.step) / 4
+            ihuddraw_alpha local.player 125 local.alpha
+            if (local.line_count == 2)
+                ihuddraw_alpha local.player 126 local.alpha
+            else
+                ihuddraw_alpha local.player 126 0.0
+            ihuddraw_alpha local.player 127 local.alpha
+            waitframe
+        }
     }
 
     local.hold = waitthread configured_float "xp_hud_hold" 2.4
@@ -370,6 +464,12 @@ show_xp_hud local.player local.reasons local.amounts local.counts local.reason_c
     }
 
     if (!(waitthread owns_xp_hud local.player local.generation)) end
+    level.xp_hud_live_reason[local.entnum] = NIL
+    level.xp_hud_live_amount[local.entnum] = NIL
+    level.xp_hud_live_count[local.entnum] = NIL
+    level.xp_hud_live_reason_count[local.entnum] = 0
+    level.xp_hud_live_total[local.entnum] = 0
+    local.player.xp_hud_active = 0
     waitthread hide_xp_hud local.player
 end
 
