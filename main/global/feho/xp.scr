@@ -500,11 +500,29 @@ owns_xp_hud local.player local.generation:
 end (local.player.xp_hud_generation == local.generation)
 
 format_award_line local.reason local.amount local.count:
-    local.reason_text = local.reason
+    local.reason_text = local.reason + ""
+    local.suffix = ""
     if (local.count > 1)
-        local.reason_text += " x" + local.count
+        local.suffix = " x" + local.count
 
-    local.reason_text = waitthread global/feho/hud_lib.scr::substr_prefix local.reason_text 18
+    // Keep a repeated-award multiplier intact. Long labels are shortened with
+    // a visible period instead of being clipped after the "x" in "xN".
+    local.reason_width = 18 - local.suffix.size
+    if (local.reason_width < 0)
+        local.reason_width = 0
+
+    if (local.reason_text.size > local.reason_width)
+    {
+        if (local.reason_width > 1)
+        {
+            local.reason_text = waitthread global/feho/hud_lib.scr::substr_prefix local.reason_text (local.reason_width - 1)
+            local.reason_text += "."
+        }
+        else
+            local.reason_text = waitthread global/feho/hud_lib.scr::substr_prefix local.reason_text local.reason_width
+    }
+
+    local.reason_text += local.suffix
     local.reason_text = waitthread pad_right local.reason_text 18
 
     local.amount_text = "+" + local.amount + " XP"
