@@ -314,7 +314,7 @@ draw_player local.player local.names:
         local.winner_xp = waitthread format_grouped_integer session.leaderboard_last_winner_xp
         local.last_week_text = "LAST WEEK: " + local.winner_name + " - " + local.winner_xp + " XP"
     }
-    ihuddraw_string local.player (local.base + 1) ("WEEKLY XP RANKING - Resets Monday\n" + local.last_week_text + "\n\n #        XP KILLS DEATHS   K/D NAME")
+    ihuddraw_string local.player (local.base + 1) ("WEEKLY RANKINGS - Resets Monday\n" + local.last_week_text + "\n\n #        XP KILLS DEATHS   K/D NAME")
     ihuddraw_alpha local.player (local.base + 1) 1.0
 
     local.viewer_name = netname local.player

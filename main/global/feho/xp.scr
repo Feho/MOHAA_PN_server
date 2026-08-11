@@ -144,7 +144,7 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
         if (local.multikill_count > 1)
         {
             local.multikill_xp = waitthread configured_amount "xp_multikill" 50
-            thread award_xp local.attacker local.multikill_xp "MULTI KILL BONUS"
+            thread award_xp local.attacker local.multikill_xp "MULTI KILL"
         }
     }
 
