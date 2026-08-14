@@ -15,6 +15,10 @@ main:
 
     level.leaderboard_initialized = 1
 
+    // Anchor for the end-of-round preview countdown. Captured here rather than
+    // assuming level.time starts at 0, since this script runs at map load.
+    level.leaderboard_round_start = level.time
+
     waitthread restore_leaderboard_once
     waitthread reset_if_new_week
     waitthread normalize_rows
@@ -81,7 +85,17 @@ event_player_teamchanged local.old_team local.new_team:
         end
     }
 
-    if (local.new_team != "spectator" || !(waitthread is_enabled))
+    if (!(waitthread is_enabled))
+    {
+        waitthread hide_player self
+        end
+    }
+
+    // Joining a playing team normally hides the panel, except inside the
+    // end-of-round preview window, where the player keeps the short version
+    // instead of it blinking out until the next refresh tick.
+    local.full = (local.new_team == "spectator")
+    if (!local.full && !(waitthread in_preview_window))
     {
         waitthread hide_player self
         end
@@ -94,7 +108,7 @@ event_player_teamchanged local.old_team local.new_team:
         end
     }
 
-    waitthread draw_player self local.names
+    waitthread draw_player self local.names local.full
 
 end
 
@@ -213,12 +227,107 @@ refresh_interval:
 end local.interval
 
 
+// Seconds before the round timer expires at which the end-of-round preview
+// opens for playing players. 0 disables the preview entirely.
+preview_lead:
+
+    local.value = getcvar "leaderboard_preview_lead"
+    if (local.value == "")
+        end 10.0
+
+    local.lead = float(local.value)
+    if (local.lead < 0)
+        local.lead = 0
+
+end local.lead
+
+
+// Rows shown in the preview. Deliberately shorter than the spectator panel:
+// this draws while players are still fighting, so it must occlude less. The
+// viewer-row reservation in draw_player still shows the viewer their own line
+// when they rank below the cutoff.
+preview_rows:
+
+    local.rows = int(getcvar "leaderboard_preview_rows")
+    if (local.rows <= 0)
+        local.rows = 5
+    if (local.rows > 20)
+        local.rows = 20
+
+end local.rows
+
+
+/*
+The round has two endings and only one of them is predictable.
+
+  - Timer expiry (level.dmroundlimit) is known from round start, so a T-minus
+    preview can be scheduled against it. That is what this gates.
+  - Ticket wipe (tickets.scr::check_ticket_winner) fires the instant a team hits
+    0 tickets with nobody alive. There is no lead time to detect, so a wipe
+    ending intentionally gets no preview.
+
+level.dmroundlimit is in MINUTES and is set by tickets.scr. Absent it (a map
+loaded without tickets), there is no round clock to count down and the preview
+stays closed.
+*/
+// True slightly BEFORE the preview opens, so refresh_loop can tighten its tick
+// and the panel appears on time rather than up to one full interval late.
+near_preview_window:
+
+    local.lead = waitthread preview_lead
+    if (local.lead <= 0)
+        end 0
+
+    // Materialized rather than returned inline: this codebase has hit VM
+    // trouble evaluating expressions directly in an `end <expr>` return.
+    local.result = waitthread elapsed_past_lead (local.lead + 4.0)
+
+end local.result
+
+
+in_preview_window:
+
+    local.lead = waitthread preview_lead
+    if (local.lead <= 0)
+        end 0
+
+    local.result = waitthread elapsed_past_lead local.lead
+
+end local.result
+
+
+// Shared countdown test: has the round clock reached T-minus <lead> seconds?
+elapsed_past_lead local.lead:
+
+    if (level.dmroundlimit == NIL || level.dmroundlimit <= 0)
+        end 0
+
+    if (level.leaderboard_round_start == NIL)
+        end 0
+
+    local.elapsed = level.time - level.leaderboard_round_start
+    if (local.elapsed < 0)
+        end 0
+
+    local.threshold = (level.dmroundlimit * 60) - local.lead
+    local.result = (local.elapsed >= local.threshold)
+
+end local.result
+
+
 refresh_loop:
 
     while (1)
     {
         waitthread refresh_all
+
+        // The preview window is only a few seconds wide. At the normal 3s tick
+        // it could open up to a full interval late and lose a third of itself,
+        // so poll faster while the round is closing out.
         local.interval = waitthread refresh_interval
+        if (local.interval > 1.0 && (waitthread near_preview_window))
+            local.interval = 1.0
+
         wait local.interval
     }
 
@@ -236,6 +345,11 @@ refresh_all:
     if (local.enabled)
         local.names = waitthread sorted_names
 
+    local.empty = ((local.names == NIL || local.names.size == 0) && !(waitthread has_last_week_winner))
+    local.preview = 0
+    if (local.enabled && !local.empty)
+        local.preview = waitthread in_preview_window
+
     for (local.i = 1; local.i <= $player.size; local.i++)
     {
         local.player = $player[local.i]
@@ -244,10 +358,17 @@ refresh_all:
 
         // dmteam is deliberate: isSpectator also includes dead team players
         // waiting for sv_team_spawn_interval and would flash the panel on death.
-        if (!local.enabled || local.player.dmteam != "spectator" || ((local.names == NIL || local.names.size == 0) && !(waitthread has_last_week_winner)))
+        local.is_spectator = (local.player.dmteam == "spectator")
+
+        if (!local.enabled || local.empty || (!local.is_spectator && !local.preview))
+        {
             waitthread hide_player local.player
-        else
-            waitthread draw_player local.player local.names
+            continue
+        }
+
+        // Spectators keep the full panel; playing players get the short preview
+        // during the closing seconds of a timed round.
+        waitthread draw_player local.player local.names local.is_spectator
     }
 
 end
@@ -271,11 +392,19 @@ purge_connected_bot_rows:
 end
 
 
-draw_player local.player local.names:
+// local.full — 1 for the spectator panel, 0 for the end-of-round preview shown
+// to playing players. The preview is shorter and dimmer because it draws while
+// the round is still live; both share this rendering path so the row layout and
+// viewer-row reservation below stay identical.
+draw_player local.player local.names local.full:
 
     if (local.player == NIL || local.player == NULL)
         end
-    if (local.player.dmteam != "spectator")
+
+    if (local.full == NIL)
+        local.full = 1
+
+    if (local.full && local.player.dmteam != "spectator")
     {
         waitthread hide_player local.player
         end
@@ -284,7 +413,11 @@ draw_player local.player local.names:
     local.rows = 0
     if (local.names != NIL)
     {
-        local.rows = waitthread row_limit
+        if (local.full)
+            local.rows = waitthread row_limit
+        else
+            local.rows = waitthread preview_rows
+
         if (local.rows > local.names.size)
             local.rows = local.names.size
     }
@@ -295,26 +428,40 @@ draw_player local.player local.names:
         end
     }
 
+    local.alpha = 0.72
+    if (!local.full)
+        local.alpha = 0.45
+
     local.base = 165
     local.panel_x = -461
     local.panel_y = 65
     local.panel_w = 446
     local.panel_h = 88 + (local.rows * 17)
 
-    waitthread global/feho/hud_lib.scr::draw_rect local.player local.base "right" "top" local.panel_x local.panel_y local.panel_w local.panel_h ( 0.04 0.04 0.04 ) 0.72
+    waitthread global/feho/hud_lib.scr::draw_rect local.player local.base "right" "top" local.panel_x local.panel_y local.panel_w local.panel_h ( 0.04 0.04 0.04 ) local.alpha
 
     ihuddraw_font local.player (local.base + 1) "courier-16"
     ihuddraw_align local.player (local.base + 1) "right" "top"
     ihuddraw_rect local.player (local.base + 1) -446 74 0 0
     ihuddraw_color local.player (local.base + 1) 0.62 0.78 0.95
-    local.last_week_text = "LAST WEEK: No result"
-    if (waitthread has_last_week_winner)
+    if (local.full)
     {
-        local.winner_name = waitthread global/feho/hud_lib.scr::substr_prefix session.leaderboard_last_winner_name 20
-        local.winner_xp = waitthread format_grouped_integer session.leaderboard_last_winner_xp
-        local.last_week_text = "LAST WEEK: " + local.winner_name + " - " + local.winner_xp + " XP"
+        local.last_week_text = "LAST WEEK: No result"
+        if (waitthread has_last_week_winner)
+        {
+            local.winner_name = waitthread global/feho/hud_lib.scr::substr_prefix session.leaderboard_last_winner_name 20
+            local.winner_xp = waitthread format_grouped_integer session.leaderboard_last_winner_xp
+            local.last_week_text = "LAST WEEK: " + local.winner_name + " - " + local.winner_xp + " XP"
+        }
+        local.header = "WEEKLY RANKINGS - Resets Monday\n" + local.last_week_text
     }
-    ihuddraw_string local.player (local.base + 1) ("WEEKLY RANKINGS - Resets Monday\n" + local.last_week_text + "\n\n #        XP KILLS DEATHS   K/D NAME")
+    else
+    {
+        // The preview trades the last-week line for a reason it is on screen.
+        // Two header lines either way, so panel_h stays correct.
+        local.header = "WEEKLY RANKINGS\nRound ending"
+    }
+    ihuddraw_string local.player (local.base + 1) (local.header + "\n\n #        XP KILLS DEATHS   K/D NAME")
     ihuddraw_alpha local.player (local.base + 1) 1.0
 
     local.viewer_name = netname local.player
@@ -373,8 +520,9 @@ draw_player local.player local.names:
         ihuddraw_alpha local.player local.idx 1.0
     }
 
-    // Clear stale rows after a row-count reduction or after pruning changes the
-    // visible table. This also guarantees the system never touches index 187.
+    // Clear stale rows after a row-count reduction (including a spectator
+    // switching to the shorter preview) or after pruning changes the visible
+    // table. This also guarantees the system never touches index 187.
     for (local.idx = local.base + 2 + local.rows; local.idx <= 186; local.idx++)
         waitthread global/feho/hud_lib.scr::hide local.player local.idx
 
