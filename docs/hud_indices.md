@@ -10,7 +10,7 @@ The active shared and per-player systems reserve these ranges:
 | 119 | Global notification | Animated notification text |
 | 120-123 | Kill banner | Panel, title, victim, accent |
 | 124 | Hitmarker | Per-player hit confirmation |
-| 125-127 | XP toast | Two text-only award lines and total |
+| 125-126 | XP toast | Multiline award details and enlarged total |
 | 150-156 | Squads | Per-player squad list |
 | 160-162 | HVT | Shared event status |
 | 165-186 | Leaderboard | Spectator-only table |

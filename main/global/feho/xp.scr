@@ -9,7 +9,7 @@ Public API:
   thread global/feho/xp.scr::award_xp <player> <amount> <reason>
 
 HUD indices are reserved in docs/hud_indices.md:
-  125-126 award lines, 127 total.
+  125 multiline award details, 126 total.
 */
 
 main:
@@ -133,18 +133,18 @@ event_player_killed local.attacker local.damage local.inflictor local.position l
         local.kill_xp = waitthread configured_amount "xp_kill" 100
         thread award_xp local.attacker local.kill_xp "ENEMY KILLED"
 
-        if (local.location >= 0 && local.location <= 2)
-        {
-            local.headshot_xp = waitthread configured_amount "xp_headshot" 25
-            thread award_xp local.attacker local.headshot_xp "HEADSHOT BONUS"
-        }
-
         // Every kill after the first in the rolling window earns one flat bonus.
         // Same-frame grenade kills naturally coalesce into "xN" in the XP HUD.
         if (local.multikill_count > 1)
         {
             local.multikill_xp = waitthread configured_amount "xp_multikill" 50
             thread award_xp local.attacker local.multikill_xp "MULTI KILL"
+        }
+
+        if (local.location >= 0 && local.location <= 2)
+        {
+            local.headshot_xp = waitthread configured_amount "xp_headshot" 25
+            thread award_xp local.attacker local.headshot_xp "HEADSHOT"
         }
     }
 
@@ -383,51 +383,78 @@ show_xp_hud local.player local.entnum local.generation local.is_refresh:
 
     local.line1 = waitthread format_award_line level.xp_hud_live_reason[local.entnum][1] level.xp_hud_live_amount[local.entnum][1] level.xp_hud_live_count[local.entnum][1]
     local.line2 = ""
+    local.line3 = ""
     local.line_count = 1
 
-    if (local.reason_count == 2)
+    if (local.reason_count >= 2)
     {
         local.line2 = waitthread format_award_line level.xp_hud_live_reason[local.entnum][2] level.xp_hud_live_amount[local.entnum][2] level.xp_hud_live_count[local.entnum][2]
         local.line_count = 2
     }
-    else if (local.reason_count > 2)
+
+    if (local.reason_count == 3)
+    {
+        local.line3 = waitthread format_award_line level.xp_hud_live_reason[local.entnum][3] level.xp_hud_live_amount[local.entnum][3] level.xp_hud_live_count[local.entnum][3]
+        local.line_count = 3
+    }
+    else if (local.reason_count > 3)
     {
         local.other_amount = 0
         local.other_count = 0
-        for (local.i = 2; local.i <= local.reason_count; local.i++)
+        for (local.i = 3; local.i <= local.reason_count; local.i++)
         {
             local.other_amount += level.xp_hud_live_amount[local.entnum][local.i]
             local.other_count += level.xp_hud_live_count[local.entnum][local.i]
         }
-        local.line2 = waitthread format_award_line "OTHER AWARDS" local.other_amount local.other_count
-        local.line_count = 2
+        local.line3 = waitthread format_award_line "OTHER AWARDS" local.other_amount local.other_count
+        local.line_count = 3
     }
 
-    local.total_line = waitthread format_award_line "TOTAL" level.xp_hud_live_total[local.entnum] 1
+    // Align every complete row by its right edge without truncating labels.
+    local.detail_width = local.line1.size
+    if (local.line_count >= 2 && local.line2.size > local.detail_width)
+        local.detail_width = local.line2.size
+    if (local.line_count >= 3 && local.line3.size > local.detail_width)
+        local.detail_width = local.line3.size
 
-    local.total_y = 260
-    if (local.line_count == 2)
-        local.total_y = 278
+    local.details = waitthread global/feho/statusb.scr::pad_left local.line1 local.detail_width
+    if (local.line_count >= 2)
+    {
+        local.padded_line = waitthread global/feho/statusb.scr::pad_left local.line2 local.detail_width
+        local.details += "\n" + local.padded_line
+    }
+    if (local.line_count >= 3)
+    {
+        local.padded_line = waitthread global/feho/statusb.scr::pad_left local.line3 local.detail_width
+        local.details += "\n" + local.padded_line
+    }
 
-    ihuddraw_string local.player 125 local.line1
-    ihuddraw_string local.player 126 local.line2
-    ihuddraw_string local.player 127 local.total_line
+    local.show_total = (local.reason_count > 1)
+    local.total_text = ""
+    if (local.show_total)
+        local.total_text = "+" + level.xp_hud_live_total[local.entnum]
 
-    // courier-16 is monospaced. Every row contains an 18-character reason field
-    // and an 8-character right-aligned XP field, matching the compact issue mockup.
-    local.text_x = -112
-    ihuddraw_rect local.player 125 local.text_x 242 0 0
-    ihuddraw_rect local.player 126 local.text_x 260 0 0
-    ihuddraw_rect local.player 127 local.text_x local.total_y 0 0
+    ihuddraw_string local.player 125 local.details
+    ihuddraw_string local.player 126 local.total_text
+
+    // The detail rows share one multiline, monospaced element. The total uses a
+    // larger element beside the first row to establish a clear visual hierarchy.
+    // courier-16 glyphs are eight pixels wide. Keep the details' right edge at
+    // x=32 and the total at x=56, regardless of the longest visible label.
+    local.text_x = 32 - (local.detail_width * 8)
+    local.total_x = 56
+    local.text_y = 242
+    local.total_y = 240
+    ihuddraw_rect local.player 125 local.text_x local.text_y 0 0
+    ihuddraw_rect local.player 126 local.total_x local.total_y 0 0
 
     if (local.is_refresh)
     {
         ihuddraw_alpha local.player 125 1.0
-        if (local.line_count == 2)
+        if (local.show_total)
             ihuddraw_alpha local.player 126 1.0
         else
             ihuddraw_alpha local.player 126 0.0
-        ihuddraw_alpha local.player 127 1.0
     }
     else
     {
@@ -436,11 +463,10 @@ show_xp_hud local.player local.entnum local.generation local.is_refresh:
             if (!(waitthread owns_xp_hud local.player local.generation)) end
             local.alpha = float(local.step) / 4
             ihuddraw_alpha local.player 125 local.alpha
-            if (local.line_count == 2)
+            if (local.show_total)
                 ihuddraw_alpha local.player 126 local.alpha
             else
                 ihuddraw_alpha local.player 126 0.0
-            ihuddraw_alpha local.player 127 local.alpha
             waitframe
         }
     }
@@ -454,13 +480,14 @@ show_xp_hud local.player local.entnum local.generation local.is_refresh:
         local.alpha = float(local.step) / 5
         local.rise = 5 - local.step
 
-        ihuddraw_rect local.player 125 local.text_x (242 - local.rise) 0 0
-        ihuddraw_rect local.player 126 local.text_x (260 - local.rise) 0 0
-        ihuddraw_rect local.player 127 local.text_x (local.total_y - local.rise) 0 0
+        ihuddraw_rect local.player 125 local.text_x (local.text_y - local.rise) 0 0
+        ihuddraw_rect local.player 126 local.total_x (local.total_y - local.rise) 0 0
 
         ihuddraw_alpha local.player 125 local.alpha
-        ihuddraw_alpha local.player 126 local.alpha
-        ihuddraw_alpha local.player 127 local.alpha
+        if (local.show_total)
+            ihuddraw_alpha local.player 126 local.alpha
+        else
+            ihuddraw_alpha local.player 126 0.0
         waitframe
     }
 
@@ -475,13 +502,15 @@ show_xp_hud local.player local.entnum local.generation local.is_refresh:
 end
 
 setup_xp_hud local.player:
-    for (local.idx = 125; local.idx <= 127; local.idx++)
-    {
-        ihuddraw_font local.player local.idx "courier-16"
-        ihuddraw_align local.player local.idx "center" "center"
-        ihuddraw_color local.player local.idx 0.90 0.90 0.90
-        ihuddraw_alpha local.player local.idx 0.0
-    }
+    ihuddraw_font local.player 125 "courier-16"
+    ihuddraw_align local.player 125 "center" "center"
+    ihuddraw_color local.player 125 0.90 0.90 0.90
+    ihuddraw_alpha local.player 125 0.0
+
+    ihuddraw_font local.player 126 "courier-20"
+    ihuddraw_align local.player 126 "center" "center"
+    ihuddraw_color local.player 126 0.90 0.90 0.90
+    ihuddraw_alpha local.player 126 0.0
 
     local.player.xp_hud_setup = 1
 end
@@ -490,7 +519,7 @@ hide_xp_hud local.player:
     if (!(waitthread is_player_entity local.player))
         end
 
-    for (local.idx = 125; local.idx <= 127; local.idx++)
+    for (local.idx = 125; local.idx <= 126; local.idx++)
         ihuddraw_alpha local.player local.idx 0.0
 end
 
@@ -505,37 +534,8 @@ format_award_line local.reason local.amount local.count:
     if (local.count > 1)
         local.suffix = " x" + local.count
 
-    // Keep a repeated-award multiplier intact. Long labels are shortened with
-    // a visible period instead of being clipped after the "x" in "xN".
-    local.reason_width = 18 - local.suffix.size
-    if (local.reason_width < 0)
-        local.reason_width = 0
-
-    if (local.reason_text.size > local.reason_width)
-    {
-        if (local.reason_width > 1)
-        {
-            local.reason_text = waitthread global/feho/hud_lib.scr::substr_prefix local.reason_text (local.reason_width - 1)
-            local.reason_text += "."
-        }
-        else
-            local.reason_text = waitthread global/feho/hud_lib.scr::substr_prefix local.reason_text local.reason_width
-    }
-
-    local.reason_text += local.suffix
-    local.reason_text = waitthread pad_right local.reason_text 18
-
-    local.amount_text = "+" + local.amount + " XP"
-    local.amount_text = waitthread global/feho/statusb.scr::pad_left local.amount_text 8
-end (local.reason_text + local.amount_text)
-
-// Left-align local.str in a fixed-width character field. Together with
-// statusb::pad_left and courier-16 this produces leaderboard-style columns.
-pad_right local.str local.width:
-    local.s = local.str + ""
-    while (local.s.size < local.width)
-        local.s += " "
-end local.s
+    local.amount_text = local.amount + ""
+end (local.reason_text + local.suffix + " " + local.amount_text)
 
 is_valid_enemy_kill local.attacker local.victim:
     if (!(waitthread is_player_entity local.attacker))
