@@ -3,7 +3,7 @@
 // session.* survives map changes but is cleared with the server process. A
 // snapshot at each map start restores completed-map scores after a crash; only
 // the interrupted map is lost. Completed weeks are archived permanently, and
-// the immediately preceding winner remains visible throughout the next week.
+// the immediately preceding top three remain visible throughout the next week.
 // The associative table is keyed by netname because entity references cannot
 // be persisted by the session serializer. Renames therefore create a new row
 // and duplicate names intentionally share one row.
@@ -102,7 +102,7 @@ event_player_teamchanged local.old_team local.new_team:
     }
 
     local.names = waitthread sorted_names
-    if ((local.names == NIL || local.names.size == 0) && !(waitthread has_last_week_winner))
+    if ((local.names == NIL || local.names.size == 0) && !(waitthread has_last_week_results))
     {
         waitthread hide_player self
         end
@@ -345,9 +345,10 @@ refresh_all:
     if (local.enabled)
         local.names = waitthread sorted_names
 
-    local.empty = ((local.names == NIL || local.names.size == 0) && !(waitthread has_last_week_winner))
+    local.has_current = (local.names != NIL && local.names.size > 0)
+    local.empty = (!local.has_current && !(waitthread has_last_week_results))
     local.preview = 0
-    if (local.enabled && !local.empty)
+    if (local.enabled && local.has_current)
         local.preview = waitthread in_preview_window
 
     for (local.i = 1; local.i <= $player.size; local.i++)
@@ -422,7 +423,19 @@ draw_player local.player local.names local.full:
             local.rows = local.names.size
     }
 
-    if (local.rows <= 0 && !(waitthread has_last_week_winner))
+    local.last_week_count = 0
+    if (local.full && (waitthread has_last_week_results))
+    {
+        local.last_week_count = session.leaderboard_last_week_count
+
+        // Keep the archived block on-screen at 480p. Each archived result uses
+        // one line, so fewer archived rows permit more current-week rows.
+        local.max_current_rows = 17 - local.last_week_count
+        if (local.rows > local.max_current_rows)
+            local.rows = local.max_current_rows
+    }
+
+    if (local.rows <= 0 && (!local.full || !(waitthread has_last_week_results)))
     {
         waitthread hide_player local.player
         end
@@ -436,7 +449,24 @@ draw_player local.player local.names local.full:
     local.panel_x = -461
     local.panel_y = 65
     local.panel_w = 446
-    local.panel_h = 88 + (local.rows * 17)
+
+    if (local.full)
+    {
+        local.row_y = 128
+        local.panel_h = 71 + (local.rows * 17)
+
+        if (local.last_week_count > 0)
+        {
+            local.last_week_y = local.row_y + (local.rows * 17) + 10
+            local.last_week_lines = local.last_week_count + 2
+            local.panel_h = (local.last_week_y - local.panel_y) + (local.last_week_lines * 17) + 10
+        }
+    }
+    else
+    {
+        local.row_y = 145
+        local.panel_h = 88 + (local.rows * 17)
+    }
 
     waitthread global/feho/hud_lib.scr::draw_rect local.player local.base "right" "top" local.panel_x local.panel_y local.panel_w local.panel_h ( 0.04 0.04 0.04 ) local.alpha
 
@@ -445,20 +475,9 @@ draw_player local.player local.names local.full:
     ihuddraw_rect local.player (local.base + 1) -446 74 0 0
     ihuddraw_color local.player (local.base + 1) 0.62 0.78 0.95
     if (local.full)
-    {
-        local.last_week_text = "LAST WEEK: No result"
-        if (waitthread has_last_week_winner)
-        {
-            local.winner_name = waitthread global/feho/hud_lib.scr::substr_prefix session.leaderboard_last_winner_name 20
-            local.winner_xp = waitthread format_grouped_integer session.leaderboard_last_winner_xp
-            local.last_week_text = "LAST WEEK: " + local.winner_name + " - " + local.winner_xp + " XP"
-        }
-        local.header = "WEEKLY RANKINGS - Resets Monday\n" + local.last_week_text
-    }
+        local.header = "WEEKLY RANKINGS - Resets Monday"
     else
     {
-        // The preview trades the last-week line for a reason it is on screen.
-        // Two header lines either way, so panel_h stays correct.
         local.header = "WEEKLY RANKINGS\nRound ending"
     }
     ihuddraw_string local.player (local.base + 1) (local.header + "\n\n #        XP KILLS DEATHS   K/D NAME")
@@ -499,7 +518,7 @@ draw_player local.player local.names local.full:
 
         local.text = local.rank_text + " " + local.xp_text + " " + local.kills_text + " " + local.deaths_text + " " + local.kd_text + " " + local.name_text
         local.idx = local.base + 2 + local.i
-        local.y = 145 + (local.i * 17)
+        local.y = local.row_y + (local.i * 17)
 
         ihuddraw_font local.player local.idx "courier-16"
         ihuddraw_align local.player local.idx "right" "top"
@@ -520,20 +539,46 @@ draw_player local.player local.names local.full:
         ihuddraw_alpha local.player local.idx 1.0
     }
 
-    // Clear stale rows after a row-count reduction (including a spectator
-    // switching to the shorter preview) or after pruning changes the visible
-    // table. This also guarantees the system never touches index 187.
-    for (local.idx = local.base + 2 + local.rows; local.idx <= 186; local.idx++)
+    local.next_idx = local.base + 2 + local.rows
+    if (local.full && local.last_week_count > 0)
+    {
+        local.last_week_text = "LAST WEEK - FINAL\n #        XP KILLS NAME"
+        for (local.rank = 1; local.rank <= local.last_week_count; local.rank++)
+        {
+            local.name = session.leaderboard_last_week_name[local.rank]
+            local.xp = session.leaderboard_last_week_xp[local.rank]
+            local.kills = session.leaderboard_last_week_kills[local.rank]
+
+            local.rank_text = waitthread global/feho/statusb.scr::pad_left local.rank 2
+            local.xp_text = waitthread format_grouped_integer local.xp
+            local.xp_text = waitthread global/feho/statusb.scr::pad_left local.xp_text 9
+            local.kills_text = waitthread global/feho/statusb.scr::pad_left local.kills 5
+            local.name_text = waitthread global/feho/hud_lib.scr::substr_prefix local.name 20
+            local.last_week_text += "\n" + local.rank_text + " " + local.xp_text + " " + local.kills_text + " " + local.name_text
+        }
+
+        ihuddraw_font local.player local.next_idx "courier-16"
+        ihuddraw_align local.player local.next_idx "right" "top"
+        ihuddraw_rect local.player local.next_idx -446 local.last_week_y 0 0
+        ihuddraw_color local.player local.next_idx 0.70 0.76 0.84
+        ihuddraw_string local.player local.next_idx local.last_week_text
+        ihuddraw_alpha local.player local.next_idx 1.0
+        local.next_idx++
+    }
+
+    // Clear stale rows after a row-count reduction, a full/preview transition,
+    // or an archived-result change. Never touch map-owned index 187.
+    for (local.idx = local.next_idx; local.idx <= 186; local.idx++)
         waitthread global/feho/hud_lib.scr::hide local.player local.idx
 
 end
 
 
-has_last_week_winner:
+has_last_week_results:
 
-    if (session.leaderboard_last_winner_name == NIL)
+    if (session.leaderboard_last_week_count == NIL)
         end 0
-    if (session.leaderboard_last_winner_xp == NIL)
+    if (session.leaderboard_last_week_count <= 0)
         end 0
 
 end 1
@@ -606,7 +651,12 @@ end local.formatted
 restore_leaderboard_once:
 
     if (session.leaderboard_persistence_loaded == 1)
+    {
+        local.current_week = waitthread current_week_key
+        if (session.leaderboard_last_week_loaded_for != local.current_week)
+            waitthread load_last_week_results local.current_week
         end
+    }
 
     session.leaderboard_persistence_loaded = 1
 
@@ -634,10 +684,10 @@ restore_leaderboard_once:
 
     // A new version can be loaded on a map change in an already-running
     // process. In that case, prefer its newer in-memory table over disk, but
-    // still initialize the previous-winner HUD state added by this version.
+    // still initialize the previous-week HUD state added by this version.
     if (local.had_session_week)
     {
-        waitthread load_last_week_winner local.current_week
+        waitthread load_last_week_results local.current_week
         end
     }
 
@@ -649,7 +699,7 @@ restore_leaderboard_once:
     else if (local.latest != NIL && local.latest["week"] < local.current_week)
         waitthread write_week_archive local.latest["week"] local.latest["rows"] local.latest["sequence"]
 
-    waitthread load_last_week_winner local.current_week
+    waitthread load_last_week_results local.current_week
 
 end
 
@@ -859,10 +909,13 @@ legacy_kill_xp:
 end local.amount
 
 
-load_last_week_winner local.current_week:
+load_last_week_results local.current_week:
 
-    session.leaderboard_last_winner_name = NIL
-    session.leaderboard_last_winner_xp = NIL
+    session.leaderboard_last_week_name = NIL
+    session.leaderboard_last_week_xp = NIL
+    session.leaderboard_last_week_kills = NIL
+    session.leaderboard_last_week_count = 0
+    session.leaderboard_last_week_loaded_for = local.current_week
 
     local.last_week = local.current_week - 1
     local.path = "leaderboard/weekly_" + local.last_week + ".dat"
@@ -874,8 +927,20 @@ load_last_week_winner local.current_week:
     if (local.names == NIL || local.names.size == 0)
         end
 
-    session.leaderboard_last_winner_name = local.names[0]
-    session.leaderboard_last_winner_xp = local.snapshot["rows"][local.names[0]]["xp"]
+    local.count = local.names.size
+    if (local.count > 3)
+        local.count = 3
+
+    for (local.i = 0; local.i < local.count; local.i++)
+    {
+        local.rank = local.i + 1
+        local.name = local.names[local.i]
+        session.leaderboard_last_week_name[local.rank] = local.name
+        session.leaderboard_last_week_xp[local.rank] = local.snapshot["rows"][local.name]["xp"]
+        session.leaderboard_last_week_kills[local.rank] = local.snapshot["rows"][local.name]["kills"]
+    }
+
+    session.leaderboard_last_week_count = local.count
 
 end
 
@@ -906,7 +971,7 @@ reset_if_new_week:
 
         session.leaderboard = NIL
         session.leaderboard_week = local.week
-        waitthread load_last_week_winner local.week
+        waitthread load_last_week_results local.week
     }
 
 end
