@@ -345,21 +345,21 @@ tdm_spawns:
 
 
 	//stage3
-	spawn info_player_axis "origin" "-4595.34 -7131.90 -51.88" "angle" "123" "targetname" "XXX1"
-	spawn info_player_axis "origin" "-4707.41 -7360.28 -287.88" "angle" "16" "targetname" "XXX2" // Tour en pierre
-	spawn info_player_axis "origin" "-7066.87 -7340.75 -220.89" "angle" "44" "targetname" "XXX3"
-	spawn info_player_axis "origin" "-7041.87 -6134.75 -179.89" "angle" "0" "targetname" "XXX4"
-	spawn info_player_axis "origin" "-3908.06 -6597.61 -341.62" "angle" "-175" "targetname" "XXX5"
-	spawn info_player_axis "origin" "-6660.87 -5583.75 -175.89" "angle" "-38" "targetname" "XXX6"
-	spawn info_player_axis "origin" "-3647.97 -6913.09 -354.03" "angle" "168" "targetname" "XXX7"
-	spawn info_player_axis "origin" "-3523.96 -6797.23 -349.53" "angle" "171" "targetname" "XXX8"
-	spawn info_player_axis "origin" "-3463.47 -6581.04 -341.88" "angle" "-173" "targetname" "XXX9"
-	spawn info_player_axis "origin" "-3310.95 -6618.87 -342.94" "angle" "-176" "targetname" "XXX10"
-	spawn info_player_axis "origin" "-4889.76 -7668.01 -454.71" "angle" "128" "targetname" "XXX11"
-	spawn info_player_axis "origin" "-5172.88 -7634.81 -433.09" "angle" "131" "targetname" "XXX12"
-	spawn info_player_axis "origin" "-5383.40 -7441.27 -386.01" "angle" "97" "targetname" "XXX13"
-	spawn info_player_axis "origin" "-5675.58 -7596.18 -376.73" "angle" "168" "targetname" "XXX14"
-	spawn info_player_axis "origin" "-5881.87 -7851.75 -380.89" "angle" "142" "targetname" "XXX15"
+	spawn info_player_axis "origin" "( -4668.938 -7348.308 -297.875 )" "angle" "10.074" "targetname" "XXX1"
+	spawn info_player_axis "origin" "( -4672.921 -7255.790 -297.875 )" "angle" "351.151" "targetname" "XXX2"
+	spawn info_player_axis "origin" "( -5602.978 -7863.217 -443.584 )" "angle" "84.122" "targetname" "XXX3"
+	spawn info_player_axis "origin" "( -5770.819 -7825.048 -412.254 )" "angle" "82.068" "targetname" "XXX4"
+	spawn info_player_axis "origin" "( -6006.550 -7831.550 -373.956 )" "angle" "87.259" "targetname" "XXX5"
+	spawn info_player_axis "origin" "( -6564.670 -7855.764 -320.582 )" "angle" "86.067" "targetname" "XXX6"
+	spawn info_player_axis "origin" "( -6761.376 -6858.769 -200.188 )" "angle" "222.017" "targetname" "XXX7"
+	spawn info_player_axis "origin" "( -7135.256 -6859.893 -193.750 )" "angle" "330.886" "targetname" "XXX8"
+	spawn info_player_axis "origin" "( -7093.368 -6703.060 -191.875 )" "angle" "8.382" "targetname" "XXX9"
+	spawn info_player_axis "origin" "( -7086.624 -6749.449 -191.875 )" "angle" "5.026" "targetname" "XXX10"
+	spawn info_player_axis "origin" "( -7147.031 -6936.126 -191.789 )" "angle" "357.495" "targetname" "XXX11"
+	spawn info_player_axis "origin" "( -6767.268 -6966.600 -217.152 )" "angle" "180.269" "targetname" "XXX12"
+	spawn info_player_axis "origin" "( -5871.766 -7063.946 -231.875 )" "angle" "49.515" "targetname" "XXX13"
+	spawn info_player_axis "origin" "( -4741.247 -5719.113 -191.842 )" "angle" "224.396" "targetname" "XXX14"
+	spawn info_player_axis "origin" "( -5521.495 -6017.520 -31.875 )" "angle" "45.297" "targetname" "XXX15"
 
 	spawn info_player_allied "origin" "-3956.46 -3665.62 8.31" "angle" "-154" "targetname" "AAA1"
 	spawn info_player_allied "origin" "-4146.87 -4004.78 -43.13" "angle" "-170" "targetname" "AAA2"
@@ -728,8 +728,8 @@ set_da_stuff_up:
 
 	$s2_playerclip remove
 
-	$scene5_dead_panzer.origin = ( -4055.32 1570.86 0.13 )	
-	$scene5_dead_panzer.angle = 18
+	//$scene5_dead_panzer.origin = ( -4055.32 1570.86 0.13 )	
+	//$scene5_dead_panzer.angle = 18
 	//$scene5_dead_panzer2.origin =
 
 	$scene5_dead_panzer thread setup_dead_panzer
