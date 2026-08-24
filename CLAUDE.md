@@ -48,6 +48,7 @@ Global scripts guard against double-initialization with `level.xxx_initialized =
 ### Variable Scopes
 - `local.x` — local to current thread
 - `level.x` — persists for the current map
+- `session.x` — persist for the current server process
 - `parm.x` — parameters passed to a thread/exec
 - `self` — the entity the script is running on
 
