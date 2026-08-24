@@ -1,6 +1,14 @@
-level bot_addtacticalpoint ( -375 3386 652 ) ( 7 -79 0 ) "allies"
-level bot_addtacticalpoint ( -375 3388 653 ) ( 7 -79 0 ) "axis"
-level bot_addtacticalpoint ( 365.78 4130.63 240.12 ) ( 0 -100 0 ) "axis"
-level bot_addtacticalpoint ( 365.78 4130.63 240.12 ) ( 0 -100 0 ) "allies"
+if (randomint(2) == 1) level bot_addtacticalpoint ( 574.652 1836.394 221.815 ) ( -0.391 -0.920 -0.006 ) "axis"
+if (randomint(2) == 1) level bot_addtacticalpoint ( 1469.271 2467.240 240.125 ) ( -0.725 -0.689 -0.025 ) "axis"
+if (randomint(2) == 1) level bot_addtacticalpoint ( 912.357 912.340 72.125 ) ( -0.452 -0.888 -0.079 ) "axis"
+if (randomint(2) == 1) level bot_addtacticalpoint ( -375 3388 653 ) ( 7 -79 0 ) "axis"
+if (randomint(2) == 1) level bot_addtacticalpoint ( 365.78 4130.63 240.12 ) ( 0 -100 0 ) "axis"
+
+if (randomint(2) == 1) level bot_addtacticalpoint ( 365.78 4130.63 240.12 ) ( 0 -100 0 ) "allies"
+if (randomint(2) == 1) level bot_addtacticalpoint ( -375 3386 652 ) ( 7 -79 0 ) "allies"
+if (randomint(2) == 1) level bot_addtacticalpoint ( 492.288 -898.960 480.125 ) ( -0.272 0.956 -0.113 ) "allies"
+if (randomint(2) == 1) level bot_addtacticalpoint ( 1268.029 685.829 32.125 ) ( -0.995 -0.076 -0.057 ) "allies"
+if (randomint(2) == 1) level bot_addtacticalpoint ( 1456.875 1466.683 208.125 ) ( -0.834 0.551 -0.017 ) "allies"
+if (randomint(2) == 1) level bot_addtacticalpoint ( 461.631 1567.059 240.125 ) ( -0.483 0.875 -0.032 ) "allies"
 
 end 1
