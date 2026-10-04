@@ -1,0 +1,100 @@
+/*
+Reveille promotion (https://mohcentral.github.io/reveille)
+
+- Each human sees a short HUD panel on spawn, at most once per hour of server
+  uptime (keyed by cl_guid, falling back to netname), so regulars aren't spammed.
+- "!reveille" in chat replies privately with the full URL.
+*/
+
+main:
+    if (level.reveille_initialized == 1)
+        end
+
+    level.reveille_initialized = 1
+
+    level.reveille_cooldown = 3600
+
+    if (session.reveille_seen == NIL)
+        session.reveille_seen[""] = 0
+    if (session.reveille_clock == NIL)
+        session.reveille_clock = 0
+
+    event_subscribe "player_spawned" event_player_spawned
+    event_subscribe "player_textMessage" event_player_textMessage
+
+    thread tick_clock
+end
+
+// level.time resets every map, so keep our own process-lifetime clock for the
+// cooldown. It loses a few seconds per map change, which is fine at this scale.
+tick_clock:
+    while (1)
+    {
+        wait 10
+        session.reveille_clock += 10
+    }
+end
+
+player_key local.player:
+    local.key = info_valueforkey (local.player.userinfo) "cl_guid"
+    if (local.key == NIL || local.key == "")
+        local.key = "name:" + local.player.netname
+end local.key
+
+event_player_spawned:
+    local.player = self
+
+    if (!local.player || isBot local.player)
+        end
+
+    local.key = waitthread player_key local.player
+    local.last = session.reveille_seen[local.key]
+    if (local.last != NIL && local.last > 0 && session.reveille_clock - local.last < level.reveille_cooldown)
+        end
+
+    // +1 so a player first seen at clock 0 isn't treated as never seen
+    session.reveille_seen[local.key] = session.reveille_clock + 1
+
+    // Let the tips message from messages.scr go first
+    wait 8
+
+    if (!local.player)
+        end
+
+    local.lines[1] = "Tired of empty servers? Reveille alerts you when they fill"
+    local.lines[2] = "Find your friends, auto-download custom maps. Free."
+    local.lines[3] = "Google 'Reveille MOHAA', or type !reveille for the link"
+
+    // Dark panel on the left, below the squad/HVT HUDs. Indices 200-203 are unused elsewhere.
+    local.bg = ( 0.05 0.05 0.05 )
+    waitthread global/feho/hud_lib.scr::draw_rect local.player 200 "left" "top" 8 230 500 74 local.bg 0.6
+
+    for (local.i = 1; local.i <= 3; local.i++)
+    {
+        local.idx = 200 + local.i
+        ihuddraw_font local.player local.idx "courier-16"
+        ihuddraw_align local.player local.idx "left" "top"
+        ihuddraw_rect local.player local.idx 16 (216 + local.i * 20) 484 20
+        if (local.i == 1)
+            ihuddraw_color local.player local.idx 1.0 0.85 0.3
+        else
+            ihuddraw_color local.player local.idx 1.0 1.0 1.0
+        ihuddraw_string local.player local.idx local.lines[local.i]
+        ihuddraw_alpha local.player local.idx 1.0
+    }
+
+    wait 20
+
+    if (!local.player)
+        end
+
+    for (local.idx = 200; local.idx <= 203; local.idx++)
+        ihuddraw_alpha local.player local.idx 0.0
+end
+
+event_player_textMessage local.text local.is_team:
+    if (!self || local.text != "!reveille")
+        end
+
+    self iprint "Reveille: mohcentral.github.io/reveille"
+end

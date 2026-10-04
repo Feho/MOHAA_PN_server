@@ -183,6 +183,7 @@ exec global/feho/difficulty_adjustment.scr
 level waittill spawn
 
 exec global/feho/messages.scr
+exec global/feho/reveille.scr
 
 // Initialize map voting backed by weighted map rotation
 exec global/feho/mapvote.scr
